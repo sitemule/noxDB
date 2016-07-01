@@ -13,7 +13,7 @@ This makes this tool perfect to load data from SQL and produce JSON in a web app
 
 It bring dynamic result set to RPG, so you don't have to recompile each time you add or change columns to your DB2 tables.
 
-It is as simple as :
+It is as simple as this in your RPG program:
 
 // load a resultset from the product table
 sql   = 'Select * from product';                            
@@ -23,5 +23,8 @@ pRows = json_sqlResultSet(sql);
 json_writeJsonStmf(pRows  :                                 
    '/jsonxml/json/resultset-array.json' : 1208 : *ON        
 );                                                          
+
+Look at all the samples in the QJXSAMPLE file
+
 
 
