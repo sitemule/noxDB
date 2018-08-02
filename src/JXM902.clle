@@ -1,0 +1,31 @@
+/* ------------------------------------------------------------- */
+/* Company . . . : System & Method A/S                           */
+/* Design  . . . : Niels Liisberg                                */
+/* Function  . . : get trace options                             */
+/*                                                               */
+/* By     Date     Task    Description                           */
+/* NL     02.01.17 0000000 New program                           */
+/* ------------------------------------------------------------- */
+pgm (&libC &trace &job)
+   dcl &lib         type(*CHAR) len(10)
+   dcl &libC        type(*CHAR) len(11)
+   dcl &trace       type(*lgl )
+   dcl &job         type(*CHAR) len(29)  /* 6+1+10+1+10+1  nnnnnn/NLI/QPADEV01 + null => 29  */
+   dcl &j           type(*CHAR) len(10)
+   dcl &u           type(*CHAR) len(10)
+   dcl &n           type(*CHAR) len(6)
+   dcl &null        type(*CHAR) len(1)  value(x'00')
+
+   rtvobjd    OBJ(JSONXML) OBJTYPE(*SRVPGM) RTNLIB(&LIB)
+   rtvDtaAra  DTAARA(&LIB/SQLTRACE) RTNVAR(&TRACE)
+   monmsg  cpf0000 exec(do)
+      CRTDTAARA  DTAARA(&LIB/SQLTRACE) TYPE(*LGL) VALUE('0') +
+                          TEXT('SQL trace enabled')
+      chgvar &trace '0'
+   enddo
+
+   /* job in format:  767070/NLI/JOHN22A1 and in c-string format*/
+   RTVJOBA    JOB(&J) USER(&U) NBR(&N)
+   chgvar &job (&n !! '/' !! &u  !< '/' !! &j !< &null)
+   chgvar &libC (&lib !< &null)
+endpgm
