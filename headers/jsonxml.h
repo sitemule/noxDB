@@ -7,6 +7,7 @@
  #include "/qsys.lib/include.lib/h.file/ostypes.mbr"
 #else
  #include "ostypes.h"     //
+ #include "streamer.h"
  #include "apierr.h"
  #include "xlate.h"
 #endif
@@ -76,20 +77,20 @@ typedef struct _JXNODE {
    struct _JXNODE * pNodeChildHead;
    struct _JXNODE * pNodeChildTail;
    struct _JXNODE * pNodeSibling;
-   LONG   Count;
-   BOOL   newlineInAttrList;
-   PUCHAR Comment;
+   LONG     Count;
+   BOOL     newlineInAttrList;
+   PUCHAR   Comment;
    NODETYPE type;
-   BOOL   doCount;
-   LONG   lineNo;
-   BOOL   isLiteral;
+   BOOL     doCount;
+   LONG     lineNo;
+   BOOL     isLiteral;
+   SHORT    ccsid;
 } JXNODE, *PJXNODE;
 
 typedef struct _JXSEGMENT {
    LONG    nodeCount;
    PJXNODE * nodeArray;
 } JXSEGMENT , *PJXSEGMENT;
-
 
 typedef enum {
    XML_FIND_START_TOKEN,
@@ -169,6 +170,9 @@ typedef _Packed struct  _JWRITE      {
    BOOL    doTrim;
    BOOL    useDefaultFormat;
    BOOL    isDefaultFormatDetected;
+   ULONG   bufLen;
+   ULONG   maxSize;
+   BOOL    wasHere;
 } JWRITE, * PJWRITE;
 
 typedef _Packed struct  _JXITERATOR {
@@ -184,6 +188,7 @@ typedef _Packed struct  _JXITERATOR {
    LONG      size;
    PJXNODE * list;
    LGL       doBreak;
+   PJXNODE   next;
 } JXITERATOR , * PJXITERATOR ;
 
 typedef _Packed struct  _JXDELIM     {
@@ -201,7 +206,24 @@ typedef _Packed struct  _JXDELIM     {
 } JXDELIM , * PJXDELIM;
 
 #endif
+
 // Prototypes  - utilities
+LONG xlateMem  (iconv_t xid , PUCHAR out , PUCHAR in, LONG len);
+void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJXNODE options);
+VARCHAR jx_AsJsonText (PJXNODE pNode);
+LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP);
+#pragma descriptor ( void jx_AsJsonTextMem                     (void))
+
+LONG jx_fileWriter  (PSTREAM pStream , PUCHAR buf , ULONG len);
+LONG jx_memWriter  (PSTREAM pStream, PUCHAR buf , ULONG len);
+void  jx_AsJsonStream (PJXNODE pNode, PSTREAM pStream);
+void  jsonStreamPrintNode (PJXNODE pNode, PSTREAM pStream, SHORT level);
+void  jsonStreamPrintValue   (PJXNODE pNode, PSTREAM pStream);
+void  jsonStreamPrintArray (PJXNODE pParent, PSTREAM pStream, SHORT level);
+void  jsonStreamPrintObject  (PJXNODE pParent, PSTREAM pStream, SHORT level);
+void  indent (PSTREAM pStream , int indent);
+PUCHAR jx_EncodeJson (PUCHAR out , PUCHAR in);
+void  jx_EncodeJsonStream (PSTREAM p , PUCHAR in);
 PUCHAR c2s(UCHAR c);
 PUCHAR strTrim(PUCHAR s);
 UCHAR hex (UCHAR c)     ;
@@ -257,6 +279,7 @@ void jx_NodeMoveAndReplace (PJXNODE  pDest, PJXNODE pSource);
 /* ------ */
 void jx_SetDecPoint(PUCHAR p);
 void jx_SetDelimiters(PJXDELIM pDelim);
+void jx_SetDelimiters2(PJXDELIM pDelim);
 void jx_CloneFormat(PJXNODE pNode, PJXNODE pSource);
 LGL jx_Has  (PJXNODE pNode, PUCHAR Name);
 #pragma descriptor ( void jx_Has                               (void))
@@ -324,9 +347,11 @@ PJXNODE  jx_GetNode  (PJXNODE pNode, PUCHAR Name) ;
 #pragma descriptor ( void jx_GetNode                                              (void))
 
 PJXNODE  jx_GetNodeChild (PJXNODE pNode);
+PJXNODE  jx_GetNodeChildNo (PJXNODE pNode, int childNo);
 PJXNODE  jx_GetNodeNext (PJXNODE pNode);
 PJXNODE  jx_GetNodeParent  (PJXNODE pNode);
 PXMLATTR jx_AttributeLookup   (PJXNODE pNode, PUCHAR Name);
+PXMLATTR jx_NodeAddAttributeValue  (PJXNODE pNode , PUCHAR AttrName, PUCHAR Value);
 PJXNODE  jx_GetNodeByName   (PJXNODE pNode, PUCHAR Ctlstr , ... );
 PUCHAR   jx_GetNodeValuePtr (PJXNODE pNode, PUCHAR DefaultValue);
 #pragma descriptor ( void jx_GetNodeValuePtr                                      (void))
@@ -343,6 +368,7 @@ void     jx_NodeDelete(PJXNODE pRoot);
 void     jx_NodeReplace (PJXNODE  pDest, PJXNODE pSource);
 PJXNODE  jx_NodeCopy (PJXNODE pDest, PJXNODE pSource, REFLOC refloc);
 void     jx_NodeMerge(PJXNODE pDest, PJXNODE pSource, SHORT replace);
+PJXNODE  jx_GetOrCreateNode (PJXNODE pNodeRoot, PUCHAR Name);
 
 // Attribute navigation:
 PXMLATTR jx_GetAttrFirst     (PJXNODE pNode);
@@ -380,7 +406,7 @@ FIXEDDEC jx_GetValueNum (PJXNODE pNode , PUCHAR Name  , FIXEDDEC dftParm);
 void jx_Close(PJXNODE * pNode);
 
 void    jx_AsJsonTextList (PJXNODE pNode, PJWRITE pJwrite);
-LONG    jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf);
+LONG    jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf, ULONG maxSize);
 VARCHAR jx_AsJsonText(PJXNODE pNode);
 LGL     jx_IsJson (PJXNODE pNode);
 BOOL    jx_HasMore(PJXNODE pNode);
@@ -410,12 +436,14 @@ PJXNODE  jx_LookupValue (PJXNODE pDest, PUCHAR expr , BOOL16 ignorecase);
 #pragma descriptor ( void jx_LookupValue    (void))
 
 LONG     jx_getLength (PJXNODE pNode);
+ULONG     jx_NodeCheckSum (PJXNODE pNode);
 
 PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value);
 PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value);
 PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value);
 PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value);
 PJXNODE  jx_NodeMoveInto (PJXNODE  pDest, PUCHAR Name , PJXNODE pSource);
+void jx_NodeCloneAndReplace (PJXNODE pDest , PJXNODE pSource);
 void jx_Debug(PUCHAR text, PJXNODE pNode);
 
 // SQL functions
@@ -457,9 +485,17 @@ typedef _Packed struct  {
    LGL         autoParseContent;
 }  SQLOPTIONS, * PSQLOPTIONS;
 
-#ifndef MAXCOLS
-#define MAXCOLS 2048
-#endif
+typedef _Packed struct  {
+   LGL         doTrace;
+   UCHAR       lib[11];
+   SQLHSTMT    handle;
+   UCHAR       tsStart [27];
+   UCHAR       tsEnd   [27];
+   LONG        sqlCode;
+   UCHAR       text  [256];
+   UCHAR       job [29];
+   INT64       trid;
+}  JXTRACE  , * PJXTRACE;
 
 #define  COMMENT_SIZE 4096
 #define  DATA_SIZE 65535
@@ -478,7 +514,7 @@ typedef _Packed struct  {
 // SQLOPTIONS    options;
 // PJXNODE       pOptions;
 // BOOL          deleteOptions;
-   JXCOL         cols[MAXCOLS];
+   PJXCOL        cols;
 } JXSQL, * PJXSQL;
 
 typedef _Packed struct  {
@@ -493,14 +529,18 @@ typedef _Packed struct  {
    UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
    JXSQLSTMT     stmts[JXSQLSTMT_MAX];
    SHORT         stmtIx;
+   JXTRACE       sqlTrace;
 } JXSQLCONNECT , * PJXSQLCONNECT;
 
 typedef enum _JX_RESULTSET {
    JX_META       = 1,
    JX_FIELDS     = 2,
    JX_TOTALROWS  = 4,
-   JX_UPPERCASE  = 8
+   JX_UPPERCASE  = 8,
+   JX_APROXIMATE_TOTALROWS = 16
 } JX_RESULTSET, *PJX_RESULTSET;
+
+VOID JXM902 ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);
 
 PJXNODE jx_sqlResultRow ( PUCHAR sqlstmt, PJXNODE pSqlParmsP ) ;
 #pragma descriptor ( void jx_sqlResultRow   (void))
@@ -511,7 +551,7 @@ PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startAt , PJXNODE pSqlParmsP ) 
 PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PJXNODE pSqlParmsP );
 #pragma descriptor ( void jx_sqlResultSet   (void))
 
-PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParms  );
+PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParms, BOOL scroll);
 #pragma descriptor ( void jx_sqlOpen        (void))
 
 LGL jx_sqlUpdate (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParmsP  );
@@ -529,6 +569,7 @@ PJXNODE jx_sqlFetchNext (PJXSQL pSQL);
 
 void jx_sqlClose (PJXSQL * ppSQL);
 void jx_sqlKeepConnection (BOOL keep);
+PJXNODE jx_sqlGetMeta (PUCHAR sqlstmt);
 
 
 LGL    jx_sqlExec (PUCHAR sqlstmt , PJXNODE pSqlParms  );
@@ -539,7 +580,7 @@ PJXSQLCONNECT  jx_sqlConnect(PJXNODE pSqlParms  );
 
 void jx_SwapNodes (PJXNODE * pNode1, PJXNODE *  pNode2);
 
-PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP);
+PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT options);
 #pragma descriptor ( void jx_ArraySort     (void))
 
 #endif
