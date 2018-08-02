@@ -9,7 +9,7 @@
 BIN_LIB=NOXDB
 
 # to this folder the header files (prototypes) are copied in the install step
-INCLUDE='/QIBM/include' 'headers/'
+INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'
 
 DBGVIEW=*ALL
 
