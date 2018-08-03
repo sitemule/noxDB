@@ -56,6 +56,7 @@ ext:
 	system "CRTCMOD MODULE($(BIN_LIB)/UTL100) SRCSTMF('src/ext/utl100.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/VARCHAR) SRCSTMF('src/ext/varchar.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/XLATE) SRCSTMF('src/ext/xlate.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/RTVSYSVAL) SRCSTMF('src/ext/rtvsysval.c') $(CCFLAGS)"
 
 bind:
 	system "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
