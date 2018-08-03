@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <qp0z1170.h>
 #include <mimchint.h>
-#include <QSYSINC/MIH/MATTOD>
+#include "/qsys.lib/QSYSINC.lib/MIH.file/MATTOD.mbr"
 #include "OSTYPES.h"
 #include "timestamp.h"
 /* ------------------------------------------------------------- */

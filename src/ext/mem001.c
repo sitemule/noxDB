@@ -18,6 +18,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mallocinfo.h>
+
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
 #include "ostypes.h"
 #include "minmax.h"
 #include "parms.h"
