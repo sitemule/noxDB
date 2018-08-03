@@ -19,7 +19,7 @@ CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSI
 # User-defined part end
 #-----------------------------------------------------------
 
-all: env compile ext bind
+all: clean env compile ext bind
 
 env:
 	-system -q "CRTLIB $(BIN_LIB) TYPE(*TEST) TEXT('Nox.DB build library')
@@ -45,14 +45,12 @@ compile:
 	system -s "CRTBNDCL PGM($(BIN_LIB)/JXM901) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
 	system -s "CRTBNDCL PGM($(BIN_LIB)/JXM902) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
 	
-	system "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
-	system "CPYFRMSTMF FROMSTMF('headers/JSONXML.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/JSONXML.mbr') MBROPT(*ADD)"
 
 ext:
 	system "CRTCMOD MODULE($(BIN_LIB)/MEM001) SRCSTMF('src/ext/mem001.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/PARMS) SRCSTMF('src/ext/parms.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/SNDPGMMSG) SRCSTMF('src/ext/sndpgmmsg.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/stream) SRCSTMF('src/ext/stream.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/STREAM) SRCSTMF('src/ext/stream.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/TIMESTAMP) SRCSTMF('src/ext/timestamp.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/TRYCATCH) SRCSTMF('src/ext/trycatch.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/UTL100) SRCSTMF('src/ext/utl100.c') $(CCFLAGS)"
@@ -60,6 +58,8 @@ ext:
 	system "CRTCMOD MODULE($(BIN_LIB)/XLATE) SRCSTMF('src/ext/xlate.c') $(CCFLAGS)"
 
 bind:
+	system "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
+	system "CPYFRMSTMF FROMSTMF('headers/JSONXML.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/JSONXML.mbr') MBROPT(*ADD)"
 	system -kpieb "CRTSRVPGM SRVPGM(JSONXML/JSONXML) MODULE($(BIN_LIB)/JXM* $(DEPS_LIST)) SRCMBR(JSONXML) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
 	
 clean:
