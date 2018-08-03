@@ -42,8 +42,8 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE')
-      /include QASPHDR,JSONparser
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
+      /include 'headers/JSONPARSER.rpgle'
      d pJson           s               *
      d pNode           s               *
      d msg             s             50    varying
@@ -89,3 +89,5 @@
          //if Json_MemLeak();
            Json_MemStat();
          //endif;
+
+        Return;
