@@ -8,11 +8,10 @@
 # binder source file and rpg module can be remove with the clean step (make clean)
 BIN_LIB=NOXDB
 DBGVIEW=*ALL
-DEPS_LIB=ÆINCLUDE
 
 # Do not touch below
 INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'
-DEPS_LIST=$(DEPS_LIB)/RTVSYSVAL $(DEPS_LIB)/UTL100 $(DEPS_LIB)/VARCHAR $(DEPS_LIB)/MEM001 $(DEPS_LIB)/XLATE $(DEPS_LIB)/STREAM $(DEPS_LIB)/TIMESTAMP $(DEPS_LIB)/SNDPGMMSG $(DEPS_LIB)/TRYCATCH
+DEPS_LIST=$(BIN_LIB)/RTVSYSVAL $(BIN_LIB)/UTL100 $(BIN_LIB)/VARCHAR $(BIN_LIB)/MEM001 $(BIN_LIB)/XLATE $(BIN_LIB)/STREAM $(BIN_LIB)/TIMESTAMP $(BIN_LIB)/SNDPGMMSG $(BIN_LIB)/TRYCATCH
 
 CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) INCDIR($(INCLUDE)) DBGVIEW($(DBGVIEW))
 
@@ -20,7 +19,7 @@ CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSI
 # User-defined part end
 #-----------------------------------------------------------
 
-all: env compile bind
+all: env compile ext bind
 
 env:
 	-system -q "CRTLIB $(BIN_LIB) TYPE(*TEST) TEXT('Nox.DB build library')
