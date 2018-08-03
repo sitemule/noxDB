@@ -1,0 +1,12 @@
+pgm
+
+  dltSrvPgm  srvPgm(jsonxml/jsonxml)
+  monmsg cpf0000
+
+             CRTSRVPGM  SRVPGM(JSONXML/JSONXML) MODULE(JXM* +
+                          RTVSYSVAL UTL100 VARCHAR MEM001 XLATE +
+                          STREAM TIMESTAMP SNDPGMMSG TRYCATCH) +
+                          SRCMBR(JSONXML) ACTGRP(QILE) +
+                          ALWLIBUPD(*YES) TGTRLS(*current)
+
+endpgm
