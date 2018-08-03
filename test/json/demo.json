@@ -1,0 +1,13 @@
+{  
+  o: { 
+    e:[],  
+    n:123   ,                             
+    a: [1,2,3,4,5],                     
+    m:"yyyy",          
+    f: "john"
+  },
+  u: "This is a unicode \u00b5 string" ,     
+  "s":"abc" ,   
+  a:[1,2,3],                              
+  x:"xxxxx"                              
+}                                   
