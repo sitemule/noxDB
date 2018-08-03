@@ -5,7 +5,7 @@
       *
       * ------------------------------------------------------------- *
      H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE' )
-      /include JSONparser
+      /include 'headers/JSONPARSER.rpgle'
      D pJson           s               *
       /free
 

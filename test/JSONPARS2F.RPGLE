@@ -8,7 +8,7 @@
      D pData           s               *
      D pTplData        s               *
      D pProp           s               *
-      /include jsonparser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         pData = json_ParseString (
            '{                      '+

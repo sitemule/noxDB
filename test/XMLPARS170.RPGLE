@@ -55,7 +55,7 @@
       *   <Myelement Myattribute1="Another name" Myattribute2="0">def</Myelement>
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pXml1           s               *
      D pXml2           s               *
      D pSrcElm         s               *
@@ -63,7 +63,7 @@
      D pDelete         s               *
      D pOut            s               *
      D msg             s             50    varying
-      /include qAspHdr,xmlparser
+      /include 'headers/XMLPARSER.rpgle'
       /free
         pXml1 = xml_ParseFile('/udv/expert/simple1.xml':'syntax=LOOSE');
         if Xml_Error(pXml1) ;

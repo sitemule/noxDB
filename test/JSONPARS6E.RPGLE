@@ -8,13 +8,13 @@
       * The aim is to produce a JSON-document from scratch
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pJson           s               *
      D pArr            s               *
      D pTemp           s               *
      D pNewObj         s               *
      D msg             s             50    varying
-      /include qAspHdr,JsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         pJson = json_NewObject();
         json_SetValue ( pJson : 'items[]': '10'); // add to the tail of items

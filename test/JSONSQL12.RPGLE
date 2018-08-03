@@ -9,7 +9,7 @@
      D pConnect        s               *
      D pResult         s               *
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // Need the resultset names in upper case:

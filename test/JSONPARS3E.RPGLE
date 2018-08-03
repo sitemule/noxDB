@@ -14,7 +14,7 @@
      D pBval           s               *
 
      D t               s            512a   varying
-      /include JsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         // ---------------------------------------
         // Step 1:

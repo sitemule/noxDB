@@ -15,7 +15,7 @@
      D prow            s               *
      D id              s             10i 0
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
          row = ('{ -

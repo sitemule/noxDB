@@ -9,7 +9,7 @@
      D MyString        s             50    varying
      D MyElem          s             50    varying
      D msg             s             50    varying
-      /include jsonparser
+      /include 'headers/JSONPARSER.rpgle'
       /include xmlparser
       /free
         pXml = xml_ParseFile('/udv/expert/xmlsample1.xml');

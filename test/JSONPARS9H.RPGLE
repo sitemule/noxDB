@@ -3,12 +3,12 @@
       * IceBreak
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE')
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
      D pList           s               *
      D msg             s             50    varying
      D value           s             40    varying
      D list            ds                  likeds(json_iterator)
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // List elements:

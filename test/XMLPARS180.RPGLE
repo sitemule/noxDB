@@ -43,7 +43,7 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pXml            s               *
      D pSrcElm         s               *
      D pDstElm         s               *
@@ -53,7 +53,7 @@
      D count           s             10I 0
      D i               s             10I 0
      D c               s             10
-      /include qAspHdr,xmlparser
+      /include 'headers/XMLPARSER.rpgle'
       /free
         pXml  = xml_ParseFile('/udv/expert/XmlSample2.xml':'syntax=LOOSE');
         if Xml_Error(pXml ) ;

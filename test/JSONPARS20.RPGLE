@@ -41,7 +41,7 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pJson           s               *
      D pNode           s               *
      D pO              s               *
@@ -53,7 +53,7 @@
      D value           s             50    varying
      D n               s             15  2
      D isnull          s               n
-      /include qAspHdr,JSONparser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         pJson = json_ParseString ('{isnull:null}');
 

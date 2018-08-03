@@ -3,7 +3,7 @@
       * IceBreak
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pXml            s               *
      D pA              s               *
      D lCount          s             10i 0

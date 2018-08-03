@@ -41,14 +41,14 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pJson           s               *
      D pNode           s               *
      D msg             s             50    varying
      D tag             s             50    varying
      D value           s             50    varying
      D price           s             15  2
-      /include qAspHdr,JSONparser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         pJson = JSON_ParseString (
            '{"/rrn/product/icebreak":1,' +

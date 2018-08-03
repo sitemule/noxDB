@@ -41,14 +41,14 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pXml            s               *
      D pElem           s               *
      D pPanel          s               *
      D msg             s             50    varying
      D tag             s             50    varying
      D value           s             50    varying
-      /include qAspHdr,xmlparser
+      /include 'headers/XMLPARSER.rpgle'
       /free
         // first we run the paser on a minimal string to build the XML tree with the root name "root"
         pXml = xml_ParseFile (

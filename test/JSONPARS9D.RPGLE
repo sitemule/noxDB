@@ -41,7 +41,7 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pJson           s               *
      D msg             s             50    varying
      D v               s             50    varying
@@ -50,7 +50,7 @@
      d id              s             10i 0
      d index           s               *   dim(100)
      D list            ds                  likeds(json_iterator)
-      /include qAspHdr,JSONparser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         pJson = JSON_ParseFile (
             '/www/portfolio/Public/TwiSite/xpd/folder.xpd'

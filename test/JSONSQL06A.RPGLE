@@ -9,7 +9,7 @@
      D pRows           s               *
      D sql             s            512    varying
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // return an simple array with all rows

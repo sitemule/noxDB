@@ -25,7 +25,7 @@
      D pRow            s               *
      D id              s             10u 0
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // insert - not subsequent object a serialized into the blobs / clobs

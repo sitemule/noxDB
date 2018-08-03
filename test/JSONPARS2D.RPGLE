@@ -3,7 +3,7 @@
       * IceBreak
       * ------------------------------------------------------------- *
      H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE')
-      /include qAspHdr,JSONparser
+      /include 'headers/JSONPARSER.rpgle'
      D pJson           s               *
      D a               s            256    varying
      D b               s            256    varying

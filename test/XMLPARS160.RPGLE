@@ -4,7 +4,7 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE')
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
      D pXml1           s               *
      D pXml2           s               *
      D pSrcElm         s               *
@@ -12,7 +12,7 @@
      D pDelete         s               *
      D pOut            s               *
      D msg             s             50    varying
-      /include qAspHdr,xmlparser
+      /include 'headers/XMLPARSER.rpgle'
       /free
         pXml1 = xml_ParseFile('/udv/expert/xmlsample1.xml');
         if Xml_Error(pXml1) ;

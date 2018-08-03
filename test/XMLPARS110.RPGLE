@@ -69,7 +69,7 @@
       *  </manifest>
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE')
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
       /include xmlparser
      d pXml            s               *
      d pVisit          s               *

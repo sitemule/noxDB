@@ -41,7 +41,7 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pJson           s               *
      D pNode           s               *
      D pArr            s               *
@@ -49,7 +49,7 @@
      D tag             s             50    varying
      D value           s             50    varying
      D n               s             15  2
-      /include qAspHdr,JsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         *inlr = *on;
         pJson = Json_ParseFile ('/samples/json/demo.json');

@@ -41,8 +41,8 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
-      /include qAspHdr,JsonParser
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
+      /include 'headers/JSONPARSER.rpgle'
      D pJson1          s               *
      D pJson2          s               *
      D pNode           s               *

@@ -1,5 +1,5 @@
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pxml            s               *
      D pList           s               *
      D msg             s             50    varying

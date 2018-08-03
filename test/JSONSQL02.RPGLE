@@ -14,7 +14,7 @@
      D msg             s            512    varying
      D cols            s             10i 0
      D rows            s             10i 0
-      /include JsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // Open our SQL cursor. Use a simple select

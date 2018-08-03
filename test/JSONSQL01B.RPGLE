@@ -13,7 +13,7 @@
      D numbers         s             11  2
      D dates           s               d
      D msg             s            512    varying
-      /include JsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // Open our SQL cursor. Use a simple select

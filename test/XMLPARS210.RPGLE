@@ -33,13 +33,13 @@
       * The XML file we want to parse in this sample look like:
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
 
       // Globals
      D pXml            s               *
      D p               s            128    varying
 
-      /include qAspHdr,xmlparser
+      /include 'headers/XMLPARSER.rpgle'
       //' -----------------------------------------------------------
       //' Mainline
       //' -----------------------------------------------------------

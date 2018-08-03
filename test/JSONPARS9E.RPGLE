@@ -3,13 +3,13 @@
       * IceBreak
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE')
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
      D pJson           s               *
      D msg             s             50    varying
      D name            s             10    varying
      D value           s             40    varying
      D list            ds                  likeds(json_iterator)
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         pJson = json_ParseString('{ a: 1, b : { c: 2 ,d : 3}}');
 

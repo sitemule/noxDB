@@ -6,7 +6,7 @@
      D pRow            s               *
      D sql             s            512    varying
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // return one object with one row

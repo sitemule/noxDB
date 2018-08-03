@@ -41,13 +41,13 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pj1             s               *
      D pj2             s               *
      D msg             s             50    varying
      D tag             s             50    varying
      D value           s             50    varying
-      /include qAspHdr,JSONparser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         pj1   = JSON_ParseString (' +
             { items: [{name:"john", height:22}]} +

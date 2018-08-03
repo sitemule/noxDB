@@ -10,7 +10,7 @@
      D priceJsStr      s            256    varying
      D priceObj        s               *
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // Simple update

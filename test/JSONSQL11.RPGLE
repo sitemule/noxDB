@@ -9,7 +9,7 @@
      D pConnect        s               *
      D pResult         s               *
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // If you nnes a seperate connection, where the default connection

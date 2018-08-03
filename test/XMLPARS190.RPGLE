@@ -50,12 +50,12 @@
       *      <last>Some stuff<last>
       *   </root>
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pXml1           s               *
      D pRoot           s               *
      D pt              s               *
      D msg             s             50    varying
-      /include qAspHdr,xmlparser
+      /include 'headers/XMLPARSER.rpgle'
       /free
         // first we run the paser on a minimal string to build the XML tree with the root name "root"
         pXml1 = xml_ParseString('<root/>':'syntax=LOOSE');

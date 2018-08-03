@@ -12,7 +12,7 @@
      D start           s             10i 0
      D limit           s             10i 0
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // return a object with all rows

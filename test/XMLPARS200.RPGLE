@@ -8,10 +8,10 @@
       * The aim is to produce a XML document from scratch
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pXml1           s               *
      D msg             s             50    varying
-      /include qAspHdr,xmlparser
+      /include 'headers/XMLPARSER.rpgle'
       /free
         // first we run the paser on an empty string giving us an empty tree
         pXml1 = xml_ParseString('':'syntax=LOOSE,keys=/[@].');

@@ -10,7 +10,7 @@
      D pB              s               *
      D aCount          s             10i 0
      D bCount          s             10i 0
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         pJson = json_parseString('                 -
             {                                      -

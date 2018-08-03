@@ -15,7 +15,7 @@
      D prodHnd         s               *
      D sql             s            512    varying
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         Json_MemStat();

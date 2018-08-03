@@ -26,7 +26,7 @@
      D pRow            s               *
      D id              s             10u 0
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
 

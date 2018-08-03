@@ -14,7 +14,7 @@
      D sql             s            512    varying
      D i               s             10u 0
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /include qasphdr,icebreak
       /free
 

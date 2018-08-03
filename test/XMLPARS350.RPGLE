@@ -48,7 +48,7 @@
      D dc              s             50    varying
      D n               s             10I 0
      D i               s             10I 0
-      /include qAspHdr,xmlparser
+      /include 'headers/XMLPARSER.rpgle'
       /include qAspHdr,ICEUTILITY
       /free
         pXml = xml_ParseFile (

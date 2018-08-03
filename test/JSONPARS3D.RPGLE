@@ -10,7 +10,7 @@
      D pD              s               *
      D len             s              5i 0
      D t               s            512a   varying
-      /include JsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         pArr = json_parseString('[a,b,c]');
         pB   = json_lookupValue(pArr :  'B' : JSON_IGNORE_CASE);

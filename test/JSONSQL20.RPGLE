@@ -15,7 +15,7 @@
      D priceObj        s               *
      D row             s               *
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // Simple update

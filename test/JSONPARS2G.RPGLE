@@ -7,7 +7,7 @@
      D pData           s               *
      D a               s               *
      D c               s               *
-      /include jsonparser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         pData = json_ParseString (
            '{                      '+

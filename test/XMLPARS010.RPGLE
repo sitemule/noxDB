@@ -50,13 +50,13 @@
       *   </Myroot>
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pXml            s               *
      D pElem           s               *
      D MyString        s             50    varying
      D MyElem          s             50    varying
      D msg             s             50    varying
-      /include qAspHdr,xmlparser
+      /include 'headers/XMLPARSER.rpgle'
       /free
         pXml = xml_ParseFile('/udv/expert/xmlsample1.xml');
         if Xml_Error(pXml) ;

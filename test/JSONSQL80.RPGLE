@@ -10,7 +10,7 @@
       * ------------------------------------------------------------- *
      H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE' )
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         json_sqlDisconnect();

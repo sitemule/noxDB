@@ -33,7 +33,7 @@
       * The XML file we want to parse in this sample look like:
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE')
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
      Fqprint    O    F  132        printer
 
       // Globals
@@ -44,7 +44,7 @@
      D Print           PR
      D   Str                        132    const
 
-      /include qAspHdr,xmlparser
+      /include 'headers/XMLPARSER.rpgle'
       //' -----------------------------------------------------------
       //' Mainline
       //' -----------------------------------------------------------

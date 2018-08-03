@@ -41,7 +41,7 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pJson           s               *
      D pNode           s               *
      D pArr            s               *
@@ -50,7 +50,7 @@
      D value           s             50    varying
      D js              s          32768    varying
      D n               s             15  2
-      /include qAspHdr,JSONparser
+      /include 'headers/JSONPARSER.rpgle'
       /free
         pJson = JSON_ParseString (
            '{  u:"This is a unicode \u00b5 string"  ,   '+

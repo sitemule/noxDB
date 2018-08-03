@@ -50,7 +50,7 @@
       *   </Myroot>
       *
       * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER') dftactgrp(*NO) ACTGRP('QILE')
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
      Fqprint    O    F  132        printer
      D Print           PR
      D   Str                        132    const

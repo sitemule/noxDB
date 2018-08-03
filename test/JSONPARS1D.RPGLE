@@ -43,7 +43,7 @@
       *
       * ------------------------------------------------------------- *
      H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE')
-      /include JsonParser
+      /include 'headers/JSONPARSER.rpgle'
      d pJson           s               *
      d msg             s            256    varying
      d n               s             50    varying

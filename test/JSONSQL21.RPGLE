@@ -27,7 +27,7 @@
      d text1           s          32766
      d text2           s          32766
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // Advanced: - update using json object as a row

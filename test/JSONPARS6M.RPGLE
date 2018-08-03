@@ -2,7 +2,7 @@
       * This sample shows the use of the build-in Json/XML parser
       * ------------------------------------------------------------- *
      H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
-      /include qAspHdr,JsonParser
+      /include 'headers/JSONPARSER.rpgle'
      D pJson           s               *
      D pText           s               *
       /free

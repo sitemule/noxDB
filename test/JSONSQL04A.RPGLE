@@ -19,7 +19,7 @@
      D prodHnd         s               *
      D sql             s            512    varying
 
-      /include jsonParser
+      /include 'headers/JSONPARSER.rpgle'
       /free
 
         // The destination object for our SQL result row
