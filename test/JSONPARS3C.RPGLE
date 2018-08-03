@@ -4,7 +4,7 @@
       *
       *
       * ------------------------------------------------------------- *
-     H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pJson           s               *
      D pA              s               *
      D pB              s               *

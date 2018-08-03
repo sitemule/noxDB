@@ -2,7 +2,7 @@
       * This sample shows the use of the buildin JSON parser in IceBreak
       *
       * ------------------------------------------------------------- *
-     H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D p1              s               *
      D p2              s               *
      D pJson           s               *

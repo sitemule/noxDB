@@ -4,7 +4,7 @@
       * Join an array and return is as string
       *
       * ------------------------------------------------------------- *
-     H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
       /include 'headers/JSONPARSER.rpgle'
      D pJson           s               *
 

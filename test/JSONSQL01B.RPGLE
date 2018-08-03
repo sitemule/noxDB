@@ -4,7 +4,7 @@
       * Using SQL cursors
       *
       * ------------------------------------------------------------- *
-     H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pRow            s               *
      D sqlHnd          s               *
      D sql             s            512    varying

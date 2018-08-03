@@ -6,7 +6,7 @@
       *
       * ------------------------------------------------------------- *
      H dftactgrp(*NO) ACTGRP('QILE' )
-     H BndDir('JSONPARSER')
+     H BndDir('JSONXML')
      H BndDir('ICEBREAK')
      D pRow            s               *
      D rows            s               *

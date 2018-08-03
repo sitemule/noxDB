@@ -9,7 +9,7 @@
       *
       *  http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.html
       * ------------------------------------------------------------- *
-     H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D err             s               n
      D priceJsStr      s            256    varying
      D priceObj        s               *

@@ -2,7 +2,7 @@
       * Return one signe object for one single row
       *
       * ------------------------------------------------------------- *
-     H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D pRow            s               *
      D sql             s            512    varying
 

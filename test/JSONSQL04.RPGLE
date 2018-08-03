@@ -5,7 +5,7 @@
       * Using SQL cursors
       *
       * ------------------------------------------------------------- *
-     H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
      D manuRow         s               *
      D prodArray       s               *
      D resultArray     s               *

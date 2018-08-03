@@ -3,7 +3,7 @@
       * IceBreak
       *
       * ------------------------------------------------------------- *
-     H BndDir('JSONPARSER') dftactgrp(*NO) ACTGRP('QILE' )
+     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
       /include 'headers/JSONPARSER.rpgle'
      D pJson1          s               *
      D pJson2          s               *
