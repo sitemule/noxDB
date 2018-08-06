@@ -1,8 +1,7 @@
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
       /include 'headers/JSONPARSER.rpgle'
-     D pJson           s               *
-      /free
+        Dcl-S pJson        Pointer;
         pJson = JSON_ParseString('[           -
           {a:"Hello",b:1,c:22.7},             -
           {a:"Yes\" you can",b:2,c:3.14}      -

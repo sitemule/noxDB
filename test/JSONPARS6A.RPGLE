@@ -1,13 +1,12 @@
-      * ------------------------------------------------------------- *
-      * Sample:
-      * Build a json object with primitive types and write
-      * is as astream file to the IFS in UTF-8 format
-      *
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
+        //------------------------------------------------------------- *
+        //Sample:
+        //Build a json object with primitive types and write
+        //is as astream file to the IFS in UTF-8 format
+
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
       /include 'headers/JSONPARSER.rpgle'
-     D pJson           s               *
-      /free
+        Dcl-S pJson        Pointer;
 
         // Creat a empty root object
         pJson = json_NewObject();

@@ -1,14 +1,13 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin JSONparser in
-      * IceBreak
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin JSONparser in
+        //IceBreak
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE');
       /include 'headers/JSONPARSER.rpgle'
-     D pJson           s               *
-     D a               s            256    varying
-     D b               s            256    varying
-     D c               s            256    varying
-      /free
+        Dcl-S pJson        Pointer;
+        Dcl-S a            Varchar(256);
+        Dcl-S b            Varchar(256);
+        Dcl-S c            Varchar(256);
         // u00b5 is "Micro sign" and exists in ebcdic
         // u2318 is "sight of interest" icon and have no equvalent in ebedic so
         // \u2318 will be un touched in the input string

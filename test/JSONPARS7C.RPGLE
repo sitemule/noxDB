@@ -1,15 +1,14 @@
-      * ------------------------------------------------------------- *
-      * Json - XML and more.
-      *
-      * Join an array and return is as string
-      *
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
-      /include 'headers/JSONPARSER.rpgle'
-     D pJson           s               *
-     D msg             s             50    varying
+        //------------------------------------------------------------- *
+        //Json - XML and more.
 
-      /free
+        //Join an array and return is as string
+
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+      /include 'headers/JSONPARSER.rpgle'
+        Dcl-S pJson        Pointer;
+        Dcl-S msg          Varchar(50);
+
         *inlr = *on;
 
         pJson = json_ParseString ('                                -

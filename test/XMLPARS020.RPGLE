@@ -1,17 +1,16 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin XML parser in
-      * IceBreak
-      *
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
-     D pXml            s               *
-     D pElem           s               *
-     D MyString        s             50    varying
-     D MyElem          s             50    varying
-     D msg             s             50    varying
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin XML parser in
+        //IceBreak
+
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Dcl-S pXml         Pointer;
+        Dcl-S pElem        Pointer;
+        Dcl-S MyString     Varchar(50);
+        Dcl-S MyElem       Varchar(50);
+        Dcl-S msg          Varchar(50);
       /include 'headers/JSONPARSER.rpgle'
       /include xmlparser
-      /free
         pXml = xml_ParseFile('/udv/expert/xmlsample1.xml');
         xml_Close(pXml);
         *inlr = *on;

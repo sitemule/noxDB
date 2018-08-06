@@ -1,22 +1,21 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin JSONparser in
-      * IceBreak
-      *
-      * Using SQL cursors
-      *
-      * ------------------------------------------------------------- *
-     H dftactgrp(*NO) ACTGRP('QILE' )
-     H BndDir('JSONXML')
-     H BndDir('ICEBREAK')
-     D pRow            s               *
-     D rows            s               *
-     D sqlHnd          s               *
-     D sql             s            512    varying
-     D i               s             10u 0
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin JSONparser in
+        //IceBreak
+
+        //Using SQL cursors
+
+        //------------------------------------------------------------- *
+        Ctl-Opt dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('JSONXML');
+        Ctl-Opt BndDir('ICEBREAK');
+        Dcl-S pRow         Pointer;
+        Dcl-S rows         Pointer;
+        Dcl-S sqlHnd       Pointer;
+        Dcl-S sql          Varchar(512);
+        Dcl-S i            Uns(10);
 
       /include 'headers/JSONPARSER.rpgle'
       /include qasphdr,icebreak
-      /free
 
         // Open our SQL cursor. Use a simple select
         sql = ('-

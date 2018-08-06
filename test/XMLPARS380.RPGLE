@@ -1,12 +1,11 @@
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
-     D pxml            s               *
-     D pList           s               *
-     D msg             s             50    varying
-     D n               s             50    varying
-     D v               s             50    varying
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Dcl-S pxml         Pointer;
+        Dcl-S pList        Pointer;
+        Dcl-S msg          Varchar(50);
+        Dcl-S n            Varchar(50);
+        Dcl-S v            Varchar(50);
       /include xmlparser
-      /free
 
         pxml  = xml_ParseString (
            '<a>                    '+

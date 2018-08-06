@@ -1,32 +1,31 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin JSONparser in
-      * IceBreak
-      *
-      * Using SQL cursors
-      *
-      *  on a table like this:
-      *    create table QGPL/NOTES (
-      *       id     int generated always as Identity,
-      *       title  varchar(256)     not null with default,
-      *       text1  blob             not null with default,
-      *       text2  blob             not null with default
-      *    )
-      *
-      *  trace: CHGCPATRC JOBNUMBER(*CURRENT) SEV(*INFO)
-      *         DSPCPATRC
-      *
-      *  http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.html
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin JSONparser in
+        //IceBreak
 
-     D err             s               n
-     D pNote1          s               *
-     D pNote2          s               *
-     D pRow            s               *
-     D id              s             10u 0
+        //Using SQL cursors
+
+        //on a table like this:
+        //create table QGPL/NOTES (
+        //id     int generated always as Identity,
+        //title  varchar(256)     not null with default,
+        //text1  blob             not null with default,
+        //text2  blob             not null with default
+        //)
+
+        //trace: CHGCPATRC JOBNUMBER(*CURRENT) SEV(*INFO)
+        //DSPCPATRC
+
+        //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        Dcl-S err          Ind;
+        Dcl-S pNote1       Pointer;
+        Dcl-S pNote2       Pointer;
+        Dcl-S pRow         Pointer;
+        Dcl-S id           Uns(10);
 
       /include 'headers/JSONPARSER.rpgle'
-      /free
 
         // Advanced: - update using json object as a row
         // This also works for BLOBS and CLOB columns

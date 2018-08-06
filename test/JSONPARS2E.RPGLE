@@ -1,14 +1,13 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin JSONparser in
-      * IceBreak
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin JSONparser in
+        //IceBreak
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE');
       /include 'headers/JSONPARSER.rpgle'
-     D pJson           s               *
-     D abc             s            256    varying
-     D b               s            256    varying
-     D c               s            256    varying
-      /free
+        Dcl-S pJson        Pointer;
+        Dcl-S abc          Varchar(256);
+        Dcl-S b            Varchar(256);
+        Dcl-S c            Varchar(256);
         pJson = json_ParseString (
            '{  +
                "a.b.c":"Text for a.b.c." +

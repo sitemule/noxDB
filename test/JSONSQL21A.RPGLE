@@ -1,32 +1,31 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin JSONparser in
-      * IceBreak
-      *
-      * Using SQL cursors
-      *
-      *  on a table like this:
-      *    create table QGPL/NOTE2 (
-      *       id     int generated always as Identity,
-      *       title  varchar(256)     not null with default,
-      *       text1  clob             not null with default,
-      *       text2  clob             not null with default,
-      *       canBeNull char(1)
-      *    )
-      *
-      *  trace: CHGCPATRC JOBNUMBER(*CURRENT) SEV(*INFO)
-      *         DSPCPATRC
-      *
-      *  http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.html
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin JSONparser in
+        //IceBreak
 
-     D err             s               n
-     D row             s          32766    varying
-     D pRow            s               *
-     D id              s             10u 0
+        //Using SQL cursors
+
+        //on a table like this:
+        //create table QGPL/NOTE2 (
+        //id     int generated always as Identity,
+        //title  varchar(256)     not null with default,
+        //text1  clob             not null with default,
+        //text2  clob             not null with default,
+        //canBeNull char(1)
+        //)
+
+        //trace: CHGCPATRC JOBNUMBER(*CURRENT) SEV(*INFO)
+        //DSPCPATRC
+
+        //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        Dcl-S err          Ind;
+        Dcl-S row          Varchar(32766);
+        Dcl-S pRow         Pointer;
+        Dcl-S id           Uns(10);
 
       /include 'headers/JSONPARSER.rpgle'
-      /free
 
         // insert - not subsequent object a serialized into the blobs / clobs
         row = ('-

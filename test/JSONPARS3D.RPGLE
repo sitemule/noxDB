@@ -1,17 +1,16 @@
-      * ------------------------------------------------------------- *
-      * This sample shows array handleing
-      *
-      *
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
-     D pArr            s               *
-     D pB              s               *
-     D pC              s               *
-     D pD              s               *
-     D len             s              5i 0
-     D t               s            512a   varying
+        //------------------------------------------------------------- *
+        //This sample shows array handleing
+
+
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Dcl-S pArr         Pointer;
+        Dcl-S pB           Pointer;
+        Dcl-S pC           Pointer;
+        Dcl-S pD           Pointer;
+        Dcl-S len          Int(5);
+        Dcl-S t            Varchar(512);
       /include 'headers/JSONPARSER.rpgle'
-      /free
         pArr = json_parseString('[a,b,c]');
         pB   = json_lookupValue(pArr :  'B' : JSON_IGNORE_CASE);
         pC   = json_lookupValue(pArr :  'c' : JSON_SAME_CASE);

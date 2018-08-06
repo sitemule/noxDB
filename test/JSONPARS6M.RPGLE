@@ -1,11 +1,10 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the build-in Json/XML parser
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
+        //------------------------------------------------------------- *
+        //This sample shows the use of the build-in Json/XML parser
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE');
       /include 'headers/JSONPARSER.rpgle'
-     D pJson           s               *
-     D pText           s               *
-      /free
+        Dcl-S pJson        Pointer;
+        Dcl-S pText        Pointer;
         *inlr = *on;
 
         // My root json

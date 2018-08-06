@@ -1,14 +1,13 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin XML parser in
-      * IceBreak
-      *
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin XML parser in
+        //IceBreak
+
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE');
       /include xmlparser
-     d pXml            s               *
-     d a               s             50    varying
-     d msg             s            256    varying
-      /free
+        Dcl-S pXml         Pointer;
+        Dcl-S a            Varchar(50);
+        Dcl-S msg          Varchar(256);
         // First parse the XML stream
         pXml = xml_ParseFile('/jsonxml/xml/escape.xml');
         if Xml_Error(pXml) ;

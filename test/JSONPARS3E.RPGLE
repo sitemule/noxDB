@@ -1,21 +1,20 @@
-      * ------------------------------------------------------------- *
-      * This sample shows array handleing
-      *
-      *
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
-     D pObj            s               *
-     D pA              s               *
-     D pAval           s               *
-     D pA2             s               *
-     D pB              s               *
-     D pB2             s               *
-     D pB3             s               *
-     D pBval           s               *
+        //------------------------------------------------------------- *
+        //This sample shows array handleing
 
-     D t               s            512a   varying
+
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Dcl-S pObj         Pointer;
+        Dcl-S pA           Pointer;
+        Dcl-S pAval        Pointer;
+        Dcl-S pA2          Pointer;
+        Dcl-S pB           Pointer;
+        Dcl-S pB2          Pointer;
+        Dcl-S pB3          Pointer;
+        Dcl-S pBval        Pointer;
+
+        Dcl-S t            Varchar(512);
       /include 'headers/JSONPARSER.rpgle'
-      /free
         // ---------------------------------------
         // Step 1:
         // Create two objects, and move the conent of b into the root

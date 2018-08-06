@@ -1,14 +1,13 @@
-      * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER' : 'ICEBREAK') dftactgrp(*NO) ACTGRP('QILE' )
-     D pxml            s               *
-     D pList           s               *
-     D p1              s               *
-     D p2              s               *
-     D msg             s             50    varying
-     D name            s             50    varying
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('XMLPARSER' : 'ICEBREAK') dftactgrp(*NO) ACTGRP('QILE' );
+        Dcl-S pxml         Pointer;
+        Dcl-S pList        Pointer;
+        Dcl-S p1           Pointer;
+        Dcl-S p2           Pointer;
+        Dcl-S msg          Varchar(50);
+        Dcl-S name         Varchar(50);
       /include xmlparser
       /include qasphdr,ilob
-      /free
 
         pxml  = xml_ParseString (
            '<a>                    '+

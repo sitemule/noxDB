@@ -1,22 +1,21 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin JSONparser in
-      * IceBreak
-      *
-      * Using SQL cursors
-      *
-      *  trace: CHGCPATRC JOBNUMBER(*CURRENT) SEV(*INFO)
-      *         DSPCPATRC
-      *
-      *  http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.html
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
-     D err             s               n
-     D row             s          32766    varying
-     D prow            s               *
-     D id              s             10i 0
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin JSONparser in
+        //IceBreak
+
+        //Using SQL cursors
+
+        //trace: CHGCPATRC JOBNUMBER(*CURRENT) SEV(*INFO)
+        //DSPCPATRC
+
+        //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Dcl-S err          Ind;
+        Dcl-S row          Varchar(32766);
+        Dcl-S prow         Pointer;
+        Dcl-S id           Int(10);
 
       /include 'headers/JSONPARSER.rpgle'
-      /free
 
          row = ('{ -
             title: "tesing",                             -

@@ -1,36 +1,35 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin JSONparser in
-      * IceBreak
-      *
-      * Using SQL cursors
-      *
-      *  on a table like this:
-      *    create table QGPL/NOTE2 (
-      *       id     int generated always as Identity,
-      *       title  varchar(256)     not null with default,
-      *       text1  clob             not null with default,
-      *       text2  clob             not null with default
-      *    )
-      *
-      *  trace: CHGCPATRC JOBNUMBER(*CURRENT) SEV(*INFO)
-      *         DSPCPATRC
-      *
-      *  http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.html
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin JSONparser in
+        //IceBreak
 
-     D err             s               n
-     D pNote1          s               *
-     D pNote2          s               *
-     D pRow            s               *
-     D id              s             10u 0
-     d text1           s          32766    dim(10)
-     d text2           s          32766    dim(10)
-     d*text1           s          32766
-     d*text2           s          32766
+        //Using SQL cursors
+
+        //on a table like this:
+        //create table QGPL/NOTE2 (
+        //id     int generated always as Identity,
+        //title  varchar(256)     not null with default,
+        //text1  clob             not null with default,
+        //text2  clob             not null with default
+        //)
+
+        //trace: CHGCPATRC JOBNUMBER(*CURRENT) SEV(*INFO)
+        //DSPCPATRC
+
+        //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        Dcl-S err          Ind;
+        Dcl-S pNote1       Pointer;
+        Dcl-S pNote2       Pointer;
+        Dcl-S pRow         Pointer;
+        Dcl-S id           Uns(10);
+        Dcl-S text1        Char(32766) dim(10);
+        Dcl-S text2        Char(32766) dim(10);
+        //text1           s          32766
+        //text2           s          32766
 
       /include 'headers/JSONPARSER.rpgle'
-      /free
 
         // Advanced: - update using json object as a row
         // This also works for BLOBS and CLOB columns

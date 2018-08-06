@@ -1,18 +1,17 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin JSONparser in
-      * IceBreak
-      *
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE')
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin JSONparser in
+        //IceBreak
+
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE');
       /include 'headers/JSONPARSER.rpgle'
-     d pJson1          s               *
-     d pJson2          s               *
-     d pSegment1       s               *
-     d pSegment2       s               *
-     d pNode           s               *
-     d name            s             64    varying
-      * ------------------------------------------------------------- *
-      /free
+        Dcl-S pJson1       Pointer;
+        Dcl-S pJson2       Pointer;
+        Dcl-S pSegment1    Pointer;
+        Dcl-S pSegment2    Pointer;
+        Dcl-S pNode        Pointer;
+        Dcl-S name         Varchar(64);
+        //------------------------------------------------------------- *
         *inlr = *on;
 
         // Load an other json into a new memory segment

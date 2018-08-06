@@ -1,20 +1,19 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin JSONparser in
-      * IceBreak
-      *
-      * Look at the header source file "qAspHdr" in the IceBreak   library
-      * for a complete description of the functionality
-      *
-      * The aim is to produce a JSON-document from scratch
-      *
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
-     D pJson           s               *
-     D pArr            s               *
-     D pNewObj         s               *
-     D msg             s             50    varying
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin JSONparser in
+        //IceBreak
+
+        //Look at the header source file "qAspHdr" in the IceBreak   library
+        //for a complete description of the functionality
+
+        //The aim is to produce a JSON-document from scratch
+
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Dcl-S pJson        Pointer;
+        Dcl-S pArr         Pointer;
+        Dcl-S pNewObj      Pointer;
+        Dcl-S msg          Varchar(50);
       /include 'headers/JSONPARSER.rpgle'
-      /free
         pJson = json_NewObject();
         json_SetValue ( pJson : 'items[]': '10'); // add to the tail of items
         json_SetValue ( pJson : 'items[]': '20'); // add to the tail of items

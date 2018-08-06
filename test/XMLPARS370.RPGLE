@@ -1,21 +1,20 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin XML parser in
-      * IceBreak
-      *
-      *
-      * ------------------------------------------------------------- *
-     H BndDir('XMLPARSER':'ICEUTILITY')
-     H dftactgrp(*NO) ACTGRP('QILE')
-     D pXml1           s               *
-     D pXml2           s               *
-     D a               s               *
-     D k               s               *
-     D msg             s             50    varying
-     D n               s             10I 0
-     D i               s             10I 0
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin XML parser in
+        //IceBreak
+
+
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('XMLPARSER':'ICEUTILITY');
+        Ctl-Opt dftactgrp(*NO) ACTGRP('QILE');
+        Dcl-S pXml1        Pointer;
+        Dcl-S pXml2        Pointer;
+        Dcl-S a            Pointer;
+        Dcl-S k            Pointer;
+        Dcl-S msg          Varchar(50);
+        Dcl-S n            Int(10);
+        Dcl-S i            Int(10);
       /include xmlParser
       /include qAspHdr,iceUtility
-      /free
         pXml1= xml_ParseString('<a><b atr="john"/></a>');
 
         if Xml_Error(pXml1) ;

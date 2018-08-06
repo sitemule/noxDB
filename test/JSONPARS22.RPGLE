@@ -1,13 +1,12 @@
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
       /include 'headers/JSONPARSER.rpgle'
-     D pJson           s               *
-     D msg             s             50    varying
+        Dcl-S pJson        Pointer;
+        Dcl-S msg          Varchar(50);
      C     *entry        plist
      C                   parm                    file            128
      C                   parm                    text             64
      C                   parm                    origin            3
-      /free
         pJson = JSON_ParseFile   ( file);
         if JSON_Error(pJson) ;
            msg = JSON_Message(pJson);

@@ -1,20 +1,19 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the IceBreak JSON/XML parser
-      *
-      * Using SQL cursors
-      *
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
-     D pRow            s               *
-     D sqlHnd          s               *
-     D sql             s            512    varying
-     D text            s            512    varying
-     D ints            s             10i 0
-     D numbers         s             11  2
-     D dates           s               d
-     D msg             s            512    varying
+        //------------------------------------------------------------- *
+        //This sample shows the use of the IceBreak JSON/XML parser
+
+        //Using SQL cursors
+
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Dcl-S pRow         Pointer;
+        Dcl-S sqlHnd       Pointer;
+        Dcl-S sql          Varchar(512);
+        Dcl-S text         Varchar(512);
+        Dcl-S ints         Int(10);
+        Dcl-S numbers      Packed(11:2);
+        Dcl-S dates        Date;
+        Dcl-S msg          Varchar(512);
       /include 'headers/JSONPARSER.rpgle'
-      /free
 
         // Open our SQL cursor. Use a simple select
         sqlhnd  = json_sqlOpen(

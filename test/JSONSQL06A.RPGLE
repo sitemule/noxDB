@@ -1,16 +1,15 @@
-      * ------------------------------------------------------------- *
-      * This sample shows the use of the buildin JSONparser in
-      * IceBreak
-      *
-      * Using SQL cursors
-      *
-      * ------------------------------------------------------------- *
-     H BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' )
-     D pRows           s               *
-     D sql             s            512    varying
+        //------------------------------------------------------------- *
+        //This sample shows the use of the buildin JSONparser in
+        //IceBreak
+
+        //Using SQL cursors
+
+        //------------------------------------------------------------- *
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Dcl-S pRows        Pointer;
+        Dcl-S sql          Varchar(512);
 
       /include 'headers/JSONPARSER.rpgle'
-      /free
 
         // return an simple array with all rows
         sql   = 'Select * from product';
