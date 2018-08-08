@@ -4,6 +4,9 @@
         /include 'headers/JSONPARSER.rpgle'
 
         Dcl-S pJson        Pointer;
+        
+        Dcl-C OB Const(x'9E');
+        Dcl-C CB Const(x'9F');
 
         //------------------------------------------------------------- *
 
@@ -14,12 +17,12 @@
         pJson = JSON_ParseString (
            '{  u:"string", '+
            '   "s":null, '+
-           '   a:[1,2,3]' +
+           '   a:' + OB + '1,2,3' + CB +
            '}'
              : '');
 
         if JSON_Error(pJson) ;
-           msg = JSON_Message(pJson);
+           pResult = JSON_Message(pJson);
            JSON_dump(pJson);
            JSON_Close(pJson);
            return;
