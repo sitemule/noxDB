@@ -15,7 +15,6 @@
           pResult Char(50);
         End-Pi;
         
-        Result = '';
         *inlr = *on;
         pJson = Json_ParseFile ('./json/demo.json');
 
