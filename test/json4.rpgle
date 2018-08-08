@@ -8,6 +8,11 @@
         Dcl-S value        Varchar(50);
         Dcl-S n            Packed(15:2);
         
+        
+        Dcl-C OB Const(x'9E');
+        Dcl-C CB Const(x'9F');
+        Dcl-S lNode  Varchar(10);
+        
         //------------------------------------------------------------- *
 
         Dcl-Pi JSON4;
@@ -24,12 +29,15 @@
            Json_Close(pJson);
            return;
         endif;
+        
+        value = Json_GetStr(pJson:'/a');
 
         pNode   = Json_locate(pJson: '/o/n');
         n       = Json_getNum(pNode);
         Result += %Char(n);
 
-        pNode   = Json_locate(pJson: '/a[1]');
+        lNode = '/a' + OB + '1' + CB;
+        pNode   = Json_locate(pJson: lNode);
         n       = Json_GetNum (pNode);
         Result += %Char(n);
 
@@ -37,7 +45,8 @@
         value   = Json_getStr(pNode);
         Result += value;
 
-        pNode   = Json_locate(pJson: '/o/a[2]');
+        lNode   = '/o/a' + OB + '2' + CB;
+        pNode   = Json_locate(pJson: lNode);
         n       = Json_GetNum(pNode);
         Result += %Char(n);
 
