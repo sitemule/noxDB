@@ -22,10 +22,10 @@
         pTplData = json_NewObject();
         json_setValue(pTplData:'site':pProp:JSON_OBJCOPY);
         
-        pResult = json_asJsonText(pTplData:'/');
+        pResult = json_asJsonText(pTplData);
 
         json_Close(pProp);
-        json_Close(pTplData ;
+        json_Close(pTplData);
 
         *inlr = *on;
         return;

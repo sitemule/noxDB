@@ -33,7 +33,7 @@
         json_NodeAdd(c:JSON_BEFORE_SIBLING:'b':'true':JSON_LITERAL);
 
         // write a,b,c,d in this order:
-        pResult = json_asJsonText(pData:'/');
+        pResult = json_asJsonText(pData);
 
         json_Close(pData);
         *inlr = *on;

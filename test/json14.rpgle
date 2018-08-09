@@ -11,7 +11,6 @@
         Dcl-S Result Varchar(50);
 
         Dcl-DS list  likeds(json_iterator);
-        End-DS;
         //------------------------------------------------------------- *
 
         Dcl-Pi JSON14;

@@ -7,11 +7,14 @@
         Dcl-S n            Varchar(50);
         Dcl-S v            Varchar(50);
         Dcl-DS list  likeds(json_iterator);
-        End-DS;
 
         Dcl-S Result Varchar(50);
 
         //------------------------------------------------------------- *
+        
+        Dcl-Pi JSON15;
+          pResult Char(50);
+        End-Pi;
 
         Result = '';
         pJson = JSON_ParseString (
