@@ -8,6 +8,9 @@
         Dcl-C OB Const(x'9E');
         Dcl-C CB Const(x'9F');
 
+        Dcl-C OS Const(x'9C');
+        Dcl-C CS Const(x'47');
+        
         //------------------------------------------------------------- *
 
         Dcl-Pi JSON12;
@@ -15,10 +18,11 @@
         End-Pi;
 
         pJson = JSON_ParseString (
-           '{  u:"string", '+
+           OS+
+           '  u:"string", '+
            '   "s":null, '+
            '   a:' + OB + '1,2,3' + CB +
-           '}'
+           CS
              : '');
 
         if JSON_Error(pJson) ;

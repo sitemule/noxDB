@@ -11,6 +11,10 @@
         Dcl-S Result Varchar(50);
 
         Dcl-DS list  likeds(json_iterator);
+        
+        Dcl-C OS Const(x'9C');
+        Dcl-C CS Const(x'47');
+        
         //------------------------------------------------------------- *
 
         Dcl-Pi JSON14;
@@ -19,11 +23,11 @@
 
         Result = '';
         pJson = JSON_ParseString (
-           '{                      '+
+           OS+
            '  a:123,               '+
            '  b:"text",            '+
            '  c:"More text"        '+
-           '}'
+           CS
              : '');
 
         if JSON_Error(pJson) ;

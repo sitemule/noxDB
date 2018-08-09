@@ -9,6 +9,9 @@
         Dcl-DS list  likeds(json_iterator);
 
         Dcl-S Result Varchar(50);
+        
+        Dcl-C OS Const(x'9C');
+        Dcl-C CS Const(x'47');
 
         //------------------------------------------------------------- *
         
@@ -18,15 +21,15 @@
 
         Result = '';
         pJson = JSON_ParseString (
-           '{                      '+
+           OS +
            '  a:123,               '+
            '  b:"text",            '+
            '  c:"More text",       '+
-           '  d:{                  '+
+           '  d:'+ OS +
            '    d1:"D1 text",      '+
            '    d2:"D2 text",      '+
-           '  }                    '+
-           '}');
+              CS +
+           CS);
 
         if JSON_Error(pJson) ;
            pResult = JSON_Message(pJson);

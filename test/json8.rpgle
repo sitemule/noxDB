@@ -6,6 +6,9 @@
         Dcl-S pData        Pointer;
         Dcl-S a            Pointer;
         Dcl-S c            Pointer;
+        
+        Dcl-C OS Const(x'9C');
+        Dcl-C CS Const(x'47');
 
         //------------------------------------------------------------- *
 
@@ -14,9 +17,9 @@
         End-Pi;
 
         pData = json_ParseString (
-           '{                      '+
+           OS+
            '  a:123                '+
-           '}'
+           CS
         );
 
         // Find the "a" node in the data object:

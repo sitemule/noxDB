@@ -9,5 +9,6 @@
   u: "This is a unicode \u00b5 string" ,     
   "s":"abc" ,   
   a:[1,2,3],                              
-  x:"xxxxx"                              
+  x:"xxxxx",
+  "yo":{a:[],b:1}
 }                                   
