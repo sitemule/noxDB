@@ -5,7 +5,6 @@
         
         Dcl-S pRow         Pointer;
         Dcl-S sqlHnd       Pointer;
-        Dcl-S sql          Varchar(512);
         
         Dcl-S ints         Int(10);
         Dcl-S numbers      Zoned(11:2);

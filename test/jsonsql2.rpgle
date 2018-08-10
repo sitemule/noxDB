@@ -6,12 +6,6 @@
         Dcl-S pRow         Pointer;
         Dcl-S sqlHnd       Pointer;
         Dcl-S rows         Pointer;
-        Dcl-S sql          Varchar(512);
-        
-        Dcl-S ints         Int(10);
-        Dcl-S numbers      Zoned(11:2);
-        Dcl-S text         Varchar(512);
-        Dcl-S dates        Date;
         
         Dcl-S Result       Varchar(50);
 
