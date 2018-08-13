@@ -36,4 +36,6 @@
 
         xml_Close(pXml);
 
+        pResult = Result;
+
         *inlr = *on;
