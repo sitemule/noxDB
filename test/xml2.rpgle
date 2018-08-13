@@ -9,6 +9,8 @@
         Dcl-S visitId      Varchar(10);
         Dcl-S visitSeq     Int(10);
 
+        Dcl-C AT Const(x'80');
+
         //------------------------------------------------------------- *
 
         Dcl-PI XML2;

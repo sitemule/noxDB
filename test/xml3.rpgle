@@ -15,6 +15,9 @@
 
         Dcl-S Result Varchar(50);
 
+        Dcl-C OB Const(x'9E');
+        Dcl-C CB Const(x'9F');
+
         //------------------------------------------------------------- *
 
         Dcl-PI XML3;
@@ -48,7 +51,7 @@
         // Just for the fun we will find the element from the root - an absolute path
         // but from "pVisit" as root and the only the "consignment" index will work just fine
         for i = 0 to consignments -1;
-           xpath = '/manifest/visit/consignment[' + %char(i) + ']';
+           xpath = '/manifest/visit/consignment' + OB + %char(i) + CB;
            pConsignment = xml_locate(pXml: xpath );
            orderRef     = %int(xml_GetValue(pConsignment: 'orderRef':'0'));          // As number
            customerCode = xml_GetValue (pConsignment: 'customerCode');        // As string
