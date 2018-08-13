@@ -26,7 +26,7 @@
         endif;
 
         // Get the manifest id: that is a attribue on the root hench the @
-        manifestId = %int(xml_GetValue (pXml : '/manifest@ID':'0'));
+        manifestId = %int(xml_GetValue (pXml : '/manifest' + AT + 'ID':'0'));
 
         // Not locate the "visit" and let it be the new temorary root
         // You can also use a comple reference from the root if you like
@@ -39,8 +39,8 @@
         endif;
 
         // Now extrace the values from the "visit" tag - some are attribues, some are elements
-        visitId   = xml_GetValue (pVisit: '@ID'); // As String
-        visitSeq  = %int(xml_getValue(pVisit: '@sequence':'0')); // As Number
+        visitId   = xml_GetValue (pVisit: AT + 'ID'); // As String
+        visitSeq  = %int(xml_getValue(pVisit: AT + 'sequence':'0')); // As Number
 
         pResult = %Char(manifestId) + visitID + %Char(visitSeq);
 
