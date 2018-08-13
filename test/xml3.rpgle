@@ -45,7 +45,9 @@
         endif;
 
          // Consignments is an array: use UBOUND to detect the numbers of entries
-        consignments = %int(xml_GetValue(pVisit:'consignment' + OB + 'UBOUND' + CB:'0'));
+        consignments = %int(xml_GetValue(pVisit:'consignment[UBOUND]':'0'));
+        consignments = %int(xml_GetValue(pVisit:'consignment' + 
+                                                OB + 'UBOUND' + CB:'0'));
 
         // Now loop for each elemnt consignments. Note - x-path use 0 as the first element
         // Just for the fun we will find the element from the root - an absolute path
