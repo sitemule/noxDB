@@ -18,7 +18,7 @@
         // First parse the XML stream
         pXml = xml_ParseFile('./test/documents/manifest.xml');
         if Xml_Error(pXml) ;
-           msg = xml_Message(pXml);
+           pResult = xml_Message(pXml);
            xml_Close(pXml);
            return;
         endif;
