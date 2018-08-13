@@ -16,7 +16,7 @@
         End-Pi;
         
         *inlr = *on;
-        pJson = Json_ParseFile ('./json/demo.json');
+        pJson = Json_ParseFile ('./test/documents/demo.json');
 
         if Json_Error(pJson) ;
            pResult = Json_Message(pJson);

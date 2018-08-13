@@ -13,7 +13,7 @@
         End-Pi;
 
         *inlr = *on;
-        pJson = Json_ParseFile ('./json/simple.json');
+        pJson = Json_ParseFile ('./test/documents/simple.json');
 
         if Json_Error(pJson) ;
            pResult = Json_Message(pJson);
