@@ -45,7 +45,6 @@
         endif;
 
          // Consignments is an array: use UBOUND to detect the numbers of entries
-        consignments = %int(xml_GetValue(pVisit:'consignment[UBOUND]':'0'));
         consignments = %int(xml_GetValue(pVisit:'consignment' + 
                                                 OB + 'UBOUND' + CB:'0'));
 
