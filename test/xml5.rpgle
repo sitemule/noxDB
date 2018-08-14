@@ -30,7 +30,8 @@
         endif;
 
         // Count elements
-        count= %int(xml_GetValue(pXml: '/myroot/myElement' + OB + 'UBOUND' + CB:'0'));
+        count= %int(xml_GetValue(pXml: '/myroot/myElement' +
+                                       OB + 'UBOUND' + CB:'0'));
 
         for i = 0 to count -1;
           pOut = xml_Locate(pXml: '/myroot/myElement' + OB + %char(i) + CB);
