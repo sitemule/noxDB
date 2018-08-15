@@ -1,7 +1,7 @@
 
 # XML Functionality
 
-This page documents the XML functionality available in noxDB. Header file: `headers/XMLPARSER.rpgle'.
+This page documents the XML functionality available in noxDB. Header file: `headers/XMLPARSER.rpgle`.
 
 ---
 
@@ -11,7 +11,7 @@ This page documents the XML functionality available in noxDB. Header file: `head
 Pointer xml_ParseFile( String path : [String options] )
 ```
 
-### Parameters
+##### Parameters
 
 1. Path relavtive to the current directory.
 2. Options for the parser. For example: `syntax=LOOSE` is a valid parameter.
@@ -26,13 +26,13 @@ Returns Pointer to created node.
 Ind xml_Error( Pointer node )
 ```
 
-### Parameters
+##### Parameters
 
 1. Pointer to node created by another XML function.
 
 Returns `*ON` if there was an error.
 
-### Example
+##### Example
 
 ```
 pXml = xml_ParseFile('./test/documents/XmlSample1.xml');
@@ -52,7 +52,7 @@ xml_Close(pXml);
 Varchar(1024) xml_Message( Pointer node )
 ```
 
-### Parameters
+#### Parameters
 
 1. Pointer to node created by other another XML function.
 
@@ -66,14 +66,14 @@ Returns error message create by another XML function.
 Pointer xml_Locate( Pointer node : String nodepath )
 ```
 
-### Parameters
+#### Parameters
 
 1. Pointer to node created by other another XML function.
 2. Document path which points another node.
 
 Returns Pointer to chosen document node.
 
-### Example
+#### Example
 
 ```
 pXml = xml_ParseFile('./test/documents/XmlSample.xml');
@@ -101,13 +101,13 @@ xml_Close(pXml);
 Pointer xml_GetElemNext( Pointer node )
 ```
 
-### Parameters
+#### Parameters
 
 1. Pointer to existing node
 
 Returns next node in current block.
 
-### Example
+#### Example
 
 ```
 pXml = xml_ParseFile('./test/documents/XmlSample.xml');
@@ -143,7 +143,7 @@ xml_Close(pXml);
 Varchar(32767) xml_GetElemValue( Pointer node : String defaultvalue )
 ```
 
-### Parameters
+#### Parameters
 
 1. Pointer to existing node
 2. Default value if not node value is found.
@@ -156,7 +156,7 @@ Varchar(32767) xml_GetElemValue( Pointer node : String defaultvalue )
 Varchar(32767) xml_GetElemValue( Pointer node : String attrname : String defaultvalue )
 ```
 
-### Parameters
+#### Parameters
 
 1. Pointer to existing node
 2. Attribute name on chosen node.
@@ -172,6 +172,6 @@ Close all nodes in this node/tree.
 void xml_Close( Pointer node )
 ```
 
-### Parameters
+#### Parameters
 
 1. Pointer to existing node.
