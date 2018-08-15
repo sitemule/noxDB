@@ -140,7 +140,7 @@ xml_Close(pXml);
 ## xml_GetStr
 
 ```
-Varchar(32767) xml_GetValue( Pointer node : [String relativeNode] : [String defaultvalue] )
+Varchar(32767) xml_GetStr( Pointer node : [String relativeNode] : [String defaultvalue] )
 ```
 
 #### Parameters
@@ -162,10 +162,24 @@ charVar = xml_GetStr(pXml:'/Myroot/Myelement@Myattribute1'); //Fetch attribute w
 
 ---
 
+## xml_SetStr
+
+```
+void xml_SetStr( Pointer node : [String relativeNode] : [String newvalue] )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Relative path to node
+3. New value.
+
+---
+
 ## xml_GetNum
 
 ```
-Packed(30:15) xml_GetValue( Pointer node : [String relativeNode] : [Packed(30:15) defaultvalue] )
+Packed(30:15) xml_GetNum( Pointer node : [String relativeNode] : [Packed(30:15) defaultvalue] )
 ```
 
 #### Parameters
@@ -176,10 +190,24 @@ Packed(30:15) xml_GetValue( Pointer node : [String relativeNode] : [Packed(30:15
 
 ---
 
+## xml_SetNum
+
+```
+void xml_SetNum( Pointer node : [String relativeNode] : [Packed(30:15) newvalue] )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Relative path to node
+3. New value.
+
+---
+
 ## xml_GetInt
 
 ```
-Int(20) xml_GetValue( Pointer node : [String relativeNode] : [Int(20) defaultvalue] )
+Int(20) xml_GetInt( Pointer node : [String relativeNode] : [Int(20) defaultvalue] )
 ```
 
 #### Parameters
@@ -214,6 +242,20 @@ kCount = xml_getInt(pA:'k[UBOUND]');
 pA = xml_locate(pXml:'/a');
 countChildren = xml_getInt(pA:'[UBOUND]');
 ```
+
+---
+
+## xml_SetInt
+
+```
+void xml_SetInt( Pointer node : [String relativeNode] : [Int(20) newvalue] )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Relative path to node
+3. New value.
 
 ---
 
