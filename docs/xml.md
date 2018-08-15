@@ -200,10 +200,10 @@ Int(20) xml_GetValueNum( Pointer node : [Int(20) defaultvalue] )
 
 ## xml_GetAttr
 
-*Deprecated*: use `xml_GetAttrValue` instead.
+*Deprecated*: use `xml_GetNodeAttrValue` instead.
 
 ```
-Varchar(32767) xml_GetElemValue( Pointer node : String attrname : String defaultvalue )
+Varchar(32767) xml_GetElemValue( Pointer node : String attrname : [String defaultvalue] )
 ```
 
 #### Parameters
@@ -211,6 +211,36 @@ Varchar(32767) xml_GetElemValue( Pointer node : String attrname : String default
 1. Pointer to existing node
 2. Attribute name on chosen node.
 2. Default value if not attribute is found.
+
+---
+
+## xml_GetNodeAttrValue
+
+```
+Varchar(32767) xml_GetNodeAttrValue( Pointer node : String attrname : [String defaultvalue] )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Attribute name on chosen node.
+2. Default value if not attribute is found.
+
+---
+
+## xml_SetNodeAttrValue
+
+Not only does this API update an existing attribute on a node, but will add the attribute if it does not exist.
+
+```
+void xml_GetNodeAttrValue( Pointer node : String attrname : String newValue )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Attribute name on chosen node.
+2. New value for selected attribute.
 
 ---
 
