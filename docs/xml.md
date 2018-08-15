@@ -361,7 +361,7 @@ Varchar(32767) xml_GetNodeAttrValue( Pointer node : String attrname : [String de
 Not only does this API update an existing attribute on a node, but will add the attribute if it does not exist.
 
 ```
-void xml_GetNodeAttrValue( Pointer node : String attrname : String newValue )
+void xml_SetNodeAttrValue( Pointer node : String attrname : String newValue )
 ```
 
 #### Parameters
