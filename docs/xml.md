@@ -79,7 +79,7 @@ Returns Pointer to chosen document node.
 pXml = xml_ParseFile('./test/documents/XmlSample.xml');
 pElem = xml_Locate(pXml:'/MyRoot/MyElement');
 
-MyElem = xml_GetElemValue (pElem : 'N/A');
+MyElem = xml_GetValueStr (pElem : 'N/A');
 
 xml_Close(pXml);
 ```
@@ -95,10 +95,10 @@ xml_Close(pXml);
 
 ---
 
-## xml_GetElemNext
+## xml_GetNext
 
 ```
-Pointer xml_GetElemNext( Pointer node )
+Pointer xml_GetNext( Pointer node )
 ```
 
 #### Parameters
@@ -114,8 +114,8 @@ pXml = xml_ParseFile('./test/documents/XmlSample.xml');
 pElem = xml_locate(pXml:'/MyRoot/MyElement');
 
 dow (pElem <> *NULL);
-  MyElem   = xml_GetElemValue (pElem : 'N/A');
-  MyString = xml_GetAttr      (pElem : 'MyAttribute1' : 'N/A');
+  MyElem   = xml_GetValueStr (pElem : 'N/A');
+  MyString = xml_GetAttr     (pElem : 'MyAttribute1' : 'N/A');
 
   pElem = xml_GetElemNext(pElem);
 enddo;
@@ -137,10 +137,10 @@ xml_Close(pXml);
 
 ---
 
-## xml_GetElemValue
+## xml_GetValueStr
 
 ```
-Varchar(32767) xml_GetElemValue( Pointer node : String defaultvalue )
+Varchar(32767) xml_GetValueStr( Pointer node : String defaultvalue )
 ```
 
 #### Parameters
