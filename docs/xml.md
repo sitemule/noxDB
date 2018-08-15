@@ -79,7 +79,7 @@ Returns Pointer to chosen document node.
 pXml = xml_ParseFile('./test/documents/XmlSample.xml');
 pElem = xml_Locate(pXml:'/MyRoot/MyElement');
 
-MyElem = xml_GetValueStr (pElem : 'N/A');
+MyElem = xml_GetValueStr(pElem : 'N/A');
 
 xml_Close(pXml);
 ```
@@ -117,7 +117,7 @@ dow (pElem <> *NULL);
   MyElem   = xml_GetValueStr (pElem : 'N/A');
   MyString = xml_GetAttr     (pElem : 'MyAttribute1' : 'N/A');
 
-  pElem = xml_GetElemNext(pElem);
+  pElem = xml_GetNext(pElem);
 enddo;
 
 xml_Close(pXml);
@@ -137,10 +137,58 @@ xml_Close(pXml);
 
 ---
 
+## xml_GetValue
+
+*Deprecated*: use `xml_GetValueStr` instead.
+
+```
+Varchar(32767) xml_GetValue( Pointer node : [String relativeNode] : [String defaultvalue] )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Relative path to node
+3. Default value if not node value is found.
+
+#### Example
+
+```
+charResult = xml_GetValue (pXml : '/Myroot/Myelement':'null');
+```
+
+---
+
 ## xml_GetValueStr
 
 ```
-Varchar(32767) xml_GetValueStr( Pointer node : String defaultvalue )
+Varchar(32767) xml_GetValueStr( Pointer node : [String defaultvalue] )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Default value if not node value is found.
+
+---
+
+## xml_GetValueNum
+
+```
+Packed(30:15) xml_GetValueNum( Pointer node : [Packed(30:15) defaultvalue] )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Default value if not node value is found.
+
+---
+
+## xml_GetValueInt
+
+```
+Int(20) xml_GetValueNum( Pointer node : [Int(20) defaultvalue] )
 ```
 
 #### Parameters
@@ -151,6 +199,8 @@ Varchar(32767) xml_GetValueStr( Pointer node : String defaultvalue )
 ---
 
 ## xml_GetAttr
+
+*Deprecated*: use `xml_GetAttrValue` instead.
 
 ```
 Varchar(32767) xml_GetElemValue( Pointer node : String attrname : String defaultvalue )
