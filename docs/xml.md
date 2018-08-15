@@ -137,9 +137,89 @@ xml_Close(pXml);
 
 ---
 
+## xml_GetStr
+
+```
+Varchar(32767) xml_GetValue( Pointer node : [String relativeNode] : [String defaultvalue] )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Relative path to node
+3. Default value if not node value is found.
+
+#### Example
+
+Fetching a value or attribute.
+
+```
+//Fetches first element always
+
+charVar = xml_GetStr(pXml:'/Myroot/Myelement'); //Fetch value
+charVar = xml_GetStr(pXml:'/Myroot/Myelement@Myattribute1'); //Fetch attribute with the @ symbol
+```
+
+---
+
+## xml_GetNum
+
+```
+Packed(30:15) xml_GetValue( Pointer node : [String relativeNode] : [Packed(30:15) defaultvalue] )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Relative path to node
+3. Default value if not node value is found.
+
+---
+
+## xml_GetInt
+
+```
+Int(20) xml_GetValue( Pointer node : [String relativeNode] : [Int(20) defaultvalue] )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Relative path to node
+3. Default value if not node value is found.
+
+#### Example
+
+Fetching count of nodes inside a node.
+
+```xml
+<a>
+    <l>1</l>
+    <l>2</l>
+    <k>x</k>
+    <l>3</l>
+</a>
+```
+
+```
+lCount = xml_getInt(pXml:'/a/l[UBOUND]');
+kCount = xml_getInt(pXml:'/a/k[UBOUND]');
+
+// relative Count number of l and k tags
+pA = xml_locate(pXml:'/a');
+lCount = xml_getInt(pA:'l[UBOUND]');
+kCount = xml_getInt(pA:'k[UBOUND]');
+
+// relative Count number childrens of a
+pA = xml_locate(pXml:'/a');
+countChildren = xml_getInt(pA:'[UBOUND]');
+```
+
+---
+
 ## xml_GetValue
 
-*Deprecated*: use `xml_GetValueStr` instead.
+*Deprecated*: use `xml_GetValueStr` or `xml_GetStr` instead.
 
 ```
 Varchar(32767) xml_GetValue( Pointer node : [String relativeNode] : [String defaultvalue] )
@@ -161,6 +241,8 @@ charResult = xml_GetValue (pXml : '/Myroot/Myelement':'null');
 
 ## xml_GetValueStr
 
+Used to get the node value as a string.
+
 ```
 Varchar(32767) xml_GetValueStr( Pointer node : [String defaultvalue] )
 ```
@@ -174,6 +256,8 @@ Varchar(32767) xml_GetValueStr( Pointer node : [String defaultvalue] )
 
 ## xml_GetValueNum
 
+Used to get the node value as numeric decimal.
+
 ```
 Packed(30:15) xml_GetValueNum( Pointer node : [Packed(30:15) defaultvalue] )
 ```
@@ -186,6 +270,8 @@ Packed(30:15) xml_GetValueNum( Pointer node : [Packed(30:15) defaultvalue] )
 ---
 
 ## xml_GetValueInt
+
+Used to get the node value as integer.
 
 ```
 Int(20) xml_GetValueNum( Pointer node : [Int(20) defaultvalue] )
