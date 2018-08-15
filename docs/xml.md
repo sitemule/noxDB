@@ -182,7 +182,7 @@ charVar = xml_GetStr(pXml:'/Myroot/Myelement@Myattribute1'); //Fetch attribute w
 ## xml_SetStr
 
 ```
-void xml_SetStr( Pointer node : [String relativeNode] : [String newvalue] )
+Pointer xml_SetStr( Pointer node : [String relativeNode] : [String newvalue] )
 ```
 
 #### Parameters
@@ -210,7 +210,7 @@ Packed(30:15) xml_GetNum( Pointer node : [String relativeNode] : [Packed(30:15) 
 ## xml_SetNum
 
 ```
-void xml_SetNum( Pointer node : [String relativeNode] : [Packed(30:15) newvalue] )
+Pointer xml_SetNum( Pointer node : [String relativeNode] : [Packed(30:15) newvalue] )
 ```
 
 #### Parameters
@@ -265,7 +265,7 @@ countChildren = xml_getInt(pA:'[UBOUND]');
 ## xml_SetInt
 
 ```
-void xml_SetInt( Pointer node : [String relativeNode] : [Int(20) newvalue] )
+Pointer xml_SetInt( Pointer node : [String relativeNode] : [Int(20) newvalue] )
 ```
 
 #### Parameters
