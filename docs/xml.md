@@ -69,7 +69,7 @@ Pointer xml_Locate( Pointer node : String nodepath )
 #### Parameters
 
 1. Pointer to node created by other another XML function.
-2. Document path which points another node.
+2. Document path which points to a node.
 
 Returns Pointer to chosen document node.
 
@@ -92,6 +92,23 @@ xml_Close(pXml);
     </Myelement>
 </Myroot>
 ```
+
+---
+
+## xml_LocateOrCreate
+
+Similar to `xml_Locate`, but if the node does not exist, it will be created. Can be used when creating an XML document.
+
+```
+Pointer xml_LocateOrCreate( Pointer node : String nodepath )
+```
+
+#### Parameters
+
+1. Pointer to node created by other another XML function.
+2. Document path which points to a node.
+
+Returns Pointer to chosen document node.
 
 ---
 
