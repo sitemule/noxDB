@@ -3,6 +3,27 @@
 
 This page documents the XML functionality available in noxDB. Header file: `headers/XMLPARSER.rpgle`.
 
+* xml_ParseFile
+* xml_Error
+* xml_Message
+* xml_Locate
+* xml_LocateOrCreate
+* xml_GetNext
+* xml_GetStr
+* xml_SetStr
+* xml_GetNum
+* xml_SetNum
+* xml_GetInt
+* xml_SetInt
+* xml_GetValue
+* xml_GetValueStr
+* xml_GetValueNum
+* xml_GetValueInt
+* xml_GetAttr
+* xml_GetNodeAttrValue
+* xml_SetNodeAttrValue
+* xml_Close
+
 ---
 
 ## xml_ParseFile

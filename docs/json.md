@@ -2,6 +2,32 @@
 
 This page documents the JSON functionality available in noxDB. Header file: `headers/JSONPARSER.rpgle`.
 
+* json_ParseFile
+* json_ParseString
+* json_WriteJsonStmf
+* json_AsJsonText
+* json_Error
+* json_Message
+* json_Locate
+* json_LocateOrCreate
+* json_NewObject
+* json_MoveObjectInto
+* json_NewArray
+* json_ArrayPush
+* json_GetStr
+* json_SetStr
+* json_GetNum
+* json_SetNum
+* json_GetInt
+* json_SetInt
+* json_SetBool
+* json_GetNext
+* json_GetName
+* json_SetIterator
+* json_ForEach
+* json_NodeDelete
+* json_Close
+
 ---
 
 ## json_ParseFile

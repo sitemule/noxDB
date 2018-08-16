@@ -2,6 +2,17 @@
 
 This page documents the JSON+SQL functionality available in noxDB. Header file: `headers/JSONPARSER.rpgle`.
 
+* json_sqlOpen
+* json_sqlResultRow
+* json_sqlResultSet
+* json_sqlFetchNext
+* json_sqlFetchRelative
+* json_sqlExec
+* json_sqlInsert
+* json_sqlUpdate
+* json_sqlClose
+* json_sqlDisconnect
+
 ---
 
 ## json_sqlOpen
