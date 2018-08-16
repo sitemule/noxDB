@@ -125,6 +125,19 @@ json_sqlDisconnect();
 
 ---
 
+## json_sqlFetchRelative
+
+```
+Pointer json_sqlFetchNext( Pointer sqlHnd : Int(10) count )
+```
+
+#### Parmaters
+
+1. An SQL handle.
+2. Amount of rows to skip relative to the current cursor position. Positive number to go forward, negative number to go backwards.
+
+---
+
 ## json_sqlExec
 
 ```
