@@ -466,6 +466,20 @@ Ind json_ForEach( JSON_ITERATOR iterator )
 
 ---
 
+## json_NodeDelete
+
+Deletes node.
+
+```
+void json_NodeDelete( Pointer node )
+```
+
+#### Parameters
+
+1. Pointer to existing node.
+
+---
+
 ## json_Close
 
 Close all nodes in this node.
