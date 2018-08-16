@@ -324,17 +324,19 @@ Int(20) json_GetInt( Pointer node : [String relativeNode] : [Int(20) defaultvalu
 pJson = Json_ParseFile ('./test/documents/demo.json');
 
 pNode   = Json_locate(pJson:'/o/n');
-n       = Json_getNum(pNode); //123
+n       = json_GetInt(pNode); //123
 
 pNode   = Json_locate(pJson:'/a[1]');
-n       = Json_GetNum (pNode); //2
+n       = json_GetInt(pNode); //2
 
 pNode   = Json_locate(pJson:'/o/a[2]');
-n       = Json_GetNum(pNode); //3
+n       = json_GetInt(pNode); //3
 
 //To fetch the length of an array
 pNode   = Json_locate(pJson:'/o/a[UBOUND]');
-n       = Json_GetNum(pNode); //5
+n       = json_GetInt(pNode); //5
+
+n       = json_GetInt(pJson:'/o/a[UBOUND]');
 ```
 
 ---
@@ -405,6 +407,62 @@ endDo;
 
 Json_Close(pJson);
 ```
+
+---
+
+## json_GetName
+
+```
+Varchar(32767) json_GetName( Pointer node )
+```
+
+#### Parameters
+
+1. Pointer to existing node.
+
+---
+
+## json_SetIterator
+
+```
+JSON_ITERATOR json_SetIterator( Pointer node : [String path] )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Relative path to object or array
+
+#### Example
+
+```json
+{
+  "a":123,
+  "b":"text",
+  "c":"More text"
+}
+```
+
+```
+pJson = Json_ParseFile('./test/documents/demo.json');
+list = json_SetIterator(pJson);
+dow json_ForEach(list);
+  n = json_GetName(list.this);
+  v = json_GetStr(list.this);
+enddo;
+```
+
+---
+
+## json_ForEach
+
+```
+Ind json_ForEach( JSON_ITERATOR iterator )
+```
+
+#### Parameters
+
+1. Iterator struct from either `json_SetIterator` or `json_setRecursiveIterator`
 
 ---
 
