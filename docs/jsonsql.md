@@ -125,6 +125,122 @@ json_sqlDisconnect();
 
 ---
 
+## json_sqlExec
+
+```
+Ind json_sqlExec( String sqlstatement : [String jsonobject] )
+Ind json_sqlExec( String sqlstatement : [Pointer jsonobject] )
+```
+
+#### Parameters
+
+1. An SQL statement.
+2. JSON object with properties matching the parameter markers.
+
+#### Example
+
+````
+err = json_sqlExec(
+    'update product set price = price * 1.01'
+);
+````
+
+````
+priceJsStr = '{ "newprice" : 1.03 }';
+err = json_sqlExec(
+    'update product set price = price * $newprice'
+    :priceJsStr
+);
+````
+
+````
+priceObj = json_parseString ('{ "newprice" : 1.04 }');
+err = json_sqlExec(
+    'update product set price = price * $newprice'
+    :priceObj
+);
+json_Close(priceObj);
+````
+
+---
+
+### json_sqlInsert
+
+```
+Ind json_sqlInsert( String table : String jsonrow : [String jsonparms] )
+Ind json_sqlInsert( String table : Pointer jsonrow : [Pointer jsonparms] )
+```
+
+#### Parameters
+
+1. The name of the name which is going to be updated.
+2. The string or JSON object Pointer which contains the rows columns.
+3. The parameters if parameter markers are used in the JSON document.
+
+#### Example
+
+```
+row  = json_parseString ('{     -
+    "prodKey": 99999  ,         -
+    "desc": "Test" ,            -
+    "manuid": "SAMSUNG",        -
+    "price": 456.78  ,          -
+    |stockCnt": 12              -
+}');
+
+err = json_sqlInsert (
+    'product'
+    :row
+);
+
+json_delete(row);
+```
+
+---
+
+## json_sqlUpdate
+
+```
+Ind json_sqlUpdate( String table : String jsonrow : String whereclause : [String jsonwhereparms] )
+Ind json_sqlUpdate( String table : Pointer jsonrow : String whereclause : [Pointer jsonwhereparms] )
+```
+
+#### Parameters
+
+1. The name of the name which is going to be updated.
+2. The string or JSON object Pointer which contains the rows updated columns.
+3. The where clause for the update.
+4. The parameters for the where clause if parameter markers are used in the where clause.
+
+#### Example
+
+```
+row  = json_parseString ('{  -
+    manuid: "SAMSUNG",        -
+    price: 1234,              -
+    stockCnt: 22              -
+}');
+```
+
+```
+err = json_sqlUpdate (
+    'product'                // table name
+    :row                     // row in object form {a:1,b:2} etc..
+    :'prodkey = 120'         // Where clause
+);
+```
+
+```
+err = json_sqlUpdate (
+    'product'                // table name
+    :row                     // row in object form {a:1,b:2} etc..
+    :'prodkey = $ID'         // Where clause
+    : '{"ID":130}'           // Templte or object
+);
+```
+
+---
+
 ## json_sqlClose
 
 Closes internal SQL statement handle.
