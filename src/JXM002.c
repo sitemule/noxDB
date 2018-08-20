@@ -10,7 +10,7 @@
 
 https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang=da
                                                                 */
-/* By     Date       PTF     Description                        €*/
+/* By     Date       PTF     Description                         */
 /* NL     21.10.2006         New program                         */
 /* NL     16.10.2014         Added to JSONXML library            */
 /* ------------------------------------------------------------- */
@@ -1180,7 +1180,7 @@ int getColType(SQLHSTMT hstmt , SHORT col )
 }
 ....... */
 /* ------------------------------------------------------------- */
-/* does not  work !!
+/* does not  work !! */
 static BOOL isIdColumn(SQLHSTMT hstmt , int colno)
 {
    int rc;
@@ -1192,7 +1192,15 @@ static BOOL isIdColumn(SQLHSTMT hstmt , int colno)
    // rc = SQLColAttributes (hstmt, colno,SQL_DESC_UPDATABLE, NULL, 0, NULL ,&isTrue);
    return (isTrue == SQL_TRUE);
 }
-*/
+/* ------------------------------------------------------------- */
+/* This is required for this wird reason:                        */
+/* If you update a row containing a CLOB or BLOB with            */
+/* data over 32K it will fail and create a SQL trap error        */
+/* if you also are updating another column with a bound          */
+/* blank value.                                                  */
+/*                                                               */
+/* Therfor you will see tha blanks and nulls are updated         */
+/* and inserted by SQL constants and not by bound markers        */
 /* ------------------------------------------------------------- */
 static BOOL  nodeisnull(PJXNODE pNode)
 {
@@ -1211,6 +1219,15 @@ static BOOL  nodeisnull(PJXNODE pNode)
    val = jx_GetNodeValuePtr (pNode , NULL);
    return (val == null);
 }
+/* ------------------------------------------------------------- */
+/* This is required for this wird reason:                        */
+/* If you update a row containing a CLOB or BLOB with            */
+/* data over 32K it will fail and create a SQL trap error        */
+/* if you also are updating another column with a bound          */
+/* blank value.                                                  */
+/*                                                               */
+/* Therfor you will see tha blanks and nulls are updated         */
+/* and inserted by SQL constants and not by bound markers        */
 /* ------------------------------------------------------------- */
 static BOOL  nodeisblank(PJXNODE pNode)
 {
@@ -1252,6 +1269,7 @@ static void buildUpdate (SQLHSTMT hstmt, PUCHAR sqlStmt, PUCHAR table, PJXNODE p
 
    pNode    =  jx_GetNodeChild (pSqlParms);
    for ( colno=1; pNode; colno++) {
+      //BOOL isid = isIdColumn(hstmt, colno);
       ///if (! isIdColumn(hstmt, colno)) {
          columns ++;
          name  = jx_GetNodeNamePtr   (pNode);
@@ -1387,6 +1405,7 @@ SHORT  doInsertOrUpdate(
    PUCHAR valArr[64];
    SHORT  valArrIx= 0;
    SQLINTEGER sql_nts;
+   SQLINTEGER bindColNo;
 
    PJXNODE pNode;
    PUCHAR comma = "";
@@ -1419,29 +1438,38 @@ SHORT  doInsertOrUpdate(
 
    // Take the description from the "select" and use it on the "update"
    pNode    =  jx_GetNodeChild (pRow);
+   bindColNo =0;
    for(colno =1; pNode ; colno ++) {
       int realLength;
       JXCOL Col;
-      memset (&Col , 0 , sizeof(JXCOL));
 
-      rc = SQLDescribeCol (
+      BOOL isId = isIdColumn(
          pSQLmeta->pstmt->hstmt,
-         colno,
-         Col.colname,
-         sizeof (Col.colname),
-         &Col.colnamelen,
-         &Col.coltype,
-         &Col.collen,
-         &Col.scale,
-         &Col.nullable
+         colno
       );
 
-      if (rc != SQL_SUCCESS ) {
-         check_error (pSQL);
-         return rc; // we have an error
-      }
-
       if (!nodeisnull(pNode) && !nodeisblank(pNode)) {
+
+         bindColNo ++; // Only columns with data ( not null nor blank) need to be bound
+
+         memset (&Col , 0 , sizeof(JXCOL));
+         rc = SQLDescribeCol (
+            pSQLmeta->pstmt->hstmt,
+            colno,    // The meta "cursor" contaians all columns
+            Col.colname,
+            sizeof (Col.colname),
+            &Col.colnamelen,
+            &Col.coltype,
+            &Col.collen,
+            &Col.scale,
+            &Col.nullable
+         );
+
+         if (rc != SQL_SUCCESS ) {
+            check_error (pSQL);
+            return rc; // we have an error
+         }
+
 
          if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
             value = valArr[valArrIx++] = memAlloc(Col.collen);
@@ -1460,8 +1488,8 @@ SHORT  doInsertOrUpdate(
 
             // Bind the parameter marker.
             rc  = SQLBindParameter (
-               pSQL->pstmt->hstmt,           // hstmt
-               colno,
+               pSQL->pstmt->hstmt, // hstmt
+               bindColNo,
                SQL_PARAM_INPUT,  // fParamType
                SQL_C_CHAR,       // fCType
                Col.coltype,      // FSqlType
@@ -1482,7 +1510,7 @@ SHORT  doInsertOrUpdate(
 
             rc = SQLBindParameter(
                pSQL->pstmt->hstmt,
-               colno,
+               bindColNo,
                SQL_PARAM_INPUT,
                SQL_C_CHAR,
                Col.coltype,
@@ -1526,7 +1554,6 @@ SHORT  doInsertOrUpdate(
          // Setup next column
          rc = SQLParamData(pSQL->pstmt->hstmt, &pNode  );
       }
-      rc = SQL_SUCCESS; // Done and OK
    }
 
    for(i=0;i<valArrIx; i++) {
