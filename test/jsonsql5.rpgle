@@ -8,6 +8,7 @@
         
         Dcl-C OS Const(x'9C');
         Dcl-C CS Const(x'47');
+        Dcl-C DL Const(x'67');
 
         //------------------------------------------------------------- *
         
@@ -19,7 +20,7 @@
         sql   = (
            'Select PRODKEY, PRODID, PRICE ' +
            'from product ' +
-           'where prodKey = $prodKey ' +
+           'where prodKey = ' + DL + 'prodKey ' +
            'fetch first 1 row only'
         );
 
