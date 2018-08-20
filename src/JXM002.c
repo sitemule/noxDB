@@ -1180,7 +1180,7 @@ int getColType(SQLHSTMT hstmt , SHORT col )
 }
 ....... */
 /* ------------------------------------------------------------- */
-/* does not  work !! */
+/* does not  work !!
 static BOOL isIdColumn(SQLHSTMT hstmt , int colno)
 {
    int rc;
@@ -1192,15 +1192,7 @@ static BOOL isIdColumn(SQLHSTMT hstmt , int colno)
    // rc = SQLColAttributes (hstmt, colno,SQL_DESC_UPDATABLE, NULL, 0, NULL ,&isTrue);
    return (isTrue == SQL_TRUE);
 }
-/* ------------------------------------------------------------- */
-/* This is required for this wird reason:                        */
-/* If you update a row containing a CLOB or BLOB with            */
-/* data over 32K it will fail and create a SQL trap error        */
-/* if you also are updating another column with a bound          */
-/* blank value.                                                  */
-/*                                                               */
-/* Therfor you will see tha blanks and nulls are updated         */
-/* and inserted by SQL constants and not by bound markers        */
+*/
 /* ------------------------------------------------------------- */
 static BOOL  nodeisnull(PJXNODE pNode)
 {
@@ -1219,15 +1211,6 @@ static BOOL  nodeisnull(PJXNODE pNode)
    val = jx_GetNodeValuePtr (pNode , NULL);
    return (val == null);
 }
-/* ------------------------------------------------------------- */
-/* This is required for this wird reason:                        */
-/* If you update a row containing a CLOB or BLOB with            */
-/* data over 32K it will fail and create a SQL trap error        */
-/* if you also are updating another column with a bound          */
-/* blank value.                                                  */
-/*                                                               */
-/* Therfor you will see tha blanks and nulls are updated         */
-/* and inserted by SQL constants and not by bound markers        */
 /* ------------------------------------------------------------- */
 static BOOL  nodeisblank(PJXNODE pNode)
 {
@@ -1250,72 +1233,79 @@ static BOOL  nodeisblank(PJXNODE pNode)
    return false;
 }
 /* ------------------------------------------------------------- */
-static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
-   PUCHAR sqlStmt, PUCHAR table, PJXNODE pSqlParms , PUCHAR where)
+static void buildUpdate (SQLHSTMT hstmt, PUCHAR sqlStmt, PUCHAR table, PJXNODE pSqlParms , PUCHAR where, BOOL override)
 {
    PUCHAR  stmt = sqlStmt;
    PUCHAR  comma = "";
    PJXNODE pNode;
    PUCHAR  name;
-   int     colno;
+   int     colno,columns  = 0;
    UCHAR   temp [128];
 
-   stmt += sprintf (stmt , "update %s set " , table);
+   // Override  only works is an id is in the roe
+   if (override) {
+   //   stmt += sprintf (stmt , "update %s overriding user value set " , table);
+      stmt += sprintf (stmt , "update %s overriding system value set " , table);
+   } else {
+      stmt += sprintf (stmt , "update %s set " , table);
+   }
 
    pNode    =  jx_GetNodeChild (pSqlParms);
    for ( colno=1; pNode; colno++) {
-      if (! isIdColumn(hMetastmt, colno)) {
+      ///if (! isIdColumn(hstmt, colno)) {
+         columns ++;
          name  = jx_GetNodeNamePtr   (pNode);
          str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
          if  (nodeisnull(pNode)) {
             stmt += sprintf (stmt , "%s%s=NULL" , comma , temp);
          } else if  (nodeisblank(pNode)) {
-            stmt += sprintf (stmt , "%s%s=default" , comma , temp);    // because timesstamp / date can be set as ''
+            stmt += sprintf (stmt , "%s%s=''" , comma , temp);
          } else {
             stmt += sprintf (stmt , "%s%s=?"  , comma , temp);
          }
          comma = ",";
-      }
+      ///}
       pNode = jx_GetNodeNext(pNode);
    }
 
    stmt += sprintf (stmt , " %s " , where);
 }
 /* ------------------------------------------------------------- */
-static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
-   PUCHAR sqlStmt, PUCHAR table, PJXNODE pSqlParms , PUCHAR where)
+static void buildInsert  (SQLHSTMT hstmt, PUCHAR sqlStmt, PUCHAR table, PJXNODE pSqlParms , PUCHAR where, BOOL override)
 {
    PUCHAR  stmt = sqlStmt;
    PUCHAR  comma = "";
    PJXNODE pNode;
    PUCHAR  name;
    PUCHAR  value;
-   int     i,colno;
+   int     i,colno,columns  = 0;
    UCHAR   markers[4096] ;
    UCHAR   temp [128];
    PUCHAR  pMarker = markers;
 
    stmt += sprintf (stmt , "insert into  %s (" , table);
 
-   pNode = jx_GetNodeChild (pSqlParms);
-   for ( colno=1; pNode; colno++) {
-      if (! isIdColumn(hMetaStmt, colno)) {
-         if (!nodeisnull(pNode)) {
-            name     = jx_GetNodeNamePtr   (pNode);
-            str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
-            stmt    += sprintf (stmt , "%s%s" , comma , temp);
-            if  (nodeisblank(pNode)) {
-               pMarker+= sprintf (pMarker , "%sdefault" , comma);    // because timesstamp / date can be set as ''
-            } else {
-               pMarker+= sprintf (pMarker , "%s?" , comma);
-            }
-            comma = ",";
-         }
+   pNode    =  jx_GetNodeChild (pSqlParms);
+   while ( pNode) {
+      ///if (! isIdColumn(hstmt, colno)) {
+      if (!nodeisnull(pNode)) {
+         name     = jx_GetNodeNamePtr   (pNode);
+         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+         stmt    += sprintf (stmt , "%s%s" , comma , temp);
+         pMarker += sprintf (pMarker, nodeisblank(pNode) ? "%s''": "%s?" , comma);
+         comma = ",";
       }
+      ///}
       pNode = jx_GetNodeNext(pNode);
    }
 
-   stmt += sprintf (stmt , ") values( ");
+   // Override  only works if an "id" is in the row
+   if (override) {
+       stmt += sprintf (stmt , ") overriding user value values( ");
+   } else {
+       stmt += sprintf (stmt , ") values( ");
+   }
+
    stmt += sprintf (stmt , markers);
    stmt += sprintf (stmt , ")") ;
 }
@@ -1387,10 +1377,9 @@ SHORT  doInsertOrUpdate(
    PUCHAR table ,
    PJXNODE pRow,
    PUCHAR where ,
-   BOOL   update
-)
+   BOOL   update,
+   BOOL   override)
 {
-
 
    LONG   attrParm;
    LONG   colno;
@@ -1398,7 +1387,6 @@ SHORT  doInsertOrUpdate(
    PUCHAR valArr[64];
    SHORT  valArrIx= 0;
    SQLINTEGER sql_nts;
-   SQLINTEGER bindColNo;
 
    PJXNODE pNode;
    PUCHAR comma = "";
@@ -1413,9 +1401,9 @@ SHORT  doInsertOrUpdate(
 
    // Now we have the colume definitions - now build the update statement:
    if (update) {
-      buildUpdate (pSQL->pstmt->hstmt, pSQLmeta->pstmt->hstmt, sqlTempStmt , table, pRow , where);
+      buildUpdate (pSQL->pstmt->hstmt, sqlTempStmt , table, pRow , where, override);
    } else {
-      buildInsert (pSQL->pstmt->hstmt, pSQLmeta->pstmt->hstmt, sqlTempStmt , table, pRow , where);
+      buildInsert (pSQL->pstmt->hstmt, sqlTempStmt , table, pRow , where, override);
    }
 
    // prepare the statement that will do the update
@@ -1431,34 +1419,29 @@ SHORT  doInsertOrUpdate(
 
    // Take the description from the "select" and use it on the "update"
    pNode    =  jx_GetNodeChild (pRow);
-   bindColNo =0;
    for(colno =1; pNode ; colno ++) {
       int realLength;
       JXCOL Col;
-      BOOL isId = isIdColumn(pSQLmeta->pstmt->hstmt, colno);
+      memset (&Col , 0 , sizeof(JXCOL));
 
-      if (!isId && !nodeisnull(pNode) && !nodeisblank(pNode)) {
+      rc = SQLDescribeCol (
+         pSQLmeta->pstmt->hstmt,
+         colno,
+         Col.colname,
+         sizeof (Col.colname),
+         &Col.colnamelen,
+         &Col.coltype,
+         &Col.collen,
+         &Col.scale,
+         &Col.nullable
+      );
 
-         bindColNo ++; // Only columns with data ( not null nor blank) need to be bound
+      if (rc != SQL_SUCCESS ) {
+         check_error (pSQL);
+         return rc; // we have an error
+      }
 
-         memset (&Col , 0 , sizeof(JXCOL));
-         rc = SQLDescribeCol (
-            pSQLmeta->pstmt->hstmt,
-            colno,    // The meta "cursor" contaians all columns
-            Col.colname,
-            sizeof (Col.colname),
-            &Col.colnamelen,
-            &Col.coltype,
-            &Col.collen,
-            &Col.scale,
-            &Col.nullable
-         );
-
-         if (rc != SQL_SUCCESS ) {
-            check_error (pSQL);
-            return rc; // we have an error
-         }
-
+      if (!nodeisnull(pNode) && !nodeisblank(pNode)) {
 
          if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
             value = valArr[valArrIx++] = memAlloc(Col.collen);
@@ -1477,8 +1460,8 @@ SHORT  doInsertOrUpdate(
 
             // Bind the parameter marker.
             rc  = SQLBindParameter (
-               pSQL->pstmt->hstmt, // hstmt
-               bindColNo,
+               pSQL->pstmt->hstmt,           // hstmt
+               colno,
                SQL_PARAM_INPUT,  // fParamType
                SQL_C_CHAR,       // fCType
                Col.coltype,      // FSqlType
@@ -1499,7 +1482,7 @@ SHORT  doInsertOrUpdate(
 
             rc = SQLBindParameter(
                pSQL->pstmt->hstmt,
-               bindColNo,
+               colno,
                SQL_PARAM_INPUT,
                SQL_C_CHAR,
                Col.coltype,
@@ -1543,6 +1526,7 @@ SHORT  doInsertOrUpdate(
          // Setup next column
          rc = SQLParamData(pSQL->pstmt->hstmt, &pNode  );
       }
+      rc = SQL_SUCCESS; // Done and OK
    }
 
    for(i=0;i<valArrIx; i++) {
@@ -1681,43 +1665,9 @@ SHORT  doInsertOrUpdate(
 }
 */
 /* ------------------------------------------------------------- */
-static PJXSQL buildMetaStmt (PUCHAR table, PJXNODE pRow)
-{
-   UCHAR     sqlTempStmt[32766];
-   PUCHAR    stmt = sqlTempStmt;
-   PUCHAR    name;
-   UCHAR     temp  [256];
-   PJXNODE   pNode;
-   PUCHAR    comma = "";
-   SQLRETURN rc;
-   PJXSQL    pSQLmeta = jx_sqlNewStatement (NULL, false, false);
-
-   stmt += sprintf (stmt , "select ");
-
-   comma = "";
-   pNode    =  jx_GetNodeChild (pRow);
-   while (pNode) {
-      name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
-      stmt += sprintf (stmt , "%s%s" , comma , temp);
-      comma = ",";
-      pNode = jx_GetNodeNext(pNode);
-   }
-
-   stmt += sprintf (stmt , " from %s where 1=0 with ur" , table);
-
-   // prepare the statement that provides the columns
-   rc = SQLPrepare(pSQLmeta->pstmt->hstmt , sqlTempStmt, SQL_NTS);
-   if (rc != SQL_SUCCESS ) {
-      check_error (pSQLmeta);
-      jx_sqlClose (&pSQLmeta); // Free the data
-      return NULL;
-   }
-   return  pSQLmeta;
-}
-/* ------------------------------------------------------------- */
 LGL jx_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PJXNODE pRowP , PUCHAR whereP, PJXNODE pSqlParms)
 {
+
    LONG   attrParm;
    LONG   i;
    PUCHAR valArr[64];
@@ -1734,22 +1684,44 @@ LGL jx_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PJXNODE pRowP , PUCHAR wh
    SQLSMALLINT   length;
    SQLRETURN     rc;
    PJXSQL        pSQL     = jx_sqlNewStatement (NULL, true, false);
-   PJXSQL        pSQLmeta;
+   PJXSQL        pSQLmeta = jx_sqlNewStatement (NULL, false, false);
    SQLCHUNK      sqlChunk[32];
    SHORT         sqlChunkIx =0;
    PUCHAR        sqlNullPtr = NULL;
    PJXNODE       pRow = jx_ParseString((PUCHAR) pRowP, NULL);
    LGL err = ON; // assume error
 
+   strFormat(where , whereP , pSqlParms);
 
    // First get the columen types - by now we use a select to mimic that
-   pSQLmeta = buildMetaStmt ( table, pRow);
-   if (pSQLmeta == NULL) {
-      goto cleanup;
+
+   stmt = sqlTempStmt;
+   stmt += sprintf (stmt , "select ");
+
+   comma = "";
+   pNode    =  jx_GetNodeChild (pRow);
+   while (pNode) {
+      name  = jx_GetNodeNamePtr   (pNode);
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+      stmt += sprintf (stmt , "%s%s" , comma , temp);
+      comma = ",";
+      pNode = jx_GetNodeNext(pNode);
    }
 
-   strFormat(where , whereP , pSqlParms);
-   rc = doInsertOrUpdate(pSQL, pSQLmeta, sqlTempStmt, table,pRow, where , update);
+   stmt += sprintf (stmt , " from %s where 1=0 with ur" , table);
+
+
+   // prepare the statement that provides the columns
+   rc = SQLPrepare(pSQLmeta->pstmt->hstmt , sqlTempStmt, SQL_NTS);
+   if (rc != SQL_SUCCESS ) {
+     check_error (pSQLmeta);
+     goto cleanup;
+   }
+
+   rc = doInsertOrUpdate(pSQL, pSQLmeta, sqlTempStmt, table,pRow, where , update, true);
+   if (rc != SQL_SUCCESS && rc != SQL_NO_DATA_FOUND) {
+      rc = doInsertOrUpdate(pSQL, pSQLmeta, sqlTempStmt, table,pRow, where , update, false);
+   }
 
    // So far we suceeded: But with data ?
    err = (rc == SQL_SUCCESS) ? OFF:ON;
@@ -1782,7 +1754,6 @@ LGL jx_sqlUpdate (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParm
    }
    return jx_sqlUpdateOrInsert  (true , table  , pRow , where, pSqlParms);
 }
-/* ------------------------------------------------------------- */
 LGL jx_sqlInsert (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParmsP  )
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -1800,13 +1771,13 @@ LGL jx_sqlUpsert (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParm
    LGL err;
    // First update - if not found the insert
    err = jx_sqlUpdate  ( table  , pRow , where, pSqlParms);
-   if (err == ON && jx_sqlCode() == 100) {
+   if (err && jx_sqlCode() == 100) {
         err = jx_sqlInsert (table  , pRow , where, pSqlParms);
    }
    return err;
 }
 /* -------------------------------------------------------------------
- * Provide options to a pSQL environment - If NULL then use the default
+ * Provide options to a pSQL environment - If NULL the use the default
  * ------------------------------------------------------------------- */
 LONG jx_sqlGetInsertId (void)
 {
