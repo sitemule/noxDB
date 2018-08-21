@@ -1,6 +1,3 @@
-/usr/local/bin/node --inspect-brk=5852 index.js 
-Debugger listening on ws://127.0.0.1:5852/4ec33fdc-3ad4-470c-9f5a-e38c3f02e9d9
-Debugger attached.
         //---------------------------------------------------------------------- *
         //This is the prototype for BlueSeries/IceBreak - JSON and XML parser
         //Use the JSONXML binddir when creating your program and include this
