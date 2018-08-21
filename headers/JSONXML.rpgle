@@ -687,7 +687,7 @@ I         Value          Pointer    value options(*string); //Value of element
       // Use jx_GetNext
 I       Dcl-PR jx_GetElemNext Pointer extproc(*CWIDEN : 'jx_GetNodeNext'); //Returns pointer to next sibling (elem)
 I         pElem          Pointer    value  ; //Pointer to current element (elem)
-        End-undefined;
+        End-PR;
 
       // use jx_GetChild
 I       Dcl-PR jx_GetElemChild Pointer extproc(*CWIDEN : 'jx_GetNodeChild'); //Returns pointer to next child (elem)
