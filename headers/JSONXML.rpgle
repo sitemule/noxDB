@@ -296,7 +296,7 @@ I         Value          Pointer    value options(*string); //Value or expressio
         Dcl-PR jx_ArraySort Pointer extproc(*CWIDEN : 'jx_ArraySort'); //returns the new node added to the end of
           pArray         Pointer    value; //Destination. Retrive from Locate()
           pkeyNames      Pointer    value options(*string) ; //nodenames if any in subobject to comapre
-        End-undefined;
+        End-PR;
         Dcl-PR jx_LookupValue Pointer extproc(*CWIDEN : 'jx_lookupValue'); //returns the first node with expr value
           pArray         Pointer    value; //Array/ obj to search
           expr           Pointer    value options(*string); //What to search for
@@ -472,7 +472,7 @@ I         pAttr          Pointer    value; //Pointer to attribute list
       // Close all nodes in this tree - also parent and siblings
 I       Dcl-PR jx_Close  extproc(*CWIDEN : 'jx_Close');
 I         pNode          Pointer  ; //Pointer to tree node
-        End-undefined;
+        End-PR;
       // Detect if you have a memry leak: call this when you have closed everything at i will return false
 I       Dcl-PR jx_MemLeak Ind extproc(*CWIDEN : 'jx_MemLeak');
         End-PR;
@@ -612,11 +612,11 @@ I         parms          Pointer    value options(*string:*nopass); //json objec
 
       // Return pointer to database connection. No options => will be default local database
 I       Dcl-PR jx_sqlDisconnect  extproc(*CWIDEN: 'jx_sqlDisconnect');
-        End-undefined;
+        End-PR;
 
       // Return sql code for previous statement
 I       Dcl-PR jx_sqlCode Int(10) extproc(*CWIDEN: 'jx_sqlCode');
-        End-undefined;
+        End-PR;
 
       // --------------------------------------------------------------------------------------------------------------
       // Depricated and renamed functions :

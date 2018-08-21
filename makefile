@@ -65,6 +65,9 @@ bind:
 	system -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/JXM* $(DEPS_LIST)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
 
 headers:
+	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
+	sed "s/ jx_/ xml_/g; s/ JX_/ xml_/g" headers/JSONXML.rpgle > headers/XMLPARSER.rpgle
+
 	system "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(112)"
 	system "CRTSRCPF FILE($(BIN_LIB)/QCREF) RCDLEN(112)"
   
