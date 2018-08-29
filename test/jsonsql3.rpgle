@@ -11,6 +11,8 @@
         Dcl-S prodHnd      Pointer;
         Dcl-S sql          Varchar(512);
         Dcl-S json         Varchar(512);
+        
+        Dcl-C DL Const(x'67');
 
         //------------------------------------------------------------- *
         
@@ -30,7 +32,7 @@
         manuRow = json_sqlFetchNext(manuHnd);
         dow (manuRow <> *NULL);
            // Note: the SQL can be a template, we fill with values from a json row
-           sql = 'Select * from product where manuid = $manuid' ;
+           sql = 'Select * from product where manuid = ' + DL + 'manuid' ;
            prodArray  = json_sqlResultSet(sql: 1 : 2 : 0 : manuRow);
            // Append the row to the end of the result array.
            json_MoveObjectInto (manuRow   : 'products' : prodArray );

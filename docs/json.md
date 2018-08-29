@@ -199,6 +199,14 @@ Pointer json_NewObject( Pointer node )
 
 Returns object pointer.
 
+*Note*: The parameter is now obsolete. It is easy to use this API along side `json_MoveObjectInto`:
+
+```
+pO1 = json_NewObject();
+pO2 = json_NewObject();
+json_MoveObjectInto(pO1 : 'myChild' : pO2)
+```
+
 ---
 
 ## json_MoveObjectInto
@@ -494,11 +502,13 @@ Ind json_ForEach( JSON_ITERATOR iterator )
 
 ## json_NodeDelete
 
-Deletes node.
+Deletes the node and all of the node's children.
 
 ```
 void json_NodeDelete( Pointer node )
 ```
+
+*Note*: This replaced `json_Delete`, which is now deprecated.
 
 #### Parameters
 
