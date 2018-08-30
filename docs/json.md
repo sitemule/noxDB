@@ -72,7 +72,7 @@ void json_SetDelimiters2( String characters )
    8. Curley bracket begin (`{`)
    9. Curley bracket end (`}`)
    10. Apostrophe (`'`)
-   10. Quote / Speech mark (`"`)
+   11. Quote / Speech mark (`"`)
 
 #### Example
 
