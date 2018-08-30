@@ -51,8 +51,6 @@ void xml_SetDelimiters( String characters )
 void xml_SetDelimiters2( String characters )
 ```
 
-*Function is deprecated, has been replaced with `xml_SetDelimiters2`*.
-
 #### Parameters
 
 1. **11 characters** which represent delimiters in a programs characters set. List of characters in their order:
