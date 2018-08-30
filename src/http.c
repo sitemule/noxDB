@@ -2,14 +2,7 @@
 /* ------------------------------------------------------------- *
  * Company . . . : System & Method A/S                           *
  * Design  . . . : Niels Liisberg                                *
- * Function  . . : NOX - main service program API exports        *
- *                                                               *
- * By     Date     Task    Description                           *
- * NL     02.06.03 0000000 New program                           *
- * NL     27.02.08 0000510 Allow also no namespace for *:tag     *
- * NL     27.02.08 0000510 jx_NodeCopy                           *
- * NL     13.05.08 0000577 jx_NodeAdd / WriteNote                *
- * NL     13.05.08 0000577 Support for refference location       *
+ * Function  . . : http handler                                  *
  * ------------------------------------------------------------- */
 #include <stdio.h>
 #include <string.h>
