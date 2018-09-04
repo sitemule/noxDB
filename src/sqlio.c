@@ -1273,7 +1273,7 @@ static void buildUpdate (SQLHSTMT hstmt, PUCHAR sqlStmt, PUCHAR table, PJXNODE p
       ///if (! isIdColumn(hstmt, colno)) {
          columns ++;
          name  = jx_GetNodeNamePtr   (pNode);
-         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELï¿½B
          if  (nodeisnull(pNode)) {
             stmt += sprintf (stmt , "%s%s=NULL" , comma , temp);
          } else if  (nodeisblank(pNode)) {
@@ -1308,7 +1308,7 @@ static void buildInsert  (SQLHSTMT hstmt, PUCHAR sqlStmt, PUCHAR table, PJXNODE 
       ///if (! isIdColumn(hstmt, colno)) {
       if (!nodeisnull(pNode)) {
          name     = jx_GetNodeNamePtr   (pNode);
-         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELï¿½B
          stmt    += sprintf (stmt , "%s%s" , comma , temp);
          pMarker += sprintf (pMarker, nodeisblank(pNode) ? "%s''": "%s?" , comma);
          comma = ",";
@@ -1506,7 +1506,8 @@ SHORT  doInsertOrUpdate(
 
          } else {
 
-            sql_nts = SQL_NTS;
+            // length  !!! 1234,56 gives 6 digits                                            
+            SQLINTEGER colLen = Col.coltype  == SQL_TIMESTAMP ? Col.collen : realLength + Col.scale;            sql_nts = SQL_NTS;
 
             rc = SQLBindParameter(
                pSQL->pstmt->hstmt,
@@ -1514,8 +1515,7 @@ SHORT  doInsertOrUpdate(
                SQL_PARAM_INPUT,
                SQL_C_CHAR,
                Col.coltype,
-               realLength + Col.scale   , // Col.collen,   // length  !!! 1234,56 gives 6 digits
-               Col.scale,    // presition
+               colLen,       // column len - Take care: timestamp need real length of colum. Numbers need string leCol.scale,    // presition
                value,
                0,
                &sql_nts // NULL terminated string -(pointer to length variable)
@@ -1729,7 +1729,7 @@ LGL jx_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PJXNODE pRowP , PUCHAR wh
    pNode    =  jx_GetNodeChild (pRow);
    while (pNode) {
       name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELï¿½B
       stmt += sprintf (stmt , "%s%s" , comma , temp);
       comma = ",";
       pNode = jx_GetNodeNext(pNode);
