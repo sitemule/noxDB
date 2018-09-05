@@ -1507,7 +1507,8 @@ SHORT  doInsertOrUpdate(
          } else {
 
             // length  !!! 1234,56 gives 6 digits                                            
-            SQLINTEGER colLen = Col.coltype  == SQL_TIMESTAMP ? Col.collen : realLength + Col.scale;            sql_nts = SQL_NTS;
+            SQLINTEGER colLen = Col.coltype  == SQL_TIMESTAMP ? Col.collen : realLength + Col.scale;            
+            sql_nts = SQL_NTS;
 
             rc = SQLBindParameter(
                pSQL->pstmt->hstmt,
@@ -1516,6 +1517,7 @@ SHORT  doInsertOrUpdate(
                SQL_C_CHAR,
                Col.coltype,
                colLen,       // column len - Take care: timestamp need real length of colum. Numbers need string leCol.scale,    // presition
+               Col.scale,
                value,
                0,
                &sql_nts // NULL terminated string -(pointer to length variable)
