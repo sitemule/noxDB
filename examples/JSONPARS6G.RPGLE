@@ -1,8 +1,13 @@
+
         //------------------------------------------------------------- *
+
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
         //This sample shows the use of the buildin JSON parser in IceBreak
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S p1           Pointer;
         Dcl-S p2           Pointer;
         Dcl-S pJson        Pointer;
@@ -15,7 +20,9 @@
         Dcl-S tag          Varchar(50);
         Dcl-S value        Varchar(50);
         Dcl-S n            Packed(15:2);
-      /include 'headers/JSONPARSER.rpgle'
+
+        //------------------------------------------------------------- *
+
         *inlr = *on;
 
         p1  = Json_ParseString ('  -
