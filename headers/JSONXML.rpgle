@@ -532,6 +532,12 @@ I         Options        Pointer    value options(*string:*nopass);
           pBuffer        Pointer    value;
         End-PR;
 
+        // Return a streamer object to be used in own serialisers 
+        Dcl-PR jx_Stream pointer extproc(*CWIDEN : 'jx_Stream');
+          //node. Retrive from Locate()
+          pNode          Pointer    value;
+        End-PR;
+
         //**  CSV  renderes ***
 I       Dcl-PR jx_WriteCsvStmf  extproc(*CWIDEN : 'jx_WriteCsvStmf');
           //node. Retrive from Locate()
