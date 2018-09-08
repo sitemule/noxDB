@@ -1,12 +1,15 @@
+        
         //------------------------------------------------------------- *
-        //Json - XML and more.
 
         //Join an array and return is as string
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
-      /include 'headers/JSONPARSER.rpgle'
+        
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S pJson        Pointer;
+
+        //------------------------------------------------------------- *
 
         *inlr = *on;
 

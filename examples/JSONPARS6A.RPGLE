@@ -1,12 +1,18 @@
+        
         //------------------------------------------------------------- *
+
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
         //Sample:
         //Build a json object with primitive types and write
         //is as astream file to the IFS in UTF-8 format
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
-      /include 'headers/JSONPARSER.rpgle'
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S pJson        Pointer;
+
+        //------------------------------------------------------------- *
 
         // Creat a empty root object
         pJson = json_NewObject();
@@ -19,11 +25,10 @@
         json_SetBool   (pJson : 'ok' : 2>1);  // true
         json_SetStr    (pJson : 's'  : 'Hello world');  // String
 
-
-
         // Write it out:
         Json_WriteStmf (pJson  :
-           '/jsonxml/json/Simple-1.json':1208:*OFF
+           './Simple-1.json':1208:*OFF
         );
+
         json_Close(pJSON);
         *inlr = *on;

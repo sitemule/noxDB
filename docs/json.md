@@ -2,6 +2,8 @@
 
 This page documents the JSON functionality available in noxDB. Header file: `headers/JSONPARSER.rpgle`.
 
+* json_SetDelimiters
+* json_SetDelimiters2
 * json_ParseFile
 * json_ParseString
 * json_WriteJsonStmf
@@ -30,13 +32,61 @@ This page documents the JSON functionality available in noxDB. Header file: `hea
 
 ---
 
+## json_SetDelimiters
+
+```
+void json_SetDelimiters( String characters )
+```
+
+*Function is deprecated, has been replaced with `json_SetDelimiters2`*.
+
+#### Parameters
+
+1. **5 characters** which represent delimiters in a programs characters set. List of characters in their order:
+   1. Forward slash
+   2. Back slash
+   3. Master space (`@`)
+   4. Square bracket begin
+   5. Square bracket end
+
+---
+
+## json_SetDelimiters2
+
+```
+void json_SetDelimiters2( String characters )
+```
+
+#### Parameters
+
+1. **11 characters** which represent delimiters in a programs characters set. List of characters in their order:
+   1. Forward slash
+   2. Back slash
+   3. Master space (`@`)
+   4. Square bracket begin
+   5. Square bracket end
+   6. Blank
+   7. Dot
+   8. Curley bracket begin (`{`)
+   9. Curley bracket end (`}`)
+   10. Apostrophe (`'`)
+   11. Quote / Speech mark (`"`)
+
+#### Example
+
+```
+json_setDelimiters2('/\@[] .{}''"');
+```
+
+---
+
 ## json_ParseFile
 
 ```
 Pointer json_ParseFile( String path : [String options] )
 ```
 
-##### Parameters
+#### Parameters
 
 1. Path relavtive to the current directory.
 2. Options for the parser.

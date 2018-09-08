@@ -1,10 +1,16 @@
+
         //------------------------------------------------------------- *
-        //This sample shows the use of the build-in Json/XML parser
-        //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE');
-      /include 'headers/JSONPARSER.rpgle'
+
+        //------------------------------------------------------------- *
+        
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S pJson        Pointer;
         Dcl-S pText        Pointer;
+
+        //------------------------------------------------------------- *
+
         *inlr = *on;
 
         // My root json
@@ -23,12 +29,12 @@
 
         // Write it out:
         Json_WriteStmf (pJson  :
-           '/samples/json/jsonout-set-value-to-object.json':1208:*OFF
+           './jsonout-set-value-to-object.json':1208:*OFF
         );
 
         // Write it out:
         Json_WriteStmf (pText  :
-           '/samples/json/jsonout-ptext.json':1208:*OFF
+           './jsonout-ptext.json':1208:*OFF
         );
 
         // Always close

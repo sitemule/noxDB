@@ -1,9 +1,13 @@
-        //------------------------------------------------------------- *
-        //This sample shows array handleing
-
 
         //------------------------------------------------------------- *
+
+        //This sample shows array handling
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
+
         Dcl-S pObj         Pointer;
         Dcl-S pA           Pointer;
         Dcl-S pAval        Pointer;
@@ -14,8 +18,9 @@
         Dcl-S pBval        Pointer;
 
         Dcl-S t            Varchar(512);
-      /include 'headers/JSONPARSER.rpgle'
-        // ---------------------------------------
+
+        //------------------------------------------------------------- *
+
         // Step 1:
         // Create two objects, and move the conent of b into the root
         pObj = json_newObject();
@@ -30,7 +35,8 @@
         // done
         json_close(pObj);
 
-        // ---------------------------------------
+        //------------------------------------------------------------- *
+
         // Step 2:
         // Do the same with lo-level functions
         pObj = json_newObject();
@@ -48,13 +54,13 @@
         // done
         json_close(pObj);
 
-
-        // ---------------------------------------
+        //------------------------------------------------------------- *
         // Step 3:
         // Do the same as abowe but by
         // moving a value into the the root
         // note: it works like renaming the value inserting
         // it into the destinaiton object
+
         pObj = json_newObject();
         json_setStr(pObj : 'a' : 'Value for a');
 
@@ -71,7 +77,7 @@
         t =   json_asJsonText(pObj);
         json_close(pObj);
 
-        // ---------------------------------------
+        //------------------------------------------------------------- *
         // Step 4:
         // Do the same as abowe but - the "moveInto" will
         // always replace the desitnation node is it exists

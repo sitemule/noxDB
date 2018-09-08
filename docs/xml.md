@@ -26,6 +26,54 @@ This page documents the XML functionality available in noxDB. Header file: `head
 
 ---
 
+## xml_SetDelimiters
+
+```
+void xml_SetDelimiters( String characters )
+```
+
+*Function is deprecated, has been replaced with `xml_SetDelimiters2`*.
+
+#### Parameters
+
+1. **5 characters** which represent delimiters in a programs characters set. List of characters in their order:
+   1. Forward slash
+   2. Back slash
+   3. Master space (`@`)
+   4. Square bracket begin
+   5. Square bracket end
+
+---
+
+## xml_SetDelimiters2
+
+```
+void xml_SetDelimiters2( String characters )
+```
+
+#### Parameters
+
+1. **11 characters** which represent delimiters in a programs characters set. List of characters in their order:
+   1. Forward slash
+   2. Back slash
+   3. Master space (`@`)
+   4. Square bracket begin
+   5. Square bracket end
+   6. Blank
+   7. Dot
+   8. Curley bracket begin (`{`)
+   9. Curley bracket end (`}`)
+   10. Apostrophe (`'`)
+   11. Quote / Speech mark (`"`)
+
+#### Example
+
+```
+xml_setDelimiters2('/\@[] .{}''"');
+```
+
+---
+
 ## xml_ParseFile
 
 ```
