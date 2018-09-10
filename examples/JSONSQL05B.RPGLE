@@ -1,12 +1,19 @@
+        
         //------------------------------------------------------------- *
+
         //Return one signe object for one single row
 
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S pRow         Pointer;
         Dcl-S sql          Varchar(512);
 
-      /include 'headers/JSONPARSER.rpgle'
+        //------------------------------------------------------------- *
 
         // return one object with one row
         sql   = ('-

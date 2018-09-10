@@ -1,15 +1,15 @@
         //------------------------------------------------------------- *
-        //This sample shows the use of the buildin JSONparser in
-        //IceBreak
 
         //Note: This is only for backward compatility.
         //Please use the JOSNSQL04 sample
 
+        //------------------------------------------------------------- *
 
-        //Using SQL cursors
+        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S manuRow      Pointer;
         Dcl-S prodArray    Pointer;
         Dcl-S prodRow      Pointer;
@@ -19,7 +19,7 @@
         Dcl-S prodHnd      Pointer;
         Dcl-S sql          Varchar(512);
 
-      /include 'headers/JSONPARSER.rpgle'
+        //------------------------------------------------------------- *
 
         // The destination object for our SQL result row
         // and the array to contain the rows
@@ -37,13 +37,18 @@
            // Note: the SQL can be a template, we fill with values from a json row
            sql = 'Select * from product where manuid = $manuid' ;
            prodHnd  = json_sqlOpen(sql : manuRow);
+           
            prodRow = json_sqlFetchNext(prodHnd);
            dow ( prodRow <>  *NULL);
-       Json_MemStat();
+              Json_MemStat();
+
               json_setValue(prodArray :'[]' : prodRow: JSON_OBJMOVE);
-       Json_MemStat();
+
+              Json_MemStat();
+
               prodRow = json_sqlFetchNext(prodHnd);
            enddo;
+
            json_sqlClose(prodHnd);
            // Append the row to the end of the result array. The [] means "new array element"
            json_setValue(manuRow   : 'products' : prodArray : JSON_OBJMOVE);

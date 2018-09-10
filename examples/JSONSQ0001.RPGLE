@@ -1,6 +1,5 @@
+        
         //------------------------------------------------------------- *
-        //This sample shows the use of the buildin JSONparser in
-        //IceBreak
 
         //Using SQL cursors
 
@@ -8,14 +7,20 @@
         //DSPCPATRC
 
         //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
+
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S err          Ind;
         Dcl-S row          Varchar(32766);
         Dcl-S prow         Pointer;
         Dcl-S id           Int(10);
 
-      /include 'headers/JSONPARSER.rpgle'
+        //------------------------------------------------------------- *
 
          row = ('{ -
             title: "tesing",                             -

@@ -1,17 +1,17 @@
-        //------------------------------------------------------------- *
-        //This sample shows the use of the buildin JSONparser in
-        //IceBreak
-
-        //Using SQL cursors
 
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S pRow         Pointer;
         Dcl-S rows         Pointer;
         Dcl-S sqlHnd       Pointer;
         Dcl-S sql          Varchar(512);
 
-      /include 'headers/JSONPARSER.rpgle'
+        //------------------------------------------------------------- *
 
         // The destination object for our SQL result row
         // and the array to contain the rows

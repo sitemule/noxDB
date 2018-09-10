@@ -1,10 +1,11 @@
-        //------------------------------------------------------------- *
-        //This sample shows the use of the IceBreak JSON/XML parser
-
-        //Using SQL cursors
 
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S pRow         Pointer;
         Dcl-S sqlHnd       Pointer;
         Dcl-S sql          Varchar(512);
@@ -13,7 +14,8 @@
         Dcl-S numbers      Zoned(11:2);
         Dcl-S dates        Date;
         Dcl-S msg          Varchar(512);
-      /include 'headers/JSONPARSER.rpgle'
+
+        //------------------------------------------------------------- *
 
         // Open our SQL cursor. Use a simple select
         sqlhnd  = json_sqlOpen(
