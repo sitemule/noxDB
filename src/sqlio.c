@@ -647,11 +647,15 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
                   p[len] = '\0';
 
                   // Have to fix .00 numeric as 0.00
+                  // and -.8  as -0.8
                   if (*p == '.') {
                      memmove (p+1 , p, len+1);
                      *p = '0';
-                  }
+                  } else if (0==memcmp(p, "-.",2)){
+                     memmove (p+1 , p, len+1);
+                     *(p+1) = '0';
 
+                  } 
                   jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
                   break ;
                }
