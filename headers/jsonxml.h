@@ -17,9 +17,9 @@
 #ifndef OCCURENS_TYPE
 #define OCCURENS_TYPE
 typedef enum {
-  OC_NONE = 0,
-  OC_NEXT_FOLLOWS = 1,
-  OC_EITHER_OR = 2
+	OC_NONE = 0,
+	OC_NEXT_FOLLOWS = 1,
+	OC_EITHER_OR = 2
 } OCCURENS , *POCCURENS;
 #endif
 
@@ -27,182 +27,182 @@ typedef decimal(30,15) FIXEDDEC, * PFIXEDDEC;
 
 #define ATTRSIG 0x03
 typedef struct _XMLATTR {
-   UCHAR  signature; // always hex 03
-   LONG   Handle;
-   PUCHAR Name;
-   PUCHAR Value;
-   struct _XMLATTR    * pAttrSibling;
-   PVOID pNodeParent;
+	UCHAR  signature; // always hex 03
+	LONG   Handle;
+	PUCHAR Name;
+	PUCHAR Value;
+	struct _XMLATTR    * pAttrSibling;
+	PVOID pNodeParent;
 } XMLATTR, *PXMLATTR;
 
 typedef enum {
-  UNKNOWN             = 0,
-  OBJECT              = 1,
-  ARRAY               = 2,
-  PARSE_STRING        = 3,
-  POINTER_VALUE       = 4,
-  VALUE               = 5,
-  JX_VALUE            = 5,
-  ROOT                = 6,
-  LITERAL             = 16,
-  JX_LITERAL          = 16,
-  CLONE_OLD           = 17,  // Was OBJLNK - Obsolete yes but maps to CLONE in appplication
-  CLONE               = 18,  // Obsolete ... NO
-  EVALUATE            = 19,  // Obsolete ??
-  OBJMOVE             = 2048,
-  // Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
-  // Note: "Merge options" are fit in here... from belowe
-  NT_MOVE             =2048,  // Unlink the source and move it to destination
-  NT_ALLOW_PRIMITIVES =4096   // Allow strings ints and other valyes to evaluate with PARSE_STRING
+	UNKNOWN             = 0,
+	OBJECT              = 1,
+	ARRAY               = 2,
+	PARSE_STRING        = 3,
+	POINTER_VALUE       = 4,
+	VALUE               = 5,
+	JX_VALUE            = 5,
+	ROOT                = 6,
+	LITERAL             = 16,
+	JX_LITERAL          = 16,
+	CLONE_OLD           = 17,  // Was OBJLNK - Obsolete yes but maps to CLONE in appplication
+	CLONE               = 18,  // Obsolete ... NO
+	EVALUATE            = 19,  // Obsolete ??
+	OBJMOVE             = 2048,
+	// Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
+	// Note: "Merge options" are fit in here... from belowe
+	NT_MOVE             =2048,  // Unlink the source and move it to destination
+	NT_ALLOW_PRIMITIVES =4096   // Allow strings ints and other valyes to evaluate with PARSE_STRING
 
 } NODETYPE, *PNODETYPE;
 typedef NODETYPE  JSTATE, *PJSTATE;
 
 typedef enum {
-  // Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
-  MO_MERGE_NEW      =   256,  // Only new elements are merged - existing are left untouched
-  MO_MERGE_MATCH    =   512,  // Merge and replace only existing nodes
-  MO_MERGE_REPLACE  =  1024   // Merge all: replace if it exists and append new nodes if not exists
+	// Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
+	MO_MERGE_NEW      =   256,  // Only new elements are merged - existing are left untouched
+	MO_MERGE_MATCH    =   512,  // Merge and replace only existing nodes
+	MO_MERGE_REPLACE  =  1024   // Merge all: replace if it exists and append new nodes if not exists
 } MERGEOPTION , *PMERGEOPTION;
 
 #define NODESIG  0x02
 typedef struct _JXNODE {
-   UCHAR  signature; // always hex 02
-   LONG   Handle;
-   PUCHAR Name;
-   SHORT  Seq;
-   PXMLATTR pAttrList;
-   PUCHAR Value;
-   struct _JXNODE * pNodeParent;
-   struct _JXNODE * pNodeChildHead;
-   struct _JXNODE * pNodeChildTail;
-   struct _JXNODE * pNodeSibling;
-   LONG     Count;
-   BOOL     newlineInAttrList;
-   PUCHAR   Comment;
-   NODETYPE type;
-   BOOL     doCount;
-   LONG     lineNo;
-   BOOL     isLiteral;
-   SHORT    ccsid;
+	UCHAR  signature; // always hex 02
+	LONG   Handle;
+	PUCHAR Name;
+	SHORT  Seq;
+	PXMLATTR pAttrList;
+	PUCHAR Value;
+	struct _JXNODE * pNodeParent;
+	struct _JXNODE * pNodeChildHead;
+	struct _JXNODE * pNodeChildTail;
+	struct _JXNODE * pNodeSibling;
+	LONG     Count;
+	BOOL     newlineInAttrList;
+	PUCHAR   Comment;
+	NODETYPE type;
+	BOOL     doCount;
+	LONG     lineNo;
+	BOOL     isLiteral;
+	SHORT    ccsid;
 } JXNODE, *PJXNODE;
 
 typedef struct _JXSEGMENT {
-   LONG    nodeCount;
-   PJXNODE * nodeArray;
+	LONG    nodeCount;
+	PJXNODE * nodeArray;
 } JXSEGMENT , *PJXSEGMENT;
 
 typedef enum {
-   XML_FIND_START_TOKEN,
-   XML_DETERMIN_TAG_TYPE,
-   XML_FIND_END_TOKEN,
-   XML_BUILD_NAME,
-   XML_COLLECT_DATA,
-   XML_ATTR_NAME,
-   XML_ATTR_VALUE,
-   XML_DELIMITER,
-   XML_EXIT,
-   XML_EXIT_ERROR
+	XML_FIND_START_TOKEN,
+	XML_DETERMIN_TAG_TYPE,
+	XML_FIND_END_TOKEN,
+	XML_BUILD_NAME,
+	XML_COLLECT_DATA,
+	XML_ATTR_NAME,
+	XML_ATTR_VALUE,
+	XML_DELIMITER,
+	XML_EXIT,
+	XML_EXIT_ERROR
 } XMLSTATE, *PXMLSTATE;
 
 
 typedef struct {
-   PJXNODE pNodeRoot;
-   FILE *  File;
-   PUCHAR  FileName;
-   XMLSTATE State;
-   UCHAR   FileBuf[65535];
-   UCHAR   dummy[32]; // Extra space after buffer for swapping
-   PUCHAR  pFileBuf;
-   PUCHAR  Data;
-   LONG    DataIx;
-   LONG    DataSize;
-   UCHAR   StartName [32768];
-   LONG    StartNameIx;
-   UCHAR   EndName [32768];
-   LONG    EndNameIx;
-   PUCHAR  pName;
-   PLONG   pNameIx;
-   LONG    Level;
-   PJXNODE pNodeWorkRoot;
-   PJXNODE pNodeCurrent;
-   PXMLATTR *pAttr;
-   LONG    Count;
-   UCHAR   fnyt;
-   LONG    LineCount;
-   LONG    ColCount;
-   PUCHAR  StreamBuf;
-   UCHAR   e2aTbl[256];
-   BOOL    UseIconv;
-   iconv_t Iconv;
-   BOOL    LittleEndian;
-   LONG    StartLine;
-   PUCHAR  Comment;
-   BOOL    isJson;
-   BOOL    hasRoot;
-   LONG    tokenNo;
+	PJXNODE pNodeRoot;
+	FILE *  File;
+	PUCHAR  FileName;
+	XMLSTATE State;
+	UCHAR   FileBuf[65535];
+	UCHAR   dummy[32]; // Extra space after buffer for swapping
+	PUCHAR  pFileBuf;
+	PUCHAR  Data;
+	LONG    DataIx;
+	LONG    DataSize;
+	UCHAR   StartName [32768];
+	LONG    StartNameIx;
+	UCHAR   EndName [32768];
+	LONG    EndNameIx;
+	PUCHAR  pName;
+	PLONG   pNameIx;
+	LONG    Level;
+	PJXNODE pNodeWorkRoot;
+	PJXNODE pNodeCurrent;
+	PXMLATTR *pAttr;
+	LONG    Count;
+	UCHAR   fnyt;
+	LONG    LineCount;
+	LONG    ColCount;
+	PUCHAR  StreamBuf;
+	UCHAR   e2aTbl[256];
+	BOOL    UseIconv;
+	iconv_t Iconv;
+	BOOL    LittleEndian;
+	LONG    StartLine;
+	PUCHAR  Comment;
+	BOOL    isJson;
+	BOOL    hasRoot;
+	LONG    tokenNo;
 } JXCOM , * PJXCOM;
 
 typedef enum {
-  RL_FIRST_CHILD = 1,
-  RL_LAST_CHILD = 2,
-  RL_BEFORE_SIBLING = 3,
-  RL_AFTER_SIBLING = 4,
-  RL_REPLACE = 5
+	RL_FIRST_CHILD = 1,
+	RL_LAST_CHILD = 2,
+	RL_BEFORE_SIBLING = 3,
+	RL_AFTER_SIBLING = 4,
+	RL_REPLACE = 5
 } REFLOC, *PREFLOC;
 
 typedef struct _TOK{
-   BOOL    isEof;
-   UCHAR   token ;
-   BOOL    isLiteral;
-   LONG    len;
-   PUCHAR  data;
-   LONG    count;
+	BOOL    isEof;
+	UCHAR   token ;
+	BOOL    isLiteral;
+	LONG    len;
+	PUCHAR  data;
+	LONG    count;
 } TOK, *PTOK;
 
 typedef _Packed struct  _JWRITE      {
-   FILE *  outFile;
-   iconv_t iconv;
-   PUCHAR  buf;
-   SHORT   level;
-   SHORT   prevLevel;
-   LONG    lineNo;
-   BOOL    doTrim;
-   BOOL    useDefaultFormat;
-   BOOL    isDefaultFormatDetected;
-   ULONG   bufLen;
-   ULONG   maxSize;
-   BOOL    wasHere;
+	FILE *  outFile;
+	iconv_t iconv;
+	PUCHAR  buf;
+	SHORT   level;
+	SHORT   prevLevel;
+	LONG    lineNo;
+	BOOL    doTrim;
+	BOOL    useDefaultFormat;
+	BOOL    isDefaultFormatDetected;
+	ULONG   bufLen;
+	ULONG   maxSize;
+	BOOL    wasHere;
 } JWRITE, * PJWRITE;
 
 typedef _Packed struct  _JXITERATOR {
-   PJXNODE   root;
-   PJXNODE   this;
-   LGL       isList;
-   LGL       isFirst;
-   LGL       isLast;
-   LGL       isRecursive;
-   VARCHAR1  comma;
-   LONG      count;
-   LONG      length;
-   LONG      size;
-   PJXNODE * list;
-   LGL       doBreak;
-   PJXNODE   next;
+	PJXNODE   root;
+	PJXNODE   this;
+	LGL       isList;
+	LGL       isFirst;
+	LGL       isLast;
+	LGL       isRecursive;
+	VARCHAR1  comma;
+	LONG      count;
+	LONG      length;
+	LONG      size;
+	PJXNODE * list;
+	LGL       doBreak;
+	PJXNODE   next;
 } JXITERATOR , * PJXITERATOR ;
 
 typedef _Packed struct  _JXDELIM     {
-  UCHAR     Slash       ;
-  UCHAR     BackSlash   ;
-  UCHAR     Masterspace ;
-  UCHAR     BraBeg      ;
-  UCHAR     BraEnd      ;
-  UCHAR     Blank       ;
-  UCHAR     Dot         ;
-  UCHAR     CurBeg      ;
-  UCHAR     CurEnd      ;
-  UCHAR     Apos        ;
-  UCHAR     Quot        ;
+	UCHAR     Slash       ;
+	UCHAR     BackSlash   ;
+	UCHAR     Masterspace ;
+	UCHAR     BraBeg      ;
+	UCHAR     BraEnd      ;
+	UCHAR     Blank       ;
+	UCHAR     Dot         ;
+	UCHAR     CurBeg      ;
+	UCHAR     CurEnd      ;
+	UCHAR     Apos        ;
+	UCHAR     Quot        ;
 } JXDELIM , * PJXDELIM;
 
 #endif
@@ -452,49 +452,49 @@ void jx_Debug(PUCHAR text, PJXNODE pNode);
 #endif
 
 typedef _Packed struct  {
-   SQLHSTMT      hstmt;
-   BOOL          allocated;
-   BOOL          exec;
+	 SQLHSTMT      hstmt;
+	 BOOL          allocated;
+	 BOOL          exec;
 } JXSQLSTMT, * PJXSQLSTMT;
 
 typedef _Packed struct  {
-   SQLCHAR       colname[256]; // !!!! TODO !!! set len to 32!!
-   SQLSMALLINT   coltype;
-   SQLSMALLINT   colnamelen;
-   SQLSMALLINT   nullable;
-   SQLINTEGER    collen;
-   SQLSMALLINT   scale;
-   SQLINTEGER    outlen;
-   SQLCHAR *     data;
-   SQLINTEGER    displaysize;
-   NODETYPE      nodeType;
-   SQLCHAR       header[256];
-   BOOL          isId;
+	 SQLCHAR       colname[256]; // !!!! TODO !!! set len to 32!!
+	 SQLSMALLINT   coltype;
+	 SQLSMALLINT   colnamelen;
+	 SQLSMALLINT   nullable;
+	 SQLINTEGER    collen;
+	 SQLSMALLINT   scale;
+	 SQLINTEGER    outlen;
+	 SQLCHAR *     data;
+	 SQLINTEGER    displaysize;
+	 NODETYPE      nodeType;
+	 SQLCHAR       header[256];
+	 BOOL          isId;
 } JXCOL, * PJXCOL;
 
 
 typedef _Packed struct  {
-   LGL         hexSort;
-   LGL         sqlNaming;
-   UCHAR       DateSep;
-   LONG        DateFmt;
-   UCHAR       TimeSep;
-   LONG        TimeFmt;
-   UCHAR       DecimalPoint;
-   LGL         upperCaseColName;
-   LGL         autoParseContent;
+	 LGL         hexSort;
+	 LGL         sqlNaming;
+	 UCHAR       DateSep;
+	 LONG        DateFmt;
+	 UCHAR       TimeSep;
+	 LONG        TimeFmt;
+	 UCHAR       DecimalPoint;
+	 LGL         upperCaseColName;
+	 LGL         autoParseContent;
 }  SQLOPTIONS, * PSQLOPTIONS;
 
 typedef _Packed struct  {
-   LGL         doTrace;
-   UCHAR       lib[11];
-   SQLHSTMT    handle;
-   UCHAR       tsStart [27];
-   UCHAR       tsEnd   [27];
-   LONG        sqlCode;
-   UCHAR       text  [256];
-   UCHAR       job [29];
-   INT64       trid;
+	 LGL         doTrace;
+	 UCHAR       lib[11];
+	 SQLHSTMT    handle;
+	 UCHAR       tsStart [27];
+	 UCHAR       tsEnd   [27];
+	 LONG        sqlCode;
+	 UCHAR       text  [256];
+	 UCHAR       job [29];
+	 INT64       trid;
 }  JXTRACE  , * PJXTRACE;
 
 #define  COMMENT_SIZE 4096
@@ -505,39 +505,39 @@ typedef _Packed struct  {
 // SQLHENV       henv;
 // SQLHDBC       hdbc;
 // SQLHSTMT      hstmt;
-   PJXSQLSTMT    pstmt;
-   PUCHAR        sqlstmt;
-   SQLSMALLINT   nresultcols;
-   SQLINTEGER    rowcount;
-   SQLRETURN     rc;
+	 PJXSQLSTMT    pstmt;
+	 PUCHAR        sqlstmt;
+	 SQLSMALLINT   nresultcols;
+	 SQLINTEGER    rowcount;
+	 SQLRETURN     rc;
 // PJXNODE       pRowNode;
 // SQLOPTIONS    options;
 // PJXNODE       pOptions;
 // BOOL          deleteOptions;
-   PJXCOL        cols;
+	 PJXCOL        cols;
 } JXSQL, * PJXSQL;
 
 typedef _Packed struct  {
-   SQLHENV       henv;
-   SQLHDBC       hdbc;
-   PJXNODE       pOptions;
-   BOOL          pOptionsCleanup;
-   SQLOPTIONS    options;
-   PXLATEDESC    pCd;
-   UCHAR         sqlState[5];
-   LONG          sqlCode;
-   UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
-   JXSQLSTMT     stmts[JXSQLSTMT_MAX];
-   SHORT         stmtIx;
-   JXTRACE       sqlTrace;
+	 SQLHENV       henv;
+	 SQLHDBC       hdbc;
+	 PJXNODE       pOptions;
+	 BOOL          pOptionsCleanup;
+	 SQLOPTIONS    options;
+	 PXLATEDESC    pCd;
+	 UCHAR         sqlState[5];
+	 LONG          sqlCode;
+	 UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
+	 JXSQLSTMT     stmts[JXSQLSTMT_MAX];
+	 SHORT         stmtIx;
+	 JXTRACE       sqlTrace;
 } JXSQLCONNECT , * PJXSQLCONNECT;
 
 typedef enum _JX_RESULTSET {
-   JX_META       = 1,
-   JX_FIELDS     = 2,
-   JX_TOTALROWS  = 4,
-   JX_UPPERCASE  = 8,
-   JX_APROXIMATE_TOTALROWS = 16
+	 JX_META       = 1,
+	 JX_FIELDS     = 2,
+	 JX_TOTALROWS  = 4,
+	 JX_UPPERCASE  = 8,
+	 JX_APROXIMATE_TOTALROWS = 16
 } JX_RESULTSET, *PJX_RESULTSET;
 
 VOID JXM902 ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);
