@@ -1,16 +1,20 @@
-        //------------------------------------------------------------- *
-        //This sample shows the use of the buildin JSONparser in
-        //IceBreak
 
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE');
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S pJson        Pointer;
         Dcl-S msg          Varchar(50);
         Dcl-S name         Varchar(10);
         Dcl-S value        Varchar(40);
         Dcl-DS list  likeds(json_iterator);
         End-DS;
-      /include 'headers/JSONPARSER.rpgle'
+
+        //------------------------------------------------------------- *
+
         pJson = json_ParseString('{ a: 1, b : { c: 2 ,d : 3}}');
 
         if json_Error(pJson) ;

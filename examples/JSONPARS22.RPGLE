@@ -1,8 +1,16 @@
+        
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
-      /include 'headers/JSONPARSER.rpgle'
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S pJson        Pointer;
         Dcl-S msg          Varchar(50);
+
+        //------------------------------------------------------------- *
+
      C     *entry        plist
      C                   parm                    file            128
      C                   parm                    text             64

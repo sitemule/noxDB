@@ -26,7 +26,7 @@ CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*NONE) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES
 all: clean env compile ext bind hdr
 
 env:
-	-system -q "CRTLIB $(BIN_LIB) TYPE(*TEST) TEXT('Nox.DB build library')
+	-system -q "CRTLIB $(BIN_LIB) TYPE(*TEST) TEXT('Nox.DB build library')"
 	-system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/JSONXML)"
 	-system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/JSONXML) OBJ((JSONXML))"
 	-system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/NOXDB)"
