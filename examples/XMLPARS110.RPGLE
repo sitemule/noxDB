@@ -1,45 +1,5 @@
+
         //------------------------------------------------------------- *
-        //This sample shows the use of the buildin XML parser in
-        //IceBreak
-
-        //Look at the header source file "qAspHdr" in the IceBreak   library
-        //for a complete description of the functionality
-
-        //Step 1)
-        //When using the XML parser - always bind your program to the XMLPARSER
-        //bind directory - either by the CRTPGM command or add the "H" spec below:
-
-        //Step 2)
-        //Include the prototypes for the xml parser found in member "XMLPARSER"
-        //in the source file "qAspHdr" in the IceBreak   library
-
-        //Step 3)
-        //Parse your XML file by caling the "XML_Parse" function. It returns
-        //logical *ON if the parser completed ok - When an error occures
-        //use the function "XML_GetMsg" to retrive the error and/or
-        //use the function "XML_Dump"   to display the xml-tree contents
-
-        //Step 4)
-        //Locate each element node by the function "XML_Locate".
-        //the location can be relative or from the root by prefixinig the location
-        //with an "/". Each level is separated by a "/" e.g.
-        //"/MyRoot/MyElement"  is "myelement" found within "myroot"
-
-        //Step 5)
-        //When a element node is sucessfully fetched, then you can
-        //can retrieve its value by "Xml_GetElemValue" and it attributes
-        //with "XML_GetAttr". Note that you can supply a default
-        //value forboth - if the node/attribute is not found.
-        //Enshure that your result variable is big enough to hold the result
-        //- otherwise unpredictble results may occure.
-
-        //Step 6)
-        //Itterate through all elements by returning the next element
-        //with "Xml_GetElemNext" until it returns *NULL
-
-        //Step 7)
-        //Last - remember to close the XML tree with "XML_Close"
-
 
         //The XML file we want to parse in this sample look like:
 
@@ -69,8 +29,12 @@
         //</manifest>
 
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE');
-      /include xmlparser
+
+        //------------------------------------------------------------- *
+
+        /include xmlparser
         Dcl-S pXml         Pointer;
         Dcl-S pVisit       Pointer;
         Dcl-S pConsignment Pointer;
@@ -86,6 +50,9 @@
         Dcl-S orderRef     Int(10);
         Dcl-S customerCode Varchar(10);
         Dcl-S discrepancy  Ind;
+
+        //------------------------------------------------------------- *
+
         // First parse the XML stream
         pXml = xml_ParseFile('/udv/expert/manifest.xml');
         if Xml_Error(pXml) ;
@@ -124,7 +91,6 @@
            customerCode = xml_GetValue (pConsignment: 'customerCode');        // As string
            discrepancy  = 'NO' <>  xml_GetValue (pConsignment: 'discrepancy');      // As boolean
         endfor;
-
 
         xml_Close(pXml);
         *inlr = *on;
