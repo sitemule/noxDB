@@ -1,21 +1,18 @@
+
         //------------------------------------------------------------- *
-        //This sample shows the use of the buildin JSONparser in
-        //IceBreak
 
-        //Using SQL cursors
-
-        //trace: CHGCPATRC JOBNUMBER(*CURRENT) SEV(*INFO)
-        //DSPCPATRC
-
-        //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
-        //------------------------------------------------------------- *
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S err          Ind;
         Dcl-S priceJsStr   Varchar(256);
         Dcl-S priceObj     Pointer;
         Dcl-S row          Pointer;
 
-      /include 'headers/JSONPARSER.rpgle'
+        //------------------------------------------------------------- *
+
 
         // upsert is a combination of "update" and if not found then "insert"
         row = json_newObject();

@@ -1,16 +1,17 @@
+        
         //------------------------------------------------------------- *
-        //This sample shows the use of the buildin JSONparser in
-        //IceBreak
 
-        //Using SQL cursors
-
-        //------------------------------------------------------------- *
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S err          Ind;
         Dcl-S priceJsStr   Varchar(256);
         Dcl-S priceObj     Pointer;
 
-      /include 'headers/JSONPARSER.rpgle'
+        //------------------------------------------------------------- *
+
 
         // Simple update
         err = json_sqlExec(

@@ -1,8 +1,4 @@
         //------------------------------------------------------------- *
-        //This sample shows the use of the buildin JSONparser in
-        //IceBreak
-
-        //Using SQL cursors
 
         //on a table like this:
         //create table QGPL/NOTE2 (
@@ -12,13 +8,13 @@
         //text2  clob             not null with default
         //)
 
-        //trace: CHGCPATRC JOBNUMBER(*CURRENT) SEV(*INFO)
-        //DSPCPATRC
-
-        //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
 
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S err          Ind;
         Dcl-S pNote1       Pointer;
         Dcl-S pNote2       Pointer;
@@ -26,10 +22,8 @@
         Dcl-S id           Uns(10);
         Dcl-S text1        Char(32766) dim(10);
         Dcl-S text2        Char(32766) dim(10);
-        //text1           s          32766
-        //text2           s          32766
 
-      /include 'headers/JSONPARSER.rpgle'
+        //------------------------------------------------------------- *
 
         // Advanced: - update using json object as a row
         // This also works for BLOBS and CLOB columns
