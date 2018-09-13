@@ -1,11 +1,13 @@
-        //------------------------------------------------------------- *
-        //This sample shows the use of the buildin XML parser in
-        //IceBreak
-
 
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('XMLPARSER':'ICEUTILITY');
         Ctl-Opt dftactgrp(*NO) ACTGRP('QILE');
+        
+        //------------------------------------------------------------- *
+
+        /include xmlParser
+        /include qAspHdr,iceUtility
         Dcl-S pXml1        Pointer;
         Dcl-S pXml2        Pointer;
         Dcl-S a            Pointer;
@@ -13,8 +15,9 @@
         Dcl-S msg          Varchar(50);
         Dcl-S n            Int(10);
         Dcl-S i            Int(10);
-      /include xmlParser
-      /include qAspHdr,iceUtility
+      
+        //------------------------------------------------------------- *
+
         pXml1= xml_ParseString('<a><b atr="john"/></a>');
 
         if Xml_Error(pXml1) ;
