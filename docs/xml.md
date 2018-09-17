@@ -20,6 +20,7 @@ This page documents the XML functionality available in noxDB. Header file: `head
 * xml_GetValueNum
 * xml_GetValueInt
 * xml_GetAttr
+* xml_IsTrue
 * xml_GetNodeAttrValue
 * xml_SetNodeAttrValue
 * xml_Close
@@ -425,6 +426,19 @@ Varchar(32767) xml_GetElemValue( Pointer node : String attrname : [String defaul
 1. Pointer to existing node
 2. Attribute name on chosen node.
 2. Default value if not attribute is found.
+
+---
+
+## xml_IsTrue
+
+```
+Ind xml_IsTrue( Pointer node : String path )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Relative path which points to a node.
 
 ---
 
