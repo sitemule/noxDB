@@ -50,7 +50,7 @@
         //<last>Some stuff<last>
         //</root>
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
         Dcl-S pXml1        Pointer;
         Dcl-S pRoot        Pointer;
         Dcl-S pt           Pointer;

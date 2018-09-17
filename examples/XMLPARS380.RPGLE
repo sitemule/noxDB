@@ -1,5 +1,5 @@
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
         Dcl-S pxml         Pointer;
         Dcl-S pList        Pointer;
         Dcl-S msg          Varchar(50);

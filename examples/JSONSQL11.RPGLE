@@ -5,7 +5,7 @@
         //Using SQL cursors
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
         Dcl-S pConnect     Pointer;
         Dcl-S pResult      Pointer;
 

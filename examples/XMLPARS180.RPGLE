@@ -43,7 +43,7 @@
 
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
         Dcl-S pXml         Pointer;
         Dcl-S pSrcElm      Pointer;
         Dcl-S pDstElm      Pointer;

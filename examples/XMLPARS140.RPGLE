@@ -3,7 +3,7 @@
         //IceBreak
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
         Dcl-S pXml         Pointer;
         Dcl-S pA           Pointer;
         Dcl-S lCount       Int(10);

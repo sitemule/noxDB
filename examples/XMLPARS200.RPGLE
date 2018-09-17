@@ -8,7 +8,7 @@
         //The aim is to produce a XML document from scratch
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
         Dcl-S pXml1        Pointer;
         Dcl-S msg          Varchar(50);
       /include 'headers/XMLPARSER.rpgle'

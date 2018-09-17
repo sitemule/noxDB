@@ -55,7 +55,7 @@
         //<Myelement Myattribute1="Another name" Myattribute2="0">def</Myelement
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
         Dcl-S pXml1        Pointer;
         Dcl-S pXml2        Pointer;
         Dcl-S pSrcElm      Pointer;

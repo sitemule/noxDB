@@ -33,7 +33,7 @@
         //The XML file we want to parse in this sample look like:
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
         Dcl-F qprint PRINTER;
 
       // Globals

@@ -50,7 +50,7 @@
         //</Myroot>
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
         Dcl-F qprint PRINTER;
         Dcl-PR Print;
           Str        Char(132)  const;

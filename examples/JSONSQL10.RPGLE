@@ -5,7 +5,7 @@
         //Using SQL cursors
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
         Dcl-S err          Ind;
         Dcl-S priceJsStr   Varchar(256);
         Dcl-S priceObj     Pointer;
