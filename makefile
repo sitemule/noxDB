@@ -91,3 +91,8 @@ current: env
 
 	system "CRTCMOD MODULE($(BIN_LIB)/$(SRC)) SRCSTMF('src/$(SRC).c') $(CCFLAGS2) "
 
+# For vsCode / single file then i.e.: gmake current sqlio.c  
+example: 
+	system "CRTBNDRPG PGM($(BIN_LIB)/$(SRC)) SRCSTMF('examples/$(SRC).rpgle') DBGVIEW(*ALL)" > error.txt
+
+	

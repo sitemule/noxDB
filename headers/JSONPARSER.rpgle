@@ -324,6 +324,15 @@ I         pNode          Pointer    value;
           Defaultvalue   Packed(30:15) value options(*nopass);
         End-PR;
 
+        Dcl-PR json_GetInt Int(20) extproc(*CWIDEN : 'jx_GetValueInt');
+          //Pointer to relative node
+          pNode          Pointer    value;
+          //Locations expression to node
+          Expression     Pointer    value options(*string:*nopass);
+          //If not found - default value
+          Defaultvalue   Int(20)    value options(*nopass);
+        End-PR;
+
 I       //Set an ILOB object to a value found by X
         //Return *ON if found
 I       Dcl-PR json_GetIlobValue Ind extproc(*CWIDEN :'ILOB_XmlGetValue');
@@ -333,6 +342,17 @@ I         pIlob          Pointer    value;
 I         pNode          Pointer    value;
           //X-path locations to node or attributes
 I         Expression     Pointer    value options(*string);
+        End-PR;
+
+        Dcl-PR json_CopyValue Pointer extproc(*CWIDEN : 'jx_CopyValue');
+          //destination node
+          pDest          Pointer    value;
+          //destiantion name (or *NULL or '')
+          destName       Pointer    value options(*string);
+          //source node
+          pSource        Pointer    value;
+          //source name (or *NULL or '')
+          sourceName     Pointer    value options(*string);
         End-PR;
 
         Dcl-PR json_NodeCopy extproc(*CWIDEN : 'jx_NodeCopy');
@@ -379,6 +399,12 @@ I         Value          Pointer    value options(*string);
           pRootNode      Pointer    value;
         End-PR;
 
+        //CheckSum of all names and values
+        //Delete all nodes which value are null
+        Dcl-PR json_NodeCheckSum Uns(10) extproc(*CWIDEN : 'jx_NodeCheckSum');
+          pRootNode      Pointer    value; //node. Retrive from Locate()
+        End-PR;
+     
         //returns the new node
         Dcl-PR json_NewObject Pointer extproc(*CWIDEN : 'jx_NewObject');
           //Destination. Retrive from Locate()
@@ -407,12 +433,36 @@ I         Value          Pointer    value options(*string);
         Dcl-C json_COPY_CLONE const(1);
 
         //returns the new node added to the end of
+        Dcl-PR json_ArrayAppend Pointer extproc(*CWIDEN :'jx_ArrayAppend');
+          //Destination. Retrive from Locate()
+          pDestArray     Pointer    value;
+          //source node to append
+          pSourceNode    Pointer    value options(*string);
+          //0=(Dft) Unlink and move, 1=copy a clone
+          copy           Uns(5)     value options(*nopass); 
+        End-PR;
+
+        //returns the new array fro source array
+        Dcl-PR json_ArraySlice Pointer extproc(*CWIDEN : 'jx_ArraySlice' );
+          //source node or array string
+          pSourceNode    Pointer    value options(*string);
+          //From entry ( 1=First)
+          from           Int(10)    value;
+          //To and includ   (-1 = Until end)
+          to             Int(10)    value;
+          //0=(Dft) Unlink and move, 1=copy a clone
+          copy           Uns(5)     value options(*nopass);
+        End-PR;
+     
+        //returns the new node added to the end of
         Dcl-PR json_ArraySort Pointer extproc(*CWIDEN : 'jx_ArraySort');
           //Destination. Retrive from Locate()
           pArray         Pointer    value;
           //nodenames if any in subobject to comapre
           pkeyNames      Pointer    value options(*string) ;
         End-PR;
+
+        Dcl-C json_USE_LOCALE const(1);
         
         //returns the first node with expr value
         Dcl-PR json_LookupValue Pointer extproc(*CWIDEN : 'jx_lookupValue');
@@ -505,6 +555,8 @@ I         Options        Pointer    value options(*string:*nopass);
           pNode          Pointer    value;
           //pointer to any memory buffer
           pBuffer        Pointer    value;
+          //Max number of bytes in buffer %size()
+          maxSize        Uns(10)    value options(*nopass);
         End-PR;
 
         //**  XML  renderes ***
@@ -661,6 +713,11 @@ I         pAttr          Pointer    value;
 I         pAttr          Pointer    value;
         End-PR;
 
+      // Clear the contents of an array or object / delete all children
+I       Dcl-PR json_Clear  extproc(*CWIDEN : 'jx_Clear');
+I         pNode          Pointer    value; //Pointer to tree node
+        End-PR;
+
       // Close all nodes in this tree - also parent and siblings
 I       Dcl-PR json_Close  extproc(*CWIDEN : 'jx_Close');
           //Pointer to tree node
@@ -672,6 +729,10 @@ I       Dcl-PR json_MemLeak Ind extproc(*CWIDEN : 'jx_MemLeak');
 
       // Print memory report
 I       Dcl-PR json_MemStat  extproc(*CWIDEN : 'jx_MemStat');
+        End-PR;
+
+      // retune number of bytest used
+I       Dcl-PR json_MemUse Uns(20) extproc(*CWIDEN : 'jx_MemUse');
         End-PR;
 
       // Return a memory segment pointer, and build a scope where JSON/XML will be created
@@ -741,10 +802,16 @@ I         parms          Pointer    value options(*string:*nopass);
         //+ Columns info
         Dcl-C json_FIELDS  const(2);
         //+ Count all rows in the resultset
-        //                ( Pricy so awoid it !! )
+        // ( Pricy so awoid it !! )
         Dcl-C json_TOTALROWS const(4);
         //+ Uppercase column names
         Dcl-C json_UPPERCASE const(8);
+
+        //+ Appoximate number of rows..
+        //  ( unpresise but cheap !! prefered  )
+        Dcl-C json_APPROXIMATE_TOTALROWS const(16); 
+     
+
 
       // SQL cursor processing
         //Returns handle to sql statement
@@ -858,6 +925,23 @@ I       Dcl-PR json_sqlDisconnect  extproc(*CWIDEN: 'jx_sqlDisconnect');
 
       // Return sql code for previous statement
 I       Dcl-PR json_sqlCode Int(10) extproc(*CWIDEN: 'jx_sqlCode');
+        End-PR;
+
+      //Returns a JSON object from a REST call
+I       Dcl-PR json_httpRequest Pointer extproc(*CWIDEN:'jx_httpRequest');
+          //Full URL to the resource
+          url            Pointer    value options(*string);
+          //json object or string
+          pReqNode       Pointer    value options(*string:*nopass);
+          //extra CURL options
+          options        Pointer    value options(*string:*nopass); 
+        End-PR;
+
+      // when the dataarea SQLTRACE is set, your SQL statements 
+      // are logged into SQLTRACE table.
+      // you can supply an extr eye-catch wariable :trcid
+        Dcl-PR json_traceSetId  extproc(*CWIDEN : 'jx_traceSetId');
+I         traceId        Int(20)    value; //Ccsid of inpur file
         End-PR;
 
       // --------------------------------------------------------------------------------------------------------------

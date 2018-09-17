@@ -2056,7 +2056,7 @@ PJXNODE jx_lookupByXpath (PJXNODE pRootNode, PUCHAR * ppName)
       PJXNODE pNodeTemp = pRootNode;
       substr(keyName , Name+1 , nameLen-1);
 
-      while (pNodeTemp && pNode->signature == NODESIG) {
+      while (pNodeTemp && pNodeTemp->signature == NODESIG) {
          PXMLATTR pAtr = jx_AttributeLookup  (pNodeTemp, keyName);
          if (pAtr && pAtr->Value) {
             // Does the value match
@@ -2071,7 +2071,7 @@ PJXNODE jx_lookupByXpath (PJXNODE pRootNode, PUCHAR * ppName)
    } else {
       // Find by value
       PJXNODE pNodeTemp = pRootNode == NULL? NULL:pRootNode->pNodeChildHead;
-      while (pNodeTemp && pNode->signature == NODESIG) {
+      while (pNodeTemp && pNodeTemp->signature == NODESIG) {
          PJXNODE pNode = jx_GetNode  (pNodeTemp, keyName);
          if (pNode && pNode->Value) {
 
@@ -2315,9 +2315,9 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
    PJXNODE refNode;
    UCHAR   refName [256];
 
-   if (pNode == NULL;
+   if (pNode == NULL
    ||  pNode->signature != NODESIG) {
-   	return NULL
+   	return NULL;
    }
 
    // You can change the "debug" in a debugsession to dump the source node
@@ -2358,9 +2358,9 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
    for (;;) {
 
 		// No node or dead node
-		if (pNode == NULL;
+		if (pNode == NULL
 		||  pNode->signature != NODESIG) {
-			return NULL
+			return NULL;
 		}
 
       // Find delimiter, find the end of this token
@@ -2433,9 +2433,9 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
          if (*pEnd != BraBeg) {
 
 				// Found but empty or dead
-				if (pNode == NULL;
+				if (pNode == NULL
    			||  pNode->signature != NODESIG) {
-   				return NULL
+   				return NULL;
    			}
 
             pNode = pNode->pNodeChildHead;
