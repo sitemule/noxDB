@@ -2056,7 +2056,7 @@ PJXNODE jx_lookupByXpath (PJXNODE pRootNode, PUCHAR * ppName)
       PJXNODE pNodeTemp = pRootNode;
       substr(keyName , Name+1 , nameLen-1);
 
-      while (pNodeTemp) {
+      while (pNodeTemp && pNode->signature == NODESIG) {
          PXMLATTR pAtr = jx_AttributeLookup  (pNodeTemp, keyName);
          if (pAtr && pAtr->Value) {
             // Does the value match
@@ -2071,7 +2071,7 @@ PJXNODE jx_lookupByXpath (PJXNODE pRootNode, PUCHAR * ppName)
    } else {
       // Find by value
       PJXNODE pNodeTemp = pRootNode == NULL? NULL:pRootNode->pNodeChildHead;
-      while (pNodeTemp) {
+      while (pNodeTemp && pNode->signature == NODESIG) {
          PJXNODE pNode = jx_GetNode  (pNodeTemp, keyName);
          if (pNode && pNode->Value) {
 
@@ -2315,7 +2315,10 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
    PJXNODE refNode;
    UCHAR   refName [256];
 
-   if (pNode == NULL) return NULL;
+   if (pNode == NULL;
+   ||  pNode->signature != NODESIG) {
+   	return NULL
+   }
 
    // You can change the "debug" in a debugsession to dump the source node
    jx_traceNode ( "GetNode " , pNode);
@@ -2347,14 +2350,18 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
       if (*Name == '\0') return jx_ReturnNode (pNode, false);; // Done
    }
 
-   if (pNode == NULL) return NULL;
-
    // Setup for iteration
    *refName = '\0';
    refNode = pNode;
    pName = Name;
 
    for (;;) {
+
+		// No node or dead node
+		if (pNode == NULL;
+		||  pNode->signature != NODESIG) {
+			return NULL
+		}
 
       // Find delimiter, find the end of this token
       if (*pEnd == BraBeg) {
@@ -2424,7 +2431,13 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
       // This level found. Iterate on next name
       if (*pEnd > '\0') { // Otherwise past end of string
          if (*pEnd != BraBeg) {
-            if (pNode == NULL) return NULL;  // Found but empty
+
+				// Found but empty or dead
+				if (pNode == NULL;
+   			||  pNode->signature != NODESIG) {
+   				return NULL
+   			}
+
             pNode = pNode->pNodeChildHead;
          }
          pName = pEnd +1 ; // Skip the '.' or '/' and set up next iteration
