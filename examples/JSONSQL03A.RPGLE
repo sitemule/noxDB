@@ -2,7 +2,7 @@
         //------------------------------------------------------------- *
 
         Ctl-Opt dftactgrp(*NO) ACTGRP('QILE' );
-        Ctl-Opt BndDir('JSONXML');
+        Ctl-Opt BndDir('NOXDB');
         Ctl-Opt BndDir('ICEBREAK');
 
         //------------------------------------------------------------- *

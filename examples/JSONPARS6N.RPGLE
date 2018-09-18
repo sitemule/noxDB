@@ -1,7 +1,7 @@
         
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('JSONXML') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
 
         //------------------------------------------------------------- *
 
