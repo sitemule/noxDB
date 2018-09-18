@@ -1,15 +1,11 @@
         
         //------------------------------------------------------------- *
-<<<<<<< HEAD
 
         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
         
         /include xmlparser
-=======
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
->>>>>>> 29b6dd90e3b0e98eb4661a4449c52f995845c4a1
         Dcl-S pxml         Pointer;
         Dcl-S pList        Pointer;
         Dcl-S msg          Varchar(50);
