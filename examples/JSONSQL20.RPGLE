@@ -1,21 +1,21 @@
+
         //------------------------------------------------------------- *
-        //This sample shows the use of the buildin JSONparser in
-        //IceBreak
 
-        //Using SQL cursors
-
-        //trace: CHGCPATRC JOBNUMBER(*CURRENT) SEV(*INFO)
-        //DSPCPATRC
-
-        //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
-        //------------------------------------------------------------- *
         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+<<<<<<< HEAD
+
+        /include 'headers/JSONPARSER.rpgle'
+=======
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+>>>>>>> 29b6dd90e3b0e98eb4661a4449c52f995845c4a1
         Dcl-S err          Ind;
         Dcl-S priceJsStr   Varchar(256);
         Dcl-S priceObj     Pointer;
         Dcl-S row          Pointer;
 
-      /include 'headers/JSONPARSER.rpgle'
+        //------------------------------------------------------------- *
 
         // Simple update
         err = json_sqlExec(

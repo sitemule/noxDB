@@ -1,13 +1,20 @@
+        
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('XMLPARSER' : 'ICEBREAK') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include xmlparser
+        /include qasphdr,ilob
         Dcl-S pXml         Pointer;
         Dcl-S pElem        Pointer;
         Dcl-S p1           Pointer;
         Dcl-S len          Uns(10);
         Dcl-S msg          Varchar(50);
         Dcl-S s            Varchar(32766);
-      /include xmlparser
-      /include qasphdr,ilob
+
+        //------------------------------------------------------------- *
 
         pxml  = xml_ParseFile('/samples/xml/XmlSample2.xml');
 

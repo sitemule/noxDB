@@ -1,10 +1,11 @@
-        //------------------------------------------------------------- *
-        //This sample shows the use of the buildin XML parser in
-        //IceBreak
-
 
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/XMLPARSER.rpgle'
         Dcl-S pXml1        Pointer;
         Dcl-S pXml2        Pointer;
         Dcl-S pSrcElm      Pointer;
@@ -12,7 +13,9 @@
         Dcl-S pDelete      Pointer;
         Dcl-S pOut         Pointer;
         Dcl-S msg          Varchar(50);
-      /include 'headers/XMLPARSER.rpgle'
+
+        //------------------------------------------------------------- *
+
         pXml1 = xml_ParseFile('/udv/expert/xmlsample1.xml');
         if Xml_Error(pXml1) ;
            msg = xml_Message(pXml1);

@@ -1,15 +1,15 @@
-        //------------------------------------------------------------- *
-        //This sample shows the use of the buildin JSONparser in
-        //IceBreak
-
-        //Using SQL cursors
 
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S pConnect     Pointer;
         Dcl-S pResult      Pointer;
 
-      /include 'headers/JSONPARSER.rpgle'
+        //------------------------------------------------------------- *
 
         // If you nnes a seperate connection, where the default connection
         // is no sufficient - then expilict do you own sqlConnect

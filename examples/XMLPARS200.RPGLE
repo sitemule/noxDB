@@ -1,17 +1,16 @@
-        //------------------------------------------------------------- *
-        //This sample shows the use of the buildin XML parser in
-        //IceBreak
-
-        //Look at the header source file "qAspHdr" in the IceBreak   library
-        //for a complete description of the functionality
-
-        //The aim is to produce a XML document from scratch
 
         //------------------------------------------------------------- *
+        
         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/XMLPARSER.rpgle'
         Dcl-S pXml1        Pointer;
         Dcl-S msg          Varchar(50);
-      /include 'headers/XMLPARSER.rpgle'
+
+        //------------------------------------------------------------- *
+
         // first we run the paser on an empty string giving us an empty tree
         pXml1 = xml_ParseString('':'syntax=LOOSE,keys=/[@].');
         if Xml_Error(pXml1) ;

@@ -1,15 +1,15 @@
-        //------------------------------------------------------------- *
-        //This sample shows the use of the buildin JSONparser in
-        //IceBreak
-
-        //Using SQL cursors
 
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include 'headers/JSONPARSER.rpgle'
         Dcl-S pConnect     Pointer;
         Dcl-S pResult      Pointer;
 
-      /include 'headers/JSONPARSER.rpgle'
+        //------------------------------------------------------------- *
 
         // Need the resultset names in upper case:
         // Note: it can be a JSON string or a JSON object made by json_ParseString

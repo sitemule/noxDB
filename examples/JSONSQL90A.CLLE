@@ -19,8 +19,8 @@
 /* By       Date       Task    Description                                                 */
 /* NLI      15.02.2016 0000000 New program                                                  */
 /* ---------------------------------------------------------------------------------------- */
-Pgm ()
 
+Pgm ()
 
    Dcl &found     *lgl
    Dcl &prodid    *char 32

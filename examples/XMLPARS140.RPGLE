@@ -1,15 +1,19 @@
-        //------------------------------------------------------------- *
-        //This sample shows the use of the build in Xml parser in
-        //IceBreak
 
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+
+        /include xmlParser
         Dcl-S pXml         Pointer;
         Dcl-S pA           Pointer;
         Dcl-S lCount       Int(10);
         Dcl-S kCount       Int(10);
         Dcl-S countChildren Int(10);
-      /include xmlParser
+
+        //------------------------------------------------------------- *
+
         pXml  = xml_parseString('                  -
             <a>                                    -
                <l>1</l>                            -

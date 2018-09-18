@@ -25,6 +25,7 @@ This page documents the JSON functionality available in noxDB. Header file: `hea
 * json_SetBool
 * json_GetNext
 * json_GetName
+* json_IsTrue
 * json_SetIterator
 * json_ForEach
 * json_NodeDelete
@@ -503,6 +504,19 @@ Varchar(32767) json_GetName( Pointer node )
 #### Parameters
 
 1. Pointer to existing node.
+
+---
+
+## json_IsTrue
+
+```
+Ind json_IsTrue( Pointer node : String path )
+```
+
+#### Parameters
+
+1. Pointer to existing node
+2. Relative path to object or array
 
 ---
 

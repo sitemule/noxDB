@@ -1,11 +1,18 @@
+        
         //------------------------------------------------------------- *
+
         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+
+        //------------------------------------------------------------- *
+        
+        /include xmlparser
         Dcl-S pxml         Pointer;
         Dcl-S pList        Pointer;
         Dcl-S msg          Varchar(50);
         Dcl-S n            Varchar(50);
         Dcl-S v            Varchar(50);
-      /include xmlparser
+      
+        //------------------------------------------------------------- *
 
         pxml  = xml_ParseString (
            '<a>                    '+
