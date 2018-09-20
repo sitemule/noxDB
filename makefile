@@ -34,6 +34,8 @@ env:
 
 
 compile:
+	system "CHGATR OBJ('src/*') ATR(*CCSID) VALUE(1208)"
+	system "CHGATR OBJ('headers/*') ATR(*CCSID) VALUE(1208)"
 	system "CRTCMOD MODULE($(BIN_LIB)/JXM001) SRCSTMF('src/noxdb.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/JXM002) SRCSTMF('src/sqlio.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/JXM003) SRCSTMF('src/xmlparser.c') $(CCFLAGS)"

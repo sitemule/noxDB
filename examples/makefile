@@ -1,4 +1,4 @@
-﻿BIN_LIB=NOXDB
+BIN_LIB=NOXDB
 
 
 # to this folder the header files (prototypes) are copied in the install step
@@ -12,6 +12,7 @@ compile:
 	qsh <<EOF 
 	export QIBM_CCSID=277
 	liblist -a $(BIN_LIB)
+	system "CHGATR OBJ('$(SRC)') ATR(*CCSID) VALUE(1208)"
 	system -i "CRTBNDRPG  PGM($(BIN_LIB)/$(OBJ)) SRCSTMF('$(SRC)') $(RPG_OPT)" > error.txt
 	EOF
        
