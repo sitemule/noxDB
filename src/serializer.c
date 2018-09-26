@@ -322,7 +322,7 @@ void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, P
 	 pStream->handle = pjWrite;
 	 pStream->writer = jx_fileWriter;
 
-	 sprintf(mode , "wb,codepage=%d", Ccsid);
+	 sprintf(mode , "wb,o_ccsid=%d", Ccsid);
 	 pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
 	 if (pjWrite->outFile == NULL) return;
 
