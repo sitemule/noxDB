@@ -323,6 +323,7 @@ void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, P
 	 pStream->writer = jx_fileWriter;
 
 	 sprintf(mode , "wb,o_ccsid=%d", Ccsid);
+	 unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
 	 pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
 	 if (pjWrite->outFile == NULL) return;
 
