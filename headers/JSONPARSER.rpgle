@@ -394,6 +394,12 @@ I         Value          Pointer    value options(*string);
           pRootNode      Pointer    value;
         End-PR;
 
+        //Unlink the note from its previous and promote it as a new root node
+        Dcl-PR json_NodeUnlink extproc(*CWIDEN : 'jx_NodeUnlink');
+          //Targenode. Retrive from Locate(
+          pNode          Pointer    value;
+        End-PR;
+
         Dcl-PR json_NodeSanitize extproc(*CWIDEN : 'jx_NodeSanitize');
           //node. Retrive from Locate()
           pRootNode      Pointer    value;
