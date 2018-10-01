@@ -395,7 +395,7 @@ I         Value          Pointer    value options(*string);
         End-PR;
 
         //Unlink the note from its previous and promote it as a new root node
-        Dcl-PR jx_NodeUnlink extproc(*CWIDEN : 'jx_NodeUnlink');
+        Dcl-PR jx_NodeUnlink Pointer extproc(*CWIDEN : 'jx_NodeUnlink');
           //Targenode. Retrive from Locate(
           pNode          Pointer    value;
         End-PR;
