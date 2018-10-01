@@ -466,6 +466,8 @@ I         Value          Pointer    value options(*string);
           pArray         Pointer    value;
           //nodenames if any in subobject to comapre
           pkeyNames      Pointer    value options(*string) ;
+          //0=(Dft) use json numerics, 1=Use locale
+          options        uns(5)     value options(*nopass);
         End-PR;
 
         Dcl-C jx_USE_LOCALE const(1);
