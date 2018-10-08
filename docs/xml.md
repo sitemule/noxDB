@@ -4,6 +4,7 @@
 This page documents the XML functionality available in noxDB. Header file: `headers/XMLPARSER.rpgle`.
 
 * xml_ParseFile
+* xml_ParseString
 * xml_Error
 * xml_Message
 * xml_Locate
@@ -85,6 +86,21 @@ Pointer xml_ParseFile( String path : [String options] )
 
 1. Path relavtive to the current directory.
 2. Options for the parser. For example: `syntax=LOOSE` is a valid parameter.
+
+Returns Pointer to created node.
+
+---
+
+## xml_ParseString
+
+```
+Pointer xml_ParseString (String xml : [String options])
+```
+
+#### Parameters
+
+1. XML document string.
+2. Options for the parser.
 
 Returns Pointer to created node.
 
