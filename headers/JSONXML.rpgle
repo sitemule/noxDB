@@ -700,6 +700,8 @@ I         Defaultvalue   Pointer    value options(*string:*nopass);
           //Pointer Attribute
 I         pAttr          Pointer    value;
           //New value
+          AttrName       Pointer    value options(*string);
+          //Default value
           Value          Pointer    value options(*string);
         End-PR;
 
