@@ -31,7 +31,7 @@
         //Set delimiter used for locate expression
         Dcl-PR xml_setDelimiters  extproc(*CWIDEN :'jx_SetDelimiters2');
           //always: '/\@[] .{}' in your  local CCSID
-I         delimiterStr   Pointer    value options(*string);
+          delimiterStr   Pointer    value options(*string);
         End-PR;
 
         Dcl-C xml_DELIMITERS const('/\@[] .{}''"');
@@ -82,19 +82,19 @@ I         delimiterStr   Pointer    value options(*string);
 
         //---------------------------------------------------------------------- *
         //Returns node to the xml_object tree
-I       Dcl-PR xml_ParseFile Pointer extproc(*CWIDEN:'jx_ParseFile');
+        Dcl-PR xml_ParseFile Pointer extproc(*CWIDEN:'jx_ParseFile');
           //File to parse
-I         FileName       Pointer    value options(*string);
+          FileName       Pointer    value options(*string);
           //Parsing options
-I         Options        Pointer    value options(*string:*nopass);
+          Options        Pointer    value options(*string:*nopass);
         End-PR;
 
         //Returns node xml_object tree
-I       Dcl-PR xml_ParseString Pointer extproc(*CWIDEN:'jx_ParseString');
+        Dcl-PR xml_ParseString Pointer extproc(*CWIDEN:'jx_ParseString');
           //String to parse
-I         String         Pointer    value options(*string);
+          String         Pointer    value options(*string);
           //Parsing options
-I         Options        Pointer    value options(*string:*nopass);
+          Options        Pointer    value options(*string:*nopass);
         End-PR;
 
         //Set , or . for numeri decimal point
@@ -106,88 +106,88 @@ I         Options        Pointer    value options(*string:*nopass);
 
 
         //Bool true if errors occures
-I       Dcl-PR xml_Error Ind extproc(*CWIDEN:'jx_Error');
+        Dcl-PR xml_Error Ind extproc(*CWIDEN:'jx_Error');
           //jx_Object  node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
         End-PR;
 
         //Return error description
-I       Dcl-PR xml_Message Varchar(1024) extproc(*CWIDEN:'jx_Message');
+        Dcl-PR xml_Message Varchar(1024) extproc(*CWIDEN:'jx_Message');
           //jx_Object
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
         End-PR;
 
         //Returns pointer to node
-I       Dcl-PR xml_Locate Pointer extproc(*CWIDEN : 'jx_GetNode');
+        Dcl-PR xml_Locate Pointer extproc(*CWIDEN : 'jx_GetNode');
           //Pointer to tree or node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //location expression
-I         Expression     Pointer    value options(*string);
+          Expression     Pointer    value options(*string);
         End-PR;
 
         //Returns pointer to node
-I       Dcl-PR xml_LocateOrCreate Pointer 
+        Dcl-PR xml_LocateOrCreate Pointer 
                                  extproc(*CWIDEN : 'jx_GetOrCreateNode');
           //Pointer to tree or node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //location expression
-I         Expression     Pointer    value options(*string);
+          Expression     Pointer    value options(*string);
         End-PR;
 
         //Returns 'ON' if node exists
-I       Dcl-PR xml_Has Ind extproc(*CWIDEN : 'jx_Has');
+        Dcl-PR xml_Has Ind extproc(*CWIDEN : 'jx_Has');
           //Pointer to tree or node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //Path to node
-I         NodeName       Pointer    value options(*string);
+          NodeName       Pointer    value options(*string);
         End-PR;
 
         //Returns 'ON' if node exists and has <> 0
-I       Dcl-PR xml_isTrue Ind extproc(*CWIDEN : 'jx_IsTrue');
+        Dcl-PR xml_isTrue Ind extproc(*CWIDEN : 'jx_IsTrue');
           //Pointer to tree or node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //Path to node
-I         NodeName       Pointer    value options(*string);
+          NodeName       Pointer    value options(*string);
         End-PR;
 
         //Returns 'ON' if node exists and has <> 0
-I       Dcl-PR xml_isNull Ind extproc(*CWIDEN : 'jx_IsNull');
+        Dcl-PR xml_isNull Ind extproc(*CWIDEN : 'jx_IsNull');
           //Pointer to tree or node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //Path to node
-I         NodeName       Pointer    value options(*string);
+          NodeName       Pointer    value options(*string);
         End-PR;
 
         //Returns 'ON' if it is a valid node
-I       Dcl-PR xml_isNode Ind extproc(*CWIDEN : 'jx_isNode');
+        Dcl-PR xml_isNode Ind extproc(*CWIDEN : 'jx_isNode');
           //a.k.a. false for strings
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
         End-PR;
 
         //renames the node name
-I       Dcl-PR xml_NodeRename Ind extproc(*CWIDEN : 'jx_NodeRename');
+        Dcl-PR xml_NodeRename Ind extproc(*CWIDEN : 'jx_NodeRename');
           //Pointer to tree or node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //Path to node
-I         NodeName       Pointer    value options(*string);
+          NodeName       Pointer    value options(*string);
         End-PR;
 
         //Returns pointer to next sibling (elem)
-I       Dcl-PR xml_GetNext Pointer extproc(*CWIDEN : 'jx_GetNodeNext');
+        Dcl-PR xml_GetNext Pointer extproc(*CWIDEN : 'jx_GetNodeNext');
           //Pointer to current node (elem)
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
         End-PR;
 
         //Returns pointer to first child (elem)
-I       Dcl-PR xml_GetChild Pointer extproc(*CWIDEN : 'jx_GetNodeChild');
+        Dcl-PR xml_GetChild Pointer extproc(*CWIDEN : 'jx_GetNodeChild');
           //Pointer to current node (elem)
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
         End-PR;
 
         //Returns pointer to parent node
-I       Dcl-PR xml_GetParent Pointer extproc(*CWIDEN : 'jx_GetNodeParent');
+        Dcl-PR xml_GetParent Pointer extproc(*CWIDEN : 'jx_GetNodeParent');
           //Pointer to current node (elem)
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
         End-PR;
 
         Dcl-PR xml_SetStr Pointer extproc(*CWIDEN: 'jx_SetStrByName');
@@ -246,47 +246,47 @@ I         pNode          Pointer    value;
           Type           Uns(5)     value options(*nopass);
         End-PR;
 
-I       Dcl-PR xml_GetValueStr Varchar(32767) 
+        Dcl-PR xml_GetValueStr Varchar(32767) 
                               extproc(*CWIDEN : 'jx_GetNodeValueVC');
           //Pointer to node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //If not found - default value
-I         Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Pointer    value options(*string:*nopass);
         End-PR;
 
-I       Dcl-PR xml_GetValueNum Packed(30:15) 
+        Dcl-PR xml_GetValueNum Packed(30:15) 
                               extproc(*CWIDEN : 'jx_GetNodeValueNum');
           //Pointer to node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //If not found - default value
-I         Defaultvalue   Packed(30:15) value options(*NOPASS);
+          Defaultvalue   Packed(30:15) value options(*NOPASS);
         End-PR;
 
-I       Dcl-PR xml_GetValuePtr Pointer extproc(*CWIDEN : 'jx_GetNodeValuePtr');
+        Dcl-PR xml_GetValuePtr Pointer extproc(*CWIDEN : 'jx_GetNodeValuePtr');
           //Pointer to node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //If not found - default value
-I         Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Pointer    value options(*string:*nopass);
         End-PR;
 
-I       Dcl-PR xml_GetName Varchar(32767) 
+        Dcl-PR xml_GetName Varchar(32767) 
                           extproc(*CWIDEN : 'jx_GetNodeNameVC');
           //Pointer to node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
         End-PR;
 
-I       Dcl-PR xml_GetNameAsPath Varchar(32767)
+        Dcl-PR xml_GetNameAsPath Varchar(32767)
                                 extproc(*CWIDEN : 'jx_GetNodeNameAsPath');
           //Pointer to node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //Delimiter like - or . or / or \
-I         Delimiter      Char(1)    value;
+          Delimiter      Char(1)    value;
         End-PR;
 
         //* Refer to node type above
-I       Dcl-PR xml_NodeType Int(5) extproc(*CWIDEN : 'jx_GetNodeType');
+        Dcl-PR xml_NodeType Int(5) extproc(*CWIDEN : 'jx_GetNodeType');
           //Pointer to xml_ tree to receive format
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
         End-PR;
 
       // Get string by expresion
@@ -333,15 +333,15 @@ I         pNode          Pointer    value;
           Defaultvalue   Int(20)    value options(*nopass);
         End-PR;
 
-I       //Set an ILOB object to a value found by X
+        //Set an ILOB object to a value found by X
         //Return *ON if found
-I       Dcl-PR xml_GetIlobValue Ind extproc(*CWIDEN :'ILOB_XmlGetValue');
+        Dcl-PR xml_GetIlobValue Ind extproc(*CWIDEN :'ILOB_XmlGetValue');
           //Pointer to ILOB object to receive the va
-I         pIlob          Pointer    value;
+          pIlob          Pointer    value;
           //Pointer to tree
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //X-path locations to node or attributes
-I         Expression     Pointer    value options(*string);
+          Expression     Pointer    value options(*string);
         End-PR;
 
         Dcl-PR xml_CopyValue Pointer extproc(*CWIDEN : 'jx_CopyValue');
@@ -382,9 +382,9 @@ I         Expression     Pointer    value options(*string);
           //Reference location to where it arrive
           RefLocation    Int(10)    value;
           //Name of node
-I         Name           Pointer    value options(*string);
+          Name           Pointer    value options(*string);
           //Value or expression
-I         Value          Pointer    value options(*string);
+          Value          Pointer    value options(*string);
           //New type (Refer "node type"
           Type           Uns(5)     value;
         End-PR;
@@ -395,7 +395,7 @@ I         Value          Pointer    value options(*string);
         End-PR;
 
         //Unlink the note from its previous and promote it as a new root node
-        Dcl-PR xml_NodeUnlink extproc(*CWIDEN : 'jx_NodeUnlink');
+        Dcl-PR xml_NodeUnlink Pointer extproc(*CWIDEN : 'jx_NodeUnlink');
           //Targenode. Retrive from Locate(
           pNode          Pointer    value;
         End-PR;
@@ -525,30 +525,30 @@ I         Value          Pointer    value options(*string);
           pSourceObj     Pointer    value;
         End-PR;
 
-I       Dcl-PR xml_Dump  extproc(*CWIDEN : 'jx_Dump');
+        Dcl-PR xml_Dump  extproc(*CWIDEN : 'jx_Dump');
           //Pointer to tree
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
         End-PR;
 
 
-I       Dcl-PR xml_CloneFormat  extproc(*CWIDEN : 'jx_CloneFormat');
+        Dcl-PR xml_CloneFormat  extproc(*CWIDEN : 'jx_CloneFormat');
           //Pointer to tree to receive format
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //node ptr or path with right formating
-I         pCloneFrom     Pointer    value options(*string);
+          pCloneFrom     Pointer    value options(*string);
         End-PR;
 
         //**  JSON renderes ***
-I       Dcl-PR xml_WriteJsonStmf  extproc(*CWIDEN : 'jx_WriteJsonStmf');
+        Dcl-PR xml_WriteJsonStmf  extproc(*CWIDEN : 'jx_WriteJsonStmf');
           //node. Retrive from Locate()
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //Name of output stream file
-I         FileName       Pointer    value options(*string);
+          FileName       Pointer    value options(*string);
           //Ccsid of output file
-I         Ccsid          Int(10)    value;
+          Ccsid          Int(10)    value;
           Trim           Ind        value;
           //Extra options
-I         Options        Pointer    value options(*string:*nopass);
+          Options        Pointer    value options(*string:*nopass);
         End-PR;
 
         Dcl-PR xml_AsJsonText Varchar(32767) 
@@ -568,16 +568,16 @@ I         Options        Pointer    value options(*string:*nopass);
         End-PR;
 
         //**  XML  renderes ***
-I       Dcl-PR xml_WriteXmlStmf  extproc(*CWIDEN : 'jx_WriteXmlStmf');
+        Dcl-PR xml_WriteXmlStmf  extproc(*CWIDEN : 'jx_WriteXmlStmf');
           //node. Retrive from Locate()
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //Name of output stream file
-I         FileName       Pointer    value options(*string);
+          FileName       Pointer    value options(*string);
           //Ccsid of output file
-I         Ccsid          Int(10)    value;
+          Ccsid          Int(10)    value;
           Trim           Ind        value;
           //Extra options
-I         Options        Pointer    value options(*string:*nopass);
+          Options        Pointer    value options(*string:*nopass);
         End-PR;
 
         Dcl-PR xml_AsXmlText Varchar(32767) extproc(*CWIDEN : 'jx_AsXmlText');
@@ -599,17 +599,17 @@ I         Options        Pointer    value options(*string:*nopass);
         End-PR;
 
         //**  CSV  renderes ***
-I       Dcl-PR xml_WriteCsvStmf  extproc(*CWIDEN : 'jx_WriteCsvStmf');
+        Dcl-PR xml_WriteCsvStmf  extproc(*CWIDEN : 'jx_WriteCsvStmf');
           //node. Retrive from Locate()
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //Name of output stream file
-I         FileName       Pointer    value options(*string);
+          FileName       Pointer    value options(*string);
           //Ccsid of output file
-I         Ccsid          Int(10)    value;
+          Ccsid          Int(10)    value;
           //*ON=Remove inter blanks
           Trim           Ind        value;
           //Options: ';.' for separator and dec
-I         Options        Pointer    value options(*string:*nopass);
+          Options        Pointer    value options(*string:*nopass);
         End-PR;
 
 
@@ -669,14 +669,14 @@ I         Options        Pointer    value options(*string:*nopass);
         End-PR;
 
         //For XML attributes
-I       Dcl-PR xml_GetNodeAttrValue Varchar(32767) 
+        Dcl-PR xml_GetNodeAttrValue Varchar(32767) 
                                    extproc(*CWIDEN : 'jx_GetNodeAttrValueVC');
           //Pointer to exsiting element
           pNode          Pointer    value;
           //Attribute Name
-I         AttrName       Pointer    value options(*string);
+          AttrName       Pointer    value options(*string);
           //If not found - default value
-I         Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Pointer    value options(*string:*nopass);
         End-PR;
 
         Dcl-PR xml_SetNodeAttrValue extproc(*CWIDEN : 'jx_SetNodeAttrValue');
@@ -688,79 +688,79 @@ I         Defaultvalue   Pointer    value options(*string:*nopass);
           Value          Pointer    value options(*string);
         End-PR;
 
-I       Dcl-PR xml_GetAttrValue Varchar(32767) 
+        Dcl-PR xml_GetAttrValue Varchar(32767) 
                                extproc(*CWIDEN : 'jx_GetAttrValueVC');
           //Pointer Attribute
-I         pAttr          Pointer    value;
+          pAttr          Pointer    value;
           //If not found - default value
-I         Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Pointer    value options(*string:*nopass);
         End-PR;
 
         Dcl-PR xml_SetAttrValue extproc(*CWIDEN : 'jx_SetAttrValue');
           //Pointer Attribute
-I         pAttr          Pointer    value;
+          pAttr          Pointer    value;
           //New value
           Value          Pointer    value options(*string);
         End-PR;
 
         //Returns pointer to attribute list
-I       Dcl-PR xml_GetAttrFirst Pointer extproc(*CWIDEN : 'jx_GetAttrFirst');
+        Dcl-PR xml_GetAttrFirst Pointer extproc(*CWIDEN : 'jx_GetAttrFirst');
           //Pointer to element
-I         pElem          Pointer    value;
+          pElem          Pointer    value;
         End-PR;
 
         //Returns pointer to attribute list
-I       Dcl-PR xml_GetAttrNext Pointer extproc(*CWIDEN : 'jx_GetAttrNext');
+        Dcl-PR xml_GetAttrNext Pointer extproc(*CWIDEN : 'jx_GetAttrNext');
           //Pointer to attribute list
-I         pAttr          Pointer    value;
+          pAttr          Pointer    value;
         End-PR;
 
         Dcl-PR xml_GetAttrName Varchar(32767) 
                               extproc(*CWIDEN : 'jx_GetAttrNameVC');
           //Pointer to attribute list
-I         pAttr          Pointer    value;
+          pAttr          Pointer    value;
         End-PR;
 
       // Clear the contents of an array or object / delete all children
-I       Dcl-PR xml_Clear  extproc(*CWIDEN : 'jx_Clear');
-I         pNode          Pointer    value; //Pointer to tree node
+        Dcl-PR xml_Clear  extproc(*CWIDEN : 'jx_Clear');
+          pNode          Pointer    value; //Pointer to tree node
         End-PR;
 
       // Close all nodes in this tree - also parent and siblings
-I       Dcl-PR xml_Close  extproc(*CWIDEN : 'jx_Close');
+        Dcl-PR xml_Close  extproc(*CWIDEN : 'jx_Close');
           //Pointer to tree node
-I         pNode          Pointer  ;
+          pNode          Pointer  ;
         End-PR;
       // Detect if you have a memry leak: call this when you have closed everything at i will return false
-I       Dcl-PR xml_MemLeak Ind extproc(*CWIDEN : 'jx_MemLeak');
+        Dcl-PR xml_MemLeak Ind extproc(*CWIDEN : 'jx_MemLeak');
         End-PR;
 
       // Print memory report
-I       Dcl-PR xml_MemStat  extproc(*CWIDEN : 'jx_MemStat');
+        Dcl-PR xml_MemStat  extproc(*CWIDEN : 'jx_MemStat');
         End-PR;
 
       // retune number of bytest used
-I       Dcl-PR xml_MemUse Uns(20) extproc(*CWIDEN : 'jx_MemUse');
+        Dcl-PR xml_MemUse Uns(20) extproc(*CWIDEN : 'jx_MemUse');
         End-PR;
 
       // Return a memory segment pointer, and build a scope where JSON/XML will be created
-I       Dcl-PR xml_SegmentSelectNo Pointer 
+        Dcl-PR xml_SegmentSelectNo Pointer 
                                   extproc(*CWIDEN : 'jx_SegmentSelectNo');
           SegmentIndex   Int(10)    value;
         End-PR;
 
       //  Delete the segment and all JSON/XML nodes build while segment scope was active
-I       Dcl-PR xml_SegmentDispose  extproc(*CWIDEN : 'jx_SegmentDispose');
+        Dcl-PR xml_SegmentDispose  extproc(*CWIDEN : 'jx_SegmentDispose');
           segmentPtr     Pointer    value;
         End-PR;
 
       // Maintain at list of index numbers to database CLOB/BLOB fields since pointers can not be shared in SQL
         //Returns *ON if found
-I       Dcl-PR xml_mapIx Ind extproc(*CWIDEN:'jx_MapIx' );
+        Dcl-PR xml_mapIx Ind extproc(*CWIDEN:'jx_MapIx' );
           //pointer to node pointer
-I         ppNode         Pointer;
+          ppNode         Pointer;
           //index of pointer
-I         Index          Uns(10)    value;
+          Index          Uns(10)    value;
         End-PR;
 
         //------------------------------------------------------------------------
@@ -770,33 +770,33 @@ I         Index          Uns(10)    value;
 
       // If options need - then it has to be first call made.
       // NOTE: If a pConnection pointer is provided, it will be updated with the conection
-I       Dcl-PR xml_sqlSetOptions  extproc(*CWIDEN: 'jx_sqlSetOptions');
+        Dcl-PR xml_sqlSetOptions  extproc(*CWIDEN: 'jx_sqlSetOptions');
           //json object with options ( see sample)
-I         parms          Pointer    value options(*string:*nopass);
+          parms          Pointer    value options(*string:*nopass);
         End-PR;
 
       // returns a object node with one resulting row for the SQL statment
         //Returns one SQL row as jx Obejct
-I       Dcl-PR xml_sqlResultRow Pointer extproc(*CWIDEN: 'jx_sqlResultRow');
+        Dcl-PR xml_sqlResultRow Pointer extproc(*CWIDEN: 'jx_sqlResultRow');
           //SQL statement to run
-I         sqlStmt        Pointer    value options(*string);
+          sqlStmt        Pointer    value options(*string);
           //json object template
-I         parms          Pointer    value options(*string:*nopass);
+          parms          Pointer    value options(*string:*nopass);
         End-PR;
 
       // returns an array (or object with array) of resulting rows for the SQL statment
         //Returns SQL rows as jx Obejct
-I       Dcl-PR xml_sqlResultSet Pointer extproc(*CWIDEN: 'jx_sqlResultSet');
+        Dcl-PR xml_sqlResultSet Pointer extproc(*CWIDEN: 'jx_sqlResultSet');
           //SQL statement to run
-I         sqlStmt        Pointer    value options(*string);
+          sqlStmt        Pointer    value options(*string);
           //From row; 1=First
-I         start          Int(10)    value options(*nopass);
+          start          Int(10)    value options(*nopass);
           //max number of rows; xml_ALLROWS=all
-I         limit          Int(10)    value options(*nopass);
+          limit          Int(10)    value options(*nopass);
           //resultset format:
-I         format         Int(10)    value options(*nopass);
+          format         Int(10)    value options(*nopass);
           //json object template
-I         parms          Pointer    value options(*string:*nopass);
+          parms          Pointer    value options(*string:*nopass);
         End-PR;
 
        
@@ -823,120 +823,120 @@ I         parms          Pointer    value options(*string:*nopass);
 
       // SQL cursor processing
         //Returns handle to sql statement
-I       Dcl-PR xml_sqlOpen Pointer extproc(*CWIDEN:'jx_sqlOpen'  );
+        Dcl-PR xml_sqlOpen Pointer extproc(*CWIDEN:'jx_sqlOpen'  );
           //SQL statement to run
-I         sqlStmt        Pointer    value options(*string);
+          sqlStmt        Pointer    value options(*string);
           //json object template
-I         parms          Pointer    value options(*string:*nopass);
+          parms          Pointer    value options(*string:*nopass);
         End-PR;
 
       // Fetch next from from that open sql handle, starting from rowNumer. 1=First row
         //Returns a row object (or *NULL if EOF)
-I       Dcl-PR xml_sqlFetchRelative Pointer 
+        Dcl-PR xml_sqlFetchRelative Pointer 
                                    extproc(*CWIDEN: 'jx_sqlFetchRelative');
           //sql statement handle ( from sqlOpen)
-I         pSqlHndl       Pointer    value;
+          pSqlHndl       Pointer    value;
           //row from where to start 1=First
-I         fromRow        Int(10)    value;
+          fromRow        Int(10)    value;
         End-PR;
 
       // Fetch next from from that open sql handle
         //Returns a row object (or *NULL if EOF)
-I       Dcl-PR xml_sqlFetchNext Pointer extproc(*CWIDEN:'jx_sqlFetchNext');
+        Dcl-PR xml_sqlFetchNext Pointer extproc(*CWIDEN:'jx_sqlFetchNext');
           //sql statement handle ( from sqlOpen)
-I         pSqlHndl       Pointer    value;
+          pSqlHndl       Pointer    value;
         End-PR;
 
       // Number of columns in result set ( -1 if error)
         //Returns number of columns
-I       Dcl-PR xml_sqlColumns Int(10) extproc(*CWIDEN:'jx_sqlColumns');
+        Dcl-PR xml_sqlColumns Int(10) extproc(*CWIDEN:'jx_sqlColumns');
           //sql statement handle ( from sqlOpen)
-I         pSqlHndl       Pointer    value;
+          pSqlHndl       Pointer    value;
         End-PR;
 
       // Number of rows  in result set ( -1 if error)
       // Note: This will run a hidden "select count(*)" which might be a little pricy
         //Returns number of rows
-I       Dcl-PR xml_sqlRows Int(10) extproc(*CWIDEN:'jx_sqlRows');
+        Dcl-PR xml_sqlRows Int(10) extproc(*CWIDEN:'jx_sqlRows');
           //sql statement handle ( from sqlOpen)
-I         pSqlHndl       Pointer    value;
+          pSqlHndl       Pointer    value;
         End-PR;
 
       // Always colse the cursor after use, to release resources
-I       Dcl-PR xml_sqlClose  extproc(*CWIDEN:'jx_sqlClose');
+        Dcl-PR xml_sqlClose  extproc(*CWIDEN:'jx_sqlClose');
           //sql statement handle ( from sqlOpen)
-I         pSqlHndl       Pointer;
+          pSqlHndl       Pointer;
         End-PR;
 
       // Execute any SQL statement not involving a cursor
         //Returns *ON if error
-I       Dcl-PR xml_sqlExec Ind extproc(*CWIDEN:'jx_sqlExec'  );
+        Dcl-PR xml_sqlExec Ind extproc(*CWIDEN:'jx_sqlExec'  );
           //SQL statement to run (template)
-I         sqlStmt        Pointer    value options(*string);
+          sqlStmt        Pointer    value options(*string);
           //json object template data
-I         parms          Pointer    value options(*string:*nopass);
+          parms          Pointer    value options(*string:*nopass);
         End-PR;
 
       // Execute an update table where the row is defined as a json object
         //Returns *ON if error
-I       Dcl-PR xml_sqlUpdate Ind extproc(*CWIDEN:'jx_sqlUpdate');
+        Dcl-PR xml_sqlUpdate Ind extproc(*CWIDEN:'jx_sqlUpdate');
           //table name
-I         table          Pointer    value options(*string);
+          table          Pointer    value options(*string);
           //json object: {a:123,b:"value"}
-I         row            Pointer    value options(*string);
+          row            Pointer    value options(*string);
           //where clause : 'where myKey=$key'
-I         where          Pointer    value options(*string:*nopass);
+          where          Pointer    value options(*string:*nopass);
           //where parameters: { key:777}
-I         whereParms     Pointer    value options(*string:*nopass);
+          whereParms     Pointer    value options(*string:*nopass);
         End-PR;
 
         //Returns *ON if error
-I       Dcl-PR xml_sqlInsert Ind extproc(*CWIDEN:'jx_sqlInsert');
+        Dcl-PR xml_sqlInsert Ind extproc(*CWIDEN:'jx_sqlInsert');
           //table name
-I         table          Pointer    value options(*string);
+          table          Pointer    value options(*string);
           //json object: {a:123,b:"value"}
-I         row            Pointer    value options(*string);
+          row            Pointer    value options(*string);
           //extra parms
-I         parms          Pointer    value options(*string:*nopass);
+          parms          Pointer    value options(*string:*nopass);
         End-PR;
 
         //Returns *ON if error
-I       Dcl-PR xml_sqlUpsert Ind extproc(*CWIDEN:'jx_sqlUpsert');
+        Dcl-PR xml_sqlUpsert Ind extproc(*CWIDEN:'jx_sqlUpsert');
           //table name
-I         table          Pointer    value options(*string);
+          table          Pointer    value options(*string);
           //json object: {a:123,b:"value"}
-I         row            Pointer    value options(*string);
+          row            Pointer    value options(*string);
           //where clause : 'where myKey=$key'
-I         where          Pointer    value options(*string:*nopass);
+          where          Pointer    value options(*string:*nopass);
           //where parameters: { key:777}
-I         whereParms     Pointer    value options(*string:*nopass);
+          whereParms     Pointer    value options(*string:*nopass);
         End-PR;
 
         //Returns id of last insert
-I       Dcl-PR xml_sqlGetInsertId Int(10) extproc(*CWIDEN:'jx_sqlGetInsertId');
+        Dcl-PR xml_sqlGetInsertId Int(10) extproc(*CWIDEN:'jx_sqlGetInsertId');
         End-PR;
 
         //Returns array of column info
-I       Dcl-PR xml_sqlGetMeta Pointer extproc(*CWIDEN:'jx_sqlGetMeta');
+        Dcl-PR xml_sqlGetMeta Pointer extproc(*CWIDEN:'jx_sqlGetMeta');
           sqlstmt        Pointer    value options(*string);
         End-PR;
 
       // Return pointer to database connection. No options => will be default local database
-I       Dcl-PR xml_sqlConnect Pointer extproc(*CWIDEN: 'jx_sqlConnect');
+        Dcl-PR xml_sqlConnect Pointer extproc(*CWIDEN: 'jx_sqlConnect');
           //json object or string with options
-I         parms          Pointer    value options(*string:*nopass);
+          parms          Pointer    value options(*string:*nopass);
         End-PR;
 
       // Return pointer to database connection. No options => will be default local database
-I       Dcl-PR xml_sqlDisconnect  extproc(*CWIDEN: 'jx_sqlDisconnect');
+        Dcl-PR xml_sqlDisconnect  extproc(*CWIDEN: 'jx_sqlDisconnect');
         End-PR;
 
       // Return sql code for previous statement
-I       Dcl-PR xml_sqlCode Int(10) extproc(*CWIDEN: 'jx_sqlCode');
+        Dcl-PR xml_sqlCode Int(10) extproc(*CWIDEN: 'jx_sqlCode');
         End-PR;
 
       //Returns a JSON object from a REST call
-I       Dcl-PR xml_httpRequest Pointer extproc(*CWIDEN:'jx_httpRequest');
+        Dcl-PR xml_httpRequest Pointer extproc(*CWIDEN:'jx_httpRequest');
           //Full URL to the resource
           url            Pointer    value options(*string);
           //json object or string
@@ -949,20 +949,20 @@ I       Dcl-PR xml_httpRequest Pointer extproc(*CWIDEN:'jx_httpRequest');
       // are logged into SQLTRACE table.
       // you can supply an extr eye-catch wariable :trcid
         Dcl-PR xml_traceSetId  extproc(*CWIDEN : 'jx_traceSetId');
-I         traceId        Int(20)    value; //Ccsid of inpur file
+          traceId        Int(20)    value; //Ccsid of inpur file
         End-PR;
 
       // --------------------------------------------------------------------------------------------------------------
       // Depricated and renamed functions :
       // --------------------------------------------------------------------------------------------------------------
       // Depricated - use  xml_GetValueStr
-I       Dcl-PR xml_GetValue Varchar(32767) extproc(*CWIDEN : 'jx_GetValueVC');
+        Dcl-PR xml_GetValue Varchar(32767) extproc(*CWIDEN : 'jx_GetValueVC');
           //Pointer to node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //If not found - default value
-I         Expression     Pointer    value options(*string:*nopass);
+          Expression     Pointer    value options(*string:*nopass);
           //If not found - default value
-I         Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Pointer    value options(*string:*nopass);
         End-PR;
 
       // Depricated - use  xml_NodeCopy
@@ -1026,9 +1026,9 @@ I         Defaultvalue   Pointer    value options(*string:*nopass);
         End-PR;
 
       // Use - xml_NodeType
-I       Dcl-PR xml_ElementType Int(5) extproc(*CWIDEN : 'jx_GetNodeType');
+        Dcl-PR xml_ElementType Int(5) extproc(*CWIDEN : 'jx_GetNodeType');
           //Pointer to tree to receive format
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
         End-PR;
 
       // Use xml_NodeAdd
@@ -1039,60 +1039,60 @@ I         pNode          Pointer    value;
           //Reference location to where it arrive
           RefLocation    Int(10)    value;
           //Name of element
-I         Name           Pointer    value options(*string);
+          Name           Pointer    value options(*string);
           //Value of element
-I         Value          Pointer    value options(*string);
+          Value          Pointer    value options(*string);
         End-PR;
 
       // Use xml_GetNext
         //Returns pointer to next sibling (elem)
-I       Dcl-PR xml_GetElemNext Pointer extproc(*CWIDEN : 'jx_GetNodeNext');
+        Dcl-PR xml_GetElemNext Pointer extproc(*CWIDEN : 'jx_GetNodeNext');
           //Pointer to current element (elem)
-I         pElem          Pointer    value  ;
+          pElem          Pointer    value  ;
         End-PR;
 
       // use xml_GetChild
         //Returns pointer to next child (elem)
-I       Dcl-PR xml_GetElemChild Pointer extproc(*CWIDEN : 'jx_GetNodeChild');
+        Dcl-PR xml_GetElemChild Pointer extproc(*CWIDEN : 'jx_GetNodeChild');
           //Pointer to current element (elem)
-I         pElem          Pointer    value;
+          pElem          Pointer    value;
         End-PR;
 
 
       // use get xml_GetName
-I       Dcl-PR xml_getElemName Varchar(32767) 
+        Dcl-PR xml_getElemName Varchar(32767) 
                               extproc(*CWIDEN : 'jx_GetNodeNameVC');
           //Pointer to node
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
         End-PR;
 
       // use xml_GetValueStr
-I       Dcl-PR xml_GetElemValue Varchar(32767) 
+        Dcl-PR xml_GetElemValue Varchar(32767) 
                                extproc(*CWIDEN : 'jx_GetNodeValueVC');
           //Pointer to element
-I         pElem          Pointer    value;
+          pElem          Pointer    value;
           //If not found - default value
-I         Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Pointer    value options(*string:*nopass);
         End-PR;
 
        // use xml_GetAttrValue
-I       Dcl-PR xml_GetAttr Varchar(32767) 
+        Dcl-PR xml_GetAttr Varchar(32767) 
                           extproc(*CWIDEN : 'jx_GetNodeAttrValueVC');
           //Pointer to element
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //Attribute Name
-I         AttrName       Pointer    value options(*string);
+          AttrName       Pointer    value options(*string);
           //If not found - default value
-I         Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Pointer    value options(*string:*nopass);
         End-PR;
 
       // has no effect any longer
         //Set input and output CCSID
         Dcl-PR xml_setCcsid  extproc(*CWIDEN : 'jx_SetCcsid');
           //Ccsid of inpur file
-I         inputCCSID     Int(10)    value;
+          inputCCSID     Int(10)    value;
           //Ccsid of output file
-I         outputCCSID    Int(10)    value;
+          outputCCSID    Int(10)    value;
         End-PR;
 
       // depricated - use setNum
@@ -1108,23 +1108,23 @@ I         outputCCSID    Int(10)    value;
       // Depricated in both JSON and XML - use  xml_WriteJsonStmf /   xml_WriteXmlStmf
       /if not defined(JSONXML_DEPRICATED)
       /define  JSONXML_DEPRICATED
-I       Dcl-PR json_WriteStmf  extproc(*CWIDEN : 'jx_WriteJsonStmf');
+        Dcl-PR json_WriteStmf  extproc(*CWIDEN : 'jx_WriteJsonStmf');
           //element. Retrive from Locate()
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //Name of output stream file
-I         FileName       Pointer    value options(*string);
+          FileName       Pointer    value options(*string);
           //Ccsid of output file
-I         Ccsid          Int(10)    value;
+          Ccsid          Int(10)    value;
           Trim           Ind        value options(*nopass);
         End-PR;
 
-I       Dcl-PR xml_WriteStmf  extproc(*CWIDEN : 'jx_WriteXmlStmf');
+        Dcl-PR xml_WriteStmf  extproc(*CWIDEN : 'jx_WriteXmlStmf');
           //element. Retrive from Locate()
-I         pNode          Pointer    value;
+          pNode          Pointer    value;
           //Name of output stream file
-I         FileName       Pointer    value options(*string);
+          FileName       Pointer    value options(*string);
           //Ccsid of output file
-I         Ccsid          Int(10)    value;
+          Ccsid          Int(10)    value;
           Trim           Ind        value options(*nopass);
         End-PR;
       /endif
