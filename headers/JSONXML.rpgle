@@ -258,7 +258,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
           pNode          Pointer    value; //Pointer to jx_ tree
           //X-path locations to node or attributes
           Expresion      Pointer    value options(*string);
-          Proc           Pointer    procptr; //Pointer to a procedure
+          Proc           Pointer(*Proc); //Pointer to a procedure
           //*ON=String escape, *OFF=If literals
           isString       Ind        value options(*nopass);
         End-PR;
