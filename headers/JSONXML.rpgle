@@ -190,6 +190,12 @@
           pNode          Pointer    value;
         End-PR;
 
+        Dcl-PR jx_SetEval pointer extproc(*CWIDEN:'jx_SetEvalByName');
+          pNode          Pointer    value;
+          Expresion      Pointer    value options(*string);
+          Value          Pointer    value options(*string);
+        End-PR;
+
         Dcl-PR jx_SetStr Pointer extproc(*CWIDEN: 'jx_SetStrByName');
           //Pointer to jx_ tree
           pNode          Pointer    value;
