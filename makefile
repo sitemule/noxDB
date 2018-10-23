@@ -3,6 +3,9 @@
 # User-defined part start
 #
 
+# NOTE - UTF is not allowed for ILE source (yet) - so convert to WIN-1252
+
+
 # BIN_LIB is the destination library for the service program.
 # the rpg modules and the binder source file are also created in BIN_LIB.
 # binder source file and rpg module can be remove with the clean step (make clean)
@@ -34,8 +37,8 @@ env:
 
 
 compile:
-	system "CHGATR OBJ('src/*') ATR(*CCSID) VALUE(1208)"
-	system "CHGATR OBJ('headers/*') ATR(*CCSID) VALUE(1208)"
+	system "CHGATR OBJ('src/*') ATR(*CCSID) VALUE(1252)"
+	system "CHGATR OBJ('headers/*') ATR(*CCSID) VALUE(1252)"
 	system "CRTCMOD MODULE($(BIN_LIB)/JXM001) SRCSTMF('src/noxdb.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/JXM002) SRCSTMF('src/sqlio.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/JXM003) SRCSTMF('src/xmlparser.c') $(CCFLAGS)"

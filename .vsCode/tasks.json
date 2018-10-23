@@ -5,7 +5,7 @@
     "tasks": [
         {
             "label": "Compile current file",
-            "command": "ssh -t dksrv206 'cd /prj/noxDB/;gmake current SRC=${fileBasenameNoExtension}'",
+            "command": "ssh -t DKSRV133 'cd /prj/noxDB/;gmake current SRC=${fileBasenameNoExtension}'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -29,7 +29,7 @@
         },
         {
             "label": "Compile Service program noxDB",
-            "command": "ssh dksrv206 'cd /prj/noxDB/;gmake all'",
+            "command": "ssh DKSRV133 'cd /prj/noxDB/;gmake all'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -41,7 +41,7 @@
         },
         {
             "label": "Compile Test modules for noxDB",
-            "command": "ssh dksrv206 'cd /prj/noxDB/test/;gmake'",
+            "command": "ssh DKSRV133 'cd /prj/noxDB/test/;gmake'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -53,7 +53,7 @@
         },
         {
             "label": "Compile current example file",
-            "command": "ssh -t dksrv206 'cd /prj/noxDB/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
+            "command": "ssh -t DKSRV133 'cd /prj/noxDB/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
             "type": "shell",
             "group": {
                 "kind": "build",
