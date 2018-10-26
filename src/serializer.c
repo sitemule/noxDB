@@ -57,6 +57,9 @@ static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
 				stream_putc(p,BackSlash);
 			}
 		}
+		else if  (c  < ' ') {
+			c = ' ';
+		}
 		stream_putc(p,c);
 		in++;
 	}
@@ -73,6 +76,9 @@ static PUCHAR jx_EncodeJson (PUCHAR out , PUCHAR in)
 			if (in[1] != 'u') {  // Dont double escape unicode escape sequence
 				*(out++) = BackSlash;
 			}
+		}
+		else if  (c  < ' ') {
+			c = ' ';
 		}
 		*(out++) = c;
 		in++;
