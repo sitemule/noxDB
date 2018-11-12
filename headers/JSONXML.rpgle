@@ -20,6 +20,9 @@
       /eof
       /endif
       /define  JX_DEF
+
+        Dcl-S UTF8 Varchar(32767) CCSID(*UTF8) Template;
+
         //---------------------------------------------------------------------- *
         //Before starting that parser - to enshure right enterpretations of delimi
         //Usage:
@@ -31,7 +34,7 @@
         //Set delimiter used for locate expression
         Dcl-PR jx_setDelimiters  extproc(*CWIDEN :'jx_SetDelimiters2');
           //always: '/\@[] .{}' in your  local CCSID
-          delimiterStr   Pointer    value options(*string);
+          delimiterStr   Like(UTF8) value;
         End-PR;
 
         Dcl-C JX_DELIMITERS const('/\@[] .{}''"');
@@ -84,23 +87,23 @@
         //Returns node to the jx_object tree
         Dcl-PR jx_ParseFile Pointer extproc(*CWIDEN:'jx_ParseFile');
           //File to parse
-          FileName       Pointer    value options(*string);
+          FileName       Like(UTF8) value;
           //Parsing options
-          Options        Pointer    value options(*string:*nopass);
+          Options        Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns node jx_object tree
         Dcl-PR jx_ParseString Pointer extproc(*CWIDEN:'jx_ParseString');
           //String to parse
-          String         Pointer    value options(*string);
+          String         Like(UTF8) value;
           //Parsing options
-          Options        Pointer    value options(*string:*nopass);
+          Options        Like(UTF8)    value options(*nopass);
         End-PR;
 
         //Set , or . for numeri decimal point
         Dcl-PR jx_setDecPoint  extproc(*CWIDEN : 'jx_SetDecPoint');
           //decimal point char
-          decPoint       Pointer    value options(*string);
+          decPoint       Like(UTF8) value;
         End-PR;
 
         //Bool true if errors occures
@@ -119,15 +122,15 @@
         // Otherwise it will format an error object
 I       Dcl-PR jx_GetMessageObject Pointer //Return error description
                                    extproc(*CWIDEN:'jx_GetMessageObject');
-I         MessageId      Pointer    value options(*string:*nopass);
-I         MessageData    Pointer    value options(*string:*nopass);
+I         MessageId      Like(UTF8) value options(*nopass);
+I         MessageData    Like(UTF8) value options(*nopass);
         End-PR;
 
         // simple courtesy function to return a {"success":true} object
         //Return success:true object
 I       Dcl-PR jx_SuccessTrue Pointer extproc(*CWIDEN:'jx_SuccessTrue');
-I         MessageId      Pointer    value options(*string:*nopass);
-I         MessageData    Pointer    value options(*string:*nopass);
+I         MessageId      Like(UTF8) value options(*nopass);
+I         MessageData    Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns pointer to node
@@ -135,7 +138,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
           //Pointer to tree or node
           pNode          Pointer    value;
           //location expression
-          Expression     Pointer    value options(*string);
+          Expression     Like(UTF8) value;
         End-PR;
 
         //Returns pointer to node
@@ -144,7 +147,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
           //Pointer to tree or node
           pNode          Pointer    value;
           //location expression
-          Expression     Pointer    value options(*string);
+          Expression     Like(UTF8) value;
         End-PR;
 
         //Returns 'ON' if node exists
@@ -152,7 +155,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
           //Pointer to tree or node
           pNode          Pointer    value;
           //Path to node
-          NodeName       Pointer    value options(*string);
+          NodeName       Like(UTF8) value;
         End-PR;
 
         //Returns 'ON' if node exists and has <> 0
@@ -160,7 +163,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
           //Pointer to tree or node
           pNode          Pointer    value;
           //Path to node
-          NodeName       Pointer    value options(*string);
+          NodeName       Like(UTF8) value;
         End-PR;
 
         //Returns 'ON' if node exists and has <> 0
@@ -168,7 +171,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
           //Pointer to tree or node
           pNode          Pointer    value;
           //Path to node
-          NodeName       Pointer    value options(*string);
+          NodeName       Like(UTF8) value;
         End-PR;
 
         //Returns 'ON' if it is a valid node
@@ -182,7 +185,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
           //Pointer to tree or node
           pNode          Pointer    value;
           //Path to node
-          NodeName       Pointer    value options(*string);
+          NodeName       Like(UTF8) value;
         End-PR;
 
         //Returns pointer to next sibling (elem)
@@ -205,24 +208,24 @@ I         MessageData    Pointer    value options(*string:*nopass);
 
         Dcl-PR jx_SetEval pointer extproc(*CWIDEN:'jx_SetEvalByName');
           pNode          Pointer    value;
-          Expresion      Pointer    value options(*string);
-          Value          Pointer    value options(*string);
+          Expresion      Like(UTF8) value;
+          Value          Like(UTF8) value;
         End-PR;
 
         Dcl-PR jx_SetStr Pointer extproc(*CWIDEN: 'jx_SetStrByName');
           //Pointer to jx_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
-          Expresion      Pointer    value options(*string);
+          Expresion      Like(UTF8) value;
           //New value to set / pointer to object
-          Value          Pointer    value options(*string);
+          Value          Like(UTF8) value;
         End-PR;
 
         Dcl-PR jx_SetInt Pointer extproc(*CWIDEN: 'jx_SetIntByName');
           //Pointer to jx_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
-          Expresion      Pointer    value options(*string);
+          Expresion      Like(UTF8) value;
           //New value to set / pointer to object
           Value          Int(10)    value;
         End-PR;
@@ -231,7 +234,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
           //Pointer to jx_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
-          Expresion      Pointer    value options(*string);
+          Expresion      Like(UTF8) value;
           //New value to set / pointer to object
           Value          Packed(30:15) value;
         End-PR;
@@ -240,7 +243,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
           //Pointer to jx_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
-          Expresion      Pointer    value options(*string);
+          Expresion      Like(UTF8) value;
           //New value to set / pointer to object
           Value          Ind        value;
         End-PR;
@@ -249,7 +252,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
           //Pointer to jx_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
-          Expresion      Pointer    value options(*string);
+          Expresion      Like(UTF8) value;
           //Pointer to anything - You do the cleanup
           Value          Pointer    value;
         End-PR;
@@ -257,7 +260,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
         Dcl-PR jx_SetProcPtr Pointer extproc(*CWIDEN: 'jx_SetPtrByName');
           pNode          Pointer    value; //Pointer to jx_ tree
           //X-path locations to node or attributes
-          Expresion      Pointer    value options(*string);
+          Expresion      Like(UTF8) value;
           Proc           Pointer(*Proc); //Pointer to a procedure
           //*ON=String escape, *OFF=If literals
           isString       Ind        value options(*nopass);
@@ -267,19 +270,19 @@ I         MessageData    Pointer    value options(*string:*nopass);
           //Pointer to jx_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
-          Expresion      Pointer    value options(*string);
+          Expresion      Like(UTF8) value;
           //New value to set / pointer to object
-          Value          Pointer    value options(*string:*nopass);
+          Value          Like(UTF8) value options(*nopass);
           //Optional new type (Refer "node type"
           Type           Uns(5)     value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_GetValueStr Varchar(32767) 
+        Dcl-PR jx_GetValueStr Like(UTF8) 
                               extproc(*CWIDEN : 'jx_GetNodeValueVC');
           //Pointer to node
           pNode          Pointer    value;
           //If not found - default value
-          Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
         Dcl-PR jx_GetValueNum Packed(30:15) 
@@ -300,21 +303,21 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Pointer to node
           pNode          Pointer    value;
           //If not found - default value
-          Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_GetName Varchar(32767) 
+        Dcl-PR jx_GetName Like(UTF8) 
                           extproc(*CWIDEN : 'jx_GetNodeNameVC');
           //Pointer to node
           pNode          Pointer    value;
         End-PR;
 
-        Dcl-PR jx_GetNameAsPath Varchar(32767)
+        Dcl-PR jx_GetNameAsPath Like(UTF8)
                                 extproc(*CWIDEN : 'jx_GetNodeNameAsPath');
           //Pointer to node
           pNode          Pointer    value;
           //Delimiter like - or . or / or \
-          Delimiter      Char(1)    value;
+          Delimiter      Char(1)    value CCSID(*UTF8);
         End-PR;
 
         //* Refer to node type above
@@ -326,24 +329,24 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
       // Get string by expresion
       //  /object/array[123]/name
       //  .object.array[123].name
-        Dcl-PR jx_GetStr Varchar(32767) extproc(*CWIDEN : 'jx_GetValueVC');
+        Dcl-PR jx_GetStr Like(UTF8) extproc(*CWIDEN : 'jx_GetValueVC');
           //Pointer to relative node
           pNode          Pointer    value;
           //Locations expression to node
-          Expression     Pointer    value options(*string:*nopass);
+          Expression     Like(UTF8) value options(*nopass);
           //If not found - default value
-          Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
       //  will join all subsequent array nodes into one resulting string
-        Dcl-PR jx_GetStrJoin Varchar(32767) 
+        Dcl-PR jx_GetStrJoin Like(UTF8) 
                              extproc(*CWIDEN : 'jx_GetStrJoinVC');
           //Pointer to relative node
           pNode          Pointer    value;
           //Locations expression to node
-          Expression     Pointer    value options(*string:*nopass);
+          Expression     Like(UTF8) value options(*nopass);
           //If not found - default value
-          Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
       // Get number by expresion like:
@@ -353,7 +356,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Pointer to relative node
           pNode          Pointer    value;
           //Locations expression to node
-          Expression     Pointer    value options(*string:*nopass);
+          Expression     Like(UTF8) value options(*nopass);
           //If not found - default value
           Defaultvalue   Packed(30:15) value options(*nopass);
         End-PR;
@@ -362,7 +365,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Pointer to relative node
           pNode          Pointer    value;
           //Locations expression to node
-          Expression     Pointer    value options(*string:*nopass);
+          Expression     Like(UTF8) value options(*nopass);
           //If not found - default value
           Defaultvalue   Int(20)    value options(*nopass);
         End-PR;
@@ -375,18 +378,18 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Pointer to tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
-          Expression     Pointer    value options(*string);
+          Expression     Like(UTF8) value;
         End-PR;
 
         Dcl-PR jx_CopyValue Pointer extproc(*CWIDEN : 'jx_CopyValue');
           //destination node
           pDest          Pointer    value;
           //destiantion name (or *NULL or '')
-          destName       Pointer    value options(*string);
+          destName       Like(UTF8) value;
           //source node
           pSource        Pointer    value;
           //source name (or *NULL or '')
-          sourceName     Pointer    value options(*string);
+          sourceName     Like(UTF8) value;
         End-PR;
 
         Dcl-PR jx_NodeCopy extproc(*CWIDEN : 'jx_NodeCopy');
@@ -416,9 +419,9 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Reference location to where it arrive
           RefLocation    Int(10)    value;
           //Name of node
-          Name           Pointer    value options(*string);
+          Name           Like(UTF8) value;
           //Value or expression
-          Value          Pointer    value options(*string);
+          Value          Like(UTF8) value;
           //New type (Refer "node type"
           Type           Uns(5)     value;
         End-PR;
@@ -463,7 +466,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Destination. Retrive from Locate()
           pDestArray     Pointer    value;
           //source node to append
-          pSourceNode    Pointer    value options(*string);
+          pSourceNode    Like(UTF8) value;
           //0=(Dft) Unlink and move, 1=copy a clone
           copy           Uns(5)     value options(*nopass);
         End-PR;
@@ -477,7 +480,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Destination. Retrive from Locate()
           pDestArray     Pointer    value;
           //source node to append
-          pSourceNode    Pointer    value options(*string);
+          pSourceNode    Like(UTF8) value;
           //0=(Dft) Unlink and move, 1=copy a clone
           copy           Uns(5)     value options(*nopass); 
         End-PR;
@@ -485,7 +488,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         //returns the new array fro source array
         Dcl-PR jx_ArraySlice Pointer extproc(*CWIDEN : 'jx_ArraySlice' );
           //source node or array string
-          pSourceNode    Pointer    value options(*string);
+          pSourceNode    Like(UTF8) value;
           //From entry ( 1=First)
           from           Int(10)    value;
           //To and includ   (-1 = Until end)
@@ -499,7 +502,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Destination. Retrive from Locate()
           pArray         Pointer    value;
           //nodenames if any in subobject to comapre
-          pkeyNames      Pointer    value options(*string) ;
+          pkeyNames      Like(UTF8) value ;
           //0=(Dft) use json numerics, 1=Use locale
           options        uns(5)     value options(*nopass);
         End-PR;
@@ -511,7 +514,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Array/ obj to search
           pArray         Pointer    value;
           //What to search for
-          expr           Pointer    value options(*string);
+          expr           Like(UTF8) value;
           //0=(Dft) Same case, 1=ignore case
           ignoreCase     Uns(5)     value options(*nopass);
         End-PR;
@@ -554,7 +557,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         Dcl-PR jx_MoveObjectInto Pointer extproc(*CWIDEN : 'jx_NodeMoveInto');
           //Destination. Retrive from Locate()
           pDestObj       Pointer    value;
-          Name           Pointer    value options(*string);
+          Name           Like(UTF8) value;
           //Source tree  Retrive from Locate()
           pSourceObj     Pointer    value;
         End-PR;
@@ -569,7 +572,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Pointer to tree to receive format
           pNode          Pointer    value;
           //node ptr or path with right formating
-          pCloneFrom     Pointer    value options(*string);
+          pCloneFrom     Like(UTF8) value;
         End-PR;
 
         //**  JSON renderes ***
@@ -577,15 +580,15 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //Name of output stream file
-          FileName       Pointer    value options(*string);
+          FileName       Like(UTF8) value;
           //Ccsid of output file
           Ccsid          Int(10)    value;
           Trim           Ind        value;
           //Extra options
-          Options        Pointer    value options(*string:*nopass);
+          Options        Like(UTF8) value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_AsJsonText Varchar(32767) 
+        Dcl-PR jx_AsJsonText Like(UTF8) 
                              extproc(*CWIDEN : 'jx_AsJsonText');
           //node. Retrive from Locate()
           pNode          Pointer    value;
@@ -606,15 +609,15 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //Name of output stream file
-          FileName       Pointer    value options(*string);
+          FileName       Like(UTF8) value;
           //Ccsid of output file
           Ccsid          Int(10)    value;
           Trim           Ind        value;
           //Extra options
-          Options        Pointer    value options(*string:*nopass);
+          Options        Like(UTF8) value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_AsXmlText Varchar(32767) extproc(*CWIDEN : 'jx_AsXmlText');
+        Dcl-PR jx_AsXmlText Like(UTF8) extproc(*CWIDEN : 'jx_AsXmlText');
           //node. Retrive from Locate()
           pNode          Pointer    value;
         End-PR;
@@ -637,28 +640,28 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //Name of output stream file
-          FileName       Pointer    value options(*string);
+          FileName       Like(UTF8) value;
           //Ccsid of output file
           Ccsid          Int(10)    value;
           //*ON=Remove inter blanks
           Trim           Ind        value;
           //Options: ';.' for separator and dec
-          Options        Pointer    value options(*string:*nopass);
+          Options        Like(UTF8) value options(*nopass);
         End-PR;
 
 
         Dcl-DS jx_DelimiterDS  based(prototype_only) qualified;
-          Slash          Char(1);
-          BackSlash      Char(1);
-          Masterspace    Char(1);
-          BraBeg         Char(1);
-          BraEnd         Char(1);
-          Blank          Char(1);
-          Dot            Char(1);
-          CurBeg         Char(1);
-          CurEnd         Char(1);
-          Apos           Char(1);
-          Quot           Char(1);
+          Slash          Char(1) CCSID(*UTF8);
+          BackSlash      Char(1) CCSID(*UTF8);
+          Masterspace    Char(1) CCSID(*UTF8);
+          BraBeg         Char(1) CCSID(*UTF8);
+          BraEnd         Char(1) CCSID(*UTF8);
+          Blank          Char(1) CCSID(*UTF8);
+          Dot            Char(1) CCSID(*UTF8);
+          CurBeg         Char(1) CCSID(*UTF8);
+          CurEnd         Char(1) CCSID(*UTF8);
+          Apos           Char(1) CCSID(*UTF8);
+          Quot           Char(1) CCSID(*UTF8);
         End-DS;
 
         //Iterators: First use the set the use forEach
@@ -685,7 +688,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //Optional - path to node
-          path           Pointer    value options(*string:*nopass);
+          path           Like(UTF8) value options(*nopass);
         End-PR;
 
         Dcl-PR jx_setRecursiveIterator  likeds( jx_Iterator) 
@@ -694,7 +697,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //Optional - path to node
-          path           Pointer    value options(*string:*nopass);
+          path           Like(UTF8) value options(*nopass);
         End-PR;
 
         //Iterator Structure
@@ -703,40 +706,40 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         //For XML attributes
-        Dcl-PR jx_GetNodeAttrValue Varchar(32767) 
+        Dcl-PR jx_GetNodeAttrValue Like(UTF8) 
                                    extproc(*CWIDEN : 'jx_GetNodeAttrValueVC');
           //Pointer to exsiting element
           pNode          Pointer    value;
           //Attribute Name
-          AttrName       Pointer    value options(*string);
+          AttrName       Like(UTF8) value;
           //If not found - default value
-          Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
         Dcl-PR jx_SetNodeAttrValue extproc(*CWIDEN : 'jx_SetNodeAttrValue');
           //Pointer to exsiting element
           pNode          Pointer    value;
           //Attribute name
-          AttrName       Pointer    value options(*string);
+          AttrName       Like(UTF8) value;
           //New value
-          Value          Pointer    value options(*string);
+          Value          Like(UTF8) value;
         End-PR;
 
-        Dcl-PR jx_GetAttrValue Varchar(32767) 
+        Dcl-PR jx_GetAttrValue Like(UTF8) 
                                extproc(*CWIDEN : 'jx_GetAttrValueVC');
           //Pointer Attribute
           pAttr          Pointer    value;
           //If not found - default value
-          Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
         Dcl-PR jx_SetAttrValue extproc(*CWIDEN : 'jx_SetAttrValue');
           //Pointer Attribute
           pAttr          Pointer    value;
           //New value
-          AttrName       Pointer    value options(*string);
+          AttrName       Like(UTF8) value;
           //Default value
-          Value          Pointer    value options(*string);
+          Value          Like(UTF8) value;
         End-PR;
 
         //Returns pointer to attribute list
@@ -751,7 +754,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           pAttr          Pointer    value;
         End-PR;
 
-        Dcl-PR jx_GetAttrName Varchar(32767) 
+        Dcl-PR jx_GetAttrName Like(UTF8) 
                               extproc(*CWIDEN : 'jx_GetAttrNameVC');
           //Pointer to attribute list
           pAttr          Pointer    value;
@@ -808,23 +811,23 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
       // NOTE: If a pConnection pointer is provided, it will be updated with the conection
         Dcl-PR jx_sqlSetOptions  extproc(*CWIDEN: 'jx_sqlSetOptions');
           //json object with options ( see sample)
-          parms          Pointer    value options(*string:*nopass);
+          parms          Like(UTF8) value options(*nopass);
         End-PR;
 
       // returns a object node with one resulting row for the SQL statment
         //Returns one SQL row as jx Obejct
         Dcl-PR jx_sqlResultRow Pointer extproc(*CWIDEN: 'jx_sqlResultRow');
           //SQL statement to run
-          sqlStmt        Pointer    value options(*string);
+          sqlStmt        Like(UTF8) value;
           //json object template
-          parms          Pointer    value options(*string:*nopass);
+          parms          Like(UTF8) value options(*nopass);
         End-PR;
 
       // returns an array (or object with array) of resulting rows for the SQL statment
         //Returns SQL rows as jx Obejct
         Dcl-PR jx_sqlResultSet Pointer extproc(*CWIDEN: 'jx_sqlResultSet');
           //SQL statement to run
-          sqlStmt        Pointer    value options(*string);
+          sqlStmt        Like(UTF8) value;
           //From row; 1=First
           start          Int(10)    value options(*nopass);
           //max number of rows; JX_ALLROWS=all
@@ -832,7 +835,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //resultset format:
           format         Int(10)    value options(*nopass);
           //json object template
-          parms          Pointer    value options(*string:*nopass);
+          parms          Like(UTF8) value options(*nopass);
         End-PR;
 
        
@@ -861,9 +864,9 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         //Returns handle to sql statement
         Dcl-PR jx_sqlOpen Pointer extproc(*CWIDEN:'jx_sqlOpen'  );
           //SQL statement to run
-          sqlStmt        Pointer    value options(*string);
+          sqlStmt        Like(UTF8) value;
           //json object template
-          parms          Pointer    value options(*string:*nopass);
+          parms          Like(UTF8) value options(*nopass);
         End-PR;
 
       // Fetch next from from that open sql handle, starting from rowNumer. 1=First row
@@ -908,44 +911,44 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         //Returns *ON if error
         Dcl-PR jx_sqlExec Ind extproc(*CWIDEN:'jx_sqlExec'  );
           //SQL statement to run (template)
-          sqlStmt        Pointer    value options(*string);
+          sqlStmt        Like(UTF8) value;
           //json object template data
-          parms          Pointer    value options(*string:*nopass);
+          parms          Like(UTF8) value options(*nopass);
         End-PR;
 
       // Execute an update table where the row is defined as a json object
         //Returns *ON if error
         Dcl-PR jx_sqlUpdate Ind extproc(*CWIDEN:'jx_sqlUpdate');
           //table name
-          table          Pointer    value options(*string);
+          table          Like(UTF8) value;
           //json object: {a:123,b:"value"}
-          row            Pointer    value options(*string);
+          row            Like(UTF8) value;
           //where clause : 'where myKey=$key'
-          where          Pointer    value options(*string:*nopass);
+          where          Like(UTF8) value options(*nopass);
           //where parameters: { key:777}
-          whereParms     Pointer    value options(*string:*nopass);
+          whereParms     Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns *ON if error
         Dcl-PR jx_sqlInsert Ind extproc(*CWIDEN:'jx_sqlInsert');
           //table name
-          table          Pointer    value options(*string);
+          table          Like(UTF8) value;
           //json object: {a:123,b:"value"}
-          row            Pointer    value options(*string);
+          row            Like(UTF8) value;
           //extra parms
-          parms          Pointer    value options(*string:*nopass);
+          parms          Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns *ON if error
         Dcl-PR jx_sqlUpsert Ind extproc(*CWIDEN:'jx_sqlUpsert');
           //table name
-          table          Pointer    value options(*string);
+          table          Like(UTF8) value;
           //json object: {a:123,b:"value"}
-          row            Pointer    value options(*string);
+          row            Like(UTF8) value;
           //where clause : 'where myKey=$key'
-          where          Pointer    value options(*string:*nopass);
+          where          Like(UTF8) value options(*nopass);
           //where parameters: { key:777}
-          whereParms     Pointer    value options(*string:*nopass);
+          whereParms     Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns id of last insert
@@ -954,13 +957,13 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
 
         //Returns array of column info
         Dcl-PR jx_sqlGetMeta Pointer extproc(*CWIDEN:'jx_sqlGetMeta');
-          sqlstmt        Pointer    value options(*string);
+          sqlstmt        Like(UTF8) value;
         End-PR;
 
       // Return pointer to database connection. No options => will be default local database
         Dcl-PR jx_sqlConnect Pointer extproc(*CWIDEN: 'jx_sqlConnect');
           //json object or string with options
-          parms          Pointer    value options(*string:*nopass);
+          parms          Like(UTF8) value options(*nopass);
         End-PR;
 
       // Return pointer to database connection. No options => will be default local database
@@ -974,11 +977,11 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
       //Returns a JSON object from a REST call
         Dcl-PR jx_httpRequest Pointer extproc(*CWIDEN:'jx_httpRequest');
           //Full URL to the resource
-          url            Pointer    value options(*string);
+          url            Like(UTF8) value;
           //json object or string
-          pReqNode       Pointer    value options(*string:*nopass);
+          pReqNode       Like(UTF8) value options(*nopass);
           //extra CURL options
-          options        Pointer    value options(*string:*nopass); 
+          options        Like(UTF8) value options(*nopass); 
         End-PR;
 
       // when the dataarea SQLTRACE is set, your SQL statements 
@@ -992,13 +995,13 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
       // Depricated and renamed functions :
       // --------------------------------------------------------------------------------------------------------------
       // Depricated - use  jx_GetValueStr
-        Dcl-PR jx_GetValue Varchar(32767) extproc(*CWIDEN : 'jx_GetValueVC');
+        Dcl-PR jx_GetValue Like(UTF8) extproc(*CWIDEN : 'jx_GetValueVC');
           //Pointer to node
           pNode          Pointer    value;
           //If not found - default value
-          Expression     Pointer    value options(*string:*nopass);
+          Expression     Like(UTF8) value options(*nopass);
           //If not found - default value
-          Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
       // Depricated - use  jx_NodeCopy
@@ -1033,21 +1036,21 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
       // Depricated - use  jx_AsJsonText
-        Dcl-PR jx_AsText Varchar(32767) extproc(*CWIDEN : 'jx_AsJsonText');
+        Dcl-PR jx_AsText Like(UTF8) extproc(*CWIDEN : 'jx_AsJsonText');
           //element. Retrive from Locate()
           pNode          Pointer    value;
         End-PR;
 
 
       // jx_XpathValue   is depricated and replaced by: jx_GetStr
-        Dcl-PR jx_XpathValue Varchar(32767)
+        Dcl-PR jx_XpathValue Like(UTF8)
                              extproc(*CWIDEN : 'jx_GetValueVC');
           //Pointer to tree
           pNode          Pointer    value;
           //Locations expression to node
-          Expression     Pointer    value options(*string);
+          Expression     Like(UTF8) value;
           //If not found - default value
-          Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
       // jx_XpathValueNum   is depricated and replaced by: jx_GetNum
@@ -1056,7 +1059,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Pointer to tree
           pJsonCom       Pointer    value;
           //X-path locations to node or attributes
-          Node           Pointer    value options(*string);
+          Node           Like(UTF8) value;
           //If not found - default value
           Defaultvalue   Packed(30:15) value options(*nopass);
         End-PR;
@@ -1075,9 +1078,9 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Reference location to where it arrive
           RefLocation    Int(10)    value;
           //Name of element
-          Name           Pointer    value options(*string);
+          Name           Like(UTF8) value;
           //Value of element
-          Value          Pointer    value options(*string);
+          Value          Like(UTF8) value;
         End-PR;
 
       // Use jx_GetNext
@@ -1096,30 +1099,30 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
 
 
       // use get jx_GetName
-        Dcl-PR jx_getElemName Varchar(32767) 
+        Dcl-PR jx_getElemName Like(UTF8) 
                               extproc(*CWIDEN : 'jx_GetNodeNameVC');
           //Pointer to node
           pNode          Pointer    value;
         End-PR;
 
       // use xml_GetValueStr
-        Dcl-PR jx_GetElemValue Varchar(32767) 
+        Dcl-PR jx_GetElemValue Like(UTF8) 
                                extproc(*CWIDEN : 'jx_GetNodeValueVC');
           //Pointer to element
           pElem          Pointer    value;
           //If not found - default value
-          Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
        // use jx_GetAttrValue
-        Dcl-PR jx_GetAttr Varchar(32767) 
+        Dcl-PR jx_GetAttr Like(UTF8) 
                           extproc(*CWIDEN : 'jx_GetNodeAttrValueVC');
           //Pointer to element
           pNode          Pointer    value;
           //Attribute Name
-          AttrName       Pointer    value options(*string);
+          AttrName       Like(UTF8) value;
           //If not found - default value
-          Defaultvalue   Pointer    value options(*string:*nopass);
+          Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
       // has no effect any longer
@@ -1136,7 +1139,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //Pointer to jx_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
-          Expresion      Pointer    value options(*string);
+          Expresion      Like(UTF8) value;
           //New value to set / pointer to object
           Value          Packed(30:15) value;
         End-PR;
@@ -1148,7 +1151,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //element. Retrive from Locate()
           pNode          Pointer    value;
           //Name of output stream file
-          FileName       Pointer    value options(*string);
+          FileName       Like(UTF8) value;
           //Ccsid of output file
           Ccsid          Int(10)    value;
           Trim           Ind        value options(*nopass);
@@ -1158,7 +1161,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           //element. Retrive from Locate()
           pNode          Pointer    value;
           //Name of output stream file
-          FileName       Pointer    value options(*string);
+          FileName       Like(UTF8) value;
           //Ccsid of output file
           Ccsid          Int(10)    value;
           Trim           Ind        value options(*nopass);
