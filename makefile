@@ -14,7 +14,6 @@ TARGET_CCSID=*JOB
 
 # Do not touch below
 INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'
-DEPS_LIST=$(BIN_LIB)/NOXDB $(BIN_LIB)/SQLIO $(BIN_LIB)/ $(BIN_LIB)/RTVSYSVAL $(BIN_LIB)/UTL100 $(BIN_LIB)/VARCHAR $(BIN_LIB)/MEM001 $(BIN_LIB)/XLATE $(BIN_LIB)/STREAM $(BIN_LIB)/TIMESTAMP $(BIN_LIB)/SNDPGMMSG $(BIN_LIB)/TRYCATCH
 
 CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) INCDIR($(INCLUDE)) DBGVIEW($(DBGVIEW)) TGTCCSID($(TARGET_CCSID))
 
@@ -60,7 +59,10 @@ noxdb.bnddir: jsonxml.entry
 %.srvpgm:
 	-system -qi "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
 	system "CPYFRMSTMF FROMSTMF('headers/$*.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/$*.mbr') MBROPT(*replace)"
+	
+	# You may be wondering what this ugly string is. It's a list of objects created from the dep list that end with .c or .clle.
 	$(eval modules := $(patsubst %,$(BIN_LIB)/%,$(basename $(filter %.c %.clle,$(notdir $^)))))
+	
 	system -i -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
 
 hdr:
@@ -70,18 +72,16 @@ hdr:
 	system -i "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(112)"
 	system -i "CRTSRCPF FILE($(BIN_LIB)/QCREF) RCDLEN(112)"
   
-	system -i "CPYFRMSTMF FROMSTMF('headers/JSONPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONPARSER.mbr') MBROPT(*ADD)"
-	system -i "CPYFRMSTMF FROMSTMF('headers/XMLPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/XMLPARSER.mbr') MBROPT(*ADD)"
-	system -i "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCREF.file/JSONXML.mbr') MBROPT(*ADD)"
+	system "CPYFRMSTMF FROMSTMF('headers/JSONPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONPARSER.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/XMLPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/XMLPARSER.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCREF.file/JSONXML.mbr') MBROPT(*REPLACE)"
 
 all:
 	@echo Build success!
 
 clean:
-	-system -qi "DLTOBJ OBJ($(BIN_LIB)/QCLLESRC) OBJTYPE(*FILE)"
-	-system -qi "DLTOBJ OBJ($(BIN_LIB)/QSRVSRC) OBJTYPE(*FILE)"
-	-system -qi "DLTOBJ OBJ($(BIN_LIB)/QRPGLEREF) OBJTYPE(*FILE)"
-	-system -qi "DLTOBJ OBJ($(BIN_LIB)/QCREF) OBJTYPE(*FILE)"
+	-system -qi "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*FILE)"
+	-system -qi "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
 current: env

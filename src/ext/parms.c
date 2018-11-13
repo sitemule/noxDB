@@ -14,48 +14,6 @@
 #include "rtvsysval.h"
 
 /* ------------------------------------------------------------- */
-PUCHAR RtvSysVal(PUCHAR sysvalvalue, PUCHAR sysvalname)
-{
-   typedef _Packed struct {
-     LONG numrtn;
-     LONG offset;
-     UCHAR payload[4096];
-   } RCV, *PRCV;
-   RCV rcv;
-   Qwc_Rsval_Sys_Value_Table_t * prcvval;
-   PUCHAR pvalue;
-
-   APIERR apierr = {sizeof(APIERR),0,"",0,""};
-   int i;
-   for (i=0;i<10; i++) {
-     sysvalname[i] = toupper(sysvalname[i]);
-   }
-
-   QWCRSVAL(&rcv , sizeof(rcv) , 1, sysvalname  , &apierr);
-   if (apierr.avail > 0) {
-     strcpy (sysvalvalue, "");
-     return (sysvalvalue);
-   }
-   prcvval = (Qwc_Rsval_Sys_Value_Table_t *)  ((PUCHAR) &rcv  + rcv.offset);
-   pvalue = (PUCHAR) prcvval + sizeof(*prcvval);
-
-   if (prcvval->Type_Data == 'B') {
-      sprintf(sysvalvalue, "%ld" , * (PLONG) pvalue );
-   } else if (prcvval->Type_Data == 'C') {
-   // left trim
-      while (*pvalue == ' ' &&  prcvval->Length_Data > 0) {
-         pvalue ++;
-         prcvval->Length_Data --;
-      }
-      strncpy(sysvalvalue , pvalue , prcvval->Length_Data);
-      sysvalvalue[prcvval->Length_Data] = '\0';
-   } else {
-     strcpy (sysvalvalue, "");
-     return (sysvalvalue);
-   }
-   return (sysvalvalue);
-}
-/* ------------------------------------------------------------- */
 int RtvDftCCSID (void)
 {
    APIERR apierr = {sizeof(APIERR),0,"",0,""};
