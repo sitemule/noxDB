@@ -16,12 +16,11 @@
 
 #include <sys/stat.h>
 #include "ostypes.h"
-#include "xlate.h"
-#include "jsonxml.h"
-#include "parms.h"
-#include "utl100.h"
-#include "mem001.h"
 #include "varchar.h"
+#include "xlate.h"
+#include "parms.h"
+#include "mem001.h"
+#include "noxdb.h"
 
 // ---------------------------------------------------------------------------
 PUCHAR loadText (PUCHAR file)

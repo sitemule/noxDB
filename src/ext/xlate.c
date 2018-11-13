@@ -17,7 +17,9 @@
 #include <QTQICONV.h>
 
 #include "ostypes.h"
+#include "varchar.h"
 #include "xlate.h"
+
 
 /* ------------------------------------------------------------- */
 PXLATEDESC XlateXdOpen (int FromCCSID, int ToCCSID)

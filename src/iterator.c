@@ -23,13 +23,12 @@
 
 #include <sys/stat.h>
 #include "ostypes.h"
+#include "varchar.h"
 #include "xlate.h"
-#include "jsonxml.h"
 #include "parms.h"
 #include "rtvsysval.h"
-#include "utl100.h"
 #include "mem001.h"
-#include "varchar.h"
+#include "noxdb.h"
 
 
 /* ---------------------------------------------------------------------------

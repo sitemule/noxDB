@@ -12,39 +12,28 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
-
 #include <sys/stat.h>
+
 #include "ostypes.h"
+#include "varchar.h"
 #include "sndpgmmsg.h"
 #include "trycatch.h"
 #include "rtvsysval.h"
 #include "parms.h"
-#include "utl100.h"
 #include "mem001.h"
-#include "varchar.h"
 #include "streamer.h"
-#include "jsonxml.h"
-
-// Globals
-extern UCHAR Quot  ;
+#include "noxdb.h"
 
 
-extern UCHAR BraBeg;
-extern UCHAR BraEnd;
-extern UCHAR CurBeg;
-extern UCHAR CurEnd;
-extern UCHAR BackSlash;
-extern int   OutputCcsid;
-
-
-/* ---------------------------------------------------------------------------
-	--------------------------------------------------------------------------- */
+// -----------------------------------------------------------------
+#pragma convert(1252)
 static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
 {
+
 	while (*in) {
 		UCHAR c =  *in;
 		if (c == '\n' ||  c == '\r' || c == '\t' || c == '\"' ) {
-			stream_putc(p,BackSlash);
+			stream_putc(p,BACKSLASH);
 			switch (c) {
 				case '\n': c = 'n' ; break ;
 				case '\r': c = 'r' ; break ;
@@ -52,9 +41,9 @@ static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
 				case '\"': c = '"' ; break ;
 			}
 		}
-		else if  (c  == BackSlash) {
+		else if  (c  == BACKSLASH) {
 			if (in[1] != 'u') {  // Dont double escape unicode escape sequence
-				stream_putc(p,BackSlash);
+				stream_putc(p,BACKSLASH);
 			}
 		}
 		else if  (c  < ' ') {
@@ -64,17 +53,20 @@ static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
 		in++;
 	}
 }
+#pragma convert(0)
+// -----------------------------------------------------------------
+#pragma convert(1252)
 static PUCHAR jx_EncodeJson (PUCHAR out , PUCHAR in)
 {
 	PUCHAR ret = out;
 	while (*in) {
 		UCHAR c =  *in;
 		if (c == '\n' ||  c == '\r' || c == '\t' || c == '\"' ) {
-			*(out++) = BackSlash;
+			*(out++) = BACKSLASH;
 		}
-		else if  (c  == BackSlash) {
+		else if  (c  == BACKSLASH) {
 			if (in[1] != 'u') {  // Dont double escape unicode escape sequence
-				*(out++) = BackSlash;
+				*(out++) = BACKSLASH;
 			}
 		}
 		else if  (c  < ' ') {
@@ -86,6 +78,9 @@ static PUCHAR jx_EncodeJson (PUCHAR out , PUCHAR in)
 	*(out++) = '\0';
 	return ret;
 }
+#pragma convert(0)
+// -----------------------------------------------------------------
+#pragma convert(1252)
 static void indent (PSTREAM pStream , int indent)
 {
 	int i;
@@ -101,7 +96,8 @@ static void indent (PSTREAM pStream , int indent)
 		stream_putc(pStream, '\t');
 	}
 }
-/* --------------------------------------------------------------------------- */
+#pragma convert(0)
+// -----------------------------------------------------------------
 void checkParentRelation(PJXNODE pNode , PJXNODE pParent)
 {
 	 if (pNode->pNodeParent != pParent) {
@@ -122,16 +118,18 @@ static void  jsonStreamPrintObject  (PJXNODE pParent, PSTREAM pStream, SHORT lev
 	SHORT nextLevel = level +1;
 
 	// indent (pStream ,level);
-	stream_putc (pStream, CurBeg);
+	stream_putc (pStream, CURBEG);
 	for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
 		indent (pStream ,nextLevel);
-		stream_printf (pStream, "%c%s%c:",Quot, pNode->Name, Quot);
+		stream_putc(pStream, QUOT);
+		stream_puts(pStream, pNode->Name);
+		stream_putc(pStream, QUOT);
 		checkParentRelation(pNode , pParent);
 		jsonStreamPrintNode (pNode , pStream, nextLevel);
-		if (pNode->pNodeSibling) stream_putc  (pStream, ',' );
+		if (pNode->pNodeSibling) stream_putc  (pStream, COMMA );
 	}
 	indent (pStream , level);
-	stream_putc (pStream, CurEnd);
+	stream_putc (pStream, CUREND);
 }
 /* --------------------------------------------------------------------------- */
 static void  jsonStreamPrintArray (PJXNODE pParent, PSTREAM pStream, SHORT level)
@@ -140,37 +138,38 @@ static void  jsonStreamPrintArray (PJXNODE pParent, PSTREAM pStream, SHORT level
 	 SHORT nextLevel = level +1;
 
 	 // indent (pStream ,level);
-	 stream_putc (pStream, BraBeg);
+	 stream_putc (pStream, BRABEG);
 	 indent (pStream ,nextLevel);
 	 for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
-			// indent (pStream ,nextLevel);
-			checkParentRelation(pNode , pParent);
-			jsonStreamPrintNode (pNode , pStream, nextLevel);
-			if (pNode->pNodeSibling) stream_putc  (pStream, ',' );
+		// indent (pStream ,nextLevel);
+		checkParentRelation(pNode , pParent);
+		jsonStreamPrintNode (pNode , pStream, nextLevel);
+		if (pNode->pNodeSibling) stream_putc  (pStream, COMMA );
 	 }
 	 indent (pStream , level);
-	 stream_putc (pStream, BraEnd);
+	 stream_putc (pStream, BRAEND);
 }
 /* --------------------------------------------------------------------------- */
 static void jsonStreamPrintValue   (PJXNODE pNode, PSTREAM pStream)
 {
-	 // Has value?
-	 if (pNode->Value && pNode->Value[0] > '\0') {
-			if (pNode->isLiteral) {
-				 stream_puts (pStream, pNode->Value);
-			} else {
-				 stream_putc(pStream , Quot);
-				 jx_EncodeJsonStream(pStream ,pNode->Value);
-				 stream_putc(pStream , Quot);
-			}
-	 // Else it is some kind of null: Strings are "". Literals will return "null"
-	 } else {
-			if (pNode->isLiteral) {
-				 stream_puts (pStream, "null");
-			} else {
-				 stream_printf (pStream, "%c%c", Quot, Quot);
-			}
-	 }
+	// Has value?
+	if (pNode->Value && pNode->Value[0] > '\0') {
+		if (pNode->isLiteral) {
+			stream_puts (pStream, pNode->Value);
+		} else {
+			stream_putc(pStream , QUOT);
+			jx_EncodeJsonStream(pStream ,pNode->Value);
+			stream_putc(pStream , QUOT);
+		}
+	// Else it is some kind of null: Strings are "". Literals will return "null"
+	} else {
+		if (pNode->isLiteral) {
+			stream_puts (pStream, NULLSTR);
+		} else {
+			stream_putc(pStream , QUOT);
+			stream_putc(pStream , QUOT);
+		}
+	}
 }
 /* --------------------------------------------------------------------------- */
 /* Invalid node types a just jeft out                                          */
@@ -196,7 +195,7 @@ static void  jsonStreamPrintNode (PJXNODE pNode, PSTREAM pStream, SHORT level)
 void  jx_AsJsonStream (PJXNODE pNode, PSTREAM pStream)
 {
 	if (pNode == NULL) {
-		stream_puts (pStream, "null");
+		stream_puts (pStream, NULLSTR);
 	} else {
 		jsonStreamPrintNode (pNode, pStream, 0);
 	}
@@ -218,6 +217,7 @@ static LONG jx_memWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 }
 
 // ----------------------------------------------------------------------------
+/*
 static LONG jx_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 {
 	PJWRITE pjWrite = p->handle;
@@ -237,9 +237,15 @@ static LONG jx_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 	free (temp);
 	return rc;
 }
-
-/* ---------------------------------------------------------------------------
-	 --------------------------------------------------------------------------- */
+*/
+// ----------------------------------------------------------------------------
+static LONG jx_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
+{
+	PJWRITE pjWrite = p->handle;
+	LONG rc = fwrite (buf, 1, len , pjWrite->outFile);
+	return rc;
+}
+// ----------------------------------------------------------------------------
 LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -261,7 +267,7 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 	pjWrite->buf = buf;
 	pjWrite->doTrim = true;
 	pjWrite->maxSize =   pParms->OpDescList == NULL
-									|| (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3) ? maxLenP : MEMMAX;
+		|| (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3) ? maxLenP : MEMMAX;
 
 	jx_AsJsonStream (pNode , pStream);
 	len = pStream->totalSize;
@@ -270,86 +276,80 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 	return  len;
 
 }
-/* ---------------------------------------------------------------------------
-	 --------------------------------------------------------------------------- */
+// ----------------------------------------------------------------------------
 static void  jx_AsJsonStreamRunner   (PSTREAM pStream)
 {
 	PJXNODE  pNode = pStream->context;
 	jx_AsJsonStream (pNode , pStream);
 }
-/* ---------------------------------------------------------------------------
-	 --------------------------------------------------------------------------- */
+// ----------------------------------------------------------------------------
 PSTREAM jx_Stream  (PJXNODE pNode)
 {
-	 PSTREAM  pStream;
-	 LONG     len;
-	 JWRITE   jWrite;
-	 PJWRITE  pjWrite = &jWrite;
-	 memset(pjWrite , 0 , sizeof(jWrite));
+	PSTREAM  pStream;
+	LONG     len;
+	JWRITE   jWrite;
+	PJWRITE  pjWrite = &jWrite;
+	memset(pjWrite , 0 , sizeof(jWrite));
 
-	 pStream = stream_new (4096);
-	 pStream->handle  = pjWrite;
-	 pjWrite->doTrim  = true;
-	 pjWrite->maxSize = MEMMAX;
-	 pStream->runner  = jx_AsJsonStreamRunner;
-	 pStream->context = pNode;
-	 return  pStream;
+	pStream = stream_new (4096);
+	pStream->handle  = pjWrite;
+	pjWrite->doTrim  = true;
+	pjWrite->maxSize = MEMMAX;
+	pStream->runner  = jx_AsJsonStreamRunner;
+	pStream->context = pNode;
+	return  pStream;
 }
-
-/* ---------------------------------------------------------------------------
-	 --------------------------------------------------------------------------- */
-VARCHAR jx_AsJsonText (PJXNODE pNode)
+// ----------------------------------------------------------------------------
+VOID jx_AsJsonText (PLVARCHAR res, PJXNODE pNode)
 {
-	 VARCHAR  res;
-	 res.Length = jx_AsJsonTextMem ( pNode ,  res.String, sizeof(res.String));
-	 return res;
+	res->Length = jx_AsJsonTextMem ( pNode ,  res->String, sizeof(res->String));
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
 void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJXNODE options)
 {
-	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	 PSTREAM pStream;
-	 JWRITE  jWrite;
-	 PJWRITE pjWrite= &jWrite;
-	 UCHAR   mode[32];
-	 UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
-	 UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PSTREAM pStream;
+	JWRITE  jWrite;
+	PJWRITE pjWrite= &jWrite;
+	UCHAR   mode[32];
+	UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
+	UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
 
-	 // Hack for quick fix no bom , just set ccsid negative
-	 BOOL   makeBomCode  = Ccsid > 0;
-	 Ccsid = Ccsid < 0  ? - Ccsid : Ccsid;
+	// Hack for quick fix no bom , just set ccsid negative
+	BOOL   makeBomCode  = Ccsid > 0;
+	Ccsid = Ccsid < 0  ? - Ccsid : Ccsid;
 
-	 memset(pjWrite , 0 , sizeof(jWrite));
+	memset(pjWrite , 0 , sizeof(jWrite));
 
-	 if (pNode == NULL) return;
+	if (pNode == NULL) return;
 
-	 pStream = stream_new (4096);
-	 pStream->handle = pjWrite;
-	 pStream->writer = jx_fileWriter;
+	pStream = stream_new (4096);
+	pStream->handle = pjWrite;
+	pStream->writer = jx_fileWriter;
 
-	 sprintf(mode , "wb,o_ccsid=%d", Ccsid);
-	 unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
-	 pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
-	 if (pjWrite->outFile == NULL) return;
+	sprintf(mode , "wb,o_ccsid=%d", Ccsid);
+	unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
+	pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
+	if (pjWrite->outFile == NULL) return;
 
-	 pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
-	 pjWrite->iconv  = OpenXlate(OutputCcsid , Ccsid );
+	pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
+	pjWrite->iconv  = OpenXlate(1208, Ccsid);
 
-	 if (makeBomCode) {
-			switch(Ccsid) {
-				case 1208 :
-					fputs (sigUtf8, pjWrite->outFile );
-					break;
-				case 1200 :
-					fputs (sigUtf16, pjWrite->outFile );
-					break;
-			}
-	 }
+	if (makeBomCode) {
+		switch(Ccsid) {
+			case 1208 :
+				fputs (sigUtf8, pjWrite->outFile );
+				break;
+			case 1200 :
+				fputs (sigUtf16, pjWrite->outFile );
+				break;
+		}
+	}
 
-	 jx_AsJsonStream (pNode , pStream);
+	jx_AsJsonStream (pNode , pStream);
 
-	 stream_delete (pStream);
-	 fclose(pjWrite->outFile);
-	 iconv_close(pjWrite->iconv);
+	stream_delete (pStream);
+	fclose(pjWrite->outFile);
+	iconv_close(pjWrite->iconv);
 }

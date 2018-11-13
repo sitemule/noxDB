@@ -20,8 +20,8 @@
 // Thread locals dont work on IBMi, so we use "the chritical section" by locking the errorFound
 // a "Serialized thread model" with locks / mutex
 
-static  BOOL      errorFound;
-static  EXCEPTION excData;
+__thread static  BOOL      errorFound;
+__thread static  EXCEPTION excData;
 /* -------------------------------------------------------------
    Error Monitor routine
    ------------------------------------------------------------- */

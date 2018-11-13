@@ -122,6 +122,13 @@ PUCHAR memStrDup(PUCHAR s)
     return p;
 }
 // -------------------------------------------------------------
+PVOID memAllocClear(ULONG len)
+{
+    PUCHAR p = memAlloc (len);
+    memset (p , '\0' , len); 
+    return p;
+}
+// -------------------------------------------------------------
 PVOID memRealloc (PVOID * p, ULONG len)
 {
     PUCHAR oldMem = *p;

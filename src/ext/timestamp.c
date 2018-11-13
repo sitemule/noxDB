@@ -112,15 +112,6 @@ PUCHAR ts_unix2isostr (PUCHAR iso ,  time_t unix)
     ts_tm2isostr (iso  , timeinfo, 0);
     return iso;
 }
-/* -----------------------------------------------------------------
-   Wrapper to time function - to be discontinued
-   ----------------------------------------------------------------- */
-decimal (15) ts2sec (PTS pTs)
-{
-   decimal (15) sec;
-   TS2SEC (pTs, &sec);
-   return sec;
-}
 /* ----------------------------------------------------------------- */
 /* testcase:
 void main()

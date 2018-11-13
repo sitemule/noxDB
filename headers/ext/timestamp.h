@@ -28,9 +28,6 @@ typedef _Packed struct {
 void CurrentTimeStamp  (PTS timestamp);
 */
 
-#pragma linkage (TS2SEC , OS)
-void TS2SEC (PTS time , decimal (15,0) * sec);
-
 /* C-Prototypes */
 PUCHAR  ts_nowstr (PUCHAR timeStamp);
 TS      ts_now(void);

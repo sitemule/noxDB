@@ -2,9 +2,10 @@
 #-----------------------------------------------------------
 # User-defined part start
 #
+# NOTE - UTF is only alowed for C 
 
-# NOTE - UTF is not allowed for ILE source (yet) - so convert to WIN-1252
-
+# The shell we use
+SHELL=/QOpenSys/usr/bin/qsh
 
 # BIN_LIB is the destination library for the service program.
 # the rpg modules and the binder source file are also created in BIN_LIB.
@@ -14,7 +15,7 @@ DBGVIEW=*ALL
 TARGET_CCSID=*JOB
 
 # Do not touch below
-INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'
+INCLUDE='/QIBM/include' './headers/' './headers/ext/'
 DEPS_LIST=$(BIN_LIB)/RTVSYSVAL $(BIN_LIB)/UTL100 $(BIN_LIB)/VARCHAR $(BIN_LIB)/MEM001 $(BIN_LIB)/XLATE $(BIN_LIB)/STREAM $(BIN_LIB)/TIMESTAMP $(BIN_LIB)/SNDPGMMSG $(BIN_LIB)/TRYCATCH
 
 CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) INCDIR($(INCLUDE)) DBGVIEW($(DBGVIEW)) TGTCCSID($(TARGET_CCSID))
@@ -37,8 +38,10 @@ env:
 
 
 compile:
-	system "CHGATR OBJ('src/*') ATR(*CCSID) VALUE(1252)"
-	system "CHGATR OBJ('headers/*') ATR(*CCSID) VALUE(1252)"
+	system "CHGATR OBJ('src/*') ATR(*CCSID) VALUE(1208)"
+	system "CHGATR OBJ('src/ext/*') ATR(*CCSID) VALUE(1208)"
+	system "CHGATR OBJ('headers/*') ATR(*CCSID) VALUE(1208)"
+	system "CHGATR OBJ('headers/ext/*') ATR(*CCSID) VALUE(1208)"
 	system "CRTCMOD MODULE($(BIN_LIB)/JXM001) SRCSTMF('src/noxdb.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/JXM002) SRCSTMF('src/sqlio.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/JXM003) SRCSTMF('src/xmlparser.c') $(CCFLAGS)"
@@ -92,11 +95,10 @@ clean:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/QCREF) OBJTYPE(*FILE)"
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
-current: env
+current: 
+	system "CRTCMOD MODULE($(BIN_LIB)/$(MOD)) SRCSTMF('$(SRC)') $(CCFLAGS2) "
 
-	system "CRTCMOD MODULE($(BIN_LIB)/$(SRC)) SRCSTMF('src/$(SRC).c') $(CCFLAGS2) "
 
-# For vsCode / single file then i.e.: gmake current sqlio.c  
 example: 
 	system "CRTBNDRPG PGM($(BIN_LIB)/$(SRC)) SRCSTMF('examples/$(SRC).rpgle') DBGVIEW(*ALL)" > error.txt
 

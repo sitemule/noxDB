@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*INHERIT) */
+﻿/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*INHERIT) */
 /* ------------------------------------------------------------- */
 /* Date  . . . . : 14.12.3005                                    */
 /* Design  . . . : Niels Liisberg                                */
@@ -19,9 +19,7 @@
 #include <mih/setsppfp.h>
 
 #include "ostypes.h"
-#include "minmax.h"
-#include "parms.h"
-#include "utl100.h"
+#include "strUtil.h"
 
 /* ------------------------------------------------------------- *\
    copy a string and return number of bytes copied
@@ -54,6 +52,24 @@ int memIcmp (PUCHAR s1, PUCHAR s2 , int len)
       c = toUpper(*(s1++)) - toUpper(*(s2++));
     }
     return c;
+}
+#include "ostypes.h"
+/* ------------------------------------------------------------- *\
+   memmem 
+\* ------------------------------------------------------------- */
+PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen, 
+                       PUCHAR needle , ULONG needleLen)
+{
+    PUCHAR p = heystack;
+    PUCHAR end = heystack + haystackLen;
+    while (p < end) {
+        if (*p == *needle
+        &&   0 == memcmp ( p , needle , needleLen)) {
+            return p;
+        }
+        p++;
+    }
+    return NULL;
 }
 /* ------------------------------------------------------------- *\
    toUpper and toLower in ccsid 277
@@ -348,6 +364,34 @@ PUCHAR strtrimncpy(PUCHAR out , PUCHAR in , LONG maxlen)
    return ret;
 }
 /* ------------------------------------------------------------- *\
+   strtrimcpy copys and remows blanks before and after
+\* ------------------------------------------------------------- */
+PUCHAR strtrimcpy(PUCHAR out , PUCHAR in)
+{
+   PUCHAR end = out;
+   PUCHAR ret = out;
+   BOOL   findfirst = TRUE;
+   int maxlen = strlen(in);
+
+   for  (; maxlen > 0 ; maxlen --) {
+      if (findfirst ) {
+         if (*in > ' ') {
+            findfirst = FALSE;
+         }
+      }
+      if (! findfirst) {
+        *out = *in;
+        if (*out > ' ') {
+          end = out + 1; // Where the zero termination will be
+        }
+        out++;
+      }
+      in++;
+   }
+   *(end) = '\0';
+   return ret;
+}
+/* ------------------------------------------------------------- *\
    substr  copys and from and up to len
 \* ------------------------------------------------------------- */
 PUCHAR substr(PUCHAR out , PUCHAR in , LONG len)
@@ -413,105 +457,6 @@ LONG subwords (PUCHAR in , PUCHAR  delimiters)
    return res;
 }
 /* ------------------------------------------------------------- */
-VARCHAR Word (PVARCHAR inputStr, LONG ix , PUCHAR delimiters)
-{
-   VARCHAR res;
-   LONG cx  =1;
-   PUCHAR p;
-   LONG i;
-
-   res.Length =0;
-   if (inputStr->Length == 0) return res; // Not found
-
-   // Find the next occurens
-   for (i=0; i<inputStr->Length && cx <ix; i++) {
-      p = strchr(delimiters , inputStr->String[i]);
-      if (p) cx ++;
-   }
-   if (cx != ix) return res; // Not found
-
-   // Find the first occurens
-   for (;i<inputStr->Length; i++) {
-      p = strchr(delimiters , inputStr->String[i]);
-      if (p) break;
-      res.String[res.Length++] = inputStr->String[i];
-   }
-   return res;
-}
-/* ------------------------------------------------------------- */
-LONG Words (PVARCHAR inputStr, PUCHAR  delimiters)
-{
-   LONG res =1;
-   LONG i ;
-   PUCHAR p;
-
-   if (inputStr->Length == 0) return 0;
-
-   for (i=0; i<inputStr->Length; i++) {
-      p = strchr(delimiters , inputStr->String[i]);
-      if (p) res++;
-   }
-   return res;
-}
-/* ------------------------------------------------------------- *\
-   Append keywords to command string
-\* ------------------------------------------------------------- */
-void AppendCmdKwd (PUCHAR cmd , PUCHAR kwd, PUCHAR  value)
-{
-    PUCHAR cmdpos;
-    PUCHAR p;
-    UCHAR kwdtmp[11];
-    UCHAR temp[512];
-    UCHAR temp1[512];
-    int len, i;
-    PUCHAR tail = NULL ;
-
-    len = strchr(kwd , ' ') - kwd;
-    substr(kwdtmp   , kwd , len);
-
-    p = stristr(cmd , kwdtmp);
-    if (p) return;   // allready there
-
- // Find last non blank
-    for (i=1023; i> 0; i--) {
-       if (cmd[i] > ' ') {
-          tail = &cmd [i] + 2;  // Last char + one blank
-          break;
-       }
-    }
-    if (tail == NULL) return;
-
- // Value
-    len = strchr(value, ' ') - value;
-    substr(temp1, value , len);
-    strchrreplace (  temp1  , temp1  , "_" , " ");
-    len = sprintf(temp , "%s(%s) " , kwdtmp , temp1);
-    memcpy ( tail , temp , len);
-
-}
-/* -----------------------------------------------------------------
-   returns the string in IBMi like commands i.e.  LIB(QSYS)
-   returns QSYS for lib
-   This also works for RPG parameters as dim(10) or likeds(product) etc
-   ----------------------------------------------------------------- */
-PUCHAR getKwdValue (PUCHAR out , PUCHAR base, PUCHAR kwd )
-{
-   PUCHAR s,b,e;
-   *out='\0';
-   s = stristr(base , kwd );
-   if (s) {
-     b = strchr(s , '(');
-     if (b) {
-       b++; // on first after
-       e = strchr(b  , ')');
-       if (e) {
-          SHORT len = e -b;
-          substr(out, b , len);
-       }
-     }
-   }
-   return out;
-}
 /* -----------------------------------------------------------------
    Copy a C-string to fixed char according to its length
    padding it right with blanks
@@ -563,19 +508,23 @@ PUCHAR strrighttrimcpy(PUCHAR dst, PUCHAR src)
    *(end+1) = '\0';
    return ret;
 }
-/* ------------------------------------------------------------- */
-void split2LibAndName(PUCHAR Lib , PUCHAR Name , PUCHAR s)
+/* -----------------------------------------------------------------
+   ----------------------------------------------------------------- */
+PUCHAR strrighttrimncpy(PUCHAR dst, PUCHAR src, LONG len)
 {
-  PUCHAR dash = strchr(s, '/');
-  if (dash) {
-    int l = dash - s;
-    memcpy(Lib , s , l);
-    pad(Lib, 10);
-    padncpy(Name,  dash +1, 10);
-  } else {
-    padncpy(Lib  ,  "*LIBL" , 10);
-    padncpy(Name ,  s       , 10);
-  }
+   PUCHAR end = dst;
+   PUCHAR ret = dst;
+   SHORT i;
+   while (*src && len-- > 0) {
+      *dst = *src;
+      if (*dst > ' ') {
+        end = dst;
+      }
+      dst ++;
+      src ++;
+   }
+   *(end+1) = '\0';
+   return ret;
 }
 /* -----------------------------------------------------------------
    ----------------------------------------------------------------- */
@@ -615,67 +564,6 @@ PUCHAR str2lower (PUCHAR out, PUCHAR in )
    *r= '\0';
    return out;
 }
-/* -----------------------------------------------------------------
-   Locate the file name portion only from a complete string
-   ----------------------------------------------------------------- */
-PUCHAR FileNameOnly(PUCHAR s)
-{
-   PUCHAR p;
-   p = s;
-   for (;;) {
-      p = strchr (p , '/');
-      if (p == NULL) break;
-      p++;
-      s = p;
-   }
-   return(s);
-}
-/* -----------------------------------------------------------------
-   Compact Short: returns a string where A12 of 1012
-   ----------------------------------------------------------------- */
-static UCHAR mapChars [] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-PUCHAR short2comp (SHORT n)
-{
-   static UCHAR c [5];
-   if (n < 1000) {
-     sprintf (c ,  "%03.3d" , n);
-   } else {
-     int i;
-     n -= 1000;
-     for (i=2 ; i>=0 ; i--) {
-       c[i] = mapChars [n % (sizeof(mapChars)-1)];
-       n /= (sizeof(mapChars)-1);
-     }
-     c[3] = '\0';
-
-   }
-   return c;
-}
-/* -----------------------------------------------------------------
-   Compact Short: returns a string where A12 of 1012
-   ----------------------------------------------------------------- */
-SHORT  comp2short (PUCHAR c)
-{
-   SHORT r;
-   UCHAR t [5];
-   if (*c >= '0' && *c <= '9') {
-     r = atoi(substr(t , c , 3));
-   } else {
-     PUCHAR p;
-     int i;
-     r = 0;
-     for ( i = 0 ; i < 3; i++) {
-       p = strchr(mapChars , c[i]);
-       if (p == NULL) {
-         return (0);
-       }
-       r *= (sizeof(mapChars) -1);
-       r += p - mapChars;
-     }
-     r += 1000;
-   }
-   return r;
-}
 /* --------------------------------------------------------------------------- */
 UCHAR hexchar2int (UCHAR c)
 {
@@ -688,22 +576,6 @@ UCHAR hexchar2int (UCHAR c)
    if (c >= 'a' && c <= 'f') {
      return (c - 'a' + 10);
    }
-}
-/* --------------------------------------------------------------------------- */
-VARCHAR hexStr (PVARCHAR in)
-{
-   VARCHAR res;
-   PUCHAR h = "0123456789ABCDEF";
-   UCHAR c;
-   SHORT i;
-
-   res.Length = 0;
-   for (i=0; i<in->Length; i++) {
-     c = in->String[i];
-     res.String[res.Length++] = h[c / 16];
-     res.String[res.Length++] = h[c % 16];
-   }
-   return res;
 }
 PUCHAR binMem2Hex (PUCHAR out , PUCHAR in , LONG len)
 {
@@ -737,21 +609,6 @@ ULONG hexstr2int (PUCHAR s)
       res = (res * 256) + (16 * hexchar2int(*(s++)) + hexchar2int(*(s++)));
    }
    return res;
-}
-/* --------------------------------------------------------------------------- */
-void memLockExcl (PVOID mem)
-{
-  // Lock Exclusive, No Read */
-  struct _LOCKSL_Template_T lt;
-  struct _LOCKSL_Template_T * plt = &lt;
-  memset (&lt , 0, sizeof(lt));
-  lt.Num_Requests = 1;
-  lt.Offset_Selections  = &lt.Lock_State - (PUCHAR) &lt;
-  lt.Request_Type = 1; // Syncrone
-  lt.Timeout_Option  = 1;
-  lt.Location[0] = setsppfp (mem);
-  lt.Lock_State = _LENR_LOCK | _LOCK_ENTRY_ACTIVE ;
-  _LOCKSL2 (&plt);
 }
 /* ------------------------------------------------------------- */
 FIXEDDEC str2dec(PUCHAR str , UCHAR decPoint)
@@ -808,15 +665,6 @@ LONG packedMem2Int(PUCHAR buf, SHORT bytes)
       res = - res;
     }
     return res;
-}
-/* ------------------------------------------------------------- */
-FIXEDDEC num(PVARCHAR Str, PUCHAR DecPointP)
-{
-   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-
-   UCHAR dc = (pParms->OpDescList->NbrOfParms > 1 && DecPointP) ? *DecPointP : ',' ;
-   Str->String[Str->Length] = '\0';
-   return str2dec(Str->String,dc);
 }
 /* ------------------------------------------------------------- */
 PUCHAR stripLeadingZeros(PUCHAR out, PUCHAR s)
@@ -895,34 +743,8 @@ PUCHAR fmtZoned(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint)
    *pOut = '\0';
    return(stripLeadingZeros(out , temp));
 }
-/* ------------------------------------------------------------- */
-/*  moved to MEM001  !!!!!!!!!!!!!!!!
-void freeAndSetNull  (PVOID * p)
-{
-   if (*p == NULL) return;
-   p--;
-   if (*p != MEMSIG) return
-   free (*p);
-   *p = NULL;
-}
 // -------------------------------------------------------------
-PVOID memAlloc (LONG len)
-{
-    PVOID mem = malloc (len + 1);
-    static PVOID firstMem;
-    *mem = MEMSIG;
-    mem ++;
-
-    if (firstMem == NULL) {
-      firstMem = mem;
-    }
-    if ((PUCHAR) mem - (PUCHAR) firstMem  > 1000000L) {
-       sleep(1000); // Slow down to let us debug
-    }
-    return mem;
-
-}
-// -------------------------------------------------------------
+/*
 PUCHAR strDup(PUCHAR s)
 {
     PUCHAR p;
@@ -930,26 +752,7 @@ PUCHAR strDup(PUCHAR s)
     p = memAlloc (len);
     return p;
 }
-// -------------------------------------------------------------
-// IBMi does not allow realloc of NULL pointers :(
-// -------------------------------------------------------------
-PVOID reallocOrMalloc  (PVOID * p, LONG len)
-{
-    if (*p)  {
-       *p = realloc(*p , len);
-    } else {
-       *p = malloc(len);
-    }
-    return *p;
-}
 */
-// -------------------------------------------------------------
-void fcloseAndSetNull  (FILE**  p)
-{
-   if (*p == NULL) return;
-   fclose (*p);
-   *p = NULL;
-}
 /* ------------------------------------------------------------- */
 LGL isOn (int boolExpr)
 {
@@ -965,107 +768,6 @@ PUCHAR strlastchr(PUCHAR str , UCHAR c)
      }
      return found;
 }
-/* ----------------------------------------------------------------------------------------
- * take next element from a string separeted by commas ( any separator:
- * a,b,c,d
- * returns true for each call where ppThis ponint to the pointer of the next value
- * Initialise like this:
- *
-     STRLIST   myList;
-
-     strForEachInit (
-        &myList ,     // The iterator list
-        "a,b,c,d",    // String list to traverse
-        ',',          // Separator
-        true          // trim enpty cells out
-     );
-
-     // For each element in the string list
-     while (strForEach  (&myList))  {
-        printf("%s\n" , myList.this );
-     }
-
- * ---------------------------------------------------------------------------------------- */
-/*
-BOOL strForEach (PSTRLIST pIter)
-{
-   // End of list ?
-   if (pIter->list == NULL) {
-      if (pIter->term) *pIter->term = pIter->separator;
-      return false; // end of list
-   }
-
-   // Fist time
-   if (pIter->this == NULL) {
-      pIter->this = pIter->list;
-   } else {
-     *pIter->term = pIter->separator;
-      pIter->this = pIter->term  +1;
-   }
-
-   // Trim out empty cells
-   if (pIter->trim) {
-      for (;*pIter->this == pIter->separator; pIter->this++);
-   }
-
-   pIter->term = strchr( pIter->this,pIter->separator);
-   if (pIter->term == NULL) {
-      pIter->list = NULL; // End of list
-   } else {
-      *pIter->term = '\0';
-   }
-
-   return true;
-}
-*/
-BOOL strForEach (PSTRLIST pIter)
-{
-   // End of list ?
-   if (pIter->list == NULL) {
-      if (pIter->term) *pIter->term = pIter->separator;
-      return false; // end of list
-   }
-
-   // Fist time
-   if (pIter->this == NULL) {
-      pIter->this = pIter->list;
-      // Trim out leading empty cell
-      if (pIter->trim) {
-         for (;*pIter->this == pIter->separator; pIter->this++);
-      }
-   } else {
-     *pIter->term = pIter->separator;
-      pIter->this = pIter->next;
-   }
-
-
-   pIter->term = strchr( pIter->this,pIter->separator);
-   if (pIter->term == NULL) {
-      pIter->list = NULL; // End of list
-   } else {
-      *pIter->term = '\0';
-      pIter->next  = pIter->term +1;
-      // Trim out empty cells
-      if (pIter->trim) {
-         for (;*pIter->next == pIter->separator; pIter->next++);
-         if (*pIter->next == '\0') {
-            pIter->list = NULL; // End of list
-         }
-      }
-   }
-
-   return true;
-}
-/* ---------------------------------------------------------------------------------------- */
-void strForEachInit (PSTRLIST pIter, PUCHAR list , UCHAR separator, BOOL trim)
-{
-    pIter->list = list;
-    pIter->separator = separator;
-    pIter->trim = trim;
-    pIter->this = pIter->next = NULL;
-    pIter->term = '\0';
-}
-/* ---------------------------------------------------------------------------------------- */
 PUCHAR blob2str  (PBLOB pb)
 {
     pb->String[pb->Length] = '\0';
@@ -1084,25 +786,4 @@ LONG strTrimLen(PUCHAR str)
        end++;
     }
     return len;
-}
-/* ---------------------------------------------------------------------------------------- */
-LONG setenv(PUCHAR var , PUCHAR val , BOOL replace)
-{
-    UCHAR temp [4096];
-    sprintf(temp , "ADDENVVAR ENVVAR('%s') VALUE('%s') REPLACE(%s)" ,
-            var  , val, replace? "*YES" : "*NO");
-    system(temp);
-    return 0;
-}
-/* ---------------------------------------------------------------------------------------- */
-PUCHAR memAsStrPush (PMAS pmas  , PUCHAR mem , ULONG memLen)
-{
-   pmas->end     = mem + memLen ;
-   pmas->endChar = *pmas->end;
-   *pmas->end = '\0';
-   return mem;
-}
-VOID  memAsStrPop  (PMAS pmas )
-{
-   *pmas->end = pmas->endChar;
 }

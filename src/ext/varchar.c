@@ -12,8 +12,28 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include "ostypes.h"
+#include "strUtil.h"
 #include "varchar.h"
 
+
+/* ------------------------------------------------------------- */
+// LONG (  4 byte length)
+/* ------------------------------------------------------------- */ 
+void lvpc2lvc (PLVARCHAR out, PLVARPUCHAR in)
+{
+   out->Length = in->Length;
+   memcpy(out->String , in->String, in->Length);
+   out->String[in->Length] = '\0'; 
+}
+/* ------------------------------------------------------------- */
+// SHORT (  2 byte length)
+/* ------------------------------------------------------------- */
+void lvpc2vc (PVARCHAR out, PLVARPUCHAR in)
+{
+   out->Length = in->Length;
+   memcpy(out->String , in->String, in->Length);
+   out->String[in->Length] = '\0'; 
+}
 /* ------------------------------------------------------------- */
 VARPUCHAR str2varpuchar(PUCHAR s)
 {
@@ -208,6 +228,14 @@ VARPUCHAR vpcSetString(PUCHAR s)
 }
 /* ---------------------------------------------------------------------------------------- */
 BOOL vpcIsEqual(PVARPUCHAR p1, PVARPUCHAR p2)
+{
+   return (
+       (p1->Length == p2->Length)
+   &&  (memicmp (p1->String , p2->String ,p2->Length) == 0)
+   );
+}
+/* ---------------------------------------------------------------------------------------- */
+BOOL lvpcIsEqual(PLVARPUCHAR p1, PLVARPUCHAR p2)
 {
    return (
        (p1->Length == p2->Length)

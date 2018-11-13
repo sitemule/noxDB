@@ -137,9 +137,6 @@ void  jx_SkipChars(PJXCOM pJxCom , int skip)
 // ---------------------------------------------------------------------------
 PUCHAR jx_GetChar(PJXCOM pJxCom)
 {
-   int i;
-   PUCHAR treshold;
-   static int len;
 
    /*
    if (dbgStep > 8170 ) { //       8179)
@@ -148,36 +145,15 @@ PUCHAR jx_GetChar(PJXCOM pJxCom)
    */
 
    if (pJxCom->State == XML_EXIT_ERROR) {
-     return (pJxCom->pFileBuf == NULL ? "" : pJxCom->pFileBuf );
+   	return (pJxCom->pFileBuf == NULL ? "" : pJxCom->pFileBuf );
    }
 
-   if (pJxCom->File == NULL) {
-     if (pJxCom->pFileBuf == NULL) {
-       pJxCom->pFileBuf =  pJxCom->StreamBuf;
-     } else {
-       pJxCom->pFileBuf ++;
-     }
-   }
-   else {
+	if (pJxCom->pFileBuf == NULL) {
+		pJxCom->pFileBuf =  pJxCom->StreamBuf;
+	} else {
+		pJxCom->pFileBuf ++;
+	}
 
-      if (pJxCom->pFileBuf == NULL) {
-         len = readBlock(pJxCom , pJxCom->FileBuf, sizeof(pJxCom->FileBuf));
-         // printf("\nlen: %d\n" , len);
-         pJxCom->pFileBuf = pJxCom->FileBuf;
-      } else {
-      // Increment the buffer pointer
-         treshold = pJxCom->FileBuf + len - LOOK_AHEAD_SIZE;
-         pJxCom->pFileBuf ++;
-         if (pJxCom->pFileBuf > treshold && ! feof(pJxCom->File)) {
-            PUCHAR temp = pJxCom->FileBuf + LOOK_AHEAD_SIZE;
-            memcpy(pJxCom->FileBuf , treshold , LOOK_AHEAD_SIZE);
-            len = readBlock(pJxCom , temp, sizeof(pJxCom->FileBuf) - LOOK_AHEAD_SIZE);
-            len += LOOK_AHEAD_SIZE;
-            //+1 because the first is allready processed and allow us to LOOK-BACK
-            pJxCom->pFileBuf = pJxCom->FileBuf +1;
-         }
-      }
-   }
    if (*pJxCom->pFileBuf == '\0') {
        pJxCom->State = XML_EXIT;
    }
@@ -187,7 +163,6 @@ PUCHAR jx_GetChar(PJXCOM pJxCom)
    } else {
      pJxCom->ColCount ++;
    }
-   dbgStep++;
    return (pJxCom->pFileBuf);
 }
 /* ---------------------------------------------------------------------------

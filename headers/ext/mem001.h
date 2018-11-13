@@ -2,6 +2,7 @@
 //    define MEMDEBUG 1
 
 PVOID  memAlloc  (ULONG len);
+PVOID  memAllocClear(ULONG len);
 void   memFree   (PVOID * p);
 PUCHAR memStrDup (PUCHAR s);
 PVOID  memRealloc(PVOID * p, ULONG len);
