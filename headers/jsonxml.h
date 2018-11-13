@@ -540,7 +540,7 @@ typedef enum _JX_RESULTSET {
 	 JX_APROXIMATE_TOTALROWS = 16
 } JX_RESULTSET, *PJX_RESULTSET;
 
-VOID JXM902 ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);
+VOID TRACE ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);
 
 PJXNODE jx_sqlResultRow ( PUCHAR sqlstmt, PJXNODE pSqlParmsP ) ;
 #pragma descriptor ( void jx_sqlResultRow   (void))

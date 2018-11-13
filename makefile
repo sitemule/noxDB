@@ -14,7 +14,7 @@ TARGET_CCSID=*JOB
 
 # Do not touch below
 INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'
-DEPS_LIST=$(BIN_LIB)/RTVSYSVAL $(BIN_LIB)/UTL100 $(BIN_LIB)/VARCHAR $(BIN_LIB)/MEM001 $(BIN_LIB)/XLATE $(BIN_LIB)/STREAM $(BIN_LIB)/TIMESTAMP $(BIN_LIB)/SNDPGMMSG $(BIN_LIB)/TRYCATCH
+DEPS_LIST=$(BIN_LIB)/NOXDB $(BIN_LIB)/SQLIO $(BIN_LIB)/ $(BIN_LIB)/RTVSYSVAL $(BIN_LIB)/UTL100 $(BIN_LIB)/VARCHAR $(BIN_LIB)/MEM001 $(BIN_LIB)/XLATE $(BIN_LIB)/STREAM $(BIN_LIB)/TIMESTAMP $(BIN_LIB)/SNDPGMMSG $(BIN_LIB)/TRYCATCH
 
 CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) INCDIR($(INCLUDE)) DBGVIEW($(DBGVIEW)) TGTCCSID($(TARGET_CCSID))
 
@@ -49,18 +49,19 @@ noxdb.bnddir: jsonxml.entry
 
 %.c:
 	system -i "CHGATR OBJ('src/$*.c') ATR(*CCSID) VALUE(1252)"
-	system -i "CRTCMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCSTMF('src/$*.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCSTMF('src/$*.c') $(CCFLAGS)"
 
 %.clle:
 	system -i "CHGATR OBJ('src/$*.clle') ATR(*CCSID) VALUE(1252)"
 	-system -qi "CRTSRCPF FILE($(BIN_LIB)/QCLLESRC) RCDLEN(112)"
 	system -i "CPYFRMSTMF FROMSTMF('src/$*.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/$(notdir $*).mbr') MBROPT(*ADD)"
-	system -i "CRTCLMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
+	system "CRTCLMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
 
 %.srvpgm:
 	-system -qi "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
-	system -i "CPYFRMSTMF FROMSTMF('headers/$*.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/$*.mbr') MBROPT(*replace)"
-	system -i -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(BIN_LIB)/JXM* $(DEPS_LIST)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
+	system "CPYFRMSTMF FROMSTMF('headers/$*.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/$*.mbr') MBROPT(*replace)"
+	$(eval modules := $(patsubst %,$(BIN_LIB)/%,$(basename $(filter %.c %.clle,$(notdir $^)))))
+	system -i -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
 
 hdr:
 	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle

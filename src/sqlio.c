@@ -1357,7 +1357,7 @@ void jx_traceOpen (PJXSQLCONNECT pCon)
    PUCHAR insertStmt = "insert into sqltrace (STSTART,STEND,STSQLSTATE,STTEXT,STJOB,STTRID,STSQLSTMT) "
                        "values (?,?,?,?,?,?,?)";
 
-   JXM902 ( pTrc->lib , &pTrc->doTrace , pTrc->job);
+   TRACE ( pTrc->lib , &pTrc->doTrace , pTrc->job);
    if (pTrc->doTrace == OFF) return;
    createTracetable(pCon);
    rc = SQLAllocStmt(pCon->hdbc, &pTrc->handle);
