@@ -25,16 +25,19 @@ CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*NONE) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES
 # User-defined part end
 #-----------------------------------------------------------
 
+# Dependency list
 
 all: $(BIN_LIB).lib jsonxml.srvpgm hdr
-
-%.lib:
-	-system -q "CRTLIB $* TYPE(*TEST)"
 
 jsonxml.srvpgm: noxdb.c sqlio.c xmlparser.c jsonparser.c serializer.c reader.c segments.c iterator.c http.c generic.c runqsh.clle trace.clle ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
 
 jsonxml.bnddir: jsonxml.entry
 noxdb.bnddir: jsonxml.entry
+
+#-----------------------------------------------------------
+
+%.lib:
+	-system -q "CRTLIB $* TYPE(*TEST)"
 
 %.bnddir:
 	-system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/$*)"
@@ -58,7 +61,6 @@ noxdb.bnddir: jsonxml.entry
 	-system -q "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
 	system "CPYFRMSTMF FROMSTMF('headers/$*.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/$*.mbr') MBROPT(*replace)"
 	system -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(BIN_LIB)/JXM* $(DEPS_LIST)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
-
 
 hdr:
 	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
