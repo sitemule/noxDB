@@ -20,7 +20,6 @@
 #include <decimal.h>
 #include <wchar.h>
 // #include <errno.h>
-
 #include <sys/stat.h>
 #include "ostypes.h"
 #include "xlate.h"
