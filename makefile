@@ -53,7 +53,7 @@ noxdb.bnddir: jsonxml.entry
 %.clle:
 	system -i "CHGATR OBJ('src/$*.clle') ATR(*CCSID) VALUE(1252)"
 	-system -qi "CRTSRCPF FILE($(BIN_LIB)/QCLLESRC) RCDLEN(112)"
-	system -i "CPYFRMSTMF FROMSTMF('src/$*.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/$(notdir $*).mbr') MBROPT(*ADD)"
+	system "CPYFRMSTMF FROMSTMF('src/$*.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/$(notdir $*).mbr') MBROPT(*ADD)"
 	system "CRTCLMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
 
 %.srvpgm:
