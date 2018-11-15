@@ -1,26 +1,25 @@
-# noxDB – Not Only XML….
+# noxDB – Not Only XML…
 
-Nox is an opensource framework that makes it easy to work with XML, JSON and SQL with one single approach - from within RPG.
+noxDB is an opensource framework that makes it easy to work with XML, JSON and SQL with one single approach - from within RPG.
 
-Basically you have an object graph which is built from scratch or loaded from XML, JSON, SQL or even CSV files.
+You can find examples and documentation on the [Sitemule documentation website](https://sitemule.github.io/noxdb/about).
 
-The idea is that it is equally easy to manipulate the data graph from RPG and save/update data right back to XML, JSON or SQL.
+### Installation
 
-This makes this tool perfect to load data from SQL and produce JSON in a web application. Or simply load data from SQL totally dynamically and then update SQL – dynamically.
+Installation of noxDB should be done with `git` and `gmake` (GNU Make), which are available via `yum` - you can read more about [yum here](https://bitbucket.org/ibmi/opensource/src/master/docs/yum/).
 
-It brings dynamic result set to RPG, so you don't have to recompile each time you add or change columns to your DB2 tables.
-
-It is as simple as this in your RPG program:
+noxDB is a two step process. noxDB requires you to build from source, but this step has been totally automated for you. To install noxDB, you need to use the pase environment (with `ssh` for example) and with a couple of seconds you can have the project built. No need to download save files, upload them or restore them.
 
 ```
-// load a resultset from the product table
-sql   = 'Select * from product';
-pRows = json_sqlResultSet(sql);
-
-// Produce a JSON stream file in the root of the IFS
-json_writeJsonStmf(pRows  :
-   '/jsonxml/json/resultset-array.json' : 1208 : *ON
-);
+git clone git@github.com:sitemule/noxDB.git
+cd noxDB
+gmake
 ```
 
-Look at all the samples in the `QJXSAMPLE` file
+This will create:
+
+* The `NOXDB` library
+* `NOXDB/JSONXML` service program.
+* `NOXDB/QRPGLEREF.XMLPARSER` for the XML noxDB API prototypes.
+* `NOXDB/QRPGLEREF.JSONPARSER` for the JSON noxDB API prototypes.
+* `NOXDB/NOXDB` binding directory, with the `JSONXML` object on it.
