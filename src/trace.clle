@@ -26,6 +26,6 @@ pgm (&libC &trace &job)
 
    /* job in format:  767070/NLI/JOHN22A1 and in c-string format*/
    RTVJOBA    JOB(&J) USER(&U) NBR(&N)
-   chgvar &job (&n !! '/' !! &u  !< '/' !! &j !< &null)
-   chgvar &libC (&lib !< &null)
+   chgvar &job (&n *CAT '/' *CAT &u *TCAT '/' *CAT &j *TCAT &null)
+   chgvar &libC (&lib *TCAT &null)
 endpgm
