@@ -146,6 +146,7 @@ FIXEDDEC jx_Num (PUCHAR in)
 	return (Res );
 }
 /* --------------------------------------------------------------------------- */
+#pragma convert(1252)
 static void jx_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 {
 	PUCHAR p = out;
@@ -161,7 +162,7 @@ static void jx_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 			else if  (BeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
 			else if  (BeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
 			else if  (BeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
-			else if  (in[1] == Hash) {
+			else if  (in[1] == HASH) {
 				int n = 0;
 				in += 2; // Skip the '&#'
 				if (*in == 'x' || *in == 'X') {   // Hexadecimal representation
@@ -188,6 +189,8 @@ static void jx_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 		}
 	}
 }
+#pragma convert(0)
+
 // ---------------------------------------------------------------------------
 static void freeAttrList (PXMLATTR pAttr)
 {
@@ -681,7 +684,7 @@ void jx_WriteCsvStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJ
 	if (pjWrite->outFile == NULL) return;
 
 	if (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 5) {
-		PJXNODE  pOptions  = jx_ParseString((PUCHAR) options , ""); // When already a object: simply returns that
+		PJXNODE  pOptions  = jx_ParseCString((PUCHAR) options ); // When already a object: simply returns that
 		comma    = *jx_GetValuePtr    (pOptions , "delimiter" , &comma );
 		decpoint = *jx_GetValuePtr    (pOptions , "decPoint"  , &decpoint );
 		headers  = (ON == jx_IsTrue   (pOptions , "headers"));
@@ -829,7 +832,6 @@ PJXNODE  jx_CopyValue (PJXNODE pDest , PUCHAR destName , PJXNODE pSource , PUCHA
 
 	pSource = jx_GetNode  (pSource  , sourceName );
 	if (pSource == NULL) return NULL;
-
 
 	pDest = jx_GetOrCreateNode (pDest, destName);
 	if (pDest  == NULL) return NULL;
@@ -1019,8 +1021,25 @@ void jx_Dump(PJXNODE  pNode)
 	printf("\n") ;
 }
 // ---------------------------------------------------------------------------
-// TODO !! To here !!!!
+// Detect if XML or json and if has UTF-8 BOM code
 // ---------------------------------------------------------------------------
+void  detectEncoding(PJXCOM pJxCom)
+{
+	PUCHAR p = pJxCom->StreamBuf;
+
+	// Skip bom ?
+	if (p [0] == 0xef && p[1] == 0xbb && p[2] == 0xbf) { // utf8 -BOM code 
+		p += 3; // Skip bom code;
+	}
+
+	// skip blanks 
+	for (; *p <= BLANK && *p != '\0'; p++);
+
+	pJxCom->isJson != (*p == LT);
+	pJxCom->StreamBuf = p;	
+}
+// ---------------------------------------------------------------------------
+/* Old implementation
 PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
 {
 	UCHAR  e2aTbl [256];
@@ -1104,7 +1123,7 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
 			 InputCcsid = statbuf.st_ccsid;
 		} else if (isAscii && InputCcsid == 0) {
 			 InputCcsid = 1208;
-		} .... */
+		} .... * /
 		// Assume 1208 for any ascii JSON and set with EBCDIC ccsid on the file
 		if (isAscii && InputCcsid < 900) {
 			 InputCcsid = 1208;
@@ -1148,42 +1167,35 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
 		return outbuf;
 	}
 
-	// Convert const to current ccsid
-	initconst( OutputCcsid);  // Init const freom 1252 to current output ccsid
-
-	pJxCom->UseIconv = (InputCcsid != OutputCcsid);
-
-	if ( pJxCom->UseIconv) {
-		pJxCom->Iconv = OpenXlate(InputCcsid  , OutputCcsid);
-	}
-
-	// printf("\n iccs: %d, occs: 5d\n ", InputCcsid  , OutputCcsid);
 	return outbuf;
 }
+*/
 // ---------------------------------------------------------------------------
 static PJXNODE  SelectParser (PJXCOM pJxCom)
 {
-	 PJXNODE pRoot;
-	 CheckBufSize(pJxCom);
-	 pJxCom->pNodeRoot = pRoot = NewNode (NULL, NULL, OBJECT);
-	 pJxCom->pFileBuf = NULL;
-	 pJxCom->State = XML_FIND_START_TOKEN;
-	 pJxCom->LineCount = 1;
-	 pJxCom->pNodeWorkRoot = pJxCom->pNodeRoot;
-	 pJxCom->Comment = memAlloc(COMMENT_SIZE);
-	 * pJxCom->Comment = '\0';
+	PJXNODE pRoot;
+	CheckBufSize(pJxCom);
+	pJxCom->pNodeRoot = pRoot = NewNode (NULL, NULL, OBJECT);
+	pJxCom->pFileBuf = NULL;
+	pJxCom->State = XML_FIND_START_TOKEN;
+	pJxCom->LineCount = 1;
+	pJxCom->pNodeWorkRoot = pJxCom->pNodeRoot;
+	pJxCom->Comment = memAlloc(COMMENT_SIZE);
+	* pJxCom->Comment = '\0';
 
-	 if (pJxCom->isJson) {
-			jxError = jx_ParseJson (pJxCom);
-	 } else {
-			jxError = jx_ParseXml (pJxCom);
-	 }
+	detectEncoding (pJxCom);
 
-	 // Clean up
-	 memFree(&pJxCom->Comment);
-	 memFree(&pJxCom);
+	if (pJxCom->isJson) {
+		jxError = jx_ParseJson (pJxCom);
+	} else {
+		jxError = jx_ParseXml (pJxCom);
+	}
 
-	 return pRoot;
+	// Clean up
+	memFree(&pJxCom->Comment);
+	memFree(&pJxCom);
+
+	return pRoot;
 }
 // ---------------------------------------------------------------------------
 // This works, however
@@ -1191,18 +1203,18 @@ static PJXNODE  SelectParser (PJXCOM pJxCom)
 // ---------------------------------------------------------------------------
 void jx_NodeAppendChild(PJXNODE pRoot, PJXNODE pNewChild)
 {
-	 if (pRoot == NULL) return;
-	 if (pNewChild == NULL) return;
+	if (pRoot == NULL) return;
+	if (pNewChild == NULL) return;
 
-	 pNewChild->pNodeParent = pRoot;
+	pNewChild->pNodeParent = pRoot;
 
-	 if (pRoot->pNodeChildHead == NULL) {
-			pNewChild->pNodeParent->pNodeChildHead = pNewChild;
-	 } else {
-			pNewChild->Seq = pNewChild->pNodeParent->pNodeChildTail->Seq + 1; // Increment Sibling number
-			pNewChild->pNodeParent->pNodeChildTail->pNodeSibling = pNewChild;
-	 }
-	 pNewChild->pNodeParent->pNodeChildTail = pNewChild;
+	if (pRoot->pNodeChildHead == NULL) {
+		pNewChild->pNodeParent->pNodeChildHead = pNewChild;
+	} else {
+		pNewChild->Seq = pNewChild->pNodeParent->pNodeChildTail->Seq + 1; // Increment Sibling number
+		pNewChild->pNodeParent->pNodeChildTail->pNodeSibling = pNewChild;
+	}
+	pNewChild->pNodeParent->pNodeChildTail = pNewChild;
 }
 // ---------------------------------------------------------------------------
 static PJXNODE previousSibling(PJXNODE p)
@@ -1220,68 +1232,68 @@ static PJXNODE previousSibling(PJXNODE p)
 // ---------------------------------------------------------------------------
 static PJXNODE DupNode(PJXNODE pSource)
 {
-	 PXMLATTR pAttrTemp;
-	 PJXNODE  pNode;
+	PXMLATTR pAttrTemp;
+	PJXNODE  pNode;
 
-	 // A copy of null is null
-	 if (pSource == NULL) return NULL;
+	// A copy of null is null
+	if (pSource == NULL) return NULL;
 
-	 // Dupling a nodex which is a string simply kicks in the parser
-	 if (pSource->signature != NODESIG) {
-			pNode = jx_ParseString((PUCHAR) pSource, "");
-			return pNode;
-	 }
+	// Dupling a nodex which is a string simply kicks in the parser
+	if (pSource->signature != NODESIG) {
+		pNode = jx_ParseCString((PUCHAR) pSource);
+		return pNode;
+	}
 
-	 pNode = (PJXNODE) memAlloc (sizeof(*pNode));
-	 memcpy  (pNode , pSource, sizeof(*pNode));
+	pNode = (PJXNODE) memAlloc (sizeof(*pNode));
+	memcpy  (pNode , pSource, sizeof(*pNode));
 
-	 SegmentNodeAdd(pNode);
+	SegmentNodeAdd(pNode);
 
-	 pNode->pAttrList  = NULL;
-	 pNode->pNodeParent = pNode->pNodeChildHead = pNode->pNodeChildTail = pNode->pNodeSibling = NULL;
-	 pNode->Name  = memStrDup(pSource->Name);
-	 pNode->Value = memStrDup(pSource->Value);
+	pNode->pAttrList  = NULL;
+	pNode->pNodeParent = pNode->pNodeChildHead = pNode->pNodeChildTail = pNode->pNodeSibling = NULL;
+	pNode->Name  = memStrDup(pSource->Name);
+	pNode->Value = memStrDup(pSource->Value);
 
-	 for (pAttrTemp = pSource->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
-			PXMLATTR  pPrev, pAttr = (PXMLATTR) memAlloc (sizeof(*pAttr));
-			memset (pAttr , 0, sizeof(*pAttr));
-			pAttr->signature  = ATTRSIG;
-			pAttr->Name  = memStrDup( pAttrTemp->Name);
-			pAttr->Value = memStrDup(pAttrTemp->Value);
-			if ( pNode->pAttrList ==NULL) {
-				 pNode->pAttrList = pAttr;
-			} else {
-				 pPrev->pAttrSibling = pAttr;
-			}
-			pPrev =pAttr;
-	 }
+	for (pAttrTemp = pSource->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
+		PXMLATTR  pPrev, pAttr = (PXMLATTR) memAlloc (sizeof(*pAttr));
+		memset (pAttr , 0, sizeof(*pAttr));
+		pAttr->signature  = ATTRSIG;
+		pAttr->Name  = memStrDup( pAttrTemp->Name);
+		pAttr->Value = memStrDup(pAttrTemp->Value);
+		if ( pNode->pAttrList ==NULL) {
+			pNode->pAttrList = pAttr;
+		} else {
+			pPrev->pAttrSibling = pAttr;
+		}
+		pPrev =pAttr;
+	}
 
-	 return (pNode);
+	return (pNode);
 }
 // ---------------------------------------------------------------------------
 void jx_NodeAddChildTail( PJXNODE pRoot, PJXNODE pChild)
 {
-	 if (pChild == NULL || pRoot == NULL) return;
+	if (pChild == NULL || pRoot == NULL) return;
 
-	 pChild->pNodeParent = pRoot;
+	pChild->pNodeParent = pRoot;
 
-	 if (pChild->pNodeParent->type == ARRAY) {
-		 pChild->pNodeParent->Count ++;
-	 }
+	if (pChild->pNodeParent->type == ARRAY) {
+		pChild->pNodeParent->Count ++;
+	}
 
-	 if (pChild->pNodeParent->pNodeChildHead == NULL) {
-			pChild->pNodeParent->pNodeChildHead = pChild;
-			pChild->pNodeParent->pNodeChildTail = pChild;
-	 } else {
-			// TODO !! Why is the tail some times NULL?
-			// AND: found the "unlink" error, so may we can remove it now...
-			// This "if" can be remove when this bug i found.
-			if (pChild->pNodeParent->pNodeChildTail) {
-				 pChild->Seq = pChild->pNodeParent->pNodeChildTail->Seq + 1; // Increment Sibling number
-				 pChild->pNodeParent->pNodeChildTail->pNodeSibling = pChild;
-			}
-			pChild->pNodeParent->pNodeChildTail = pChild;
-	 }
+	if (pChild->pNodeParent->pNodeChildHead == NULL) {
+		pChild->pNodeParent->pNodeChildHead = pChild;
+		pChild->pNodeParent->pNodeChildTail = pChild;
+	} else {
+		// TODO !! Why is the tail some times NULL?
+		// AND: found the "unlink" error, so may we can remove it now...
+		// This "if" can be remove when this bug i found.
+		if (pChild->pNodeParent->pNodeChildTail) {
+			pChild->Seq = pChild->pNodeParent->pNodeChildTail->Seq + 1; // Increment Sibling number
+			pChild->pNodeParent->pNodeChildTail->pNodeSibling = pChild;
+		}
+		pChild->pNodeParent->pNodeChildTail = pChild;
+	}
 }
 // ---------------------------------------------------------------------------
 // unlink a node from the tree and returns it as a new root
@@ -1300,17 +1312,17 @@ PJXNODE jx_NodeUnlink  (PJXNODE  pNode)
 
 	pPrevNode  = previousSibling(pNode);
 	if (pPrevNode) {
-		 pPrevNode->pNodeSibling = pNode->pNodeSibling;
+		pPrevNode->pNodeSibling = pNode->pNodeSibling;
 	} else {
-		 pParent->pNodeChildHead = pNode->pNodeSibling;
+		pParent->pNodeChildHead = pNode->pNodeSibling;
 	}
 	if (pParent->pNodeChildTail == pNode) {
-		 pParent->pNodeChildTail = pPrevNode;
+		pParent->pNodeChildTail = pPrevNode;
 	}
 
 	// json arrays has the "length" counter synconized
 	if (pParent->type == ARRAY) {
-		 pParent->Count --;
+		pParent->Count --;
 	}
 
 	// Now i am alone:
@@ -1331,16 +1343,16 @@ void jx_SwapNodes (PJXNODE * ppNode1, PJXNODE * ppNode2)
 	pParent = pNode1->pNodeParent;
 	pPrevNode  = previousSibling(pNode1);
 	if (pPrevNode) {
-		 pPrevNode->pNodeSibling = pNode2;
+		pPrevNode->pNodeSibling = pNode2;
 	} else if (pParent) {
-		 pParent->pNodeChildHead = pNode2;
+		pParent->pNodeChildHead = pNode2;
 	}
 
 	pNode1->pNodeSibling = pNode2->pNodeSibling;
 	pNode2->pNodeSibling = pNode1;
 
 	if (pParent && pParent->pNodeChildTail == pNode2) {
-		 pParent->pNodeChildTail = pNode1;
+		pParent->pNodeChildTail = pNode1;
 	}
 	*ppNode1 = pNode2;
 	*ppNode2 = pNode1;
@@ -1349,289 +1361,247 @@ void jx_SwapNodes (PJXNODE * ppNode1, PJXNODE * ppNode2)
 PJXNODE jx_NodeMoveInto (PJXNODE  pDest, PUCHAR name , PJXNODE pSource)
 {
 
-	 PJXNODE  pTempNode;
+	PJXNODE  pTempNode;
 
-	 if (pDest == pSource
-	 ||  pDest == NULL) {
-		 return pDest;
-	 }
+	if (pDest == pSource
+	||  pDest == NULL) {
+		return pDest;
+	}
 
-	 // If no destination given, then it is actually a replace og the
-	 // destimnation node - with respect to the memmory locaitons
-	 if (*name == '\0') {
-			jx_NodeMoveAndReplace (pDest , pSource);
-			return pDest;
-	 }
+	// If no destination given, then it is actually a replace og the
+	// destimnation node - with respect to the memmory locaitons
+	if (*name == '\0') {
+		jx_NodeMoveAndReplace (pDest , pSource);
+		return pDest;
+	}
 
-	 pSource = jx_NodeUnlink(pSource); // Now I am my own root
-	 jx_NodeRename(pSource , name);
+	pSource = jx_NodeUnlink(pSource); // Now I am my own root
+	jx_NodeRename(pSource , name);
 
+	pTempNode  = jx_GetNode  (pDest, name );
+	if (pTempNode == NULL) {
+	// if (pSource->type == VALUE) {
+	//    jx_NodeSet (pDest , pSource->Value);
+	//    jx_NodeDelete (pSource);
+	//    return pDest;
+	// }
+		jx_NodeAddChildTail (pDest, pSource);
 
-	 pTempNode  = jx_GetNode  (pDest, name );
-	 if (pTempNode == NULL) {
-	 // if (pSource->type == VALUE) {
-	 //    jx_NodeSet (pDest , pSource->Value);
-	 //    jx_NodeDelete (pSource);
-	 //    return pDest;
-	 // }
-			jx_NodeAddChildTail (pDest, pSource);
+		// Since we have a name - we must be an object
+		// required if we were a value i.e. produce by
+		// locateOrCreate / getorCreate or we were a value by ie. setStr
+		if (pDest->type != ARRAY ) {
+			pDest->type = OBJECT;
+		}
+		freeNodeValue(pDest);
 
-			// Since we have a name - we must be an object
-			// required if we were a value i.e. produce by
-			// locateOrCreate / getorCreate or we were a value by ie. setStr
-			if (pDest->type != ARRAY ) {
-				 pDest->type = OBJECT;
-			}
-			freeNodeValue(pDest);
+	} else {
+		// replace, by adding a new with same name and the remove the original. Will keep the same position
+		jx_NodeAddSiblingAfter(pTempNode, pSource);
+		jx_NodeDelete (pTempNode);
+	}
 
-	 } else {
-			// replace, by adding a new with same name and the remove the original. Will keep the same position
-			jx_NodeAddSiblingAfter(pTempNode, pSource);
-			jx_NodeDelete (pTempNode);
-	 }
-
-	 return pSource;
+	return pSource;
 
 }
 // ---------------------------------------------------------------------------
 void jx_NodeMoveAndReplace (PJXNODE  pDest, PJXNODE pSource)
 {
+	if (pDest == pSource
+	||  pDest == NULL) {
+		return;
+	}
 
-	 if (pDest == pSource
-	 ||  pDest == NULL) {
-		 return;
-	 }
+	pSource = jx_NodeUnlink(pSource);      // Now I am my own root
+	jx_NodeRename(pSource , pDest->Name);  // I need the same name of the node i gonna replace
 
-	 pSource = jx_NodeUnlink(pSource);      // Now I am my own root
-	 jx_NodeRename(pSource , pDest->Name);  // I need the same name of the node i gonna replace
-
-	 // replace, by adding a new with same name and the remove the original. Will keep the same position
-	 jx_NodeAddSiblingAfter(pDest, pSource);
-	 jx_NodeDelete (pDest);
+	// replace, by adding a new with same name and the remove the original. Will keep the same position
+	jx_NodeAddSiblingAfter(pDest, pSource);
+	jx_NodeDelete (pDest);
 }
 // ---------------------------------------------------------------------------
 void jx_NodeAddChildHead( PJXNODE pRoot, PJXNODE pChild)
 {
-	 pChild->pNodeParent = pRoot;
+	pChild->pNodeParent = pRoot;
 
-	 if (pChild->pNodeParent->type == ARRAY) {
-		 pChild->pNodeParent->Count ++;
-	 }
+	if (pChild->pNodeParent->type == ARRAY) {
+		pChild->pNodeParent->Count ++;
+	}
 
-	 if (pChild->pNodeParent->pNodeChildHead == NULL) {
-			pChild->pNodeParent->pNodeChildHead = pChild;
-			pChild->pNodeParent->pNodeChildTail = pChild;
-	 } else {
-			PJXNODE pTemp;
-			pTemp = pChild->pNodeParent->pNodeChildHead;
-			pChild->pNodeParent->pNodeChildHead = pChild;
-			pChild->pNodeSibling = pTemp;
+	if (pChild->pNodeParent->pNodeChildHead == NULL) {
+		pChild->pNodeParent->pNodeChildHead = pChild;
+		pChild->pNodeParent->pNodeChildTail = pChild;
+	} else {
+		PJXNODE pTemp;
+		pTemp = pChild->pNodeParent->pNodeChildHead;
+		pChild->pNodeParent->pNodeChildHead = pChild;
+		pChild->pNodeSibling = pTemp;
 //    pChild->Seq = pChild->pNodeParent->pNodeChildTail->Seq + 1; // Increment Sibling number to do ... renumber
-	 }
+	}
 }
 // ---------------------------------------------------------------------------
 void jx_NodeAddSiblingBefore( PJXNODE pRef, PJXNODE pSibling)
 {
-		PJXNODE pPrev = previousSibling(pRef);
+	PJXNODE pPrev = previousSibling(pRef);
 
-		if (pPrev == NULL) {
-				jx_NodeAddChildHead( pRef->pNodeParent, pSibling);
-				return;
-		}
-		pSibling->pNodeParent  = pRef->pNodeParent;
-		pSibling->pNodeSibling = pRef;
-		pPrev->pNodeSibling    = pSibling;
-
-//  to do ... renumber seq.
-
+	if (pPrev == NULL) {
+		jx_NodeAddChildHead( pRef->pNodeParent, pSibling);
+		return;
+	}
+	pSibling->pNodeParent  = pRef->pNodeParent;
+	pSibling->pNodeSibling = pRef;
+	pPrev->pNodeSibling    = pSibling;
 }
 // ---------------------------------------------------------------------------
 void jx_NodeAddSiblingAfter( PJXNODE pRef, PJXNODE pSibling)
 {
-		if (pRef->pNodeSibling == NULL) {
-				jx_NodeAddChildTail ( pRef->pNodeParent, pSibling);
-				return;
-		}
-		pSibling->pNodeParent  = pRef->pNodeParent;
-		pSibling->pNodeSibling = pRef->pNodeSibling;
-		pRef->pNodeSibling     = pSibling;
-
-//    to do ... renumber seq.
+	if (pRef->pNodeSibling == NULL) {
+			jx_NodeAddChildTail ( pRef->pNodeParent, pSibling);
+			return;
+	}
+	pSibling->pNodeParent  = pRef->pNodeParent;
+	pSibling->pNodeSibling = pRef->pNodeSibling;
+	pRef->pNodeSibling     = pSibling;
 }
 // ---------------------------------------------------------------------------
 void AddNode(PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
 {
-	 if (pDest   == NULL) return;
+	if (pDest   == NULL) return;
 
-	 switch ( refloc) {
-	 case RL_LAST_CHILD:
-		 jx_NodeAddChildTail (pDest, pSource);
-		 break;
-	 case RL_FIRST_CHILD:
-		 jx_NodeAddChildHead (pDest, pSource);
-		 break;
-	 case RL_BEFORE_SIBLING:
-		 jx_NodeAddSiblingBefore(pDest, pSource);
-		 break;
-	 case RL_AFTER_SIBLING:
-		 jx_NodeAddSiblingAfter(pDest, pSource);
-		 break;
-	 }
+	switch ( refloc) {
+		case RL_LAST_CHILD:
+			jx_NodeAddChildTail (pDest, pSource);
+			break;
+		case RL_FIRST_CHILD:
+			jx_NodeAddChildHead (pDest, pSource);
+			break;
+		case RL_BEFORE_SIBLING:
+			jx_NodeAddSiblingBefore(pDest, pSource);
+			break;
+		case RL_AFTER_SIBLING:
+			jx_NodeAddSiblingAfter(pDest, pSource);
+			break;
+	}
 }
 // ---------------------------------------------------------------------------
 PJXNODE jx_NodeClone  (PJXNODE pSource)
 {
-	 PJXNODE  pNewNode, pNext;
+	PJXNODE  pNewNode, pNext;
 
-	 if (pSource == NULL) return NULL;
+	if (pSource == NULL) return NULL;
 
-	 pNewNode = DupNode(pSource);
+	pNewNode = DupNode(pSource);
 
-	 pNext = pSource->pNodeChildHead;
-	 while (pNext) {
-			PJXNODE  pNewChild = jx_NodeClone (pNext);
-			jx_NodeAddChildTail (pNewNode , pNewChild);
-			pNext=pNext->pNodeSibling;
-	 }
-	 return pNewNode;
+	pNext = pSource->pNodeChildHead;
+	while (pNext) {
+		PJXNODE  pNewChild = jx_NodeClone (pNext);
+		jx_NodeAddChildTail (pNewNode , pNewChild);
+		pNext=pNext->pNodeSibling;
+	}
+	return pNewNode;
 }
 // ---------------------------------------------------------------------------
 PJXNODE jx_NodeCopy (PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
 {
-	 PJXNODE  pNewNode, pNode;
+	PJXNODE  pNewNode, pNode;
 
-	 if (pDest   == NULL) return;
-	 if (pSource == NULL) return;
+	if (pDest   == NULL) return;
+	if (pSource == NULL) return;
 
-	 pNewNode = jx_NodeClone  (pSource);
-	 AddNode(pDest, pNewNode, refloc);
-	 return pNewNode;
+	pNewNode = jx_NodeClone  (pSource);
+	AddNode(pDest, pNewNode, refloc);
+	return pNewNode;
 
 }
 // ---------------------------------------------------------------------------
 PJXNODE NewNode  (PUCHAR Name , PUCHAR Value, NODETYPE type)
 {
-	 PJXNODE  pNode;
-	 static int id = 0;
+	PJXNODE  pNode;
 
-	 pNode = (PJXNODE) memAlloc (sizeof(*pNode));
-	 memset (pNode , 0, sizeof(*pNode));
-	 pNode->signature  = NODESIG;
+	pNode = (PJXNODE) memAlloc (sizeof(*pNode));
+	memset (pNode , 0, sizeof(*pNode));
+	pNode->signature  = NODESIG;
 
-	 // TODO !! Need use only the type in the future
-	 if (type == LITERAL) {
-			pNode->type      = VALUE;
-			pNode->isLiteral = TRUE;
-	 } else {
-			pNode->type = type;
-			pNode->isLiteral = FALSE;
-	 }
-	 pNode->Name   = memStrDup(Name);
-	 pNode->Handle = id++;
-	 pNode->Value  = memStrDup(Value);
-	 SegmentNodeAdd(pNode);
-	 return pNode;
+	// TODO !! Need use only the type in the future
+	if (type == LITERAL) {
+		pNode->type      = VALUE;
+		pNode->isLiteral = TRUE;
+	} else {
+		pNode->type = type;
+		pNode->isLiteral = FALSE;
+	}
+	pNode->Name   = memStrDup(Name);
+	pNode->Value  = memStrDup(Value);
+	return pNode;
 }
 // ---------------------------------------------------------------------------
 PJXNODE jx_NodeAdd (PJXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type)
 {
-	 PJXNODE  pNewNode  = NewNode  (Name , Value, type);
-	 AddNode(pDest, pNewNode, refloc);
-	 return pNewNode;
+	PJXNODE  pNewNode  = NewNode  (Name , Value, type);
+	AddNode(pDest, pNewNode, refloc);
+	return pNewNode;
 }
 // ---------------------------------------------------------------------------
 PJXNODE jx_NewObject (PJXNODE pDest)
 {
-	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	 PJXNODE pParent = pDest == NULL || pParms->OpDescList->NbrOfParms == 0 ? NULL:pDest;
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PJXNODE pParent = pDest == NULL || pParms->OpDescList->NbrOfParms == 0 ? NULL:pDest;
 
-	 // If we just produce JSON with out having parsed anything
-	 if (pDest == NULL) {
-			initconst(0);  // Init CCSID for current job
-	 }
+	return jx_NodeAdd (pParent, RL_LAST_CHILD, NULL  , NULL , OBJECT);
 
-	 return jx_NodeAdd (pParent, RL_LAST_CHILD, NULL  , NULL , OBJECT);
-/*
-	 if (pDest == NULL || pParms->OpDescList->NbrOfParms == 0) {
-		 return ( PJXNODE) jx_ParseString("{}","");
-	 } else {
-		 return jx_NodeAdd (pDest, RL_LAST_CHILD, NULL  , NULL , OBJECT);
-	 }
-*/
 }
 // ---------------------------------------------------------------------------
 PJXNODE jx_NewArray (PJXNODE pDest)
 {
-	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	 PJXNODE pParent = pDest == NULL || pParms->OpDescList->NbrOfParms == 0 ? NULL:pDest;
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PJXNODE pParent = pDest == NULL || pParms->OpDescList->NbrOfParms == 0 ? NULL:pDest;
 
-	 // If we just produce JSON with out having parsed anything
-	 if (pDest == NULL) {
-			initconst(0);  // Init CCSID for current job
-	 }
+	return jx_NodeAdd (pParent, RL_LAST_CHILD, NULL  , NULL , ARRAY);
 
-	 return jx_NodeAdd (pParent, RL_LAST_CHILD, NULL  , NULL , ARRAY);
-
-/*
-	 // from "C" return null in number of parms
-	 if (pDest == NULL || pParms->OpDescList->NbrOfParms == 0) {
-		 return ( PJXNODE) jx_ParseString("[]","");
-	 } else {
-		 return jx_NodeAdd (pDest, RL_LAST_CHILD, NULL  , NULL , ARRAY);
-	 }
-*/
 }
 // ---------------------------------------------------------------------------
 void jx_NodeSet (PJXNODE pNode , PUCHAR Value)
 {
-	 if (pNode == NULL) return;
+	if (pNode == NULL) return;
 
-	 // Remake me as a value node...
-	 if (pNode->type != VALUE ) {
-			 jx_FreeChildren (pNode);
-			 pNode->type = VALUE;
-	 }
-	 freeNodeValue(pNode);
+	// Remake me as a value node...
+	if (pNode->type != VALUE ) {
+		jx_FreeChildren (pNode);
+		pNode->type = VALUE;
+	}
+	freeNodeValue(pNode);
 
-	 if (Value) {
-		 pNode->Value = memStrDup(Value);
-	 }
+	if (Value) {
+		pNode->Value = memStrDup(Value);
+	}
 }
 // ---------------------------------------------------------------------------
 void jx_NodeSetAsPointer (PJXNODE pNode , PUCHAR Value)
 {
-	 if (pNode == NULL) return;
+	if (pNode == NULL) return;
 
-	 // Remake me as a pointer node node...
-	 freeNodeValue(pNode);     // If i was a value - - drop it
-	 jx_FreeChildren (pNode);  // Ensure we are only a value
-	 pNode->Value     = Value;
-	 pNode->type      = POINTER_VALUE;
-	 pNode->isLiteral = true; // no escaping and no conversion
+	// Remake me as a pointer node node...
+	freeNodeValue(pNode);     // If i was a value - - drop it
+	jx_FreeChildren (pNode);  // Ensure we are only a value
+	pNode->Value     = Value;
+	pNode->type      = POINTER_VALUE;
+	pNode->isLiteral = true; // no escaping and no conversion
 }
 // ---------------------------------------------------------------------------
 void jx_NodeDelete(PJXNODE pNode)
 {
-	 PJXNODE  pTemp;
+	PJXNODE  pTemp;
 
-	 if (pNode == NULL) return;
+	if (pNode == NULL) return;
 
-	 jx_NodeUnlink (pNode);
-	 jx_FreeChildren (pNode);
-	 jx_NodeFree(pNode);
-}
-
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-void jx_SetCcsid(int pInputCcsid, int pOutputCcsid)
-{
-	InputCcsid  = pInputCcsid;
-	OutputCcsid = pOutputCcsid;
+	jx_NodeUnlink (pNode);
+	jx_FreeChildren (pNode);
+	jx_NodeFree(pNode);
 }
 // ---------------------------------------------------------------------------
 // delim was originally only 5.
 // ---------------------------------------------------------------------------
+/*
 void jx_SetDelimiters(PJXDELIM pDelim)
 {
 	PUCHAR delim = (PUCHAR) pDelim;
@@ -1644,10 +1614,12 @@ void jx_SetDelimiters(PJXDELIM pDelim)
 	BraBeg      = delim [3];
 	BraEnd      = delim [4];
 }
+*/ 
 // ---------------------------------------------------------------------------
 // New wrapper  - Missing in old "SetDelimiters" - now the string is NULL
 // terminated to we can just build more on as we go
 // ---------------------------------------------------------------------------
+/* 
 void jx_SetDelimiters2(PJXDELIM pDelim)
 {
 	int i;
@@ -1669,49 +1641,57 @@ void jx_SetDelimiters2(PJXDELIM pDelim)
 		 }
 	}
 }
+*/
 // ---------------------------------------------------------------------------
+/*
 PJXDELIM jx_GetDelimiters(void)
 {
 	return   (PJXDELIM)   &delimiters;
 }
+*/
 // ---------------------------------------------------------------------------
 PJXNODE jx_ParseCString(PUCHAR Buf)
 {
-	 PJXNODE pRoot;
-	 PJXCOM pJxCom;
+	PJXNODE pRoot;
+	PJXCOM  pJxCom;
 
-	 #ifdef MEMDEBUG
-	 UCHAR  tempStr[100];
-	 substr(tempStr , Buf , 100);
-	 #endif
+	#ifdef MEMDEBUG
+		UCHAR  tempStr[100];
+		substr(tempStr , Buf , 100);
+	#endif
 
-	 // Asume OK
-	 jxError = false;
+	// Asume OK
+	jxError = false;
 
-	 if (Buf == NULL || *Buf == '\0' ) {
-			 return NULL;
-	 }
-	 // Is it already a object graph, then return it
-	 if (*Buf == NODESIG) {
-			 return (PJXNODE) Buf;
-	 }
+	if (Buf == NULL || *Buf == '\0' ) {
+		return NULL;
+	}
+	// Is it already a object graph, then return it
+	if (*Buf == NODESIG) {
+		return (PJXNODE) Buf;
+	}
 
-	 jxMessage[0] = '\0';
+	jxMessage[0] = '\0';
 
-	 pJxCom = memAlloc (sizeof(JXCOM));
-	 memset(pJxCom , 0, sizeof(JXCOM));
+	pJxCom = memAllocClear (sizeof(JXCOM));
 
-	 pJxCom->StreamBuf =  Buf;
-	 pRoot = SelectParser (pJxCom);
- 
-	 // DEBUGGER TODO !!!
-	 #ifdef MEMDEBUG
-			printf("\n\nParse String: %p - %-90.90s\n " , pRoot  , tempStr);
-			memStat();
-	 #endif
+	pJxCom->StreamBuf =  Buf;
+	pRoot = SelectParser (pJxCom);
 
-	 return (pRoot);
+	// DEBUGGER TODO !!!
+	#ifdef MEMDEBUG
+		printf("\n\nParse String: %p - %-90.90s\n " , pRoot  , tempStr);
+		memStat();
+	#endif
+
+	return (pRoot);
 }
+// ---------------------------------------------------------------------------
+PJXNODE jx_ParseLVC(PLVARCHAR buf)
+{
+	jx_ParseCString ( plvc2str (buf));
+
+// ---------------------------------------------------------------------------
 PJXNODE jx_ParseFile(PUCHAR FileName)
 {
 
@@ -2594,7 +2574,7 @@ PJXNODE  jx_ArrayAppend  (PJXNODE pDest, PJXNODE pSource , BOOL16 copyP)
 			pNewNode  = NewNode  (NULL  , "null" , LITERAL);
 	 } else if (pSource->signature != NODESIG) {
 			if (*(PUCHAR) pSource == BraBeg || *(PUCHAR) pSource == CurBeg ) {
-					pNewNode = jx_ParseString((PUCHAR) pSource, "");
+					pNewNode = jx_ParseCString((PUCHAR) pSource);
 			} else {
 					pNewNode  = NewNode  (NULL  , (PUCHAR) pSource , VALUE);
 			}

@@ -369,7 +369,7 @@ PUCHAR   jx_GetValueByName (PJXNODE pNode, PUCHAR Name, PUCHAR Default);
 PJXNODE  jx_SetValueByName (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETYPE type);
 #pragma descriptor ( void jx_SetValueByName (void))
 
-LVARCHAR  jx_AsXmlText (PJXNODE pNode);
+void   jx_AsXmlText (PLVARCHAR retVal, PJXNODE pNode);
 PUCHAR   jx_NodeAsXmlTextList (PJXNODE pNode, PUCHAR temp);
 BOOL     jx_Parse (PJXCOM pJxCom);
 LGL      jx_Error (PJXNODE pJxNode);
