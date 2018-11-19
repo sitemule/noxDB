@@ -8,8 +8,8 @@
  * By     Date     Task    Description                           *
  * NL     02.06.03 0000000 New program                           *
  * NL     27.02.08 0000510 Allow also no namespace for *:tag     *
- * NL     27.02.08 0000510 jx_NodeCopy                           *
- * NL     13.05.08 0000577 jx_NodeAdd / WriteNote                *
+ * NL     27.02.08 0000510 nox_NodeCopy                           *
+ * NL     13.05.08 0000577 nox_NodeAdd / WriteNote                *
  * NL     13.05.08 0000577 Support for refference location       *
  * ------------------------------------------------------------- */
 #include <stdio.h>
@@ -105,7 +105,7 @@ LONG xlateMem  (iconv_t xid , PUCHAR out , PUCHAR in, LONG len)
 	return outlen;
 }
 /* --------------------------------------------------------------------------- */
-void xlatecpy( PJXCOM pJxCom ,PUCHAR out , PUCHAR in  , LONG len)
+void xlatecpy( PNOXCOM pJxCom ,PUCHAR out , PUCHAR in  , LONG len)
 {
 	size_t buflen, before, inbytesleft, outbytesleft;
 
@@ -203,7 +203,7 @@ void  swapEndian(PUCHAR buf, LONG len)
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
- LONG xlate(PJXCOM pJxCom, PUCHAR outbuf, PUCHAR inbuf , LONG len)
+ LONG xlate(PNOXCOM pJxCom, PUCHAR outbuf, PUCHAR inbuf , LONG len)
 {
 	size_t buflen, inbytesleft, outbytesleft;
 	int l;
@@ -291,7 +291,7 @@ int unicode2utf8 (PUCHAR out, USHORT c)
 		ic = OpenXlate (1200  , 1208);
 		doOpen = FALSE;
 	}
-	outbytesleft = 1  ;
+	outbytesleft = 2  ;
 	inbytesleft  = 2  ;
 	in = (PUCHAR) &c;
 	// swapEndian(in , 2  );

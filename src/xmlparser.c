@@ -7,8 +7,8 @@
  * By     Date     Task    Description                           *
  * NL     02.06.03 0000000 New program                           *
  * NL     27.02.08 0000510 Allow also no namespace for *:tag     *
- * NL     27.02.08 0000510 jx_NodeCopy                           *
- * NL     13.05.08 0000577 jx_NodeAdd / WriteNote                *
+ * NL     27.02.08 0000510 nox_NodeCopy                           *
+ * NL     13.05.08 0000577 nox_NodeAdd / WriteNote                *
  * NL     13.05.08 0000577 Support for refference location       *
  * ------------------------------------------------------------- */
 #include <stdio.h>
@@ -37,7 +37,7 @@ extern LONG  dbgStep=0;
 
 /* --------------------------------------------------------------------------- */
 #pragma convert(1252)
-static void jx_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
+static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 {
 	PUCHAR p = out;
 	PUCHAR pEnd = in  + inlen;
@@ -90,13 +90,13 @@ static void jx_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
-void jx_AppendName (PJXCOM pJxCom)
+void nox_AppendName (PNOXCOM pJxCom)
 {
-	PJXNODE pNode;
+	PNOXNODE pNode;
 	UCHAR c = *pJxCom->pFileBuf;
 
 	if (*pJxCom->pNameIx > sizeof(pJxCom->StartName)) {
-		jx_SetMessage( "Name to long at (%d:%d)", pJxCom->LineCount, pJxCom->ColCount);
+		nox_SetMessage( "Name to long at (%d:%d)", pJxCom->LineCount, pJxCom->ColCount);
 		pJxCom->State = XML_EXIT_ERROR;
 		return;
 	}
@@ -115,7 +115,7 @@ void jx_AppendName (PJXCOM pJxCom)
 	// Name complete .. Add node 
 	if (pJxCom->pName == pJxCom->StartName) {
 		pJxCom->Level ++;
-		pNode = (PJXNODE) memAllocClear (sizeof(*pNode));
+		pNode = (PNOXNODE) memAllocClear (sizeof(*pNode));
 
 		pNode->signature  = NODESIG;
 		pNode->Name = memStrDup (pJxCom->pName);
@@ -140,7 +140,7 @@ void jx_AppendName (PJXCOM pJxCom)
 	} else {
 
 		if (stricmp(pJxCom->pName , pJxCom->pNodeWorkRoot->Name) != 0) {
-			jx_SetMessage( "Invalid end tag </%s> for start tag <%s> at (%d:%d)" ,
+			nox_SetMessage( "Invalid end tag </%s> for start tag <%s> at (%d:%d)" ,
 				pJxCom->pName , pJxCom->pNodeWorkRoot->Name, pJxCom->LineCount, pJxCom->ColCount);
 			pJxCom->State = XML_EXIT_ERROR;
 			return;
@@ -151,11 +151,11 @@ void jx_AppendName (PJXCOM pJxCom)
 	pJxCom->State  = XML_ATTR_NAME;
 	pJxCom->DataIx = 0;
 	pJxCom->pAttr  = &pNode->pAttrList;
-	jx_CheckEnd(pJxCom);
+	nox_CheckEnd(pJxCom);
 	SkipBlanks(pJxCom);
 }
 // ---------------------------------------------------------------------------
-static void jx_AttrAppendName  (PJXCOM pJxCom)
+static void nox_AttrAppendName  (PNOXCOM pJxCom)
 {
 	PXMLATTR pAttr;
 	UCHAR c = *pJxCom->pFileBuf;
@@ -165,7 +165,7 @@ static void jx_AttrAppendName  (PJXCOM pJxCom)
 			static int debug ;
 			debug ++;
 			if (debug == 617) {
-				 jx_Dump(pJxCom);
+				 nox_Dump(pJxCom);
 			}
 	 }
 */
@@ -196,28 +196,28 @@ static void jx_AttrAppendName  (PJXCOM pJxCom)
 	pJxCom->DataIx=0;
 	pJxCom->Data[0]='\0';
 	pJxCom->State = XML_ATTR_VALUE;
-	jx_CheckEnd(pJxCom);
+	nox_CheckEnd(pJxCom);
 }
 // ---------------------------------------------------------------------------
 // When hitting that point we have to get rid of the <![CDATA[
 // and the copy data until we find the ]]>
 // ---------------------------------------------------------------------------
-void jx_CopyCdata (PJXCOM pJxCom)
+void nox_CopyCdata (PNOXCOM pJxCom)
 {
 	PUCHAR p;
 
-	jx_SkipChars(pJxCom , sizeof("<![CDATA[") -2) ; // omit the zero terminator
-	p = jx_GetChar(pJxCom);
+	nox_SkipChars(pJxCom , sizeof("<![CDATA[") -2) ; // omit the zero terminator
+	p = nox_GetChar(pJxCom);
 	while (! BeginsWith(p , BRABRAGT  ) &&  pJxCom->State != XML_EXIT) {  // the "]]>"
 		CheckBufSize(pJxCom);
 		pJxCom->Data[pJxCom->DataIx++] = *p;
-		p = jx_GetChar(pJxCom);
+		p = nox_GetChar(pJxCom);
 	}
-	jx_SkipChars(pJxCom , sizeof(BRABRAGT) -2) ; // omit the zero terminator
+	nox_SkipChars(pJxCom , sizeof(BRABRAGT) -2) ; // omit the zero terminator
 	pJxCom->Data[pJxCom->DataIx]   = '\0';
 }
 // ---------------------------------------------------------------------------
-void jx_AppendData (PJXCOM pJxCom)
+void nox_AppendData (PNOXCOM pJxCom)
 {
 	UCHAR lookahead;
 	UCHAR c = *pJxCom->pFileBuf;
@@ -226,7 +226,7 @@ void jx_AppendData (PJXCOM pJxCom)
 	if (c == LT ) {
 	// Check for CDATA stream ... copy until ]]>
 		if (BeginsWith(pJxCom->pFileBuf , CDATA )) {   // the "<![CDATA["
-			jx_CopyCdata (pJxCom);
+			nox_CopyCdata (pJxCom);
 			return;
 		}
 		lookahead = *(pJxCom->pFileBuf+1);
@@ -247,7 +247,7 @@ void jx_AppendData (PJXCOM pJxCom)
 			if (pJxCom->pName == pJxCom->StartName) {
 				if (pJxCom->DataIx > 0) {
 					pJxCom->pNodeWorkRoot->Value = memAlloc (pJxCom->DataIx + 1) ;
-					jx_XmlDecode( pJxCom->pNodeWorkRoot->Value  , pJxCom->Data , pJxCom->DataIx + 1);
+					nox_XmlDecode( pJxCom->pNodeWorkRoot->Value  , pJxCom->Data , pJxCom->DataIx + 1);
 				}
 			}
 			return;
@@ -260,7 +260,7 @@ void jx_AppendData (PJXCOM pJxCom)
 	pJxCom->Data[pJxCom->DataIx]   = '\0';
 }
 // ---------------------------------------------------------------------------
-static void jx_AttrAppendValue  (PJXCOM pJxCom)
+static void nox_AttrAppendValue  (PNOXCOM pJxCom)
 {
 	PXMLATTR pAttr;
 	UCHAR c = *pJxCom->pFileBuf;
@@ -281,12 +281,12 @@ static void jx_AttrAppendValue  (PJXCOM pJxCom)
 		if (pJxCom->DataIx > 0) {
 			pAttr =  *pJxCom->pAttr;
 			if (pAttr==NULL) {
-				jx_SetMessage( "Invalid attribute termination at (%d:%d)", pJxCom->LineCount, pJxCom->ColCount);
+				nox_SetMessage( "Invalid attribute termination at (%d:%d)", pJxCom->LineCount, pJxCom->ColCount);
 				pJxCom->State = XML_EXIT_ERROR;
 				return;
 			}
 			pAttr->Value = memAlloc (pJxCom->DataIx + 1) ;
-			jx_XmlDecode(pAttr->Value   , pJxCom->Data , pJxCom->DataIx + 1);
+			nox_XmlDecode(pAttr->Value   , pJxCom->Data , pJxCom->DataIx + 1);
 		}
 		pJxCom->DataIx = 0;
 		pJxCom->State = XML_ATTR_NAME;
@@ -303,7 +303,7 @@ static void jx_AttrAppendValue  (PJXCOM pJxCom)
 	pJxCom->Data[pJxCom->DataIx]   = '\0';
 }
 // ---------------------------------------------------------------------------
-BOOL jx_ParseXml (PJXCOM pJxCom)
+BOOL nox_ParseXml (PNOXCOM pJxCom)
 {
 	UCHAR  c;
 	PUCHAR p;
@@ -311,7 +311,7 @@ BOOL jx_ParseXml (PJXCOM pJxCom)
 	dbgStep=0;
 
 	for(;;) {
-		p = jx_GetChar(pJxCom);
+		p = nox_GetChar(pJxCom);
 		c = *p;
 		switch (pJxCom->State) {
 			case XML_FIND_START_TOKEN:
@@ -325,7 +325,7 @@ BOOL jx_ParseXml (PJXCOM pJxCom)
 				if (BeginsWith(p , REMARK  )) {  // the "!--"
 					int commentIx =0;
 					do {
-						p = jx_GetChar(pJxCom);
+						p = nox_GetChar(pJxCom);
 						if (commentIx < COMMENT_SIZE -1) {
 							pJxCom->Comment[commentIx++] = *p;
 						}
@@ -347,24 +347,24 @@ BOOL jx_ParseXml (PJXCOM pJxCom)
 					pJxCom->pNameIx = &pJxCom->StartNameIx;
 					pJxCom->pName   = pJxCom->StartName;
 					*pJxCom->pNameIx = 0;
-					jx_AppendName (pJxCom);
+					nox_AppendName (pJxCom);
 				}
 				break;
 
 			case XML_BUILD_NAME:
-				jx_AppendName (pJxCom);
+				nox_AppendName (pJxCom);
 				break;
 
 			case XML_ATTR_NAME:
-				jx_AttrAppendName(pJxCom);
+				nox_AttrAppendName(pJxCom);
 				break;
 
 			case XML_ATTR_VALUE:
-				jx_AttrAppendValue(pJxCom);
+				nox_AttrAppendValue(pJxCom);
 				break;
 
 			case XML_COLLECT_DATA:
-				jx_AppendData (pJxCom);
+				nox_AppendData (pJxCom);
 				break;
 
 			case XML_FIND_END_TOKEN:
@@ -375,7 +375,7 @@ BOOL jx_ParseXml (PJXCOM pJxCom)
 
 			case XML_EXIT:
 				if (debug) {
-					jx_Dump(pJxCom->pNodeRoot);
+					nox_Dump(pJxCom->pNodeRoot);
 				}
 				// printf("\ndbgStep:%d\n" , dbgStep);
 				// getchar();
@@ -385,7 +385,7 @@ BOOL jx_ParseXml (PJXCOM pJxCom)
 					return false;
 				} else {
 					pJxCom->State = XML_EXIT_ERROR;
-					jx_SetMessage( "Unexpected end of inputstream");
+					nox_SetMessage( "Unexpected end of inputstream");
 					return true;
 				}
 

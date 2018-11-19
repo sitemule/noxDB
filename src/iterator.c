@@ -7,8 +7,8 @@
  * By     Date     Task    Description                           *
  * NL     02.06.03 0000000 New program                           *
  * NL     27.02.08 0000510 Allow also no namespace for *:tag     *
- * NL     27.02.08 0000510 jx_NodeCopy                           *
- * NL     13.05.08 0000577 jx_NodeAdd / WriteNote                *
+ * NL     27.02.08 0000510 nox_NodeCopy                           *
+ * NL     13.05.08 0000577 nox_NodeAdd / WriteNote                *
  * NL     13.05.08 0000577 Support for refference location       *
  * ------------------------------------------------------------- */
 #include <stdio.h>
@@ -33,37 +33,37 @@
 
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
-JXITERATOR jx_SetRecursiveIterator (PJXNODE pNode , PUCHAR path)
+NOXITERATOR nox_SetRecursiveIterator (PNOXNODE pNode , PUCHAR path)
 {
     PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-    JXITERATOR iter;
+    NOXITERATOR iter;
 
     if (pParms->OpDescList->NbrOfParms == 2 && path && *path > ' ') {
-       pNode = jx_GetNode  (pNode, path );
+       pNode = nox_GetNode  (pNode, path );
     }
 
-    memset(&iter , 0 , sizeof(JXITERATOR));
+    memset(&iter , 0 , sizeof(NOXITERATOR));
     iter.isFirst = ON;
     iter.isLast  = ON;
     iter.isList  = ON;
     iter.isRecursive = ON;;
     iter.root = pNode;
     iter.size = 0;
-    jx_LoadRecursiveList (pNode, &iter, TRUE);
+    nox_LoadRecursiveList (pNode, &iter, TRUE);
     iter.this = (iter.length > 0) ? iter.list [0] : NULL;
     return iter;
 }
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
-JXITERATOR jx_SetIterator (PJXNODE pNode , PUCHAR path)
+NOXITERATOR nox_SetIterator (PNOXNODE pNode , PUCHAR path)
 {
     PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-    JXITERATOR iter;
+    NOXITERATOR iter;
 
     if (pParms->OpDescList->NbrOfParms == 2 && path && *path > ' ') {
-       pNode = jx_GetNode  (pNode, path );
+       pNode = nox_GetNode  (pNode, path );
     }
-    memset(&iter , 0 , sizeof(JXITERATOR));
+    memset(&iter , 0 , sizeof(NOXITERATOR));
     iter.isFirst = ON;
     iter.isLast  = ON;
     iter.isList  = OFF;
@@ -85,7 +85,7 @@ JXITERATOR jx_SetIterator (PJXNODE pNode , PUCHAR path)
 /* ---------------------------------------------------------------------------
    Return ON for each entry in the list..
    --------------------------------------------------------------------------- */
-LGL jx_ForEach (PJXITERATOR pIter)
+LGL nox_ForEach (PNOXITERATOR pIter)
 {
     if (! pIter || ! pIter->this) return OFF;
 

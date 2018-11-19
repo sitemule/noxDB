@@ -16,56 +16,56 @@
 
         //Note: all binddirectories JSONPARSER, XMLPARSER and JSONXML is the same
         //---------------------------------------------------------------------- *
-      /if defined( JX_DEF)
+      /if defined( NOX_DEF)
       /eof
       /endif
-      /define  JX_DEF
+      /define  NOX_DEF
 
         Dcl-S UTF8 Varchar(32767) CCSID(*UTF8) Template;
 
         //---------------------------------------------------------------------- *
         //Before starting that parser - to enshure right enterpretations of delimi
         //Usage:
-        //jx_setDelimiters( JX_DELIMITERS);
+        //nox_setDelimiters( NOX_DELIMITERS);
         //--------------------------------------------------------------------- *
         //get delimiter pointer
-        Dcl-PR jx_getDelimiters Pointer extproc(*CWIDEN :'jx_GetDelimiters');
+        Dcl-PR nox_getDelimiters Pointer extproc(*CWIDEN :'nox_GetDelimiters');
         End-PR;
         //Set delimiter used for locate expression
-        Dcl-PR jx_setDelimiters  extproc(*CWIDEN :'jx_SetDelimiters2');
+        Dcl-PR nox_setDelimiters  extproc(*CWIDEN :'nox_SetDelimiters2');
           //always: '/\@[] .{}' in your  local CCSID
           delimiterStr   Like(UTF8) value;
         End-PR;
 
-        Dcl-C JX_DELIMITERS const('/\@[] .{}''"');
+        Dcl-C NOX_DELIMITERS const('/\@[] .{}''"');
 
         //---------------------------------------------------------------------- *
         //Type of a node:
         //---------------------------------------------------------------------- *
-        Dcl-C JX_UNKNOWN const(0);
-        Dcl-C JX_OBJECT  const(1);
-        Dcl-C JX_ARRAY   const(2);
-        Dcl-C JX_EVAL    const(3);
-        Dcl-C JX_POINTER_VALUE const(4);
-        Dcl-C JX_VALUE   const(5);
-        Dcl-C JX_ROOT    const(6);
-        Dcl-C JX_LITERAL const(16);
-        Dcl-C JX_OBJLINK const(17);
-        Dcl-C JX_OBJREPLACE const(18);
-        Dcl-C JX_OBJCOPY const(18);
-        Dcl-C JX_BY_CONTEXT const(19);
-        Dcl-C JX_OBJMOVE const(2048);
+        Dcl-C NOX_UNKNOWN const(0);
+        Dcl-C NOX_OBJECT  const(1);
+        Dcl-C NOX_ARRAY   const(2);
+        Dcl-C NOX_EVAL    const(3);
+        Dcl-C NOX_POINTER_VALUE const(4);
+        Dcl-C NOX_VALUE   const(5);
+        Dcl-C NOX_ROOT    const(6);
+        Dcl-C NOX_LITERAL const(16);
+        Dcl-C NOX_OBJLINK const(17);
+        Dcl-C NOX_OBJREPLACE const(18);
+        Dcl-C NOX_OBJCOPY const(18);
+        Dcl-C NOX_BY_CONTEXT const(19);
+        Dcl-C NOX_OBJMOVE const(2048);
 
         //* Modifiers to "add" / "or" into "parseString" and "evaluate"
         //!! Type - have to be backwards compat.
         //Unlink the source and move it to dest.
-        Dcl-C JX_MOVE_MODES const(2048);
+        Dcl-C NOX_MOVE_MODES const(2048);
         //Allow strings ints and other values to
-        Dcl-C JX_ALLOW_PRIMITIVES const(4096);
+        Dcl-C NOX_ALLOW_PRIMITIVES const(4096);
 
         //* Combinations:
-        //JX_PARSE  = JX_EVAL + JX_MOVE_NODES
-        Dcl-C JX_PARSE   const(2051);
+        //NOX_PARSE  = NOX_EVAL + NOX_MOVE_NODES
+        Dcl-C NOX_PARSE   const(2051);
 
         //Merge options:
         //Modifiers to "add" / "or" into "JSON_EVAL"
@@ -81,19 +81,19 @@
         Dcl-C MO_MERGE_REPLACE const(1024 );
       /endif
 
-        Dcl-C JX_CHILD_LIST const('[0]');
+        Dcl-C NOX_CHILD_LIST const('[0]');
 
         //---------------------------------------------------------------------- *
-        //Returns node to the jx_object tree
-        Dcl-PR jx_ParseFile Pointer extproc(*CWIDEN:'jx_ParseFile');
+        //Returns node to the nox_object tree
+        Dcl-PR nox_ParseFile Pointer extproc(*CWIDEN:'nox_ParseFile');
           //File to parse
           FileName       Like(UTF8) value;
           //Parsing options
           Options        Like(UTF8) value options(*nopass);
         End-PR;
 
-        //Returns node jx_object tree
-        Dcl-PR jx_ParseString Pointer extproc(*CWIDEN:'jx_ParseString');
+        //Returns node nox_object tree
+        Dcl-PR nox_ParseString Pointer extproc(*CWIDEN:'nox_ParseString');
           //String to parse
           String         Like(UTF8) value;
           //Parsing options
@@ -101,40 +101,40 @@
         End-PR;
 
         //Set , or . for numeri decimal point
-        Dcl-PR jx_setDecPoint  extproc(*CWIDEN : 'jx_SetDecPoint');
+        Dcl-PR nox_setDecPoint  extproc(*CWIDEN : 'nox_SetDecPoint');
           //decimal point char
           decPoint       Like(UTF8) value;
         End-PR;
 
         //Bool true if errors occures
-        Dcl-PR jx_Error Ind extproc(*CWIDEN:'jx_Error');
-          //jx_Object  node
+        Dcl-PR nox_Error Ind extproc(*CWIDEN:'nox_Error');
+          //nox_Object  node
           pNode          Pointer    value;
         End-PR;
 
         //Return error description
-        Dcl-PR jx_Message Varchar(1024) extproc(*CWIDEN:'jx_Message');
-          //jx_Object
+        Dcl-PR nox_Message Varchar(1024) extproc(*CWIDEN:'nox_Message');
+          //nox_Object
           pNode          Pointer    value;
         End-PR;
 
         // Without parameters you will get the last internal error
         // Otherwise it will format an error object
-I       Dcl-PR jx_GetMessageObject Pointer //Return error description
-                                   extproc(*CWIDEN:'jx_GetMessageObject');
+I       Dcl-PR nox_GetMessageObject Pointer //Return error description
+                                   extproc(*CWIDEN:'nox_GetMessageObject');
 I         MessageId      Like(UTF8) value options(*nopass);
 I         MessageData    Like(UTF8) value options(*nopass);
         End-PR;
 
         // simple courtesy function to return a {"success":true} object
         //Return success:true object
-I       Dcl-PR jx_SuccessTrue Pointer extproc(*CWIDEN:'jx_SuccessTrue');
+I       Dcl-PR nox_SuccessTrue Pointer extproc(*CWIDEN:'nox_SuccessTrue');
 I         MessageId      Like(UTF8) value options(*nopass);
 I         MessageData    Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns pointer to node
-        Dcl-PR jx_Locate Pointer extproc(*CWIDEN : 'jx_GetNode');
+        Dcl-PR nox_Locate Pointer extproc(*CWIDEN : 'nox_GetNode');
           //Pointer to tree or node
           pNode          Pointer    value;
           //location expression
@@ -142,8 +142,8 @@ I         MessageData    Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns pointer to node
-        Dcl-PR jx_LocateOrCreate Pointer 
-                                 extproc(*CWIDEN : 'jx_GetOrCreateNode');
+        Dcl-PR nox_LocateOrCreate Pointer 
+                                 extproc(*CWIDEN : 'nox_GetOrCreateNode');
           //Pointer to tree or node
           pNode          Pointer    value;
           //location expression
@@ -151,7 +151,7 @@ I         MessageData    Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns 'ON' if node exists
-        Dcl-PR jx_Has Ind extproc(*CWIDEN : 'jx_Has');
+        Dcl-PR nox_Has Ind extproc(*CWIDEN : 'nox_Has');
           //Pointer to tree or node
           pNode          Pointer    value;
           //Path to node
@@ -159,7 +159,7 @@ I         MessageData    Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns 'ON' if node exists and has <> 0
-        Dcl-PR jx_isTrue Ind extproc(*CWIDEN : 'jx_IsTrue');
+        Dcl-PR nox_isTrue Ind extproc(*CWIDEN : 'nox_IsTrue');
           //Pointer to tree or node
           pNode          Pointer    value;
           //Path to node
@@ -167,7 +167,7 @@ I         MessageData    Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns 'ON' if node exists and has <> 0
-        Dcl-PR jx_isNull Ind extproc(*CWIDEN : 'jx_IsNull');
+        Dcl-PR nox_isNull Ind extproc(*CWIDEN : 'nox_IsNull');
           //Pointer to tree or node
           pNode          Pointer    value;
           //Path to node
@@ -175,13 +175,13 @@ I         MessageData    Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns 'ON' if it is a valid node
-        Dcl-PR jx_isNode Ind extproc(*CWIDEN : 'jx_isNode');
+        Dcl-PR nox_isNode Ind extproc(*CWIDEN : 'nox_isNode');
           //a.k.a. false for strings
           pNode          Pointer    value;
         End-PR;
 
         //renames the node name
-        Dcl-PR jx_NodeRename Ind extproc(*CWIDEN : 'jx_NodeRename');
+        Dcl-PR nox_NodeRename Ind extproc(*CWIDEN : 'nox_NodeRename');
           //Pointer to tree or node
           pNode          Pointer    value;
           //Path to node
@@ -189,31 +189,31 @@ I         MessageData    Like(UTF8) value options(*nopass);
         End-PR;
 
         //Returns pointer to next sibling (elem)
-        Dcl-PR jx_GetNext Pointer extproc(*CWIDEN : 'jx_GetNodeNext');
+        Dcl-PR nox_GetNext Pointer extproc(*CWIDEN : 'nox_GetNodeNext');
           //Pointer to current node (elem)
           pNode          Pointer    value;
         End-PR;
 
         //Returns pointer to first child (elem)
-        Dcl-PR jx_GetChild Pointer extproc(*CWIDEN : 'jx_GetNodeChild');
+        Dcl-PR nox_GetChild Pointer extproc(*CWIDEN : 'nox_GetNodeChild');
           //Pointer to current node (elem)
           pNode          Pointer    value;
         End-PR;
 
         //Returns pointer to parent node
-        Dcl-PR jx_GetParent Pointer extproc(*CWIDEN : 'jx_GetNodeParent');
+        Dcl-PR nox_GetParent Pointer extproc(*CWIDEN : 'nox_GetNodeParent');
           //Pointer to current node (elem)
           pNode          Pointer    value;
         End-PR;
 
-        Dcl-PR jx_SetEval pointer extproc(*CWIDEN:'jx_SetEvalByName');
+        Dcl-PR nox_SetEval pointer extproc(*CWIDEN:'nox_SetEvalByName');
           pNode          Pointer    value;
           Expresion      Like(UTF8) value;
           Value          Like(UTF8) value;
         End-PR;
 
-        Dcl-PR jx_SetStr Pointer extproc(*CWIDEN: 'jx_SetStrByName');
-          //Pointer to jx_ tree
+        Dcl-PR nox_SetStr Pointer extproc(*CWIDEN: 'nox_SetStrByName');
+          //Pointer to nox_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
           Expresion      Like(UTF8) value;
@@ -221,8 +221,8 @@ I         MessageData    Like(UTF8) value options(*nopass);
           Value          Like(UTF8) value;
         End-PR;
 
-        Dcl-PR jx_SetInt Pointer extproc(*CWIDEN: 'jx_SetIntByName');
-          //Pointer to jx_ tree
+        Dcl-PR nox_SetInt Pointer extproc(*CWIDEN: 'nox_SetIntByName');
+          //Pointer to nox_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
           Expresion      Like(UTF8) value;
@@ -230,8 +230,8 @@ I         MessageData    Like(UTF8) value options(*nopass);
           Value          Int(10)    value;
         End-PR;
 
-        Dcl-PR jx_SetNum Pointer extproc(*CWIDEN: 'jx_SetDecByName');
-          //Pointer to jx_ tree
+        Dcl-PR nox_SetNum Pointer extproc(*CWIDEN: 'nox_SetDecByName');
+          //Pointer to nox_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
           Expresion      Like(UTF8) value;
@@ -239,8 +239,8 @@ I         MessageData    Like(UTF8) value options(*nopass);
           Value          Packed(30:15) value;
         End-PR;
 
-        Dcl-PR jx_SetBool Pointer extproc(*CWIDEN: 'jx_SetBoolByName');
-          //Pointer to jx_ tree
+        Dcl-PR nox_SetBool Pointer extproc(*CWIDEN: 'nox_SetBoolByName');
+          //Pointer to nox_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
           Expresion      Like(UTF8) value;
@@ -248,8 +248,8 @@ I         MessageData    Like(UTF8) value options(*nopass);
           Value          Ind        value;
         End-PR;
 
-        Dcl-PR jx_SetPtr Pointer extproc(*CWIDEN: 'jx_SetPtrByName');
-          //Pointer to jx_ tree
+        Dcl-PR nox_SetPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByName');
+          //Pointer to nox_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
           Expresion      Like(UTF8) value;
@@ -257,8 +257,8 @@ I         MessageData    Like(UTF8) value options(*nopass);
           Value          Pointer    value;
         End-PR;
 
-        Dcl-PR jx_SetProcPtr Pointer extproc(*CWIDEN: 'jx_SetPtrByName');
-          pNode          Pointer    value; //Pointer to jx_ tree
+        Dcl-PR nox_SetProcPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByName');
+          pNode          Pointer    value; //Pointer to nox_ tree
           //X-path locations to node or attributes
           Expresion      Like(UTF8) value;
           Proc           Pointer(*Proc); //Pointer to a procedure
@@ -266,8 +266,8 @@ I         MessageData    Like(UTF8) value options(*nopass);
           isString       Ind        value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_SetValue Pointer extproc(*CWIDEN: 'jx_SetValueByName');
-          //Pointer to jx_ tree
+        Dcl-PR nox_SetValue Pointer extproc(*CWIDEN: 'nox_SetValueByName');
+          //Pointer to nox_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
           Expresion      Like(UTF8) value;
@@ -277,43 +277,43 @@ I         MessageData    Like(UTF8) value options(*nopass);
           Type           Uns(5)     value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_GetValueStr Like(UTF8) 
-                              extproc(*CWIDEN : 'jx_GetNodeValueVC');
+        Dcl-PR nox_GetValueStr Like(UTF8) 
+                              extproc(*CWIDEN : 'nox_GetNodeValueVC');
           //Pointer to node
           pNode          Pointer    value;
           //If not found - default value
           Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_GetValueNum Packed(30:15) 
-                              extproc(*CWIDEN : 'jx_GetNodeValueNum');
+        Dcl-PR nox_GetValueNum Packed(30:15) 
+                              extproc(*CWIDEN : 'nox_GetNodeValueNum');
           //Pointer to node
           pNode          Pointer    value;
           //If not found - default value
           Defaultvalue   Packed(30:15) value options(*NOPASS);
         End-PR;
 
-I       Dcl-PR jx_GetValueInt Int(20) extproc(*CWIDEN : 'jx_GetNodeValueInt');
+I       Dcl-PR nox_GetValueInt Int(20) extproc(*CWIDEN : 'nox_GetNodeValueInt');
 I         pNode          Pointer    value; //Pointer to node
           //If not found - default value
 I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
-        Dcl-PR jx_GetValuePtr Pointer extproc(*CWIDEN : 'jx_GetNodeValuePtr');
+        Dcl-PR nox_GetValuePtr Pointer extproc(*CWIDEN : 'nox_GetNodeValuePtr');
           //Pointer to node
           pNode          Pointer    value;
           //If not found - default value
           Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_GetName Like(UTF8) 
-                          extproc(*CWIDEN : 'jx_GetNodeNameVC');
+        Dcl-PR nox_GetName Like(UTF8) 
+                          extproc(*CWIDEN : 'nox_GetNodeNameVC');
           //Pointer to node
           pNode          Pointer    value;
         End-PR;
 
-        Dcl-PR jx_GetNameAsPath Like(UTF8)
-                                extproc(*CWIDEN : 'jx_GetNodeNameAsPath');
+        Dcl-PR nox_GetNameAsPath Like(UTF8)
+                                extproc(*CWIDEN : 'nox_GetNodeNameAsPath');
           //Pointer to node
           pNode          Pointer    value;
           //Delimiter like - or . or / or \
@@ -321,15 +321,15 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         //* Refer to node type above
-        Dcl-PR jx_NodeType Int(5) extproc(*CWIDEN : 'jx_GetNodeType');
-          //Pointer to jx_ tree to receive format
+        Dcl-PR nox_NodeType Int(5) extproc(*CWIDEN : 'nox_GetNodeType');
+          //Pointer to nox_ tree to receive format
           pNode          Pointer    value;
         End-PR;
 
       // Get string by expresion
       //  /object/array[123]/name
       //  .object.array[123].name
-        Dcl-PR jx_GetStr Like(UTF8) extproc(*CWIDEN : 'jx_GetValueVC');
+        Dcl-PR nox_GetStr Like(UTF8) extproc(*CWIDEN : 'nox_GetValueVC');
           //Pointer to relative node
           pNode          Pointer    value;
           //Locations expression to node
@@ -339,8 +339,8 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
       //  will join all subsequent array nodes into one resulting string
-        Dcl-PR jx_GetStrJoin Like(UTF8) 
-                             extproc(*CWIDEN : 'jx_GetStrJoinVC');
+        Dcl-PR nox_GetStrJoin Like(UTF8) 
+                             extproc(*CWIDEN : 'nox_GetStrJoinVC');
           //Pointer to relative node
           pNode          Pointer    value;
           //Locations expression to node
@@ -352,7 +352,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
       // Get number by expresion like:
       //  /object/array[123]/name
       //  .object.array[123].name
-        Dcl-PR jx_GetNum Packed(30:15) extproc(*CWIDEN : 'jx_GetValueNum');
+        Dcl-PR nox_GetNum Packed(30:15) extproc(*CWIDEN : 'nox_GetValueNum');
           //Pointer to relative node
           pNode          Pointer    value;
           //Locations expression to node
@@ -361,7 +361,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Defaultvalue   Packed(30:15) value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_GetInt Int(20) extproc(*CWIDEN : 'jx_GetValueInt');
+        Dcl-PR nox_GetInt Int(20) extproc(*CWIDEN : 'nox_GetValueInt');
           //Pointer to relative node
           pNode          Pointer    value;
           //Locations expression to node
@@ -372,7 +372,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
 
         //Set an ILOB object to a value found by X
         //Return *ON if found
-        Dcl-PR jx_GetIlobValue Ind extproc(*CWIDEN :'ILOB_XmlGetValue');
+        Dcl-PR nox_GetIlobValue Ind extproc(*CWIDEN :'ILOB_XmlGetValue');
           //Pointer to ILOB object to receive the va
           pIlob          Pointer    value;
           //Pointer to tree
@@ -381,7 +381,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Expression     Like(UTF8) value;
         End-PR;
 
-        Dcl-PR jx_CopyValue Pointer extproc(*CWIDEN : 'jx_CopyValue');
+        Dcl-PR nox_CopyValue Pointer extproc(*CWIDEN : 'nox_CopyValue');
           //destination node
           pDest          Pointer    value;
           //destiantion name (or *NULL or '')
@@ -392,7 +392,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           sourceName     Like(UTF8) value;
         End-PR;
 
-        Dcl-PR jx_NodeCopy extproc(*CWIDEN : 'jx_NodeCopy');
+        Dcl-PR nox_NodeCopy extproc(*CWIDEN : 'nox_NodeCopy');
           //node. Retrive from Locate()
           pRootNode      Pointer    value;
           //node. Retrive from Locate()
@@ -401,19 +401,19 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           RefLocation    Int(10)    value;
         End-PR;
 
-        //Following constants used by jx_NodeCopy:RefLocation
-        Dcl-C JX_FIRST_CHILD const(1);
-        Dcl-C JX_LAST_CHILD const(2);
-        Dcl-C JX_BEFORE_SIBLING const(3);
-        Dcl-C JX_AFTER_SIBLING const(4);
+        //Following constants used by nox_NodeCopy:RefLocation
+        Dcl-C NOX_FIRST_CHILD const(1);
+        Dcl-C NOX_LAST_CHILD const(2);
+        Dcl-C NOX_BEFORE_SIBLING const(3);
+        Dcl-C NOX_AFTER_SIBLING const(4);
 
-        Dcl-PR jx_NodeClone Pointer extproc(*CWIDEN : 'jx_NodeClone');
+        Dcl-PR nox_NodeClone Pointer extproc(*CWIDEN : 'nox_NodeClone');
           //node. Retrive from Locate()
           pSource        Pointer    value;
         End-PR;
 
         //returns the new node
-        Dcl-PR jx_NodeAdd Pointer extproc(*CWIDEN : 'jx_NodeAdd');
+        Dcl-PR nox_NodeAdd Pointer extproc(*CWIDEN : 'nox_NodeAdd');
           //node. Retrive from Locate()
           pRootNode      Pointer    value;
           //Reference location to where it arrive
@@ -426,43 +426,43 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Type           Uns(5)     value;
         End-PR;
 
-        Dcl-PR jx_NodeDelete extproc(*CWIDEN : 'jx_NodeDelete');
+        Dcl-PR nox_NodeDelete extproc(*CWIDEN : 'nox_NodeDelete');
           //node. Retrive from Locate()
           pRootNode      Pointer    value;
         End-PR;
 
         //Unlink the note from its previous and promote it as a new root node
-        Dcl-PR jx_NodeUnlink Pointer extproc(*CWIDEN : 'jx_NodeUnlink');
+        Dcl-PR nox_NodeUnlink Pointer extproc(*CWIDEN : 'nox_NodeUnlink');
           //Targenode. Retrive from Locate(
           pNode          Pointer    value;
         End-PR;
 
-        Dcl-PR jx_NodeSanitize extproc(*CWIDEN : 'jx_NodeSanitize');
+        Dcl-PR nox_NodeSanitize extproc(*CWIDEN : 'nox_NodeSanitize');
           //node. Retrive from Locate()
           pRootNode      Pointer    value;
         End-PR;
 
         //CheckSum of all names and values
         //Delete all nodes which value are null
-        Dcl-PR jx_NodeCheckSum Uns(10) extproc(*CWIDEN : 'jx_NodeCheckSum');
+        Dcl-PR nox_NodeCheckSum Uns(10) extproc(*CWIDEN : 'nox_NodeCheckSum');
           pRootNode      Pointer    value; //node. Retrive from Locate()
         End-PR;
      
         //returns the new node
-        Dcl-PR jx_NewObject Pointer extproc(*CWIDEN : 'jx_NewObject');
+        Dcl-PR nox_NewObject Pointer extproc(*CWIDEN : 'nox_NewObject');
           //Destination. Retrive from Locate()
           pDestNode      Pointer    value options(*nopass);
         End-PR;
 
       // Array functions
         //returns the new node
-        Dcl-PR jx_NewArray Pointer extproc(*CWIDEN : 'jx_NewArray');
+        Dcl-PR nox_NewArray Pointer extproc(*CWIDEN : 'nox_NewArray');
           //Destination. Retrive from Locate()
           pDestNode      Pointer    value options(*nopass);
         End-PR;
 
         //returns the new node added to the end of
-        Dcl-PR jx_ArrayPush Pointer extproc(*CWIDEN : 'jx_ArrayPush');
+        Dcl-PR nox_ArrayPush Pointer extproc(*CWIDEN : 'nox_ArrayPush');
           //Destination. Retrive from Locate()
           pDestArray     Pointer    value;
           //source node to append
@@ -471,12 +471,12 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           copy           Uns(5)     value options(*nopass);
         End-PR;
 
-        //Following constants used by jx_ArrayPush:copy
-        Dcl-C JX_MOVE_UNLINK const(0);
-        Dcl-C JX_COPY_CLONE const(1);
+        //Following constants used by nox_ArrayPush:copy
+        Dcl-C NOX_MOVE_UNLINK const(0);
+        Dcl-C NOX_COPY_CLONE const(1);
 
         //returns the new node added to the end of
-        Dcl-PR jx_ArrayAppend Pointer extproc(*CWIDEN :'jx_ArrayAppend');
+        Dcl-PR nox_ArrayAppend Pointer extproc(*CWIDEN :'nox_ArrayAppend');
           //Destination. Retrive from Locate()
           pDestArray     Pointer    value;
           //source node to append
@@ -486,7 +486,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         //returns the new array fro source array
-        Dcl-PR jx_ArraySlice Pointer extproc(*CWIDEN : 'jx_ArraySlice' );
+        Dcl-PR nox_ArraySlice Pointer extproc(*CWIDEN : 'nox_ArraySlice' );
           //source node or array string
           pSourceNode    Like(UTF8) value;
           //From entry ( 1=First)
@@ -498,7 +498,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
      
         //returns the new node added to the end of
-        Dcl-PR jx_ArraySort Pointer extproc(*CWIDEN : 'jx_ArraySort');
+        Dcl-PR nox_ArraySort Pointer extproc(*CWIDEN : 'nox_ArraySort');
           //Destination. Retrive from Locate()
           pArray         Pointer    value;
           //nodenames if any in subobject to comapre
@@ -507,10 +507,10 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           options        uns(5)     value options(*nopass);
         End-PR;
 
-        Dcl-C jx_USE_LOCALE const(1);
+        Dcl-C nox_USE_LOCALE const(1);
         
         //returns the first node with expr value
-        Dcl-PR jx_LookupValue Pointer extproc(*CWIDEN : 'jx_lookupValue');
+        Dcl-PR nox_LookupValue Pointer extproc(*CWIDEN : 'nox_lookupValue');
           //Array/ obj to search
           pArray         Pointer    value;
           //What to search for
@@ -519,18 +519,18 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           ignoreCase     Uns(5)     value options(*nopass);
         End-PR;
 
-        //Following constants used by jx_LookupValue:ignoreCase
-        Dcl-C JX_SAME_CASE const(0);
-        Dcl-C JX_IGNORE_CASE const(1);
+        //Following constants used by nox_LookupValue:ignoreCase
+        Dcl-C NOX_SAME_CASE const(0);
+        Dcl-C NOX_IGNORE_CASE const(1);
 
         //returns numer of element in array or obj
-        Dcl-PR jx_GetLength Int(10) extproc(*CWIDEN : 'jx_getLength'  );
+        Dcl-PR nox_GetLength Int(10) extproc(*CWIDEN : 'nox_getLength'  );
           //Array to count length
           pArray         Pointer    value;
         End-PR;
 
         //returns the new node
-        Dcl-PR jx_Merge Pointer extproc(*CWIDEN : 'jx_NodeMerge');
+        Dcl-PR nox_Merge Pointer extproc(*CWIDEN : 'nox_NodeMerge');
           //Destination. Retrive from Locate()
           pDestNode      Pointer    value;
           //Source tree  Retrive from Locate()
@@ -539,22 +539,22 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Type           Uns(5)     value options(*nopass);
         End-PR;
 
-        //Following constants used by jx_Merge:Type
-        Dcl-C JX_DONTREPLACE const(0);
-        Dcl-C JX_REPLACE const(1);
+        //Following constants used by nox_Merge:Type
+        Dcl-C NOX_DONTREPLACE const(0);
+        Dcl-C NOX_REPLACE const(1);
 
         //returns the new node
-        Dcl-PR jx_MergeObjects Pointer extproc(*CWIDEN : 'jx_MergeObjects');
+        Dcl-PR nox_MergeObjects Pointer extproc(*CWIDEN : 'nox_MergeObjects');
           //Destination. Retrive from Locate()
           pDestObj       Pointer    value;
           //Source tree  Retrive from Locate()
           pSourceObj     Pointer    value;
-          //JX_DONTREPLACE or JX_OBJREPLACE
+          //NOX_DONTREPLACE or NOX_OBJREPLACE
           Type           Uns(5)     value;
         End-PR;
 
         //returns the source node
-        Dcl-PR jx_MoveObjectInto Pointer extproc(*CWIDEN : 'jx_NodeMoveInto');
+        Dcl-PR nox_MoveObjectInto Pointer extproc(*CWIDEN : 'nox_NodeMoveInto');
           //Destination. Retrive from Locate()
           pDestObj       Pointer    value;
           Name           Like(UTF8) value;
@@ -562,13 +562,13 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           pSourceObj     Pointer    value;
         End-PR;
 
-        Dcl-PR jx_Dump  extproc(*CWIDEN : 'jx_Dump');
+        Dcl-PR nox_Dump  extproc(*CWIDEN : 'nox_Dump');
           //Pointer to tree
           pNode          Pointer    value;
         End-PR;
 
 
-        Dcl-PR jx_CloneFormat  extproc(*CWIDEN : 'jx_CloneFormat');
+        Dcl-PR nox_CloneFormat  extproc(*CWIDEN : 'nox_CloneFormat');
           //Pointer to tree to receive format
           pNode          Pointer    value;
           //node ptr or path with right formating
@@ -576,7 +576,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         //**  JSON renderes ***
-        Dcl-PR jx_WriteJsonStmf  extproc(*CWIDEN : 'jx_WriteJsonStmf');
+        Dcl-PR nox_WriteJsonStmf  extproc(*CWIDEN : 'nox_WriteJsonStmf');
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //Name of output stream file
@@ -588,14 +588,14 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Options        Like(UTF8) value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_AsJsonText Like(UTF8) 
-                             extproc(*CWIDEN : 'jx_AsJsonText');
+        Dcl-PR nox_AsJsonText Like(UTF8) 
+                             extproc(*CWIDEN : 'nox_AsJsonText');
           //node. Retrive from Locate()
           pNode          Pointer    value;
         End-PR;
 
-        Dcl-PR jx_AsJsonTextMem Uns(10) 
-                                extproc(*CWIDEN : 'jx_AsJsonTextMem');
+        Dcl-PR nox_AsJsonTextMem Uns(10) 
+                                extproc(*CWIDEN : 'nox_AsJsonTextMem');
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //pointer to any memory buffer
@@ -605,7 +605,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         //**  XML  renderes ***
-        Dcl-PR jx_WriteXmlStmf  extproc(*CWIDEN : 'jx_WriteXmlStmf');
+        Dcl-PR nox_WriteXmlStmf  extproc(*CWIDEN : 'nox_WriteXmlStmf');
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //Name of output stream file
@@ -617,12 +617,12 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Options        Like(UTF8) value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_AsXmlText Like(UTF8) extproc(*CWIDEN : 'jx_AsXmlText');
+        Dcl-PR nox_AsXmlText Like(UTF8) extproc(*CWIDEN : 'nox_AsXmlText');
           //node. Retrive from Locate()
           pNode          Pointer    value;
         End-PR;
 
-        Dcl-PR jx_AsXmlTextMem Uns(10) extproc(*CWIDEN : 'jx_AsXmlTextMem');
+        Dcl-PR nox_AsXmlTextMem Uns(10) extproc(*CWIDEN : 'nox_AsXmlTextMem');
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //pointer to any memory buffer
@@ -630,13 +630,13 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         // Return a streamer object to be used in own serialisers 
-        Dcl-PR jx_Stream pointer extproc(*CWIDEN : 'jx_Stream');
+        Dcl-PR nox_Stream pointer extproc(*CWIDEN : 'nox_Stream');
           //node. Retrive from Locate()
           pNode          Pointer    value;
         End-PR;
 
         //**  CSV  renderes ***
-        Dcl-PR jx_WriteCsvStmf  extproc(*CWIDEN : 'jx_WriteCsvStmf');
+        Dcl-PR nox_WriteCsvStmf  extproc(*CWIDEN : 'nox_WriteCsvStmf');
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //Name of output stream file
@@ -650,7 +650,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
 
-        Dcl-DS jx_DelimiterDS  based(prototype_only) qualified;
+        Dcl-DS nox_DelimiterDS  based(prototype_only) qualified;
           Slash          Char(1) CCSID(*UTF8);
           BackSlash      Char(1) CCSID(*UTF8);
           Masterspace    Char(1) CCSID(*UTF8);
@@ -665,7 +665,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-DS;
 
         //Iterators: First use the set the use forEach
-        Dcl-DS jx_Iterator  based(prototype_only) qualified;
+        Dcl-DS nox_Iterator  based(prototype_only) qualified;
           root           Pointer;
           this           Pointer;
           isList         Ind;
@@ -683,17 +683,17 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           filler         Char(64);
         End-DS;
 
-        Dcl-PR jx_setIterator  likeds( jx_Iterator) 
-                               extproc(*CWIDEN : 'jx_SetIterator');
+        Dcl-PR nox_setIterator  likeds( nox_Iterator) 
+                               extproc(*CWIDEN : 'nox_SetIterator');
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //Optional - path to node
           path           Like(UTF8) value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_setRecursiveIterator  likeds( jx_Iterator) 
+        Dcl-PR nox_setRecursiveIterator  likeds( nox_Iterator) 
                                         extproc(*CWIDEN : 
-                                        'jx_SetRecursiveIterator');
+                                        'nox_SetRecursiveIterator');
           //node. Retrive from Locate()
           pNode          Pointer    value;
           //Optional - path to node
@@ -701,13 +701,13 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         //Iterator Structure
-        Dcl-PR jx_forEach Ind extproc(*CWIDEN : 'jx_ForEach');
-          iterator                  likeds( jx_Iterator);
+        Dcl-PR nox_forEach Ind extproc(*CWIDEN : 'nox_ForEach');
+          iterator                  likeds( nox_Iterator);
         End-PR;
 
         //For XML attributes
-        Dcl-PR jx_GetNodeAttrValue Like(UTF8) 
-                                   extproc(*CWIDEN : 'jx_GetNodeAttrValueVC');
+        Dcl-PR nox_GetNodeAttrValue Like(UTF8) 
+                                   extproc(*CWIDEN : 'nox_GetNodeAttrValueVC');
           //Pointer to exsiting element
           pNode          Pointer    value;
           //Attribute Name
@@ -716,7 +716,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_SetNodeAttrValue extproc(*CWIDEN : 'jx_SetNodeAttrValue');
+        Dcl-PR nox_SetNodeAttrValue extproc(*CWIDEN : 'nox_SetNodeAttrValue');
           //Pointer to exsiting element
           pNode          Pointer    value;
           //Attribute name
@@ -725,15 +725,15 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Value          Like(UTF8) value;
         End-PR;
 
-        Dcl-PR jx_GetAttrValue Like(UTF8) 
-                               extproc(*CWIDEN : 'jx_GetAttrValueVC');
+        Dcl-PR nox_GetAttrValue Like(UTF8) 
+                               extproc(*CWIDEN : 'nox_GetAttrValueVC');
           //Pointer Attribute
           pAttr          Pointer    value;
           //If not found - default value
           Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
-        Dcl-PR jx_SetAttrValue extproc(*CWIDEN : 'jx_SetAttrValue');
+        Dcl-PR nox_SetAttrValue extproc(*CWIDEN : 'nox_SetAttrValue');
           //Pointer Attribute
           pAttr          Pointer    value;
           //New value
@@ -743,59 +743,59 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         //Returns pointer to attribute list
-        Dcl-PR jx_GetAttrFirst Pointer extproc(*CWIDEN : 'jx_GetAttrFirst');
+        Dcl-PR nox_GetAttrFirst Pointer extproc(*CWIDEN : 'nox_GetAttrFirst');
           //Pointer to element
           pElem          Pointer    value;
         End-PR;
 
         //Returns pointer to attribute list
-        Dcl-PR jx_GetAttrNext Pointer extproc(*CWIDEN : 'jx_GetAttrNext');
+        Dcl-PR nox_GetAttrNext Pointer extproc(*CWIDEN : 'nox_GetAttrNext');
           //Pointer to attribute list
           pAttr          Pointer    value;
         End-PR;
 
-        Dcl-PR jx_GetAttrName Like(UTF8) 
-                              extproc(*CWIDEN : 'jx_GetAttrNameVC');
+        Dcl-PR nox_GetAttrName Like(UTF8) 
+                              extproc(*CWIDEN : 'nox_GetAttrNameVC');
           //Pointer to attribute list
           pAttr          Pointer    value;
         End-PR;
 
       // Clear the contents of an array or object / delete all children
-        Dcl-PR jx_Clear  extproc(*CWIDEN : 'jx_Clear');
+        Dcl-PR nox_Clear  extproc(*CWIDEN : 'nox_Clear');
           pNode          Pointer    value; //Pointer to tree node
         End-PR;
 
       // Close all nodes in this tree - also parent and siblings
-        Dcl-PR jx_Close  extproc(*CWIDEN : 'jx_Close');
+        Dcl-PR nox_Close  extproc(*CWIDEN : 'nox_Close');
           //Pointer to tree node
           pNode          Pointer  ;
         End-PR;
       // Detect if you have a memry leak: call this when you have closed everything at i will return false
-        Dcl-PR jx_MemLeak Ind extproc(*CWIDEN : 'jx_MemLeak');
+        Dcl-PR nox_MemLeak Ind extproc(*CWIDEN : 'nox_MemLeak');
         End-PR;
 
       // Print memory report
-        Dcl-PR jx_MemStat  extproc(*CWIDEN : 'jx_MemStat');
+        Dcl-PR nox_MemStat  extproc(*CWIDEN : 'nox_MemStat');
         End-PR;
 
       // retune number of bytest used
-        Dcl-PR jx_MemUse Uns(20) extproc(*CWIDEN : 'jx_MemUse');
+        Dcl-PR nox_MemUse Uns(20) extproc(*CWIDEN : 'nox_MemUse');
         End-PR;
 
       // Return a memory segment pointer, and build a scope where JSON/XML will be created
-        Dcl-PR jx_SegmentSelectNo Pointer 
-                                  extproc(*CWIDEN : 'jx_SegmentSelectNo');
+        Dcl-PR nox_SegmentSelectNo Pointer 
+                                  extproc(*CWIDEN : 'nox_SegmentSelectNo');
           SegmentIndex   Int(10)    value;
         End-PR;
 
       //  Delete the segment and all JSON/XML nodes build while segment scope was active
-        Dcl-PR jx_SegmentDispose  extproc(*CWIDEN : 'jx_SegmentDispose');
+        Dcl-PR nox_SegmentDispose  extproc(*CWIDEN : 'nox_SegmentDispose');
           segmentPtr     Pointer    value;
         End-PR;
 
       // Maintain at list of index numbers to database CLOB/BLOB fields since pointers can not be shared in SQL
         //Returns *ON if found
-        Dcl-PR jx_mapIx Ind extproc(*CWIDEN:'jx_MapIx' );
+        Dcl-PR nox_mapIx Ind extproc(*CWIDEN:'nox_MapIx' );
           //pointer to node pointer
           ppNode         Pointer;
           //index of pointer
@@ -804,19 +804,19 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
 
         //------------------------------------------------------------------------
         //SQL interface:
-        //Note: When SQL functions returns *NULL, then use  the jx_Message() to re
+        //Note: When SQL functions returns *NULL, then use  the nox_Message() to re
         //------------------------------------------------------------------------
 
       // If options need - then it has to be first call made.
       // NOTE: If a pConnection pointer is provided, it will be updated with the conection
-        Dcl-PR jx_sqlSetOptions  extproc(*CWIDEN: 'jx_sqlSetOptions');
+        Dcl-PR nox_sqlSetOptions  extproc(*CWIDEN: 'nox_sqlSetOptions');
           //json object with options ( see sample)
           parms          Like(UTF8) value options(*nopass);
         End-PR;
 
       // returns a object node with one resulting row for the SQL statment
         //Returns one SQL row as jx Obejct
-        Dcl-PR jx_sqlResultRow Pointer extproc(*CWIDEN: 'jx_sqlResultRow');
+        Dcl-PR nox_sqlResultRow Pointer extproc(*CWIDEN: 'nox_sqlResultRow');
           //SQL statement to run
           sqlStmt        Like(UTF8) value;
           //json object template
@@ -825,12 +825,12 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
 
       // returns an array (or object with array) of resulting rows for the SQL statment
         //Returns SQL rows as jx Obejct
-        Dcl-PR jx_sqlResultSet Pointer extproc(*CWIDEN: 'jx_sqlResultSet');
+        Dcl-PR nox_sqlResultSet Pointer extproc(*CWIDEN: 'nox_sqlResultSet');
           //SQL statement to run
           sqlStmt        Like(UTF8) value;
           //From row; 1=First
           start          Int(10)    value options(*nopass);
-          //max number of rows; JX_ALLROWS=all
+          //max number of rows; NOX_ALLROWS=all
           limit          Int(10)    value options(*nopass);
           //resultset format:
           format         Int(10)    value options(*nopass);
@@ -839,30 +839,30 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
        
-        Dcl-C JX_ALLROWS const(-1);
+        Dcl-C NOX_ALLROWS const(-1);
 
-        //Following constants used by jx_sqlResultSet:format
+        //Following constants used by nox_sqlResultSet:format
         //+ An array with each row as an object
-        Dcl-C JX_ROWARRAY const(0);
+        Dcl-C NOX_ROWARRAY const(0);
         //+ Metaobject: rows, fields
-        Dcl-C JX_META    const(1);
+        Dcl-C NOX_META    const(1);
         //+ Columns info
-        Dcl-C JX_FIELDS  const(2);
+        Dcl-C NOX_FIELDS  const(2);
         //+ Count all rows in the resultset
         // ( Pricy so awoid it !! )
-        Dcl-C JX_TOTALROWS const(4);
+        Dcl-C NOX_TOTALROWS const(4);
         //+ Uppercase column names
-        Dcl-C JX_UPPERCASE const(8);
+        Dcl-C NOX_UPPERCASE const(8);
 
         //+ Appoximate number of rows..
         //  ( unpresise but cheap !! prefered  )
-        Dcl-C JX_APPROXIMATE_TOTALROWS const(16); 
+        Dcl-C NOX_APPROXIMATE_TOTALROWS const(16); 
      
 
 
       // SQL cursor processing
         //Returns handle to sql statement
-        Dcl-PR jx_sqlOpen Pointer extproc(*CWIDEN:'jx_sqlOpen'  );
+        Dcl-PR nox_sqlOpen Pointer extproc(*CWIDEN:'nox_sqlOpen'  );
           //SQL statement to run
           sqlStmt        Like(UTF8) value;
           //json object template
@@ -871,8 +871,8 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
 
       // Fetch next from from that open sql handle, starting from rowNumer. 1=First row
         //Returns a row object (or *NULL if EOF)
-        Dcl-PR jx_sqlFetchRelative Pointer 
-                                   extproc(*CWIDEN: 'jx_sqlFetchRelative');
+        Dcl-PR nox_sqlFetchRelative Pointer 
+                                   extproc(*CWIDEN: 'nox_sqlFetchRelative');
           //sql statement handle ( from sqlOpen)
           pSqlHndl       Pointer    value;
           //row from where to start 1=First
@@ -881,14 +881,14 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
 
       // Fetch next from from that open sql handle
         //Returns a row object (or *NULL if EOF)
-        Dcl-PR jx_sqlFetchNext Pointer extproc(*CWIDEN:'jx_sqlFetchNext');
+        Dcl-PR nox_sqlFetchNext Pointer extproc(*CWIDEN:'nox_sqlFetchNext');
           //sql statement handle ( from sqlOpen)
           pSqlHndl       Pointer    value;
         End-PR;
 
       // Number of columns in result set ( -1 if error)
         //Returns number of columns
-        Dcl-PR jx_sqlColumns Int(10) extproc(*CWIDEN:'jx_sqlColumns');
+        Dcl-PR nox_sqlColumns Int(10) extproc(*CWIDEN:'nox_sqlColumns');
           //sql statement handle ( from sqlOpen)
           pSqlHndl       Pointer    value;
         End-PR;
@@ -896,20 +896,20 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
       // Number of rows  in result set ( -1 if error)
       // Note: This will run a hidden "select count(*)" which might be a little pricy
         //Returns number of rows
-        Dcl-PR jx_sqlRows Int(10) extproc(*CWIDEN:'jx_sqlRows');
+        Dcl-PR nox_sqlRows Int(10) extproc(*CWIDEN:'nox_sqlRows');
           //sql statement handle ( from sqlOpen)
           pSqlHndl       Pointer    value;
         End-PR;
 
       // Always colse the cursor after use, to release resources
-        Dcl-PR jx_sqlClose  extproc(*CWIDEN:'jx_sqlClose');
+        Dcl-PR nox_sqlClose  extproc(*CWIDEN:'nox_sqlClose');
           //sql statement handle ( from sqlOpen)
           pSqlHndl       Pointer;
         End-PR;
 
       // Execute any SQL statement not involving a cursor
         //Returns *ON if error
-        Dcl-PR jx_sqlExec Ind extproc(*CWIDEN:'jx_sqlExec'  );
+        Dcl-PR nox_sqlExec Ind extproc(*CWIDEN:'nox_sqlExec'  );
           //SQL statement to run (template)
           sqlStmt        Like(UTF8) value;
           //json object template data
@@ -918,7 +918,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
 
       // Execute an update table where the row is defined as a json object
         //Returns *ON if error
-        Dcl-PR jx_sqlUpdate Ind extproc(*CWIDEN:'jx_sqlUpdate');
+        Dcl-PR nox_sqlUpdate Ind extproc(*CWIDEN:'nox_sqlUpdate');
           //table name
           table          Like(UTF8) value;
           //json object: {a:123,b:"value"}
@@ -930,7 +930,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         //Returns *ON if error
-        Dcl-PR jx_sqlInsert Ind extproc(*CWIDEN:'jx_sqlInsert');
+        Dcl-PR nox_sqlInsert Ind extproc(*CWIDEN:'nox_sqlInsert');
           //table name
           table          Like(UTF8) value;
           //json object: {a:123,b:"value"}
@@ -940,7 +940,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         //Returns *ON if error
-        Dcl-PR jx_sqlUpsert Ind extproc(*CWIDEN:'jx_sqlUpsert');
+        Dcl-PR nox_sqlUpsert Ind extproc(*CWIDEN:'nox_sqlUpsert');
           //table name
           table          Like(UTF8) value;
           //json object: {a:123,b:"value"}
@@ -952,30 +952,30 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         //Returns id of last insert
-        Dcl-PR jx_sqlGetInsertId Int(10) extproc(*CWIDEN:'jx_sqlGetInsertId');
+        Dcl-PR nox_sqlGetInsertId Int(10) extproc(*CWIDEN:'nox_sqlGetInsertId');
         End-PR;
 
         //Returns array of column info
-        Dcl-PR jx_sqlGetMeta Pointer extproc(*CWIDEN:'jx_sqlGetMeta');
+        Dcl-PR nox_sqlGetMeta Pointer extproc(*CWIDEN:'nox_sqlGetMeta');
           sqlstmt        Like(UTF8) value;
         End-PR;
 
       // Return pointer to database connection. No options => will be default local database
-        Dcl-PR jx_sqlConnect Pointer extproc(*CWIDEN: 'jx_sqlConnect');
+        Dcl-PR nox_sqlConnect Pointer extproc(*CWIDEN: 'nox_sqlConnect');
           //json object or string with options
           parms          Like(UTF8) value options(*nopass);
         End-PR;
 
       // Return pointer to database connection. No options => will be default local database
-        Dcl-PR jx_sqlDisconnect  extproc(*CWIDEN: 'jx_sqlDisconnect');
+        Dcl-PR nox_sqlDisconnect  extproc(*CWIDEN: 'nox_sqlDisconnect');
         End-PR;
 
       // Return sql code for previous statement
-        Dcl-PR jx_sqlCode Int(10) extproc(*CWIDEN: 'jx_sqlCode');
+        Dcl-PR nox_sqlCode Int(10) extproc(*CWIDEN: 'nox_sqlCode');
         End-PR;
 
       //Returns a JSON object from a REST call
-        Dcl-PR jx_httpRequest Pointer extproc(*CWIDEN:'jx_httpRequest');
+        Dcl-PR nox_httpRequest Pointer extproc(*CWIDEN:'nox_httpRequest');
           //Full URL to the resource
           url            Like(UTF8) value;
           //json object or string
@@ -987,15 +987,15 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
       // when the dataarea SQLTRACE is set, your SQL statements 
       // are logged into SQLTRACE table.
       // you can supply an extr eye-catch wariable :trcid
-        Dcl-PR jx_traceSetId  extproc(*CWIDEN : 'jx_traceSetId');
+        Dcl-PR nox_traceSetId  extproc(*CWIDEN : 'nox_traceSetId');
           traceId        Int(20)    value; //Ccsid of inpur file
         End-PR;
 
       // --------------------------------------------------------------------------------------------------------------
       // Depricated and renamed functions :
       // --------------------------------------------------------------------------------------------------------------
-      // Depricated - use  jx_GetValueStr
-        Dcl-PR jx_GetValue Like(UTF8) extproc(*CWIDEN : 'jx_GetValueVC');
+      // Depricated - use  nox_GetValueStr
+        Dcl-PR nox_GetValue Like(UTF8) extproc(*CWIDEN : 'nox_GetValueVC');
           //Pointer to node
           pNode          Pointer    value;
           //If not found - default value
@@ -1004,8 +1004,8 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
-      // Depricated - use  jx_NodeCopy
-        Dcl-PR jx_Copy extproc(*CWIDEN : 'jx_NodeCopy');
+      // Depricated - use  nox_NodeCopy
+        Dcl-PR nox_Copy extproc(*CWIDEN : 'nox_NodeCopy');
           //element. Retrive from Locate()
           pRootNode      Pointer    value;
           //element. Retrive from Locate()
@@ -1014,7 +1014,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           RefLocation    Int(10)    value;
         End-PR;
 
-        Dcl-PR jx_ElementCopy extproc(*CWIDEN : 'jx_NodeCopy');
+        Dcl-PR nox_ElementCopy extproc(*CWIDEN : 'nox_NodeCopy');
           //element. Retrive from Locate()
           pRootNode      Pointer    value;
           //element. Retrive from Locate()
@@ -1023,28 +1023,28 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           RefLocation    Int(10)    value;
         End-PR;
 
-      // Depricated - use  jx_NodeDelete
-        Dcl-PR jx_Delete extproc(*CWIDEN : 'jx_NodeDelete');
+      // Depricated - use  nox_NodeDelete
+        Dcl-PR nox_Delete extproc(*CWIDEN : 'nox_NodeDelete');
           //element. Retrive from Locate()
           pRootNode      Pointer    value;
         End-PR;
 
-      // Depricated - use  jx_NodeDelete
-        Dcl-PR jx_ElementDelete extproc(*CWIDEN : 'jx_NodeDelete');
+      // Depricated - use  nox_NodeDelete
+        Dcl-PR nox_ElementDelete extproc(*CWIDEN : 'nox_NodeDelete');
           //element. Retrive from Locate()
           pRootNode      Pointer    value;
         End-PR;
 
-      // Depricated - use  jx_AsJsonText
-        Dcl-PR jx_AsText Like(UTF8) extproc(*CWIDEN : 'jx_AsJsonText');
+      // Depricated - use  nox_AsJsonText
+        Dcl-PR nox_AsText Like(UTF8) extproc(*CWIDEN : 'nox_AsJsonText');
           //element. Retrive from Locate()
           pNode          Pointer    value;
         End-PR;
 
 
-      // jx_XpathValue   is depricated and replaced by: jx_GetStr
-        Dcl-PR jx_XpathValue Like(UTF8)
-                             extproc(*CWIDEN : 'jx_GetValueVC');
+      // nox_XpathValue   is depricated and replaced by: nox_GetStr
+        Dcl-PR nox_XpathValue Like(UTF8)
+                             extproc(*CWIDEN : 'nox_GetValueVC');
           //Pointer to tree
           pNode          Pointer    value;
           //Locations expression to node
@@ -1053,9 +1053,9 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
-      // jx_XpathValueNum   is depricated and replaced by: jx_GetNum
-        Dcl-PR jx_XpathValueNum Packed(30:15) 
-                                extproc(*CWIDEN : 'jx_GetValueNum');
+      // nox_XpathValueNum   is depricated and replaced by: nox_GetNum
+        Dcl-PR nox_XpathValueNum Packed(30:15) 
+                                extproc(*CWIDEN : 'nox_GetValueNum');
           //Pointer to tree
           pJsonCom       Pointer    value;
           //X-path locations to node or attributes
@@ -1064,15 +1064,15 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Defaultvalue   Packed(30:15) value options(*nopass);
         End-PR;
 
-      // Use - jx_NodeType
-        Dcl-PR jx_ElementType Int(5) extproc(*CWIDEN : 'jx_GetNodeType');
+      // Use - nox_NodeType
+        Dcl-PR nox_ElementType Int(5) extproc(*CWIDEN : 'nox_GetNodeType');
           //Pointer to tree to receive format
           pNode          Pointer    value;
         End-PR;
 
-      // Use jx_NodeAdd
+      // Use nox_NodeAdd
         //returns the new element
-        Dcl-PR jx_ElementAdd Pointer extproc(*CWIDEN : 'jx_NodeAdd');
+        Dcl-PR nox_ElementAdd Pointer extproc(*CWIDEN : 'nox_NodeAdd');
           //element. Retrive from Locate()
           pRootNode      Pointer    value;
           //Reference location to where it arrive
@@ -1083,40 +1083,40 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Value          Like(UTF8) value;
         End-PR;
 
-      // Use jx_GetNext
+      // Use nox_GetNext
         //Returns pointer to next sibling (elem)
-        Dcl-PR jx_GetElemNext Pointer extproc(*CWIDEN : 'jx_GetNodeNext');
+        Dcl-PR nox_GetElemNext Pointer extproc(*CWIDEN : 'nox_GetNodeNext');
           //Pointer to current element (elem)
           pElem          Pointer    value  ;
         End-PR;
 
-      // use jx_GetChild
+      // use nox_GetChild
         //Returns pointer to next child (elem)
-        Dcl-PR jx_GetElemChild Pointer extproc(*CWIDEN : 'jx_GetNodeChild');
+        Dcl-PR nox_GetElemChild Pointer extproc(*CWIDEN : 'nox_GetNodeChild');
           //Pointer to current element (elem)
           pElem          Pointer    value;
         End-PR;
 
 
-      // use get jx_GetName
-        Dcl-PR jx_getElemName Like(UTF8) 
-                              extproc(*CWIDEN : 'jx_GetNodeNameVC');
+      // use get nox_GetName
+        Dcl-PR nox_getElemName Like(UTF8) 
+                              extproc(*CWIDEN : 'nox_GetNodeNameVC');
           //Pointer to node
           pNode          Pointer    value;
         End-PR;
 
       // use xml_GetValueStr
-        Dcl-PR jx_GetElemValue Like(UTF8) 
-                               extproc(*CWIDEN : 'jx_GetNodeValueVC');
+        Dcl-PR nox_GetElemValue Like(UTF8) 
+                               extproc(*CWIDEN : 'nox_GetNodeValueVC');
           //Pointer to element
           pElem          Pointer    value;
           //If not found - default value
           Defaultvalue   Like(UTF8) value options(*nopass);
         End-PR;
 
-       // use jx_GetAttrValue
-        Dcl-PR jx_GetAttr Like(UTF8) 
-                          extproc(*CWIDEN : 'jx_GetNodeAttrValueVC');
+       // use nox_GetAttrValue
+        Dcl-PR nox_GetAttr Like(UTF8) 
+                          extproc(*CWIDEN : 'nox_GetNodeAttrValueVC');
           //Pointer to element
           pNode          Pointer    value;
           //Attribute Name
@@ -1127,7 +1127,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
 
       // has no effect any longer
         //Set input and output CCSID
-        Dcl-PR jx_setCcsid  extproc(*CWIDEN : 'jx_SetCcsid');
+        Dcl-PR nox_setCcsid  extproc(*CWIDEN : 'nox_SetCcsid');
           //Ccsid of inpur file
           inputCCSID     Int(10)    value;
           //Ccsid of output file
@@ -1135,8 +1135,8 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
       // depricated - use setNum
-        Dcl-PR jx_SetDec Pointer extproc(*CWIDEN: 'jx_SetDecByName');
-          //Pointer to jx_ tree
+        Dcl-PR nox_SetDec Pointer extproc(*CWIDEN: 'nox_SetDecByName');
+          //Pointer to nox_ tree
           pNode          Pointer    value;
           //X-path locations to node or attributes
           Expresion      Like(UTF8) value;
@@ -1144,10 +1144,10 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Value          Packed(30:15) value;
         End-PR;
 
-      // Depricated in both JSON and XML - use  jx_WriteJsonStmf /   jx_WriteXmlStmf
+      // Depricated in both JSON and XML - use  nox_WriteJsonStmf /   nox_WriteXmlStmf
       /if not defined(JSONXML_DEPRICATED)
       /define  JSONXML_DEPRICATED
-        Dcl-PR json_WriteStmf  extproc(*CWIDEN : 'jx_WriteJsonStmf');
+        Dcl-PR json_WriteStmf  extproc(*CWIDEN : 'nox_WriteJsonStmf');
           //element. Retrive from Locate()
           pNode          Pointer    value;
           //Name of output stream file
@@ -1157,7 +1157,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Trim           Ind        value options(*nopass);
         End-PR;
 
-        Dcl-PR xml_WriteStmf  extproc(*CWIDEN : 'jx_WriteXmlStmf');
+        Dcl-PR xml_WriteStmf  extproc(*CWIDEN : 'nox_WriteXmlStmf');
           //element. Retrive from Locate()
           pNode          Pointer    value;
           //Name of output stream file

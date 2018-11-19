@@ -1,7 +1,7 @@
 /* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL)      */
 /* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL)      */
 /* COMPILEOPT('OUTPUT(*PRINT) OPTION(*EXPMAC *SHOWINC)')         */
-/* Program . . . : JXM002                                        */
+/* Program . . . : NOXM002                                        */
 /* Design  . . . : Niels Liisberg                                */
 /* Function  . . : SQL database I/O                              */
 /*                                                               */
@@ -38,7 +38,7 @@ __thread extern UCHAR jxMessage[512];
 __thread extern BOOL  jxError;
 
 // Unit Globals:
-static PJXSQLCONNECT pConnection = NULL;
+static PNOXSQLCONNECT pConnection = NULL;
 static BOOL keepConnection = false;
 __thread static SQLINTEGER sqlCode = 0;
 
@@ -55,13 +55,13 @@ typedef _Packed struct _SQLCHUNK {
    PUCHAR value;
 } SQLCHUNK, *PSQLCHUNK;
 
-void          jx_sqlDisconnect (void);
-PJXSQLCONNECT jx_sqlNewConnection(void);
-void jx_traceOpen (PJXSQLCONNECT pCon);
-void jx_traceInsert (PJXSQL pSQL, PUCHAR stmt , PUCHAR sqlState);
+void          nox_sqlDisconnect (void);
+PNOXSQLCONNECT nox_sqlNewConnection(void);
+void nox_traceOpen (PNOXSQLCONNECT pCon);
+void nox_traceInsert (PNOXSQL pSQL, PUCHAR stmt , PUCHAR sqlState);
 
 /* ------------------------------------------------------------- */
-SQLINTEGER jx_sqlCode(void)
+SQLINTEGER nox_sqlCode(void)
 {
 	return sqlCode;
 }
@@ -82,7 +82,7 @@ static SQLINTEGER getSqlCode(SQLHSTMT hStmt)
 	return sqlCode;
 }
 /* ------------------------------------------------------------- */
-static int check_error (PJXSQL pSQL)
+static int check_error (PNOXSQL pSQL)
 {
 	SQLSMALLINT length;
 	ULONG l;
@@ -119,13 +119,13 @@ static int check_error (PJXSQL pSQL)
 	length = 0;
 	rc = SQLGetDiagRec(hType , handle, 1, psqlState, psqlCode, psqlMsgDta,  sizeof(sqlMsgDta), &length);
 	sprintf( jxMessage , "%-5.5s %-*.*s" , psqlState, length, length, psqlMsgDta);
-	jx_sqlClose (&pSQL); // Free the data
+	nox_sqlClose (&pSQL); // Free the data
 	jxError = true;
 
 	return;
 }
 /* ------------------------------------------------------------- */
-static PJXSQLCONNECT jx_sqlNewConnection(void )
+static PNOXSQLCONNECT nox_sqlNewConnection(void )
 {
 	// static SQLHSTMT      hstmt = 0 ;
 	// SQLINTEGEREGER    len;
@@ -133,14 +133,14 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
 	// LGL  err = ON;
 	// LONG rows =0;
 
-	// PJXSQLCONNECT pConnection;  I hate this - bu need to go global for now !!
+	// PNOXSQLCONNECT pConnection;  I hate this - bu need to go global for now !!
 	LONG          attrParm;
 	PUCHAR        server = "*LOCAL";
 	int rc;
 	PSQLOPTIONS po;
 
-	pConnection = memAlloc(sizeof(JXSQLCONNECT));
-	memset(pConnection , 0 , sizeof(JXSQLCONNECT));
+	pConnection = memAlloc(sizeof(NOXSQLCONNECT));
+	memset(pConnection , 0 , sizeof(NOXSQLCONNECT));
 	pConnection->sqlTrace.handle = -1;
 	pConnection->pCd = XlateXdOpen (13488, 0);
 	po = &pConnection->options;
@@ -158,7 +158,7 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
 	rc = SQLAllocEnv (&pConnection->henv);
 	if (rc != SQL_SUCCESS ) {
 		check_error (NULL);
-		jx_sqlDisconnect ();
+		nox_sqlDisconnect ();
 		return NULL; // we have an error
 	}
 
@@ -168,7 +168,7 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
 	/* Dont test since the activations groupe might be reclaimed, and a new "session" is on..
 	if (rc != SQL_SUCCESS ) {
 		check_error (NULL);
-		jx_sqlDisconnect ();
+		nox_sqlDisconnect ();
 		return NULL; // we have an error
 	}
 	... */
@@ -177,7 +177,7 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
 	attrParm = SQL_TRUE;
 	rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_UTF8 , &attrParm  , 0);
 	if (rc != SQL_SUCCESS ) {
-		jx_sqlDisconnect ();
+		nox_sqlDisconnect ();
 		return NULL; // we have an error
 	}
 
@@ -185,14 +185,14 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
 	attrParm = SQL_TRUE;
 	rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
 	if (rc != SQL_SUCCESS ) {
-		jx_sqlDisconnect ();
+		nox_sqlDisconnect ();
 		return NULL; // we have an error
 	}
 
 	rc = SQLAllocConnect (pConnection->henv, &pConnection->hdbc);  // allocate a connection handle
 	if (rc != SQL_SUCCESS ) {
 		check_error (NULL);
-		jx_sqlDisconnect ();
+		nox_sqlDisconnect ();
 		return NULL; // we have an error
 	}
 
@@ -201,29 +201,29 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
 	rc = SQLSetConnectAttr (pConnection->hdbc, SQL_ATTR_COMMIT , &attrParm  , 0);
 	if (rc != SQL_SUCCESS ) {
 		check_error (NULL);
-		jx_sqlDisconnect ();
+		nox_sqlDisconnect ();
 		return NULL; // we have an error
 	}
 
 	rc = SQLConnect (pConnection->hdbc, server , SQL_NTS, NULL, SQL_NTS, NULL, SQL_NTS);
 	if (rc != SQL_SUCCESS ) {
 		check_error (NULL);
-		jx_sqlDisconnect ();
+		nox_sqlDisconnect ();
 		return NULL; // we have an error
 	}
 
 	// If required, open the trace table
-	jx_traceOpen (pConnection);
+	nox_traceOpen (pConnection);
 
 	return pConnection; // we are ok
 
 }
 /* ------------------------------------------------------------- */
-static PJXSQLCONNECT jx_getCurrentConnection(void)
+static PNOXSQLCONNECT nox_getCurrentConnection(void)
 {
 
 	if (pConnection == NULL) {
-		pConnection = jx_sqlNewConnection ();
+		pConnection = nox_sqlNewConnection ();
 	}
 	return pConnection;
 }
@@ -247,15 +247,15 @@ static int sqlEscape (PUCHAR out  , PUCHAR in)
 	return len;
 }
 /* ------------------------------------------------------------- */
-static int insertMarkerValue (PUCHAR buf , PUCHAR marker, PJXNODE parms)
+static int insertMarkerValue (PUCHAR buf , PUCHAR marker, PNOXNODE parms)
 {
 	int len =0;
-	PJXNODE pNode;
+	PNOXNODE pNode;
 	PUCHAR value;
 
-	pNode = jx_GetNode   ( parms , marker);
+	pNode = nox_GetNode   ( parms , marker);
 	if (pNode) {
-		value = jx_GetValuePtr  ( pNode , "" , NULL );
+		value = nox_GetValuePtr  ( pNode , "" , NULL );
 		if (pNode->isLiteral) {
 			strcpy(buf, value);
 			len = strlen(buf);
@@ -266,14 +266,14 @@ static int insertMarkerValue (PUCHAR buf , PUCHAR marker, PJXNODE parms)
 	return len;
 }
 /* ------------------------------------------------------------- */
-int jx_sqlExecDirectTrace(PJXSQL pSQL , int hstmt, PUCHAR sqlstmt)
+int nox_sqlExecDirectTrace(PNOXSQL pSQL , int hstmt, PUCHAR sqlstmt)
 {
 
 	int rc, rc2;
 	SQLSMALLINT   length   = 0;
 	LONG          lrc;
 	PUCHAR        psqlState  = "";
-	PJXTRACE      pTrc = &pConnection->sqlTrace;
+	PNOXTRACE      pTrc = &pConnection->sqlTrace;
 
 	sqlCode = 0; // TODO re-entrant !!
 	memset ( pConnection->sqlState , ' ' , 5);
@@ -282,18 +282,18 @@ int jx_sqlExecDirectTrace(PJXSQL pSQL , int hstmt, PUCHAR sqlstmt)
 	if (rc != SQL_SUCCESS) {
 		rc2= SQLGetDiagRec(SQL_HANDLE_STMT,hstmt,1,pConnection->sqlState,&sqlCode, pTrc->text,sizeof(pTrc->text), &length);
 		sprintf( jxMessage , "%-5.5s %0.*s" , pConnection->sqlState , length, pTrc->text);
-		jx_sqlClose (&pSQL); // Free the data
+		nox_sqlClose (&pSQL); // Free the data
 	}
 	pTrc->text [length] = '\0';
 	ts_nowstr(pTrc->tsEnd); // TODO !!! not form global
-	jx_traceInsert ( pSQL , sqlstmt , pConnection->sqlState);
+	nox_traceInsert ( pSQL , sqlstmt , pConnection->sqlState);
 	return rc; // we have an error
 }
 /* ------------------------------------------------------------- */
-PUCHAR strFormat (PUCHAR out, PUCHAR in , PJXNODE parms)
+PUCHAR strFormat (PUCHAR out, PUCHAR in , PNOXNODE parms)
 {
 	PUCHAR p, pMarker, res = out;
-	PJXNODE pParms = parms;
+	PNOXNODE pParms = parms;
 	int markerLen ;
 	UCHAR marker [64];
 	UCHAR dollar = 0x67;
@@ -304,8 +304,8 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PJXNODE parms)
 		return out;
 	}
 
-	if (OFF == jx_isNode (parms)) {
-	pParms =  jx_ParseString((PUCHAR) parms, NULL);
+	if (OFF == nox_isNode (parms)) {
+	pParms =  nox_ParseString((PUCHAR) parms, NULL);
 	}
 
 	while (*in) {
@@ -323,31 +323,31 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PJXNODE parms)
 	}
 	*(out++) =  '\0';
 
-	if (OFF == jx_isNode (parms)) {
-		jx_Close (&pParms);
+	if (OFF == nox_isNode (parms)) {
+		nox_Close (&pParms);
 	}
 
 	return res;
 }
 /* ------------------------------------------------------------- */
-static PJXSQL jx_sqlNewStatement(PJXNODE pSqlParms, BOOL exec, BOOL scroll)
+static PNOXSQL nox_sqlNewStatement(PNOXNODE pSqlParms, BOOL exec, BOOL scroll)
 {
-	PJXSQL pSQL;
-	PJXSQLCONNECT pc;
-	PJXSQLSTMT pStmt;
+	PNOXSQL pSQL;
+	PNOXSQLCONNECT pc;
+	PNOXSQLSTMT pStmt;
 	SHORT i;
 	int rc;
 	LONG   attrParm;
 
 	sqlCode  = 0;
-	pSQL = memAllocClear(sizeof(JXSQL));
+	pSQL = memAllocClear(sizeof(NOXSQL));
 	pSQL->rowcount = -1;
 
 	// build or get the connection
-	pc = jx_getCurrentConnection();
+	pc = nox_getCurrentConnection();
 	if (pc == NULL) return NULL;
 
-	pSQL->pstmt        = memAlloc(sizeof(JXSQLSTMT));
+	pSQL->pstmt        = memAlloc(sizeof(NOXSQLSTMT));
 	pSQL->pstmt->hstmt = 0;
 	pSQL->pstmt->exec  = exec;
 
@@ -396,23 +396,23 @@ static PJXSQL jx_sqlNewStatement(PJXNODE pSqlParms, BOOL exec, BOOL scroll)
 }
 /* ------------------------------------------------------------- */
 /* ------------------------------------------------------------- */
-PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll)
+PNOXSQL nox_sqlOpen(PUCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scroll)
 {
 
 	UCHAR sqlTempStmt[32766];
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PJXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 2 ) ? pSqlParmsP : NULL;
+	PNOXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 2 ) ? pSqlParmsP : NULL;
 	LONG   attrParm;
 	LONG   i;
-	//   PJXSQL pSQL = jx_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
-	PJXSQL pSQL;
+	//   PNOXSQL pSQL = nox_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
+	PNOXSQL pSQL;
 	SQLINTEGER len, descLen, isTrue;
 	int rc;
 
 	if (pParms->OpDescList->NbrOfParms <= 2 ) scroll = true;
 	jxError = false; // Assume OK
 
-	pSQL = jx_sqlNewStatement (NULL, false, scroll);
+	pSQL = nox_sqlNewStatement (NULL, false, scroll);
 	if  ( pSQL == NULL) return NULL;
 
 	if ( pConnection->options.hexSort == ON ) {
@@ -429,7 +429,7 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll)
 	strcat ( sqlTempStmt , " with ur");
 	pSQL->sqlstmt = strdup(sqlTempStmt);
 
-	rc = jx_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, pSQL->sqlstmt);
+	rc = nox_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, pSQL->sqlstmt);
 	if (rc != SQL_SUCCESS ) {
 		// is checked in abowe    check_error (pSQL);
 		return NULL; // we have an error
@@ -454,11 +454,11 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll)
 		check_error (pSQL);
 		return NULL; // we have an error
 	}
-	pSQL->cols = memAlloc (pSQL->nresultcols * sizeof(JXCOL));
+	pSQL->cols = memAlloc (pSQL->nresultcols * sizeof(NOXCOL));
 
 	for (i = 0; i < pSQL->nresultcols; i++) {
 
-		PJXCOL pCol = &pSQL->cols[i];
+		PNOXCOL pCol = &pSQL->cols[i];
 
 		SQLDescribeCol (pSQL->pstmt->hstmt, i+1, pCol->colname, sizeof (pCol->colname),
 			&pCol->colnamelen, &pCol->coltype, &pCol->collen, &pCol->scale, &pCol->nullable);
@@ -466,7 +466,7 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll)
 		pCol->colname[pCol->colnamelen] = '\0';
 
 		// If all uppsercase ( not given name by .. AS "newName") the lowercase
-		if (OFF == jx_IsTrue (pConnection->pOptions ,"uppercasecolname")) {
+		if (OFF == nox_IsTrue (pConnection->pOptions ,"uppercasecolname")) {
 			UCHAR temp [256];
 			str2upper  (temp , pCol->colname);
 			if (strcmp (temp , pCol->colname) == 0) {
@@ -545,9 +545,9 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll)
 			break;
 		}
 		if (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE) {
-			pCol->nodeType = JX_LITERAL;
+			pCol->nodeType = NOX_LITERAL;
 		} else {
-			pCol->nodeType = JX_VALUE;
+			pCol->nodeType = NOX_VALUE;
 		}
 	}
 
@@ -555,21 +555,21 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll)
 
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
+PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 {
 	int i;
-	PJXNODE pRow;
+	PNOXNODE pRow;
 	SQLINTEGER buflen, datatype;
 
 	if ( pSQL->rc == SQL_SUCCESS
 	||   pSQL->rc == SQL_SUCCESS_WITH_INFO ) {
 		jxError = false;
 
-		pRow = jx_NewObject(NULL);
+		pRow = nox_NewObject(NULL);
 
 		for (i = 0; i < pSQL->nresultcols; i++) {
 
-			PJXCOL pCol = &pSQL->cols[i];
+			PNOXCOL pCol = &pSQL->cols[i];
 			UCHAR buf [1048576]; // one meg
 
 			// TODO - Work arround !!! first get the length - if null, the dont try the get data
@@ -593,7 +593,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
 
 			// Null data is the same for all types
 			if (buflen  ==  SQL_NULL_DATA) {
-				jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , NULL,  JX_LITERAL );
+				nox_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , NULL,  NOX_LITERAL );
 			} else {
 
 				buf[buflen] = '\0';
@@ -619,7 +619,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
 						OutLen = XlateXdBuf  (pConnection->pCd, temp , pInBuf, inbytesleft);
 						temp[OutLen] = '\0';
 
-						jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , temp,  pCol->nodeType );
+						nox_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , temp,  pCol->nodeType );
 
 						break;
 					}
@@ -648,7 +648,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
 
 						} 
 
-						jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
+						nox_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
 						break ;
 					}
 
@@ -666,16 +666,16 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
 						// Predicts json data i columns
 						if (pConnection->options.autoParseContent == ON) {
 							if (*p == BRABEG || *p == CURBEG) {
-							PJXNODE pNode = jx_ParseString(p, NULL);
+							PNOXNODE pNode = nox_ParseString(p, NULL);
 							if (pNode) {
-								jx_NodeRename(pNode, pCol->colname);
-								jx_NodeAddChildTail (pRow, pNode);
+								nox_NodeRename(pNode, pCol->colname);
+								nox_NodeAddChildTail (pRow, pNode);
 								break;
 							}
 							}
 						}
 
-						jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
+						nox_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
 						break;
 					}
 				}
@@ -693,26 +693,26 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
 	return NULL; // not found
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlFetchRelative (PJXSQL pSQL, LONG fromRow)
+PNOXNODE nox_sqlFetchRelative (PNOXSQL pSQL, LONG fromRow)
 {
 	int rc;
 	if (pSQL == NULL) return (NULL);
 
 	pSQL->rc = SQLFetchScroll (pSQL->pstmt->hstmt, SQL_FETCH_RELATIVE , (fromRow < 1) ? 1: fromRow);
-	return jx_sqlFormatRow(pSQL);
+	return nox_sqlFormatRow(pSQL);
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlFetchNext (PJXSQL pSQL)
+PNOXNODE nox_sqlFetchNext (PNOXSQL pSQL)
 {
 	int rc;
 	if (pSQL == NULL) return (NULL);
 
 	// List next row from the result set
 	pSQL->rc = SQLFetch (pSQL->pstmt->hstmt);
-	return jx_sqlFormatRow(pSQL);
+	return nox_sqlFormatRow(pSQL);
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlFetchFirst (PJXSQL pSQL, LONG fromRow)
+PNOXNODE nox_sqlFetchFirst (PNOXSQL pSQL, LONG fromRow)
 {
 	int rc;
 	if (pSQL == NULL) return (NULL);
@@ -722,14 +722,14 @@ PJXNODE jx_sqlFetchFirst (PJXSQL pSQL, LONG fromRow)
 	} else {
 		pSQL->rc = SQLFetch (pSQL->pstmt->hstmt);
 	}
-	return jx_sqlFormatRow(pSQL);
+	return nox_sqlFormatRow(pSQL);
 }
 /* ------------------------------------------------------------- */
-void jx_sqlClose (PJXSQL * ppSQL)
+void nox_sqlClose (PNOXSQL * ppSQL)
 {
 	int i;
 	int rc;
-	PJXSQL pSQL = * ppSQL;
+	PNOXSQL pSQL = * ppSQL;
 
 	if (pConnection->options.hexSort == ON ) {
 		LONG attrParm = SQL_TRUE ;
@@ -762,12 +762,12 @@ void jx_sqlClose (PJXSQL * ppSQL)
 
 }
 /* ------------------------------------------------------------- */
-void jx_sqlKeepConnection (BOOL keep)
+void nox_sqlKeepConnection (BOOL keep)
 {
    keepConnection = keep;
 }
 /* ------------------------------------------------------------- */
-void jx_sqlDisconnect (void)
+void nox_sqlDisconnect (void)
 {
 
 	int rc;
@@ -796,21 +796,21 @@ void jx_sqlDisconnect (void)
 		pConnection->henv = -1;
 	}
 
-	jx_Close(&pConnection->pOptions);
+	nox_Close(&pConnection->pOptions);
 	memFree (&pConnection);
 
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
+PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
 {
 	int rc;
 	LONG    attrParm;
-	PJXNODE pFields;
+	PNOXNODE pFields;
 	int i;
 
 	if (pSQL == NULL) return(NULL);
 
-	pFields  = jx_NewArray(NULL);
+	pFields  = nox_NewArray(NULL);
 
 	/*****  need to be done before the cursor is closed !!
 
@@ -823,15 +823,15 @@ PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
 	******/
 
 	for (i = 1; i <= pSQL->nresultcols; i++) {
-		PJXNODE pField  = jx_NewObject (NULL);
-		PJXCOL  pCol     = &pSQL->cols[i-1];
+		PNOXNODE pField  = nox_NewObject (NULL);
+		PNOXCOL  pCol     = &pSQL->cols[i-1];
 		PUCHAR  type = "string";
 		UCHAR   temp [256];
 		SQLINTEGER templen;
 		SQLINTEGER descNo;
 
 		// Add name
-		jx_NodeAdd (pField  , RL_LAST_CHILD, "name" , pCol->colname,  VALUE );
+		nox_NodeAdd (pField  , RL_LAST_CHILD, "name" , pCol->colname,  VALUE );
 
 		// Add type
 		switch( pCol->coltype) {
@@ -860,38 +860,38 @@ PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
 			}
 			}
 		}
-		jx_NodeAdd (pField  , RL_LAST_CHILD, "datatype" , type,  VALUE );
+		nox_NodeAdd (pField  , RL_LAST_CHILD, "datatype" , type,  VALUE );
 
 		sprintf(temp , "%d" ,  pCol->coltype);
-		jx_NodeAdd (pField  , RL_LAST_CHILD, "sqltype" , temp ,  LITERAL);
+		nox_NodeAdd (pField  , RL_LAST_CHILD, "sqltype" , temp ,  LITERAL);
 
 		// Add size
 		sprintf(temp , "%d" , pCol->displaysize);
-		jx_NodeAdd (pField  , RL_LAST_CHILD, "size"     , temp,  LITERAL  );
+		nox_NodeAdd (pField  , RL_LAST_CHILD, "size"     , temp,  LITERAL  );
 
 		// Add decimal precission
 		if  (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE
 		&&   pCol->scale > 0) {
 			sprintf(temp , "%d" , pCol->scale);
-			jx_NodeAdd (pField  , RL_LAST_CHILD, "prec"     , temp,  LITERAL  );
+			nox_NodeAdd (pField  , RL_LAST_CHILD, "prec"     , temp,  LITERAL  );
 		}
 
-		jx_NodeAdd (pField  , RL_LAST_CHILD, "header" , pCol->header, VALUE  );
+		nox_NodeAdd (pField  , RL_LAST_CHILD, "header" , pCol->header, VALUE  );
 
 		// Push to array
-		jx_ArrayPush (pFields , pField, FALSE);
+		nox_ArrayPush (pFields , pField, FALSE);
 	}
 
-	// jx_Debug ("Fields:", pFields);
+	// nox_Debug ("Fields:", pFields);
 	return  pFields;
 
 }
 /* ------------------------------------------------------------- */
-LONG jx_sqlNumberOfRows(PUCHAR sqlstmt)
+LONG nox_sqlNumberOfRows(PUCHAR sqlstmt)
 {
 
 	LONG    rowCount, para = 0;
-	PJXNODE pRow;
+	PNOXNODE pRow;
 	PUCHAR p, w, lastSelect, orderby, from, withur;
 	UCHAR  str2 [32766];
 
@@ -951,119 +951,119 @@ LONG jx_sqlNumberOfRows(PUCHAR sqlstmt)
 	strcat (str2 , from );
 
 	// Get that only row
-	pRow = jx_sqlResultRow(str2, NULL);
+	pRow = nox_sqlResultRow(str2, NULL);
 
-	rowCount = atoi(jx_GetValuePtr(pRow, "counter", NULL));
+	rowCount = atoi(nox_GetValuePtr(pRow, "counter", NULL));
 
-	jx_NodeDelete (pRow);
+	nox_NodeDelete (pRow);
 
 	return rowCount;
 }
 /* ------------------------------------------------------------- */
 
 /***********
-LONG jx_sqlNumberOfRowsDiag(PUCHAR sqlstmt)
+LONG nox_sqlNumberOfRowsDiag(PUCHAR sqlstmt)
 {
 
    LONG    rowCount, para = 0;
-   PJXNODE pRow;
+   PNOXNODE pRow;
    PUCHAR p, w, lastSelect, orderby, from, withur;
    UCHAR  str2 [32766];
 
    strcat (str2 , "GET DIAGNOSTICS :v = DB2_NUMBER_ROWS" );
 
    // Get that only row
-   pRow = jx_sqlResultRow(str2, NULL);
+   pRow = nox_sqlResultRow(str2, NULL);
 
-   rowCount = atoi(jx_GetValuePtr(pRow, "counter", NULL));
+   rowCount = atoi(nox_GetValuePtr(pRow, "counter", NULL));
 
-   jx_NodeDelete (pRow);
+   nox_NodeDelete (pRow);
 
    return rowCount;
 }
 */
 /* ------------------------------------------------------------- */
-void jx_sqlUpperCaseNames(PJXSQL pSQL)
+void nox_sqlUpperCaseNames(PNOXSQL pSQL)
 {
 	int i;
 	for (i = 0; i < pSQL->nresultcols; i++) {
-		PJXCOL pCol = &pSQL->cols[i];
+		PNOXCOL pCol = &pSQL->cols[i];
 		str2upper (pCol->colname , pCol->colname);
 	}
 }
 /* ------------------------------------------------------------- */
-LONG jx_sqlColumns (PJXSQL pSQL)
+LONG nox_sqlColumns (PNOXSQL pSQL)
 {
    if (pSQL == NULL) return -1;
    return (pSQL->nresultcols);
 }
 /* ------------------------------------------------------------- */
-LONG jx_sqlRows (PJXSQL pSQL)
+LONG nox_sqlRows (PNOXSQL pSQL)
 {
 	if (pSQL == NULL) return -1;
 	if (pSQL->rowcount == -1) {
-		pSQL->rowcount = jx_sqlNumberOfRows(pSQL->sqlstmt);
+		pSQL->rowcount = nox_sqlNumberOfRows(pSQL->sqlstmt);
 	}
 
 	return (pSQL->rowcount);
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PJXNODE pSqlParmsP  )
+PNOXNODE nox_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PNOXNODE pSqlParmsP  )
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	LONG    start     = (pParms->OpDescList->NbrOfParms >= 2) ? startP     : 1;  // From first row
 	LONG    limit     = (pParms->OpDescList->NbrOfParms >= 3) ? limitP     : -1; // All row
 	LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;  // Arrray only
-	PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 5) ? pSqlParmsP : NULL;
-	PJXNODE pRows     = jx_NewArray(NULL);
-	PJXNODE pRow      ;
-	PJXNODE pResult;
-	PJXSQL  pSQL;
+	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 5) ? pSqlParmsP : NULL;
+	PNOXNODE pRows     = nox_NewArray(NULL);
+	PNOXNODE pRow      ;
+	PNOXNODE pResult;
+	PNOXSQL  pSQL;
 	LONG    i, rc;
 	LONG rowCount=0;
 	SHORT strLen=0;
 
 	start = start < 1 ? 1 : start;
 
-	pSQL = jx_sqlOpen(sqlstmt , pSqlParms, start > 1);
+	pSQL = nox_sqlOpen(sqlstmt , pSqlParms, start > 1);
 	if ( pSQL == NULL) {
 		return NULL;
 	}
 
-	if (format & (JX_UPPERCASE)) {
-		jx_sqlUpperCaseNames(pSQL);
+	if (format & (NOX_UPPERCASE)) {
+		nox_sqlUpperCaseNames(pSQL);
 	}
 
-	pRow  = jx_sqlFetchFirst (pSQL, start);
+	pRow  = nox_sqlFetchFirst (pSQL, start);
 	for (rowCount = 1; pRow && (rowCount <=limit || limit == -1); rowCount ++) {
-		jx_ArrayPush (pRows , pRow, FALSE);
-		pRow  = jx_sqlFetchNext (pSQL);
+		nox_ArrayPush (pRows , pRow, FALSE);
+		pRow  = nox_sqlFetchNext (pSQL);
 	}
 
 	// need a object as return value
-	if (format & (JX_META | JX_FIELDS | JX_TOTALROWS | JX_APROXIMATE_TOTALROWS)) {
-		PJXNODE pMeta;
-		pResult  = jx_NewObject(NULL);
-		pMeta    = jx_NewObject(NULL);
-		jx_SetValueByName(pResult  , "success" , "true" , LITERAL);
-		jx_SetValueByName(pResult , "root"    , "rows" , VALUE);
-		if (format & JX_FIELDS ) {
-			PJXNODE pFields = jx_buildMetaFields (pSQL);
-			jx_NodeMoveInto(pMeta , "fields" , pFields);
+	if (format & (NOX_META | NOX_FIELDS | NOX_TOTALROWS | NOX_APROXIMATE_TOTALROWS)) {
+		PNOXNODE pMeta;
+		pResult  = nox_NewObject(NULL);
+		pMeta    = nox_NewObject(NULL);
+		nox_SetValueByName(pResult  , "success" , "true" , LITERAL);
+		nox_SetValueByName(pResult , "root"    , "rows" , VALUE);
+		if (format & NOX_FIELDS ) {
+			PNOXNODE pFields = nox_buildMetaFields (pSQL);
+			nox_NodeMoveInto(pMeta , "fields" , pFields);
 		}
-		if (format & (JX_TOTALROWS | JX_APROXIMATE_TOTALROWS)) {
-			jx_SetValueByName(pMeta , "totalProperty"   , "totalRows" , VALUE);
+		if (format & (NOX_TOTALROWS | NOX_APROXIMATE_TOTALROWS)) {
+			nox_SetValueByName(pMeta , "totalProperty"   , "totalRows" , VALUE);
 
-			if (format & JX_APROXIMATE_TOTALROWS ) {
+			if (format & NOX_APROXIMATE_TOTALROWS ) {
 				if (pRow) { // Yet more rows to come
 					pSQL->rowcount = start + limit;
 				} else {
 					pSQL->rowcount = start + rowCount - 2; // "start" and "rowCount" count has both 1 as option base)
 				}
 			} else {
-				pSQL->rowcount = jx_sqlNumberOfRows(sqlstmt);
+				pSQL->rowcount = nox_sqlNumberOfRows(sqlstmt);
 			}
-			jx_SetIntByName(pResult , "totalRows" , pSQL->rowcount );
+			nox_SetIntByName(pResult , "totalRows" , pSQL->rowcount );
 
 			//SQLGetDiagField(SQL_HANDLE_STMT,
 			//    pSQL->pstmt->hstmt,0,DB2_NUMBER_ROWS,&rowCount,SQL_INTEGER,&strLen);
@@ -1073,11 +1073,11 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
 			//rc=SQLGetDiagField(SQL_HANDLE_STMT,pSQL->pstmt->hstmt, 0 ,SQL_DIAG_ROW_COUNT,&rowCount,SQL_INTEGER,&strLen);
 			// pSQL->rowcount = rowCount;
 
-			jx_SetIntByName(pResult , "totalRows" , pSQL->rowcount );
+			nox_SetIntByName(pResult , "totalRows" , pSQL->rowcount );
 		}
 
-		jx_NodeMoveInto (pResult , "metaData" , pMeta);
-		jx_NodeMoveInto (pResult , "rows"     , pRows);
+		nox_NodeMoveInto (pResult , "metaData" , pMeta);
+		nox_NodeMoveInto (pResult , "rows"     , pRows);
 
 	} else {
 
@@ -1085,77 +1085,77 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
 		pResult = pRows;
 	}
 
-	jx_sqlClose (&pSQL);
+	nox_sqlClose (&pSQL);
 	return pResult;
 
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startP, PJXNODE pSqlParmsP )
+PNOXNODE nox_sqlResultRowAt ( PUCHAR sqlstmt, LONG startP, PNOXNODE pSqlParmsP )
 {
 
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	LONG    start     = (pParms->OpDescList->NbrOfParms >= 2) ? startP     : 1;  // From first row
-	PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
-	PJXNODE pRow;
-	PJXSQL  pSQL;
+	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
+	PNOXNODE pRow;
+	PNOXSQL  pSQL;
 
-	pSQL = jx_sqlOpen(sqlstmt , pSqlParms, start > 1);
-	pRow  = jx_sqlFetchFirst (pSQL, start);
-	jx_sqlClose (&pSQL);
+	pSQL = nox_sqlOpen(sqlstmt , pSqlParms, start > 1);
+	pRow  = nox_sqlFetchFirst (pSQL, start);
+	nox_sqlClose (&pSQL);
 	return pRow;
 
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlGetMeta (PUCHAR sqlstmt)
+PNOXNODE nox_sqlGetMeta (PUCHAR sqlstmt)
 {
 	int i;
-	PJXSQL  pSQL  = jx_sqlOpen(sqlstmt , NULL, false);
-	PJXNODE pMeta = jx_buildMetaFields ( pSQL );
-	jx_sqlClose (&pSQL);
+	PNOXSQL  pSQL  = nox_sqlOpen(sqlstmt , NULL, false);
+	PNOXNODE pMeta = nox_buildMetaFields ( pSQL );
+	nox_sqlClose (&pSQL);
 	return pMeta;
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlResultRow ( PUCHAR sqlstmt, PJXNODE pSqlParmsP )
+PNOXNODE nox_sqlResultRow ( PUCHAR sqlstmt, PNOXNODE pSqlParmsP )
 {
 
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 2) ? pSqlParmsP : NULL;
-	PJXNODE pRow;
-	PJXSQL  pSQL;
+	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 2) ? pSqlParmsP : NULL;
+	PNOXNODE pRow;
+	PNOXSQL  pSQL;
 
-	pSQL = jx_sqlOpen(sqlstmt , pSqlParms, false);
-	pRow  = jx_sqlFetchNext (pSQL);
-	jx_sqlClose (&pSQL);
+	pSQL = nox_sqlOpen(sqlstmt , pSqlParms, false);
+	pRow  = nox_sqlFetchNext (pSQL);
+	nox_sqlClose (&pSQL);
 	return pRow;
 
 }
 /* ------------------------------------------------------------- */
-LGL jx_sqlExec(PUCHAR sqlstmt , PJXNODE pSqlParms)
+LGL nox_sqlExec(PUCHAR sqlstmt , PNOXNODE pSqlParms)
 {
 
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	LONG   attrParm;
 	LONG   i;
 	int rc;
-	//   PJXSQL pSQL = jx_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
-	PJXSQL pSQL = jx_sqlNewStatement (NULL, true, false);
+	//   PNOXSQL pSQL = nox_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
+	PNOXSQL pSQL = nox_sqlNewStatement (NULL, true, false);
 
 	// run  the  statement in "sqlstr"
 	if (pParms->OpDescList->NbrOfParms >= 2) {
 		UCHAR sqlTempStmt[32766];
 		strFormat(sqlTempStmt , sqlstmt , pSqlParms);
-		rc = jx_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, sqlTempStmt);
+		rc = nox_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, sqlTempStmt);
 	} else {
-		rc = jx_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, sqlstmt);
+		rc = nox_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, sqlstmt);
 	}
-	jx_sqlClose (&pSQL);
+	nox_sqlClose (&pSQL);
 	return rc == SQL_SUCCESS ? OFF: ON;
 }
 /* ------------------------------------------------------------- */
 /* .........
 int getColType(SQLHSTMT hstmt , SHORT col )
 {
-   JXCOL Col;
+   NOXCOL Col;
 
    int rc = SQLDescribeCol (
       hstmt,
@@ -1196,7 +1196,7 @@ static BOOL isIdColumn(SQLHSTMT hstmt , int colno)
 /* Therfor you will see tha blanks and nulls are updated         */
 /* and inserted by SQL constants and not by bound markers        */
 /* ------------------------------------------------------------- */
-static BOOL  nodeisnull(PJXNODE pNode)
+static BOOL  nodeisnull(PNOXNODE pNode)
 {
 	PUCHAR val;
 
@@ -1205,12 +1205,12 @@ static BOOL  nodeisnull(PJXNODE pNode)
 	// has always a content ...
 	if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
 		// .. so this will fail
-		// pNode =  jx_GetNodeChild (pNode);
+		// pNode =  nox_GetNodeChild (pNode);
 		// if (pNode != NULL) return false;
 		return false;
 	}
 
-	val = jx_GetNodeValuePtr (pNode , NULL);
+	val = nox_GetNodeValuePtr (pNode , NULL);
 	return (val == null);
 }
 /* ------------------------------------------------------------- */
@@ -1223,7 +1223,7 @@ static BOOL  nodeisnull(PJXNODE pNode)
 /* Therfor you will see tha blanks and nulls are updated         */
 /* and inserted by SQL constants and not by bound markers        */
 /* ------------------------------------------------------------- */
-static BOOL  nodeisblank(PJXNODE pNode)
+static BOOL  nodeisblank(PNOXNODE pNode)
 {
 	PUCHAR val;
 
@@ -1232,34 +1232,34 @@ static BOOL  nodeisblank(PJXNODE pNode)
 	// has always a content ...
 	if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
 		// .. so this will fail
-		// pNode =  jx_GetNodeChild (pNode);
+		// pNode =  nox_GetNodeChild (pNode);
 		// if (pNode != NULL) return false;
 		return false;
 	}
 
 	if (pNode->isLiteral) return false;
-	val = jx_GetNodeValuePtr (pNode , null);
+	val = nox_GetNodeValuePtr (pNode , null);
 	if (val == null) return false;
 	if (*val == 0) return true;
 	return false;
 }
 /* ------------------------------------------------------------- */
 static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
-   PUCHAR sqlStmt, PUCHAR table, PJXNODE pSqlParms , PUCHAR where)
+   PUCHAR sqlStmt, PUCHAR table, PNOXNODE pSqlParms , PUCHAR where)
 {
 	PUCHAR  stmt = sqlStmt;
 	PUCHAR  comma = "";
-	PJXNODE pNode;
+	PNOXNODE pNode;
 	PUCHAR  name;
 	int     colno;
 	UCHAR   temp [128];
 
 	stmt += sprintf (stmt , "update %s set " , table);
 
-	pNode    =  jx_GetNodeChild (pSqlParms);
+	pNode    =  nox_GetNodeChild (pSqlParms);
 	for ( colno=1; pNode; colno++) {
 		if (! isIdColumn(hMetastmt, colno)) {
-			name  = jx_GetNodeNamePtr   (pNode);
+			name  = nox_GetNodeNamePtr   (pNode);
 			str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
 			if  (nodeisnull(pNode)) {
 				stmt += sprintf (stmt , "%s%s=NULL" , comma , temp);
@@ -1270,18 +1270,18 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
 			}
 			comma = ",";
 		}
-		pNode = jx_GetNodeNext(pNode);
+		pNode = nox_GetNodeNext(pNode);
 	}
 
 	stmt += sprintf (stmt , " %s " , where);
 }
 /* ------------------------------------------------------------- */
 static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
-   PUCHAR sqlStmt, PUCHAR table, PJXNODE pSqlParms , PUCHAR where)
+   PUCHAR sqlStmt, PUCHAR table, PNOXNODE pSqlParms , PUCHAR where)
 {
 	PUCHAR  stmt = sqlStmt;
 	PUCHAR  comma = "";
-	PJXNODE pNode;
+	PNOXNODE pNode;
 	PUCHAR  name;
 	PUCHAR  value;
 	int     i,colno;
@@ -1291,11 +1291,11 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
 
 	stmt += sprintf (stmt , "insert into  %s (" , table);
 
-	pNode = jx_GetNodeChild (pSqlParms);
+	pNode = nox_GetNodeChild (pSqlParms);
 	for ( colno=1; pNode; colno++) {
 		if (! isIdColumn(hMetaStmt, colno)) {
 			if (!nodeisnull(pNode)) {
-				name     = jx_GetNodeNamePtr   (pNode);
+				name     = nox_GetNodeNamePtr   (pNode);
 				str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
 				stmt    += sprintf (stmt , "%s%s" , comma , temp);
 				if  (nodeisblank(pNode)) {
@@ -1306,7 +1306,7 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
 				comma = ",";
 			}
 		}
-		pNode = jx_GetNodeNext(pNode);
+		pNode = nox_GetNodeNext(pNode);
 	}
 
 	stmt += sprintf (stmt , ") values( ");
@@ -1314,9 +1314,9 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
 	stmt += sprintf (stmt , ")") ;
 }
 /* ------------------------------------------------------------- */
-void createTracetable(PJXSQLCONNECT pCon)
+void createTracetable(PNOXSQLCONNECT pCon)
 {
-	PJXTRACE pTrc = &pCon->sqlTrace;
+	PNOXTRACE pTrc = &pCon->sqlTrace;
 	UCHAR  t [512];
 	PUCHAR s = "CREATE            TABLE %s/sqlTrace (       "
 		"   STSTART TIMESTAMP NOT NULL WITH DEFAULT,        "
@@ -1328,18 +1328,18 @@ void createTracetable(PJXSQLCONNECT pCon)
 		"   STSQLSTMT VARCHAR ( 8192) NOT NULL WITH DEFAULT)  ";
 	sprintf(t , s , pTrc->lib);
 	pTrc->doTrace =  OFF; // So we don't end up in a recusive death spiral
-	jx_sqlExec(t , NULL);
+	nox_sqlExec(t , NULL);
 	pTrc->doTrace =  ON;
 }
 /* ------------------------------------------------------------- */
-void jx_traceOpen (PJXSQLCONNECT pCon)
+void nox_traceOpen (PNOXSQLCONNECT pCon)
 {
-	PJXTRACE pTrc = &pCon->sqlTrace;
+	PNOXTRACE pTrc = &pCon->sqlTrace;
 	int rc;
 	PUCHAR insertStmt = "insert into sqltrace (STSTART,STEND,STSQLSTATE,STTEXT,STJOB,STTRID,STSQLSTMT) "
 						"values (?,?,?,?,?,?,?)";
 
-	JXM902 ( pTrc->lib , &pTrc->doTrace , pTrc->job);
+	NOXM902 ( pTrc->lib , &pTrc->doTrace , pTrc->job);
 	if (pTrc->doTrace == OFF) return;
 	createTracetable(pCon);
 	rc = SQLAllocStmt(pCon->hdbc, &pTrc->handle);
@@ -1354,17 +1354,17 @@ void jx_traceOpen (PJXSQLCONNECT pCon)
 	// rc = SQLBindParameter(pTrc->handle,7,SQL_PARAM_INPUT,SQL_C_CHAR,SQL_VARCHAR ,8192,0,pTrc->sqlstmt,0,NULL);
 }
 /* ------------------------------------------------------------- */
-void jx_traceSetId (INT64 trid)
+void nox_traceSetId (INT64 trid)
 {
-	PJXSQLCONNECT pc = jx_getCurrentConnection();
-	PJXTRACE pTrc = &pc->sqlTrace;
+	PNOXSQLCONNECT pc = nox_getCurrentConnection();
+	PNOXTRACE pTrc = &pc->sqlTrace;
 	pTrc->trid = trid;
 }
 /* ------------------------------------------------------------- */
-void jx_traceInsert (PJXSQL pSQL, PUCHAR stmt , PUCHAR sqlState)
+void nox_traceInsert (PNOXSQL pSQL, PUCHAR stmt , PUCHAR sqlState)
 {
 	int rc;
-	PJXTRACE pTrc = &pConnection->sqlTrace; // !!! TODO not from global !!!
+	PNOXTRACE pTrc = &pConnection->sqlTrace; // !!! TODO not from global !!!
 	if (pTrc->doTrace == OFF) return;
 	rc = SQLBindParameter(pTrc->handle,3,SQL_PARAM_INPUT,SQL_C_CHAR,SQL_CHAR    ,   5,0,sqlState,0,NULL);
 	rc = SQLBindParameter(pTrc->handle,7,SQL_PARAM_INPUT,SQL_C_CHAR,SQL_VARCHAR ,8192,0,stmt,0,NULL);
@@ -1375,11 +1375,11 @@ void jx_traceInsert (PJXSQL pSQL, PUCHAR stmt , PUCHAR sqlState)
 }
 /* ------------------------------------------------------------- */
 SHORT  doInsertOrUpdate(
-	PJXSQL pSQL,
-	PJXSQL pSQLmeta,
+	PNOXSQL pSQL,
+	PNOXSQL pSQLmeta,
 	PUCHAR sqlTempStmt,
 	PUCHAR table ,
-	PJXNODE pRow,
+	PNOXNODE pRow,
 	PUCHAR where ,
 	BOOL   update
 )
@@ -1392,7 +1392,7 @@ SHORT  doInsertOrUpdate(
 	SQLINTEGER sql_nts;
 	SQLINTEGER bindColNo;
 
-	PJXNODE pNode;
+	PNOXNODE pNode;
 	PUCHAR comma = "";
 	PUCHAR name, value;
 
@@ -1421,18 +1421,18 @@ SHORT  doInsertOrUpdate(
 
 
 	// Take the description from the "select" and use it on the "update"
-	pNode    =  jx_GetNodeChild (pRow);
+	pNode    =  nox_GetNodeChild (pRow);
 	bindColNo =0;
 	for(colno =1; pNode ; colno ++) {
 		int realLength;
-		JXCOL Col;
+		NOXCOL Col;
 		BOOL isId = isIdColumn(pSQLmeta->pstmt->hstmt, colno);
 
 		if (!isId && !nodeisnull(pNode) && !nodeisblank(pNode)) {
 
 			bindColNo ++; // Only columns with data ( not null nor blank) need to be bound
 
-			memset (&Col , 0 , sizeof(JXCOL));
+			memset (&Col , 0 , sizeof(NOXCOL));
 			rc = SQLDescribeCol (
 				pSQLmeta->pstmt->hstmt,
 				colno,    // The meta "cursor" contaians all columns
@@ -1453,10 +1453,10 @@ SHORT  doInsertOrUpdate(
 
 			if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
 				value = valArr[valArrIx++] = memAlloc(Col.collen);
-				realLength = jx_AsJsonTextMem (pNode , value,  Col.collen );
+				realLength = nox_AsJsonTextMem (pNode , value,  Col.collen );
 				value [realLength] = '\0';
 			} else {
-				value = jx_GetNodeValuePtr  (pNode , NULL);
+				value = nox_GetNodeValuePtr  (pNode , NULL);
 				realLength = strlen(value);
 			}
 
@@ -1509,7 +1509,7 @@ SHORT  doInsertOrUpdate(
 				return rc; // we have an error
 			}
 		}
-		pNode = jx_GetNodeNext(pNode);
+		pNode = nox_GetNodeNext(pNode);
 	}
 
 	// run  the  statement in "sqlstr"
@@ -1520,7 +1520,7 @@ SHORT  doInsertOrUpdate(
 		rc  = SQLParamData(pSQL->pstmt->hstmt, &pNode);
 		while (rc == SQL_NEED_DATA) {
 			LONG    cbBatch = 32000; // Dont use real 32K it will be to large a buffer
-			PUCHAR  value = jx_GetNodeValuePtr (pNode , NULL);
+			PUCHAR  value = nox_GetNodeValuePtr (pNode , NULL);
 			LONG    lbytes = strlen(value);
 
 			while (lbytes > cbBatch) {
@@ -1551,27 +1551,27 @@ SHORT  doInsertOrUpdate(
 }
 
 /* ------------------------------------------------------------- */
-static PJXSQL buildMetaStmt (PUCHAR table, PJXNODE pRow)
+static PNOXSQL buildMetaStmt (PUCHAR table, PNOXNODE pRow)
 {
 	UCHAR     sqlTempStmt[32766];
 	PUCHAR    stmt = sqlTempStmt;
 	PUCHAR    name;
 	UCHAR     temp  [256];
-	PJXNODE   pNode;
+	PNOXNODE   pNode;
 	PUCHAR    comma = "";
 	SQLRETURN rc;
-	PJXSQL    pSQLmeta = jx_sqlNewStatement (NULL, false, false);
+	PNOXSQL    pSQLmeta = nox_sqlNewStatement (NULL, false, false);
 
 	stmt += sprintf (stmt , "select ");
 
 	comma = "";
-	pNode    =  jx_GetNodeChild (pRow);
+	pNode    =  nox_GetNodeChild (pRow);
 	while (pNode) {
-		name  = jx_GetNodeNamePtr   (pNode);
+		name  = nox_GetNodeNamePtr   (pNode);
 		str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
 		stmt += sprintf (stmt , "%s%s" , comma , temp);
 		comma = ",";
-		pNode = jx_GetNodeNext(pNode);
+		pNode = nox_GetNodeNext(pNode);
 	}
 
 	stmt += sprintf (stmt , " from %s where 1=0 with ur" , table);
@@ -1580,13 +1580,13 @@ static PJXSQL buildMetaStmt (PUCHAR table, PJXNODE pRow)
 	rc = SQLPrepare(pSQLmeta->pstmt->hstmt , sqlTempStmt, SQL_NTS);
 	if (rc != SQL_SUCCESS ) {
 		check_error (pSQLmeta);
-		jx_sqlClose (&pSQLmeta); // Free the data
+		nox_sqlClose (&pSQLmeta); // Free the data
 		return NULL;
 	}
 	return  pSQLmeta;
 }
 /* ------------------------------------------------------------- */
-LGL jx_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PJXNODE pRowP , PUCHAR whereP, PJXNODE pSqlParms)
+LGL nox_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PNOXNODE pRowP , PUCHAR whereP, PNOXNODE pSqlParms)
 {
 	LONG   attrParm;
 	LONG   i;
@@ -1597,18 +1597,18 @@ LGL jx_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PJXNODE pRowP , PUCHAR wh
 	UCHAR where [4096];
 	UCHAR temp  [256];
 	PUCHAR stmt = sqlTempStmt;
-	PJXNODE pNode;
+	PNOXNODE pNode;
 	PUCHAR comma = "";
 	PUCHAR name, value;
 
 	SQLSMALLINT   length;
 	SQLRETURN     rc;
-	PJXSQL        pSQL     = jx_sqlNewStatement (NULL, true, false);
-	PJXSQL        pSQLmeta;
+	PNOXSQL        pSQL     = nox_sqlNewStatement (NULL, true, false);
+	PNOXSQL        pSQLmeta;
 	SQLCHUNK      sqlChunk[32];
 	SHORT         sqlChunkIx =0;
 	PUCHAR        sqlNullPtr = NULL;
-	PJXNODE       pRow = jx_ParseString((PUCHAR) pRowP, NULL);
+	PNOXNODE       pRow = nox_ParseString((PUCHAR) pRowP, NULL);
 	LGL err = ON; // assume error
 
 
@@ -1632,17 +1632,17 @@ LGL jx_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PJXNODE pRowP , PUCHAR wh
 
 	// Now we are done with the select statement:
 cleanup:
-	if (pRowP != pRow) jx_NodeDelete (pRow);
-	jx_sqlClose (&pSQLmeta); // Free the data
-	jx_sqlClose (&pSQL);
+	if (pRowP != pRow) nox_NodeDelete (pRow);
+	nox_sqlClose (&pSQLmeta); // Free the data
+	nox_sqlClose (&pSQL);
 	return err;
 }
 /* ------------------------------------------------------------- */
-LGL jx_sqlUpdate (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParmsP  )
+LGL nox_sqlUpdate (PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP  )
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 3) ? whereP : "";
-	PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
+	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
 	UCHAR  whereStr [1024];
 	str2upper(table , table);
 	for(; *where == ' ' ; where++); // skip leading blanks
@@ -1650,82 +1650,82 @@ LGL jx_sqlUpdate (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParm
 		sprintf (whereStr , "where %s" , where);
 		where = whereStr;
 	}
-	return jx_sqlUpdateOrInsert  (true , table  , pRow , where, pSqlParms);
+	return nox_sqlUpdateOrInsert  (true , table  , pRow , where, pSqlParms);
 }
 /* ------------------------------------------------------------- */
-LGL jx_sqlInsert (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParmsP  )
+LGL nox_sqlInsert (PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP  )
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PUCHAR  where    =  (pParms->OpDescList->NbrOfParms >= 3) ? whereP : "";
-	PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
+	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
 	str2upper(table , table);
-	return jx_sqlUpdateOrInsert  (false , table  , pRow , where , pSqlParms);
+	return nox_sqlUpdateOrInsert  (false , table  , pRow , where , pSqlParms);
 }
 /* ------------------------------------------------------------- */
-LGL jx_sqlUpsert (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParmsP  )
+LGL nox_sqlUpsert (PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP  )
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 3) ? whereP : "";
-	PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
+	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
 	LGL err;
 	// First update - if not found the insert
-	err = jx_sqlUpdate  ( table  , pRow , where, pSqlParms);
-	if (err == ON && jx_sqlCode() == 100) {
-		err = jx_sqlInsert (table  , pRow , where, pSqlParms);
+	err = nox_sqlUpdate  ( table  , pRow , where, pSqlParms);
+	if (err == ON && nox_sqlCode() == 100) {
+		err = nox_sqlInsert (table  , pRow , where, pSqlParms);
 	}
 	return err;
 }
 /* -------------------------------------------------------------------
  * Provide options to a pSQL environment - If NULL then use the default
  * ------------------------------------------------------------------- */
-LONG jx_sqlGetInsertId (void)
+LONG nox_sqlGetInsertId (void)
 {
 	LONG    id;
-	PJXNODE pRow;
+	PNOXNODE pRow;
 	// PUCHAR  sqlStmt = "values IDENTITY_VAL_LOCAL() as id ";
 	// PUCHAR  sqlStmt = "values IDENTITY_VAL_LOCAL() into :id";
 	PUCHAR  sqlStmt = "Select IDENTITY_VAL_LOCAL() as id from sysibm/sysdummy1";
 
 	// Get that only row
-	pRow = jx_sqlResultRow(sqlStmt, NULL);
+	pRow = nox_sqlResultRow(sqlStmt, NULL);
 
-	id = atoi(jx_GetValuePtr(pRow, "id", NULL));
+	id = atoi(nox_GetValuePtr(pRow, "id", NULL));
 
-	jx_NodeDelete (pRow);
+	nox_NodeDelete (pRow);
 
 	return id ;
 }
 /* -------------------------------------------------------------------
  * Provide options to a pSQL environment - If NULL the use the default
  * ------------------------------------------------------------------- */
-void jx_sqlSetOptions (PJXNODE pOptionsP)
+void nox_sqlSetOptions (PNOXNODE pOptionsP)
 {
 
-	PJXSQLCONNECT pc = jx_getCurrentConnection();
+	PNOXSQLCONNECT pc = nox_getCurrentConnection();
 	PSQLOPTIONS po = &pConnection->options;
-	PJXNODE pNode;
+	PNOXNODE pNode;
 
 	// Delete previous settings, if we did that parsing
 	if (pConnection->pOptionsCleanup) {
-		jx_Close(&pConnection->pOptions);
+		nox_Close(&pConnection->pOptions);
 	}
 
 	// .. and set the new setting
 	pConnection->pOptionsCleanup = false;
-	if (ON == jx_isNode(pOptionsP)) {
+	if (ON == nox_isNode(pOptionsP)) {
 		pConnection->pOptions = pOptionsP;
 	} else if (pOptionsP != NULL) {
-		pConnection->pOptions = jx_ParseString ((PUCHAR) pOptionsP , NULL);
+		pConnection->pOptions = nox_ParseString ((PUCHAR) pOptionsP , NULL);
 		pConnection->pOptionsCleanup = true;
 	}
 
-	pNode    =  jx_GetNodeChild (pConnection->pOptions);
+	pNode    =  nox_GetNodeChild (pConnection->pOptions);
 	while (pNode) {
 		int rc = SQL_SUCCESS;
 		PUCHAR name, value;
 		LONG attrParm;
-		name  = jx_GetNodeNamePtr   (pNode);
-		value = jx_GetNodeValuePtr  (pNode , NULL);
+		name  = nox_GetNodeNamePtr   (pNode);
+		value = nox_GetNodeValuePtr  (pNode , NULL);
 
 		// Is header overriden by userprogram ?
 		if (BeginsWith(name , "upperCaseColName")) {
@@ -1758,21 +1758,21 @@ void jx_sqlSetOptions (PJXNODE pOptionsP)
 			po->TimeFmt;
 			po->DecimalPoint;
 		*/
-		pNode = jx_GetNodeNext(pNode);
+		pNode = nox_GetNodeNext(pNode);
 	}
 }
 /* ------------------------------------------------------------- */
-PJXSQLCONNECT jx_sqlConnect(PJXNODE pOptionsP)
+PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PJXNODE  pOptions = pParms->OpDescList->NbrOfParms >= 1 ? pOptionsP : NULL;
-	JXSQL tempSQL;
-	PJXSQLCONNECT pc;
+	PNOXNODE  pOptions = pParms->OpDescList->NbrOfParms >= 1 ? pOptionsP : NULL;
+	NOXSQL tempSQL;
+	PNOXSQLCONNECT pc;
 
 	connectionMode = HOSTED;
 	// memset(&tempSQL , 0 , sizeof(tempSQL));
-	// jx_BuildEnv(&tempSQL);
-	pc = jx_getCurrentConnection ();
+	// nox_BuildEnv(&tempSQL);
+	pc = nox_getCurrentConnection ();
 
 	return pc;
 }

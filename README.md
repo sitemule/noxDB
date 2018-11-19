@@ -23,4 +23,4 @@ json_writeJsonStmf(pRows  :
 );
 ```
 
-Look at all the samples in the `QJXSAMPLE` file
+Look at all the samples in the `QNOXSAMPLE` file

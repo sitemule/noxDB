@@ -7,8 +7,8 @@
  * By     Date     Task    Description                           *
  * NL     02.06.03 0000000 New program                           *
  * NL     27.02.08 0000510 Allow also no namespace for *:tag     *
- * NL     27.02.08 0000510 jx_NodeCopy                           *
- * NL     13.05.08 0000577 jx_NodeAdd / WriteNote                *
+ * NL     27.02.08 0000510 nox_NodeCopy                           *
+ * NL     13.05.08 0000577 nox_NodeAdd / WriteNote                *
  * NL     13.05.08 0000577 Support for refference location       *
  * ------------------------------------------------------------- */
 #include <stdio.h>
@@ -93,15 +93,15 @@ void initconst(int ccsid)
 */
 
 // ---------------------------------------------------------------------------
-void  jx_SkipChars(PJXCOM pJxCom , int skip)
+void  nox_SkipChars(PNOXCOM pJxCom , int skip)
 {
 	int i;
 	for(i=0;i<skip; i++) {
-		jx_GetChar(pJxCom);
+		nox_GetChar(pJxCom);
 	}
 }
 // ---------------------------------------------------------------------------
-PUCHAR jx_GetChar(PJXCOM pJxCom)
+PUCHAR nox_GetChar(PNOXCOM pJxCom)
 {
 
 	/*
@@ -133,12 +133,12 @@ PUCHAR jx_GetChar(PJXCOM pJxCom)
 }
 /* ---------------------------------------------------------------------------
 	--------------------------------------------------------------------------- */
-UCHAR SkipBlanks (PJXCOM pJxCom)
+UCHAR SkipBlanks (PNOXCOM pJxCom)
 {
 	UCHAR c;
 
 	for(;;) {
-		c  = *jx_GetChar(pJxCom);
+		c  = *nox_GetChar(pJxCom);
 		if ( pJxCom->State == XML_EXIT
 		||   pJxCom->State == XML_EXIT_ERROR ) {
 			return '\0';
@@ -151,7 +151,7 @@ UCHAR SkipBlanks (PJXCOM pJxCom)
 }
 /* ---------------------------------------------------------------------------
 	--------------------------------------------------------------------------- */
-void CheckBufSize(PJXCOM pJxCom)
+void CheckBufSize(PNOXCOM pJxCom)
 {
 	if (pJxCom->DataIx >= pJxCom->DataSize ||  pJxCom->Data  == NULL) {
 		pJxCom->DataSize += DATA_SIZE;
@@ -160,7 +160,7 @@ void CheckBufSize(PJXCOM pJxCom)
 }
 /* ---------------------------------------------------------------------------
 	--------------------------------------------------------------------------- */
-void jx_CheckEnd(PJXCOM pJxCom)
+void nox_CheckEnd(PNOXCOM pJxCom)
 {
 	if (*pJxCom->pFileBuf == GT) {
 		pJxCom->State = XML_COLLECT_DATA;
@@ -181,7 +181,7 @@ void jx_CheckEnd(PJXCOM pJxCom)
 /* ---------------------------------------------------------------------------
 	--------------------------------------------------------------------------- */
 /*   
-int readBlock(PJXCOM pJxCom , PUCHAR buf, int size)
+int readBlock(PNOXCOM pJxCom , PUCHAR buf, int size)
 {
   int len, rlen, j;
 

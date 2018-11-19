@@ -41,13 +41,13 @@ PUCHAR loadText (PUCHAR file)
 // ---------------------------------------------------------------------------
 void qsh (PUCHAR cmd)
 {
-   VOID JXM901  (PUCHAR cmd);
-   JXM901  (cmd);
+   VOID NOXM901  (PUCHAR cmd);
+   NOXM901  (cmd);
 }
 /* ---------------------------------------------------------------------------
    get a resource on the net
    --------------------------------------------------------------------------- */
-PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options)
+PNOXNODE nox_httpRequest (PUCHAR url, PNOXNODE pNode, PUCHAR options)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    UCHAR   cmd [4097];
@@ -55,7 +55,7 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options)
    UCHAR   temp1[256];
    UCHAR   temp2[256];
    UCHAR   error[256];
-   PJXNODE  pRes;
+   PNOXNODE  pRes;
 
    if ( pParms->OpDescList->NbrOfParms < 2 )  pNode = NULL;
    if ( pParms->OpDescList->NbrOfParms < 3 )  options = NULL;
@@ -69,7 +69,7 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options)
 
    if (pNode) {
        // The negative causes it not to produce BOM code
-       jx_WriteJsonStmf (pNode , temp1 , -1208, ON ,NULL);
+       nox_WriteJsonStmf (pNode , temp1 , -1208, ON ,NULL);
        p += sprintf( p , " -X POST --data @%s " , temp1);
    }
    p += sprintf( p ,  " %s ",
@@ -84,12 +84,12 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options)
 
    p =  loadText(error);
    if (p != NULL) {
-      pRes = jx_NewObject(NULL);
-      jx_SetValueByName(pRes , "success"  , "false" , LITERAL);
-      jx_SetValueByName(pRes , "reason" , p , VALUE );
+      pRes = nox_NewObject(NULL);
+      nox_SetValueByName(pRes , "success"  , "false" , LITERAL);
+      nox_SetValueByName(pRes , "reason" , p , VALUE );
       free(p);
    } else {
-      pRes = jx_ParseFile (temp2 , NULL);
+      pRes = nox_ParseFile (temp2 , NULL);
    }
    unlink (temp1);
    unlink (temp2);

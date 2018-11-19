@@ -27,7 +27,7 @@
 
 // -----------------------------------------------------------------
 #pragma convert(1252)
-static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
+static void   nox_EncodeJsonStream (PSTREAM p , PUCHAR in)
 {
 
 	while (*in) {
@@ -56,7 +56,7 @@ static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
 #pragma convert(0)
 // -----------------------------------------------------------------
 #pragma convert(1252)
-static PUCHAR jx_EncodeJson (PUCHAR out , PUCHAR in)
+static PUCHAR nox_EncodeJson (PUCHAR out , PUCHAR in)
 {
 	PUCHAR ret = out;
 	while (*in) {
@@ -98,7 +98,7 @@ static void indent (PSTREAM pStream , int indent)
 }
 #pragma convert(0)
 // -----------------------------------------------------------------
-void checkParentRelation(PJXNODE pNode , PJXNODE pParent)
+void checkParentRelation(PNOXNODE pNode , PNOXNODE pParent)
 {
 	 if (pNode->pNodeParent != pParent) {
 		try {
@@ -112,9 +112,9 @@ void checkParentRelation(PJXNODE pNode , PJXNODE pParent)
 	 }
 }
 /* --------------------------------------------------------------------------- */
-static void  jsonStreamPrintObject  (PJXNODE pParent, PSTREAM pStream, SHORT level)
+static void  jsonStreamPrintObject  (PNOXNODE pParent, PSTREAM pStream, SHORT level)
 {
-	PJXNODE pNode;
+	PNOXNODE pNode;
 	SHORT nextLevel = level +1;
 
 	// indent (pStream ,level);
@@ -132,9 +132,9 @@ static void  jsonStreamPrintObject  (PJXNODE pParent, PSTREAM pStream, SHORT lev
 	stream_putc (pStream, CUREND);
 }
 /* --------------------------------------------------------------------------- */
-static void  jsonStreamPrintArray (PJXNODE pParent, PSTREAM pStream, SHORT level)
+static void  jsonStreamPrintArray (PNOXNODE pParent, PSTREAM pStream, SHORT level)
 {
-	 PJXNODE pNode;
+	 PNOXNODE pNode;
 	 SHORT nextLevel = level +1;
 
 	 // indent (pStream ,level);
@@ -150,7 +150,7 @@ static void  jsonStreamPrintArray (PJXNODE pParent, PSTREAM pStream, SHORT level
 	 stream_putc (pStream, BRAEND);
 }
 /* --------------------------------------------------------------------------- */
-static void jsonStreamPrintValue   (PJXNODE pNode, PSTREAM pStream)
+static void jsonStreamPrintValue   (PNOXNODE pNode, PSTREAM pStream)
 {
 	// Has value?
 	if (pNode->Value && pNode->Value[0] > '\0') {
@@ -158,7 +158,7 @@ static void jsonStreamPrintValue   (PJXNODE pNode, PSTREAM pStream)
 			stream_puts (pStream, pNode->Value);
 		} else {
 			stream_putc(pStream , QUOT);
-			jx_EncodeJsonStream(pStream ,pNode->Value);
+			nox_EncodeJsonStream(pStream ,pNode->Value);
 			stream_putc(pStream , QUOT);
 		}
 	// Else it is some kind of null: Strings are "". Literals will return "null"
@@ -174,7 +174,7 @@ static void jsonStreamPrintValue   (PJXNODE pNode, PSTREAM pStream)
 /* --------------------------------------------------------------------------- */
 /* Invalid node types a just jeft out                                          */
 /* --------------------------------------------------------------------------- */
-static void  jsonStreamPrintNode (PJXNODE pNode, PSTREAM pStream, SHORT level)
+static void  jsonStreamPrintNode (PNOXNODE pNode, PSTREAM pStream, SHORT level)
 {
 	switch (pNode->type) {
 		case OBJECT:
@@ -192,7 +192,7 @@ static void  jsonStreamPrintNode (PJXNODE pNode, PSTREAM pStream, SHORT level)
 	 }
 }
 /* --------------------------------------------------------------------------- */
-void  jx_AsJsonStream (PJXNODE pNode, PSTREAM pStream)
+void  nox_AsJsonStream (PNOXNODE pNode, PSTREAM pStream)
 {
 	if (pNode == NULL) {
 		stream_puts (pStream, NULLSTR);
@@ -201,7 +201,7 @@ void  jx_AsJsonStream (PJXNODE pNode, PSTREAM pStream)
 	}
 }
 // ----------------------------------------------------------------------------
-static LONG jx_memWriter  (PSTREAM p , PUCHAR buf , ULONG len)
+static LONG nox_memWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 {
 	PJWRITE pjWrite = p->handle;
 	ULONG newLen =  pjWrite->bufLen + len;
@@ -218,7 +218,7 @@ static LONG jx_memWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 
 // ----------------------------------------------------------------------------
 /*
-static LONG jx_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
+static LONG nox_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 {
 	PJWRITE pjWrite = p->handle;
 	int outlen = 4 * len;
@@ -239,14 +239,14 @@ static LONG jx_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 }
 */
 // ----------------------------------------------------------------------------
-static LONG jx_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
+static LONG nox_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 {
 	PJWRITE pjWrite = p->handle;
 	LONG rc = fwrite (buf, 1, len , pjWrite->outFile);
 	return rc;
 }
 // ----------------------------------------------------------------------------
-LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
+LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PSTREAM  pStream;
@@ -262,14 +262,14 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 	}
 
 	pStream = stream_new (4096);
-	pStream->writer  = jx_memWriter;
+	pStream->writer  = nox_memWriter;
 	pStream->handle = pjWrite;
 	pjWrite->buf = buf;
 	pjWrite->doTrim = true;
 	pjWrite->maxSize =   pParms->OpDescList == NULL
 		|| (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3) ? maxLenP : MEMMAX;
 
-	jx_AsJsonStream (pNode , pStream);
+	nox_AsJsonStream (pNode , pStream);
 	len = pStream->totalSize;
 	stream_putc   (pStream,'\0');
 	stream_delete (pStream);
@@ -277,13 +277,13 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 
 }
 // ----------------------------------------------------------------------------
-static void  jx_AsJsonStreamRunner   (PSTREAM pStream)
+static void  nox_AsJsonStreamRunner   (PSTREAM pStream)
 {
-	PJXNODE  pNode = pStream->context;
-	jx_AsJsonStream (pNode , pStream);
+	PNOXNODE  pNode = pStream->context;
+	nox_AsJsonStream (pNode , pStream);
 }
 // ----------------------------------------------------------------------------
-PSTREAM jx_Stream  (PJXNODE pNode)
+PSTREAM nox_Stream  (PNOXNODE pNode)
 {
 	PSTREAM  pStream;
 	LONG     len;
@@ -295,18 +295,18 @@ PSTREAM jx_Stream  (PJXNODE pNode)
 	pStream->handle  = pjWrite;
 	pjWrite->doTrim  = true;
 	pjWrite->maxSize = MEMMAX;
-	pStream->runner  = jx_AsJsonStreamRunner;
+	pStream->runner  = nox_AsJsonStreamRunner;
 	pStream->context = pNode;
 	return  pStream;
 }
 // ----------------------------------------------------------------------------
-VOID jx_AsJsonText (PLVARCHAR res, PJXNODE pNode)
+VOID nox_AsJsonText (PLVARCHAR res, PNOXNODE pNode)
 {
-	res->Length = jx_AsJsonTextMem ( pNode ,  res->String, sizeof(res->String));
+	res->Length = nox_AsJsonTextMem ( pNode ,  res->String, sizeof(res->String));
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
-void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJXNODE options)
+void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PSTREAM pStream;
@@ -326,7 +326,7 @@ void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, P
 
 	pStream = stream_new (4096);
 	pStream->handle = pjWrite;
-	pStream->writer = jx_fileWriter;
+	pStream->writer = nox_fileWriter;
 
 	sprintf(mode , "wb,o_ccsid=%d", Ccsid);
 	unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
@@ -347,7 +347,7 @@ void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, P
 		}
 	}
 
-	jx_AsJsonStream (pNode , pStream);
+	nox_AsJsonStream (pNode , pStream);
 
 	stream_delete (pStream);
 	fclose(pjWrite->outFile);

@@ -7,8 +7,8 @@
  * By     Date     Task    Description                           *
  * NL     02.06.03 0000000 New program                           *
  * NL     27.02.08 0000510 Allow also no namespace for *:tag     *
- * NL     27.02.08 0000510 jx_NodeCopy                           *
- * NL     13.05.08 0000577 jx_NodeAdd / WriteNote                *
+ * NL     27.02.08 0000510 nox_NodeCopy                           *
+ * NL     13.05.08 0000577 nox_NodeAdd / WriteNote                *
  * NL     13.05.08 0000577 Support for refference location       *
  * ------------------------------------------------------------- */
 #include <stdio.h>
@@ -33,7 +33,7 @@
 #include "noxdb.h"
 
 // Prototypes --
-//PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions);
+//PNOXNODE nox_ParseString(PUCHAR Buf, PUCHAR pOptions);
 
 // Global
 __thread UCHAR jxMessage[512];
@@ -43,9 +43,9 @@ __thread BOOL  jxError = false;
 //  BOOL  skipBlanks = TRUE;
 __thread BOOL  doTrim;
 
-__thread PJXCOM pJxCom;
+__thread PNOXCOM pJxCom;
 __thread BOOL   debugger = false;
-__thread UCHAR  jx_DecPoint = '.';
+__thread UCHAR  nox_DecPoint = '.';
 
 UCHAR  e2aTbl[256];
 UCHAR  a2eTbl[256];
@@ -55,7 +55,7 @@ iconv_t xlate1208toE;
 
 
 // --------------------------------------------------------------------------- 
-void jx_SetMessage (PUCHAR Ctlstr , ... )
+void nox_SetMessage (PUCHAR Ctlstr , ... )
 {
 	va_list arg_ptr;
 	if (*jxMessage > ' ') return; // Already made
@@ -66,7 +66,7 @@ void jx_SetMessage (PUCHAR Ctlstr , ... )
 	va_end(arg_ptr);
 }
 // ---------------------------------------------------------------------------
-void  freeNodeValue(PJXNODE pNode)
+void  freeNodeValue(PNOXNODE pNode)
 {
 	if (pNode->type != POINTER_VALUE) {
 		memFree(&pNode->Value );
@@ -75,7 +75,7 @@ void  freeNodeValue(PJXNODE pNode)
 /* ------------------------------------------------------------- */
 //void dummy01(){}
 /* ------------------------------------------------------------- */
-PJXNODE jx_traceNode (PUCHAR text, PJXNODE pNode)
+PNOXNODE nox_traceNode (PUCHAR text, PNOXNODE pNode)
 {
 	static int i;
 	UCHAR filename [128];
@@ -84,10 +84,10 @@ PJXNODE jx_traceNode (PUCHAR text, PJXNODE pNode)
 
 	if (debugger == 1) {
 		sprintf(filename, "/tmp/jsonxml-%05.5d.json" , i ++);
-		jx_WriteJsonStmf (pNode, filename , 1208, OFF, NULL);
+		nox_WriteJsonStmf (pNode, filename , 1208, OFF, NULL);
 	} else if (debugger == 2) {
 		UCHAR temp [65536];
-		int l = jx_AsJsonTextMem (pNode , temp , sizeof(temp));
+		int l = nox_AsJsonTextMem (pNode , temp , sizeof(temp));
 		// TODO!! 2 ebcdic
 		temp [l] = 0;
 		puts (text);
@@ -98,12 +98,12 @@ PJXNODE jx_traceNode (PUCHAR text, PJXNODE pNode)
 }
 
 /* --------------------------------------------------------------------------- */
-void jx_SetDecPoint(PUCHAR p)
+void nox_SetDecPoint(PUCHAR p)
 {
-	jx_DecPoint = *p;
+	nox_DecPoint = *p;
 }
 /* --------------------------------------------------------------------------- */
-FIXEDDEC jx_Num (PUCHAR in)
+FIXEDDEC nox_Num (PUCHAR in)
 {
 	FIXEDDEC        Res   = 0D;
 	decimal(17,16)  Temp  = 0D;
@@ -135,7 +135,7 @@ FIXEDDEC jx_Num (PUCHAR in)
 					if (Res > 0D) Dec++;
 				}
 			}
-		} else if (c == jx_DecPoint) {
+		} else if (c == nox_DecPoint) {
 			DecFound = TRUE;
 		}
 	}
@@ -147,7 +147,7 @@ FIXEDDEC jx_Num (PUCHAR in)
 }
 /* --------------------------------------------------------------------------- */
 #pragma convert(1252)
-static void jx_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
+static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 {
 	PUCHAR p = out;
 	PUCHAR pEnd = in  + inlen;
@@ -207,7 +207,7 @@ static void freeAttrList (PXMLATTR pAttr)
 // Delete the node, with out the relations
 // Used in bulk cleanup
 // ---------------------------------------------------------------------------
-void jx_NodeFreeNodeOnly(PJXNODE pNode)
+void nox_NodeFreeNodeOnly(PNOXNODE pNode)
 {
 	if (pNode == NULL
 	||  pNode->signature != NODESIG) {
@@ -221,12 +221,12 @@ void jx_NodeFreeNodeOnly(PJXNODE pNode)
 	memFree (&pNode);
 }
 // ---------------------------------------------------------------------------
-static void jx_NodeFree(PJXNODE pNode)
+static void nox_NodeFree(PNOXNODE pNode)
 {
-	jx_NodeFreeNodeOnly(pNode);
+	nox_NodeFreeNodeOnly(pNode);
 }
 // ---------------------------------------------------------------------------
-void jx_NodeRename(PJXNODE pNode, PUCHAR name)
+void nox_NodeRename(PNOXNODE pNode, PUCHAR name)
 {
 	if (pNode == NULL) return;
 
@@ -234,7 +234,7 @@ void jx_NodeRename(PJXNODE pNode, PUCHAR name)
 	pNode->Name = memStrDup(name);
 }
 // ---------------------------------------------------------------------------
-PUCHAR nodevalue  (PJXNODE p)
+PUCHAR nodevalue  (PNOXNODE p)
 {
 	if (p == NULL || p->Value == NULL) return "";
 	return p->Value;
@@ -249,10 +249,10 @@ int doubleCmp (double x, double y)
 // ---------------------------------------------------------------------------
 double num2float(PUCHAR s)
 {
-	return jx_Num(s);
+	return nox_Num(s);
 }
 // ---------------------------------------------------------------------------
-BOOL isNumberNodeStrict (PJXNODE node)
+BOOL isNumberNodeStrict (PNOXNODE node)
 {
 	UCHAR c;
 	PUCHAR p;
@@ -266,7 +266,7 @@ BOOL isNumberNodeStrict (PJXNODE node)
 	return ((c >= '0' && c <= '9') || c == '-');
 }
 // ---------------------------------------------------------------------------
-BOOL isNumberNodeLoose  (PJXNODE node)
+BOOL isNumberNodeLoose  (PNOXNODE node)
 {
 	UCHAR c;
 	PUCHAR p;
@@ -281,7 +281,7 @@ BOOL isNumberNodeLoose  (PJXNODE node)
 	return ((c >= '0' && c <= '9') || c == '-');
 }
 // ---------------------------------------------------------------------------
-LGL jx_IsLiteral (PJXNODE node)
+LGL nox_IsLiteral (PNOXNODE node)
 {
 	BOOL isString = (
 		 node
@@ -293,12 +293,12 @@ LGL jx_IsLiteral (PJXNODE node)
 // ---------------------------------------------------------------------------
 // use simple bouble-sort to sort an array by keyvalues
 // ---------------------------------------------------------------------------
-PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
+PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PUCHAR  fields = (pParms->OpDescList->NbrOfParms >= 2) ? fieldsP : "";
 	BOOL    useLocale =  (pParms->OpDescList->NbrOfParms >= 3) ? optionsP & 1: FALSE;
-	PJXNODE pNodeNext, pNode1, pNode2, pCompNode1, pCompNode2 ;
+	PNOXNODE pNodeNext, pNode1, pNode2, pCompNode1, pCompNode2 ;
 	BOOL    bubles;
 	UCHAR   keys [256][256];
 	BOOL    descending [256];
@@ -306,7 +306,7 @@ PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
 
 	// Set function pointers for callback
 	double (* getnumberval)(PUCHAR s)  =  useLocale ? num2float   : atof;
-	BOOL   (* isNumberNode)(PJXNODE n) =  useLocale ? isNumberNodeLoose : isNumberNodeStrict;
+	BOOL   (* isNumberNode)(PNOXNODE n) =  useLocale ? isNumberNodeLoose : isNumberNodeStrict;
 
 	// if (pNode == NULL || pNode->type != ARRAY) return;
 
@@ -334,8 +334,8 @@ PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
 		while (pNode2) {
 			for(kx = 0; kx < kix ; kx++)  {
 				PUCHAR v1, v2;
-				pCompNode1 = jx_GetNode  (pNode1 ,keys[kx]);
-				pCompNode2 = jx_GetNode  (pNode2 ,keys[kx]);
+				pCompNode1 = nox_GetNode  (pNode1 ,keys[kx]);
+				pCompNode2 = nox_GetNode  (pNode2 ,keys[kx]);
 				v1 = nodevalue(pCompNode1);
 				v2 = nodevalue(pCompNode2);
 
@@ -353,7 +353,7 @@ PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
 					case 0: break;
 					case 1: {
 						bubles = true;
-						jx_SwapNodes(&pNode1, &pNode2);
+						nox_SwapNodes(&pNode1, &pNode2);
 						kx = kix; // done
 						break;
 					}
@@ -372,33 +372,33 @@ PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
 	return pNode;
 }
 // ---------------------------------------------------------------------------
-void jx_FreeSiblings(PJXNODE pNode)
+void nox_FreeSiblings(PNOXNODE pNode)
 {
-	PJXNODE pNodeNext;
+	PNOXNODE pNodeNext;
 
 	while (pNode) {
 		pNodeNext=pNode->pNodeSibling;
-		jx_FreeChildren (pNode);
-		jx_NodeFree(pNode);
+		nox_FreeChildren (pNode);
+		nox_NodeFree(pNode);
 		pNode=pNodeNext;
 	}
 }
 // -------------------------------------------------------------
-void jx_FreeChildren (PJXNODE pNode)
+void nox_FreeChildren (PNOXNODE pNode)
 {
-	jx_FreeSiblings(pNode->pNodeChildHead);
+	nox_FreeSiblings(pNode->pNodeChildHead);
 	pNode->pNodeChildHead = NULL;
 	pNode->pNodeChildTail = NULL;
 	pNode->Count = 0;
 }
 // -------------------------------------------------------------
-void jx_DumpNodeList (PJXNODE pNodeTemp)
+void nox_DumpNodeList (PNOXNODE pNodeTemp)
 {
-	PJXNODE  pNodeNext;
+	PNOXNODE  pNodeNext;
 	PXMLATTR pAttrTemp;
 
 	while (pNodeTemp) {
-		PJXNODE p;
+		PNOXNODE p;
 		PUCHAR in ="";
 		printf("\n");
 
@@ -419,7 +419,7 @@ void jx_DumpNodeList (PJXNODE pNodeTemp)
 				pAttrTemp->Name == NULL ? "" : pAttrTemp->Name,
 				pAttrTemp->Value== NULL ? "" : pAttrTemp->Value);
 		}
-		jx_DumpNodeList(pNodeTemp->pNodeChildHead);
+		nox_DumpNodeList(pNodeTemp->pNodeChildHead);
 		pNodeTemp = pNodeTemp->pNodeSibling;
 	}
 }
@@ -434,9 +434,9 @@ static ULONG sumString (PUCHAR p)
 	return sum;
 }
 // -------------------------------------------------------------
-ULONG jx_NodeCheckSum (PJXNODE pNode)
+ULONG nox_NodeCheckSum (PNOXNODE pNode)
 {
-	PJXNODE  pNodeNext;
+	PNOXNODE  pNodeNext;
 	PXMLATTR pAttrTemp;
 	ULONG    sum =0;
 
@@ -449,16 +449,16 @@ ULONG jx_NodeCheckSum (PJXNODE pNode)
 			sum += sumString (pAttrTemp->Name);
 			sum += sumString (pAttrTemp->Value);
 		}
-		sum += jx_NodeCheckSum (pNode->pNodeChildHead);
+		sum += nox_NodeCheckSum (pNode->pNodeChildHead);
 		pNode = pNode->pNodeSibling;
 	}
 	return sum;
 }
 // ---------------------------------------------------------------------------
 #pragma convert(1252)
-static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode)
+static void nox_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PNOXNODE pNode)
 {
-	PJXNODE  pNodeTemp, pNodeNext;
+	PNOXNODE  pNodeTemp, pNodeNext;
 	PXMLATTR pAttrTemp;
 	static int level = 0;
 	UCHAR    tab[256];
@@ -519,7 +519,7 @@ static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode)
 			} else {
 				fputs(">", f);
 			}
-			jx_WriteXmlStmfNodeList (f, pIconv, pNode->pNodeChildHead);
+			nox_WriteXmlStmfNodeList (f, pIconv, pNode->pNodeChildHead);
 		}
 
 		if (shortform) {
@@ -547,9 +547,9 @@ static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode)
 }
 #pragma convert(0)
 // ---------------------------------------------------------------------------
-LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf)
+LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf)
 {
-	PJXNODE    pNodeTemp, pNodeNext;
+	PNOXNODE    pNodeTemp, pNodeNext;
 	PXMLATTR   pAttrTemp;
 	static int level = 0;
 	BOOL       shortform;
@@ -578,7 +578,7 @@ LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf)
 			} else {
 				temp +=  sprintf(temp , ">");
 			}
-			temp += jx_AsXmlTextMem (pNode->pNodeChildHead , temp);
+			temp += nox_AsXmlTextMem (pNode->pNodeChildHead , temp);
 		}
 
 		if (shortform) {
@@ -599,16 +599,16 @@ LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf)
 
 }
 // ---------------------------------------------------------------------------
-VOID jx_AsXmlText (PLVARCHAR res , PJXNODE pNode)
+VOID nox_AsXmlText (PLVARCHAR res , PNOXNODE pNode)
 {
-	res->Length = jx_AsXmlTextMem (pNode , res->String);
+	res->Length = nox_AsXmlTextMem (pNode , res->String);
 }
 // ---------------------------------------------------------------------------
 // Traverse up the tree and build the name  like: "root/tree/node"
 // --------------------------------------------------------------------------- 
-VARCHAR jx_GetNodeNameAsPath (PJXNODE pNode, UCHAR Delimiter)
+VARCHAR nox_GetNodeNameAsPath (PNOXNODE pNode, UCHAR Delimiter)
 {
-	PJXNODE  p;
+	PNOXNODE  p;
 	VARCHAR  res;
 	UCHAR    buf  [4096];
 	PUCHAR   pBuf, pBufEnd;
@@ -661,7 +661,7 @@ void csvStringEscape (PUCHAR out, PUCHAR in)
 	*out = '\0';
 }
 // --------------------------------------------------------------------------- 
-void jx_WriteCsvStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJXNODE options)
+void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	JWRITE jWrite;
@@ -684,11 +684,11 @@ void jx_WriteCsvStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJ
 	if (pjWrite->outFile == NULL) return;
 
 	if (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 5) {
-		PJXNODE  pOptions  = jx_ParseCString((PUCHAR) options ); // When already a object: simply returns that
-		comma    = *jx_GetValuePtr    (pOptions , "delimiter" , &comma );
-		decpoint = *jx_GetValuePtr    (pOptions , "decPoint"  , &decpoint );
-		headers  = (ON == jx_IsTrue   (pOptions , "headers"));
-		if (pOptions != options) jx_Close(&pOptions); // It was already a josn object , then don't close
+		PNOXNODE  pOptions  = nox_ParseCString((PUCHAR) options ); // When already a object: simply returns that
+		comma    = *nox_GetValuePtr    (pOptions , "delimiter" , &comma );
+		decpoint = *nox_GetValuePtr    (pOptions , "decPoint"  , &decpoint );
+		headers  = (ON == nox_IsTrue   (pOptions , "headers"));
+		if (pOptions != options) nox_Close(&pOptions); // It was already a josn object , then don't close
 	}
 
 	pjWrite->buf    = wTemp;
@@ -710,7 +710,7 @@ void jx_WriteCsvStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJ
 
 	// Need the headers as first row;
 	if (headers) {
-		PJXNODE pHead  = pNode->pNodeChildHead;
+		PNOXNODE pHead  = pNode->pNodeChildHead;
 		while (pHead) {
 			csvStringEscape (temp , pHead->Name);
 			iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);
@@ -723,7 +723,7 @@ void jx_WriteCsvStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJ
 
 	while (pNode) {
 
-		PJXNODE pCol  = pNode->pNodeChildHead;
+		PNOXNODE pCol  = pNode->pNodeChildHead;
 
 		while (pCol) {
 
@@ -754,24 +754,24 @@ void jx_WriteCsvStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJ
 	iconv_close(pjWrite->iconv);
 }
 /* --------------------------------------------------------------------------- */
-SHORT jx_GetNodeType (PJXNODE pNode)
+SHORT nox_GetNodeType (PNOXNODE pNode)
 {
 	return (pNode) ? pNode->type : 0;
 }
 // ---------------------------------------------------------------------------
-void jx_NodeCloneAndReplace (PJXNODE pDest , PJXNODE pSource)
+void nox_NodeCloneAndReplace (PNOXNODE pDest , PNOXNODE pSource)
 {
-	PJXNODE  pNewNode = jx_NodeClone (pSource);
-	jx_NodeMoveAndReplace (pDest, pNewNode);
+	PNOXNODE  pNewNode = nox_NodeClone (pSource);
+	nox_NodeMoveAndReplace (pDest, pNewNode);
 }
 // ---------------------------------------------------------------------------
 //	 This works great, have to go back and update the "cloneFormat" logic to do similar
 // --------------------------------------------------------------------------- 
-void  jx_MergeList (PJXNODE pDest, PJXNODE pSource, PJWRITE pjWrite, PUCHAR name, PJXNODE pParent, MERGEOPTION merge)
+void  nox_MergeList (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, PUCHAR name, PNOXNODE pParent, MERGEOPTION merge)
 {
-	PJXNODE  p;
+	PNOXNODE  p;
 	UCHAR tempname[256];
-	PJXNODE pDestNode , pEdt ;
+	PNOXNODE pDestNode , pEdt ;
 	int ix =0;
 
 	while (pSource) {
@@ -788,14 +788,14 @@ void  jx_MergeList (PJXNODE pDest, PJXNODE pSource, PJWRITE pjWrite, PUCHAR name
 			PUCHAR relName = tempname+1; // Remove first slash absolut and make it relative
 			// printf("\n%s - %s : %d val:%s\n" , tempname , pSource->Name, pjWrite->level,pSource->Value);
 
-			pDestNode = jx_GetNode  (pDest, relName);
+			pDestNode = nox_GetNode  (pDest, relName);
 			if (pDestNode != NULL) {
 				if (merge == MO_MERGE_REPLACE || merge == MO_MERGE_MATCH) {
-					jx_NodeSet(pDestNode , pSource->Value);
+					nox_NodeSet(pDestNode , pSource->Value);
 				}
 			} else {
 				if (merge == MO_MERGE_REPLACE || merge == MO_MERGE_NEW ) {
-					pEdt = jx_SetValueByName  (pDest , relName, pSource->Value, pSource->type);
+					pEdt = nox_SetValueByName  (pDest , relName, pSource->Value, pSource->type);
 					pEdt->isLiteral = pSource->isLiteral;
 				}
 			}
@@ -803,7 +803,7 @@ void  jx_MergeList (PJXNODE pDest, PJXNODE pSource, PJWRITE pjWrite, PUCHAR name
 
 		if (pSource->pNodeChildHead) {
 			pjWrite->level ++;
-			jx_MergeList (pDest , pSource->pNodeChildHead,pjWrite, tempname , pSource, merge  );
+			nox_MergeList (pDest , pSource->pNodeChildHead,pjWrite, tempname , pSource, merge  );
 			pjWrite->level --;
 		}
 		// Merging only take the first occurent where the object object names has a match
@@ -812,81 +812,81 @@ void  jx_MergeList (PJXNODE pDest, PJXNODE pSource, PJWRITE pjWrite, PUCHAR name
 	}
 }
 /* --------------------------------------------------------------------------- */
-PJXNODE  jx_InsertByName (PJXNODE pDest , PUCHAR name , PJXNODE pSource )
+PNOXNODE  nox_InsertByName (PNOXNODE pDest , PUCHAR name , PNOXNODE pSource )
 {
-	PJXNODE pNode;
+	PNOXNODE pNode;
 
 	if ( pSource->type == OBJECT || pSource->type == ARRAY ) {
-		pNode  =  jx_NodeCopy (pDest, pSource , RL_LAST_CHILD);
+		pNode  =  nox_NodeCopy (pDest, pSource , RL_LAST_CHILD);
 		pNode->Name = memStrDup(name);
 	} else {
-		pNode  = jx_SetValueByName  (pDest , name , pSource->Value , pSource->type);
+		pNode  = nox_SetValueByName  (pDest , name , pSource->Value , pSource->type);
 		pNode->isLiteral = pSource->isLiteral;
 	}
 	return pNode;
 }
 /* --------------------------------------------------------------------------- */
-PJXNODE  jx_CopyValue (PJXNODE pDest , PUCHAR destName , PJXNODE pSource , PUCHAR sourceName)
+PNOXNODE  nox_CopyValue (PNOXNODE pDest , PUCHAR destName , PNOXNODE pSource , PUCHAR sourceName)
 {
-	PJXNODE pRes;
+	PNOXNODE pRes;
 
-	pSource = jx_GetNode  (pSource  , sourceName );
+	pSource = nox_GetNode  (pSource  , sourceName );
 	if (pSource == NULL) return NULL;
 
-	pDest = jx_GetOrCreateNode (pDest, destName);
+	pDest = nox_GetOrCreateNode (pDest, destName);
 	if (pDest  == NULL) return NULL;
 
 	if ( pSource->type == OBJECT || pSource->type == ARRAY ) {
-		jx_NodeCloneAndReplace (pDest  , pSource);
+		nox_NodeCloneAndReplace (pDest  , pSource);
 
 	} else {
-		jx_NodeSet (pDest ,pSource->Value);
+		nox_NodeSet (pDest ,pSource->Value);
 		pDest->isLiteral = pSource->isLiteral;
 	}
 
 	return pDest ;
 }
 /* --------------------------------------------------------------------------- */
-static void  jx_MergeObj  (PJXNODE pDest, PJXNODE pSource, PJWRITE pjWrite, MERGEOPTION merge)
+static void  nox_MergeObj  (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, MERGEOPTION merge)
 {
-	PJXNODE  p;
+	PNOXNODE  p;
 	UCHAR tempname[256];
-	PJXNODE pDestNode , pEdt ;
+	PNOXNODE pDestNode , pEdt ;
 	int ix =0;
 
 	while (pSource) {
 
 		if (pSource->Name && *pSource->Name){
-			pDestNode = jx_GetNode  (pDest, pSource->Name);
+			pDestNode = nox_GetNode  (pDest, pSource->Name);
 			if (pDestNode) {
 				if (merge == MO_MERGE_REPLACE) {
-					jx_NodeDelete (pDestNode);
-					jx_InsertByName (pDest , pSource->Name , pSource );
+					nox_NodeDelete (pDestNode);
+					nox_InsertByName (pDest , pSource->Name , pSource );
 				} else {
 					if (pSource->pNodeChildHead && pSource->type == OBJECT) {
-							jx_MergeObj  (pDestNode ,  pSource->pNodeChildHead , pjWrite, merge);
+							nox_MergeObj  (pDestNode ,  pSource->pNodeChildHead , pjWrite, merge);
 					}
 				}
 			} else {
-				jx_InsertByName (pDest , pSource->Name , pSource );
+				nox_InsertByName (pDest , pSource->Name , pSource );
 			}
 		} else {
 			if (pSource->pNodeChildHead ) {
-				// PJXNODE pNewDest = pDest->pNodeChildHead ?  pDest->pNodeChildHead : pDest; // Handle roots !! TODO !!
-				PJXNODE pNewDest = pDest;
-				jx_MergeObj  (pNewDest,  pSource->pNodeChildHead , pjWrite, merge);
+				// PNOXNODE pNewDest = pDest->pNodeChildHead ?  pDest->pNodeChildHead : pDest; // Handle roots !! TODO !!
+				PNOXNODE pNewDest = pDest;
+				nox_MergeObj  (pNewDest,  pSource->pNodeChildHead , pjWrite, merge);
 			}
 		}
 		pSource = pSource->pNodeSibling;
 	}
 }
 // ---------------------------------------------------------------------------
-void  jx_MergeObjects (PJXNODE pDest, PJXNODE pSource , MERGEOPTION merge)
+void  nox_MergeObjects (PNOXNODE pDest, PNOXNODE pSource , MERGEOPTION merge)
 {
-	PJXNODE  p;
+	PNOXNODE  p;
 	UCHAR tempname[256];
-	PJXNODE pDestNode , pEdt ;
-	PJXNODE pSourceNode;
+	PNOXNODE pDestNode , pEdt ;
+	PNOXNODE pSourceNode;
 	int ix =0;
 
 	if (pDest ==NULL ||pSource == NULL) return;
@@ -894,54 +894,54 @@ void  jx_MergeObjects (PJXNODE pDest, PJXNODE pSource , MERGEOPTION merge)
 	pSourceNode =  pSource->pNodeChildHead;
 	while (pSourceNode) {
 
-		pDestNode = jx_GetNode  (pDest, pSourceNode->Name);
+		pDestNode = nox_GetNode  (pDest, pSourceNode->Name);
 		if (pDestNode) {
 			if (merge == MO_MERGE_REPLACE) {
-				jx_NodeDelete (pDestNode);
-				jx_InsertByName (pDest , pSourceNode->Name , pSourceNode );
+				nox_NodeDelete (pDestNode);
+				nox_InsertByName (pDest , pSourceNode->Name , pSourceNode );
 			} else {
 				if (pSourceNode->type == OBJECT) {
-					jx_MergeObjects  (pDestNode ,  pSourceNode , merge);
+					nox_MergeObjects  (pDestNode ,  pSourceNode , merge);
 				}
 			}
 		} else {
-			jx_InsertByName (pDest , pSourceNode->Name , pSourceNode );
+			nox_InsertByName (pDest , pSourceNode->Name , pSourceNode );
 		}
 		pSourceNode = pSourceNode->pNodeSibling;
 	}
 }
 // --------------------------------------------------------------------------- 
-void  jx_LoadRecursiveList (PJXNODE pNode, PJXITERATOR pIter, BOOL first)
+void  nox_LoadRecursiveList (PNOXNODE pNode, PNOXITERATOR pIter, BOOL first)
 {
 	while (pNode) {
 		if (pIter->length >= pIter->size) {
 			pIter->size += 256;
-			pIter->list = realloc (pIter->list , sizeof(PJXNODE) * pIter->size);
+			pIter->list = realloc (pIter->list , sizeof(PNOXNODE) * pIter->size);
 		}
 		pIter->list [pIter->length] = pNode;
 		pIter->length++;
-		jx_LoadRecursiveList (pNode->pNodeChildHead , pIter, FALSE);
+		nox_LoadRecursiveList (pNode->pNodeChildHead , pIter, FALSE);
 		pNode = first ? NULL : pNode->pNodeSibling;
 	}
 }
 // ---------------------------------------------------------------------------
 // Delete nodes which are NULL
 // --------------------------------------------------------------------------- 
-void  jx_NodeSanitize(PJXNODE pNode)
+void  nox_NodeSanitize(PNOXNODE pNode)
 {
 	while (pNode) {
-		PJXNODE pNext = pNode->pNodeSibling;
+		PNOXNODE pNext = pNode->pNodeSibling;
 		if (pNode->Value != NULL && strcmp (pNode->Value , "null") == 0
 		||  pNode->Value == NULL && pNode->type == VALUE) {
-			jx_NodeDelete(pNode);
+			nox_NodeDelete(pNode);
 		} else {
-			jx_NodeSanitize(pNode->pNodeChildHead);
+			nox_NodeSanitize(pNode->pNodeChildHead);
 		}
 		pNode = pNext;
 	}
 }
 // ---------------------------------------------------------------------------
-void jx_WriteXmlStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , PJXNODE options)
+void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , PNOXNODE options)
 {
 	FILE * f;
 	iconv_t Iconv;
@@ -1005,25 +1005,25 @@ void jx_WriteXmlStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , P
 
 
 	#pragma convert(0)
-	jx_WriteXmlStmfNodeList (f , &Iconv , pNode);
+	nox_WriteXmlStmfNodeList (f , &Iconv , pNode);
 	fclose(f);
 	iconv_close(Iconv);
 }
 // ---------------------------------------------------------------------------
-void jx_Dump(PJXNODE  pNode)
+void nox_Dump(PNOXNODE  pNode)
 {
 	if (pNode == NULL) {
 		return;
 	}
 
 	printf("%s\n" , jxMessage) ;
-	jx_DumpNodeList(pNode);
+	nox_DumpNodeList(pNode);
 	printf("\n") ;
 }
 // ---------------------------------------------------------------------------
 // Detect if XML or json and if has UTF-8 BOM code
 // ---------------------------------------------------------------------------
-void  detectEncoding(PJXCOM pJxCom)
+void  detectEncoding(PNOXCOM pJxCom)
 {
 	PUCHAR p = pJxCom->StreamBuf;
 
@@ -1040,7 +1040,7 @@ void  detectEncoding(PJXCOM pJxCom)
 }
 // ---------------------------------------------------------------------------
 /* Old implementation
-PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
+PUCHAR detectEncoding(PNOXCOM pJxCom, PUCHAR pIn)
 {
 	UCHAR  e2aTbl [256];
 	UCHAR  buf [128];
@@ -1162,7 +1162,7 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
 	} else if (strlen(buf) == 0) {
 		InputCcsid = 0; // Empty string; build from scratch XML
 	} else {
-		jx_SetMessage( "Unsupported /unknown charset or encoding for file %s ", pJxCom->FileName);
+		nox_SetMessage( "Unsupported /unknown charset or encoding for file %s ", pJxCom->FileName);
 		pJxCom->State = XML_EXIT_ERROR;
 		return outbuf;
 	}
@@ -1171,9 +1171,9 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
 }
 */
 // ---------------------------------------------------------------------------
-static PJXNODE  SelectParser (PJXCOM pJxCom)
+static PNOXNODE  SelectParser (PNOXCOM pJxCom)
 {
-	PJXNODE pRoot;
+	PNOXNODE pRoot;
 	CheckBufSize(pJxCom);
 	pJxCom->pNodeRoot = pRoot = NewNode (NULL, NULL, OBJECT);
 	pJxCom->pFileBuf = NULL;
@@ -1186,9 +1186,9 @@ static PJXNODE  SelectParser (PJXCOM pJxCom)
 	detectEncoding (pJxCom);
 
 	if (pJxCom->isJson) {
-		jxError = jx_ParseJson (pJxCom);
+		jxError = nox_ParseJson (pJxCom);
 	} else {
-		jxError = jx_ParseXml (pJxCom);
+		jxError = nox_ParseXml (pJxCom);
 	}
 
 	// Clean up
@@ -1201,7 +1201,7 @@ static PJXNODE  SelectParser (PJXCOM pJxCom)
 // This works, however
 // it is dangling for clean up since the subnotes are moved to another tree
 // ---------------------------------------------------------------------------
-void jx_NodeAppendChild(PJXNODE pRoot, PJXNODE pNewChild)
+void nox_NodeAppendChild(PNOXNODE pRoot, PNOXNODE pNewChild)
 {
 	if (pRoot == NULL) return;
 	if (pNewChild == NULL) return;
@@ -1217,9 +1217,9 @@ void jx_NodeAppendChild(PJXNODE pRoot, PJXNODE pNewChild)
 	pNewChild->pNodeParent->pNodeChildTail = pNewChild;
 }
 // ---------------------------------------------------------------------------
-static PJXNODE previousSibling(PJXNODE p)
+static PNOXNODE previousSibling(PNOXNODE p)
 {
-	PJXNODE t;
+	PNOXNODE t;
 	if (p->pNodeParent == NULL) return NULL; // I am the root
 	t = p->pNodeParent->pNodeChildHead;
 	while (t) {
@@ -1230,21 +1230,21 @@ static PJXNODE previousSibling(PJXNODE p)
 }
 
 // ---------------------------------------------------------------------------
-static PJXNODE DupNode(PJXNODE pSource)
+static PNOXNODE DupNode(PNOXNODE pSource)
 {
 	PXMLATTR pAttrTemp;
-	PJXNODE  pNode;
+	PNOXNODE  pNode;
 
 	// A copy of null is null
 	if (pSource == NULL) return NULL;
 
 	// Dupling a nodex which is a string simply kicks in the parser
 	if (pSource->signature != NODESIG) {
-		pNode = jx_ParseCString((PUCHAR) pSource);
+		pNode = nox_ParseCString((PUCHAR) pSource);
 		return pNode;
 	}
 
-	pNode = (PJXNODE) memAlloc (sizeof(*pNode));
+	pNode = (PNOXNODE) memAlloc (sizeof(*pNode));
 	memcpy  (pNode , pSource, sizeof(*pNode));
 
 	SegmentNodeAdd(pNode);
@@ -1271,7 +1271,7 @@ static PJXNODE DupNode(PJXNODE pSource)
 	return (pNode);
 }
 // ---------------------------------------------------------------------------
-void jx_NodeAddChildTail( PJXNODE pRoot, PJXNODE pChild)
+void nox_NodeAddChildTail( PNOXNODE pRoot, PNOXNODE pChild)
 {
 	if (pChild == NULL || pRoot == NULL) return;
 
@@ -1299,9 +1299,9 @@ void jx_NodeAddChildTail( PJXNODE pRoot, PJXNODE pChild)
 // unlink a node from the tree and returns it as a new root
 // It has no parent nor any siblings. It can only have children
 // ---------------------------------------------------------------------------
-PJXNODE jx_NodeUnlink  (PJXNODE  pNode)
+PNOXNODE nox_NodeUnlink  (PNOXNODE  pNode)
 {
-	PJXNODE pNewRoot, pPrevNode, pParent;
+	PNOXNODE pNewRoot, pPrevNode, pParent;
 
 	if (pNode == NULL) return NULL;
 
@@ -1332,10 +1332,10 @@ PJXNODE jx_NodeUnlink  (PJXNODE  pNode)
 	return pNode;
 }
 // ---------------------------------------------------------------------------
-void jx_SwapNodes (PJXNODE * ppNode1, PJXNODE * ppNode2)
+void nox_SwapNodes (PNOXNODE * ppNode1, PNOXNODE * ppNode2)
 {
-	PJXNODE pNode1 = *ppNode1  , pNode2 =  * ppNode2;
-	PJXNODE pTemp1, pTemp2, pPrevNode, pParent = NULL;
+	PNOXNODE pNode1 = *ppNode1  , pNode2 =  * ppNode2;
+	PNOXNODE pTemp1, pTemp2, pPrevNode, pParent = NULL;
 
 	if (pNode1 == NULL || pNode2 == NULL) return;
 
@@ -1358,10 +1358,10 @@ void jx_SwapNodes (PJXNODE * ppNode1, PJXNODE * ppNode2)
 	*ppNode2 = pNode1;
 }
 // ---------------------------------------------------------------------------
-PJXNODE jx_NodeMoveInto (PJXNODE  pDest, PUCHAR name , PJXNODE pSource)
+PNOXNODE nox_NodeMoveInto (PNOXNODE  pDest, PUCHAR name , PNOXNODE pSource)
 {
 
-	PJXNODE  pTempNode;
+	PNOXNODE  pTempNode;
 
 	if (pDest == pSource
 	||  pDest == NULL) {
@@ -1371,21 +1371,21 @@ PJXNODE jx_NodeMoveInto (PJXNODE  pDest, PUCHAR name , PJXNODE pSource)
 	// If no destination given, then it is actually a replace og the
 	// destimnation node - with respect to the memmory locaitons
 	if (*name == '\0') {
-		jx_NodeMoveAndReplace (pDest , pSource);
+		nox_NodeMoveAndReplace (pDest , pSource);
 		return pDest;
 	}
 
-	pSource = jx_NodeUnlink(pSource); // Now I am my own root
-	jx_NodeRename(pSource , name);
+	pSource = nox_NodeUnlink(pSource); // Now I am my own root
+	nox_NodeRename(pSource , name);
 
-	pTempNode  = jx_GetNode  (pDest, name );
+	pTempNode  = nox_GetNode  (pDest, name );
 	if (pTempNode == NULL) {
 	// if (pSource->type == VALUE) {
-	//    jx_NodeSet (pDest , pSource->Value);
-	//    jx_NodeDelete (pSource);
+	//    nox_NodeSet (pDest , pSource->Value);
+	//    nox_NodeDelete (pSource);
 	//    return pDest;
 	// }
-		jx_NodeAddChildTail (pDest, pSource);
+		nox_NodeAddChildTail (pDest, pSource);
 
 		// Since we have a name - we must be an object
 		// required if we were a value i.e. produce by
@@ -1397,30 +1397,30 @@ PJXNODE jx_NodeMoveInto (PJXNODE  pDest, PUCHAR name , PJXNODE pSource)
 
 	} else {
 		// replace, by adding a new with same name and the remove the original. Will keep the same position
-		jx_NodeAddSiblingAfter(pTempNode, pSource);
-		jx_NodeDelete (pTempNode);
+		nox_NodeAddSiblingAfter(pTempNode, pSource);
+		nox_NodeDelete (pTempNode);
 	}
 
 	return pSource;
 
 }
 // ---------------------------------------------------------------------------
-void jx_NodeMoveAndReplace (PJXNODE  pDest, PJXNODE pSource)
+void nox_NodeMoveAndReplace (PNOXNODE  pDest, PNOXNODE pSource)
 {
 	if (pDest == pSource
 	||  pDest == NULL) {
 		return;
 	}
 
-	pSource = jx_NodeUnlink(pSource);      // Now I am my own root
-	jx_NodeRename(pSource , pDest->Name);  // I need the same name of the node i gonna replace
+	pSource = nox_NodeUnlink(pSource);      // Now I am my own root
+	nox_NodeRename(pSource , pDest->Name);  // I need the same name of the node i gonna replace
 
 	// replace, by adding a new with same name and the remove the original. Will keep the same position
-	jx_NodeAddSiblingAfter(pDest, pSource);
-	jx_NodeDelete (pDest);
+	nox_NodeAddSiblingAfter(pDest, pSource);
+	nox_NodeDelete (pDest);
 }
 // ---------------------------------------------------------------------------
-void jx_NodeAddChildHead( PJXNODE pRoot, PJXNODE pChild)
+void nox_NodeAddChildHead( PNOXNODE pRoot, PNOXNODE pChild)
 {
 	pChild->pNodeParent = pRoot;
 
@@ -1432,7 +1432,7 @@ void jx_NodeAddChildHead( PJXNODE pRoot, PJXNODE pChild)
 		pChild->pNodeParent->pNodeChildHead = pChild;
 		pChild->pNodeParent->pNodeChildTail = pChild;
 	} else {
-		PJXNODE pTemp;
+		PNOXNODE pTemp;
 		pTemp = pChild->pNodeParent->pNodeChildHead;
 		pChild->pNodeParent->pNodeChildHead = pChild;
 		pChild->pNodeSibling = pTemp;
@@ -1440,12 +1440,12 @@ void jx_NodeAddChildHead( PJXNODE pRoot, PJXNODE pChild)
 	}
 }
 // ---------------------------------------------------------------------------
-void jx_NodeAddSiblingBefore( PJXNODE pRef, PJXNODE pSibling)
+void nox_NodeAddSiblingBefore( PNOXNODE pRef, PNOXNODE pSibling)
 {
-	PJXNODE pPrev = previousSibling(pRef);
+	PNOXNODE pPrev = previousSibling(pRef);
 
 	if (pPrev == NULL) {
-		jx_NodeAddChildHead( pRef->pNodeParent, pSibling);
+		nox_NodeAddChildHead( pRef->pNodeParent, pSibling);
 		return;
 	}
 	pSibling->pNodeParent  = pRef->pNodeParent;
@@ -1453,10 +1453,10 @@ void jx_NodeAddSiblingBefore( PJXNODE pRef, PJXNODE pSibling)
 	pPrev->pNodeSibling    = pSibling;
 }
 // ---------------------------------------------------------------------------
-void jx_NodeAddSiblingAfter( PJXNODE pRef, PJXNODE pSibling)
+void nox_NodeAddSiblingAfter( PNOXNODE pRef, PNOXNODE pSibling)
 {
 	if (pRef->pNodeSibling == NULL) {
-			jx_NodeAddChildTail ( pRef->pNodeParent, pSibling);
+			nox_NodeAddChildTail ( pRef->pNodeParent, pSibling);
 			return;
 	}
 	pSibling->pNodeParent  = pRef->pNodeParent;
@@ -1464,29 +1464,29 @@ void jx_NodeAddSiblingAfter( PJXNODE pRef, PJXNODE pSibling)
 	pRef->pNodeSibling     = pSibling;
 }
 // ---------------------------------------------------------------------------
-void AddNode(PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
+void AddNode(PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc)
 {
 	if (pDest   == NULL) return;
 
 	switch ( refloc) {
 		case RL_LAST_CHILD:
-			jx_NodeAddChildTail (pDest, pSource);
+			nox_NodeAddChildTail (pDest, pSource);
 			break;
 		case RL_FIRST_CHILD:
-			jx_NodeAddChildHead (pDest, pSource);
+			nox_NodeAddChildHead (pDest, pSource);
 			break;
 		case RL_BEFORE_SIBLING:
-			jx_NodeAddSiblingBefore(pDest, pSource);
+			nox_NodeAddSiblingBefore(pDest, pSource);
 			break;
 		case RL_AFTER_SIBLING:
-			jx_NodeAddSiblingAfter(pDest, pSource);
+			nox_NodeAddSiblingAfter(pDest, pSource);
 			break;
 	}
 }
 // ---------------------------------------------------------------------------
-PJXNODE jx_NodeClone  (PJXNODE pSource)
+PNOXNODE nox_NodeClone  (PNOXNODE pSource)
 {
-	PJXNODE  pNewNode, pNext;
+	PNOXNODE  pNewNode, pNext;
 
 	if (pSource == NULL) return NULL;
 
@@ -1494,31 +1494,31 @@ PJXNODE jx_NodeClone  (PJXNODE pSource)
 
 	pNext = pSource->pNodeChildHead;
 	while (pNext) {
-		PJXNODE  pNewChild = jx_NodeClone (pNext);
-		jx_NodeAddChildTail (pNewNode , pNewChild);
+		PNOXNODE  pNewChild = nox_NodeClone (pNext);
+		nox_NodeAddChildTail (pNewNode , pNewChild);
 		pNext=pNext->pNodeSibling;
 	}
 	return pNewNode;
 }
 // ---------------------------------------------------------------------------
-PJXNODE jx_NodeCopy (PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
+PNOXNODE nox_NodeCopy (PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc)
 {
-	PJXNODE  pNewNode, pNode;
+	PNOXNODE  pNewNode, pNode;
 
 	if (pDest   == NULL) return;
 	if (pSource == NULL) return;
 
-	pNewNode = jx_NodeClone  (pSource);
+	pNewNode = nox_NodeClone  (pSource);
 	AddNode(pDest, pNewNode, refloc);
 	return pNewNode;
 
 }
 // ---------------------------------------------------------------------------
-PJXNODE NewNode  (PUCHAR Name , PUCHAR Value, NODETYPE type)
+PNOXNODE NewNode  (PUCHAR Name , PUCHAR Value, NODETYPE type)
 {
-	PJXNODE  pNode;
+	PNOXNODE  pNode;
 
-	pNode = (PJXNODE) memAlloc (sizeof(*pNode));
+	pNode = (PNOXNODE) memAlloc (sizeof(*pNode));
 	memset (pNode , 0, sizeof(*pNode));
 	pNode->signature  = NODESIG;
 
@@ -1535,38 +1535,38 @@ PJXNODE NewNode  (PUCHAR Name , PUCHAR Value, NODETYPE type)
 	return pNode;
 }
 // ---------------------------------------------------------------------------
-PJXNODE jx_NodeAdd (PJXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type)
+PNOXNODE nox_NodeAdd (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type)
 {
-	PJXNODE  pNewNode  = NewNode  (Name , Value, type);
+	PNOXNODE  pNewNode  = NewNode  (Name , Value, type);
 	AddNode(pDest, pNewNode, refloc);
 	return pNewNode;
 }
 // ---------------------------------------------------------------------------
-PJXNODE jx_NewObject (PJXNODE pDest)
+PNOXNODE nox_NewObject (PNOXNODE pDest)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PJXNODE pParent = pDest == NULL || pParms->OpDescList->NbrOfParms == 0 ? NULL:pDest;
+	PNOXNODE pParent = pDest == NULL || pParms->OpDescList->NbrOfParms == 0 ? NULL:pDest;
 
-	return jx_NodeAdd (pParent, RL_LAST_CHILD, NULL  , NULL , OBJECT);
+	return nox_NodeAdd (pParent, RL_LAST_CHILD, NULL  , NULL , OBJECT);
 
 }
 // ---------------------------------------------------------------------------
-PJXNODE jx_NewArray (PJXNODE pDest)
+PNOXNODE nox_NewArray (PNOXNODE pDest)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PJXNODE pParent = pDest == NULL || pParms->OpDescList->NbrOfParms == 0 ? NULL:pDest;
+	PNOXNODE pParent = pDest == NULL || pParms->OpDescList->NbrOfParms == 0 ? NULL:pDest;
 
-	return jx_NodeAdd (pParent, RL_LAST_CHILD, NULL  , NULL , ARRAY);
+	return nox_NodeAdd (pParent, RL_LAST_CHILD, NULL  , NULL , ARRAY);
 
 }
 // ---------------------------------------------------------------------------
-void jx_NodeSet (PJXNODE pNode , PUCHAR Value)
+void nox_NodeSet (PNOXNODE pNode , PUCHAR Value)
 {
 	if (pNode == NULL) return;
 
 	// Remake me as a value node...
 	if (pNode->type != VALUE ) {
-		jx_FreeChildren (pNode);
+		nox_FreeChildren (pNode);
 		pNode->type = VALUE;
 	}
 	freeNodeValue(pNode);
@@ -1576,33 +1576,33 @@ void jx_NodeSet (PJXNODE pNode , PUCHAR Value)
 	}
 }
 // ---------------------------------------------------------------------------
-void jx_NodeSetAsPointer (PJXNODE pNode , PUCHAR Value)
+void nox_NodeSetAsPointer (PNOXNODE pNode , PUCHAR Value)
 {
 	if (pNode == NULL) return;
 
 	// Remake me as a pointer node node...
 	freeNodeValue(pNode);     // If i was a value - - drop it
-	jx_FreeChildren (pNode);  // Ensure we are only a value
+	nox_FreeChildren (pNode);  // Ensure we are only a value
 	pNode->Value     = Value;
 	pNode->type      = POINTER_VALUE;
 	pNode->isLiteral = true; // no escaping and no conversion
 }
 // ---------------------------------------------------------------------------
-void jx_NodeDelete(PJXNODE pNode)
+void nox_NodeDelete(PNOXNODE pNode)
 {
-	PJXNODE  pTemp;
+	PNOXNODE  pTemp;
 
 	if (pNode == NULL) return;
 
-	jx_NodeUnlink (pNode);
-	jx_FreeChildren (pNode);
-	jx_NodeFree(pNode);
+	nox_NodeUnlink (pNode);
+	nox_FreeChildren (pNode);
+	nox_NodeFree(pNode);
 }
 // ---------------------------------------------------------------------------
 // delim was originally only 5.
 // ---------------------------------------------------------------------------
 /*
-void jx_SetDelimiters(PJXDELIM pDelim)
+void nox_SetDelimiters(PNOXDELIM pDelim)
 {
 	PUCHAR delim = (PUCHAR) pDelim;
 
@@ -1620,7 +1620,7 @@ void jx_SetDelimiters(PJXDELIM pDelim)
 // terminated to we can just build more on as we go
 // ---------------------------------------------------------------------------
 /* 
-void jx_SetDelimiters2(PJXDELIM pDelim)
+void nox_SetDelimiters2(PNOXDELIM pDelim)
 {
 	int i;
 	PUCHAR p = (PUCHAR) pDelim;
@@ -1644,16 +1644,16 @@ void jx_SetDelimiters2(PJXDELIM pDelim)
 */
 // ---------------------------------------------------------------------------
 /*
-PJXDELIM jx_GetDelimiters(void)
+PNOXDELIM nox_GetDelimiters(void)
 {
-	return   (PJXDELIM)   &delimiters;
+	return   (PNOXDELIM)   &delimiters;
 }
 */
 // ---------------------------------------------------------------------------
-PJXNODE jx_ParseCString(PUCHAR Buf)
+PNOXNODE nox_ParseCString(PUCHAR Buf)
 {
-	PJXNODE pRoot;
-	PJXCOM  pJxCom;
+	PNOXNODE pRoot;
+	PNOXCOM  pJxCom;
 
 	#ifdef MEMDEBUG
 		UCHAR  tempStr[100];
@@ -1668,12 +1668,12 @@ PJXNODE jx_ParseCString(PUCHAR Buf)
 	}
 	// Is it already a object graph, then return it
 	if (*Buf == NODESIG) {
-		return (PJXNODE) Buf;
+		return (PNOXNODE) Buf;
 	}
 
 	jxMessage[0] = '\0';
 
-	pJxCom = memAllocClear (sizeof(JXCOM));
+	pJxCom = memAllocClear (sizeof(NOXCOM));
 
 	pJxCom->StreamBuf =  Buf;
 	pRoot = SelectParser (pJxCom);
@@ -1687,16 +1687,16 @@ PJXNODE jx_ParseCString(PUCHAR Buf)
 	return (pRoot);
 }
 // ---------------------------------------------------------------------------
-PJXNODE jx_ParseLVC(PLVARCHAR buf)
+PNOXNODE nox_ParseLVC(PLVARCHAR buf)
 {
-	jx_ParseCString ( plvc2str (buf));
+	nox_ParseCString ( plvc2str (buf));
 
 // ---------------------------------------------------------------------------
-PJXNODE jx_ParseFile(PUCHAR FileName)
+PNOXNODE nox_ParseFile(PUCHAR FileName)
 {
 
 	 PUCHAR  streamBuf;
-	 PJXNODE pRoot;
+	 PNOXNODE pRoot;
 	 PUCHAR  pFirstChar;
 	 LONG    fileSize;
 	 LONG    len ;
@@ -1707,7 +1707,7 @@ PJXNODE jx_ParseFile(PUCHAR FileName)
 
 	 f  = fopen(strTrim(FileName), "rb");
 	 if (f  == NULL) {
-			jx_SetMessage( "File %s not open", FileName);
+			nox_SetMessage( "File %s not open", FileName);
 			jxError = true;
 			return NULL;
 	 }
@@ -1726,7 +1726,7 @@ PJXNODE jx_ParseFile(PUCHAR FileName)
 	 fclose(f);
 
 	 if (len != fileSize) {
-			jx_SetMessage( "File %s was not read", FileName);
+			nox_SetMessage( "File %s was not read", FileName);
 			jxError = true;
 			memFree (&streamBuf);
 			return NULL;
@@ -1734,29 +1734,29 @@ PJXNODE jx_ParseFile(PUCHAR FileName)
 
 	 // make it a string
 	 streamBuf[len] = '\0';
-	 pRoot = jx_ParseCString(streamBuf);
+	 pRoot = nox_ParseCString(streamBuf);
 	 memFree (&streamBuf);
 
 	 return (pRoot);
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
-void jx_CloneFormat(PJXNODE pNode, PJXNODE pSource)
+void nox_CloneFormat(PNOXNODE pNode, PNOXNODE pSource)
 {
 	JWRITE jWrite;
 	memset(&jWrite , 0 , sizeof(jWrite));
 	if (pSource->signature != NODESIG) {
-		PJXNODE pc = jx_ParseFile((PUCHAR) pSource, "");
-		jx_CloneNodeFormat(pNode,  pc , &jWrite, "", NULL);
-		jx_FreeSiblings(pc);
+		PNOXNODE pc = nox_ParseFile((PUCHAR) pSource, "");
+		nox_CloneNodeFormat(pNode,  pc , &jWrite, "", NULL);
+		nox_FreeSiblings(pc);
 	} else {
-		jx_CloneNodeFormat(pNode, pSource, &jWrite, "", NULL);
+		nox_CloneNodeFormat(pNode, pSource, &jWrite, "", NULL);
 	}
 }
 /* --------------------------------------------------------------------------- *\
 	 Following routines are for manipulatin with the Xml-Tree inscance
 \* --------------------------------------------------------------------------- */
-PJXNODE jx_GetNodeParent(PJXNODE pNode)
+PNOXNODE nox_GetNodeParent(PNOXNODE pNode)
 {
 	 if (pNode == NULL) return NULL;
 	 return(pNode->pNodeParent);
@@ -1764,7 +1764,7 @@ PJXNODE jx_GetNodeParent(PJXNODE pNode)
 /* ---------------------------------------------------------------------------
 	 go to the top to find the root
 	 --------------------------------------------------------------------------- */
-PJXNODE  jx_GetRoot (PJXNODE pNode)
+PNOXNODE  nox_GetRoot (PNOXNODE pNode)
 {
 	 int i = 0;
 	 if (pNode == NULL) return NULL;
@@ -1776,7 +1776,7 @@ PJXNODE  jx_GetRoot (PJXNODE pNode)
 	 return ( pNode);
 }
 /* --------------------------------------------------------------------------- */
-PJXNODE jx_lookupByXpath (PJXNODE pRootNode, PUCHAR * ppName)
+PNOXNODE nox_lookupByXpath (PNOXNODE pRootNode, PUCHAR * ppName)
 {
 	 PUCHAR  Name = * ppName;
 	 PUCHAR  pEnd = findchr(Name , "=<>" , 3);
@@ -1805,11 +1805,11 @@ PJXNODE jx_lookupByXpath (PJXNODE pRootNode, PUCHAR * ppName)
 	 if (*keyName == Masterspace) {
 
 			// Find by atribute value
-			PJXNODE pNodeTemp = pRootNode;
+			PNOXNODE pNodeTemp = pRootNode;
 			substr(keyName , Name+1 , nameLen-1);
 
 			while (pNodeTemp && pNodeTemp->signature == NODESIG) {
-				 PXMLATTR pAtr = jx_AttributeLookup  (pNodeTemp, keyName);
+				 PXMLATTR pAtr = nox_AttributeLookup  (pNodeTemp, keyName);
 				 if (pAtr && pAtr->Value) {
 						// Does the value match
 						if (memicmp(compVal , pAtr->Value, compLen) == comp
@@ -1822,9 +1822,9 @@ PJXNODE jx_lookupByXpath (PJXNODE pRootNode, PUCHAR * ppName)
 
 	 } else {
 			// Find by value
-			PJXNODE pNodeTemp = pRootNode == NULL? NULL:pRootNode->pNodeChildHead;
+			PNOXNODE pNodeTemp = pRootNode == NULL? NULL:pRootNode->pNodeChildHead;
 			while (pNodeTemp && pNodeTemp->signature == NODESIG) {
-				 PJXNODE pNode = jx_GetNode  (pNodeTemp, keyName);
+				 PNOXNODE pNode = nox_GetNode  (pNodeTemp, keyName);
 				 if (pNode && pNode->Value) {
 
 					 // Does the value match
@@ -1840,7 +1840,7 @@ PJXNODE jx_lookupByXpath (PJXNODE pRootNode, PUCHAR * ppName)
 
 }
 /* --------------------------------------------------------------------------- */
-PUCHAR jx_NodeName (PJXNODE pNode,BOOL SkipNameSpace)
+PUCHAR nox_NodeName (PNOXNODE pNode,BOOL SkipNameSpace)
 {
 	 PUCHAR p;
 
@@ -1858,14 +1858,14 @@ PUCHAR jx_NodeName (PJXNODE pNode,BOOL SkipNameSpace)
 	 return p;
 }
 /* --------------------------------------------------------------------------- */
-PJXNODE  jx_FindNodeAtIndex(PJXNODE pNode , PUCHAR Key , int index , BOOL SkipNameSpace)
+PNOXNODE  nox_FindNodeAtIndex(PNOXNODE pNode , PUCHAR Key , int index , BOOL SkipNameSpace)
 {
 	 int i =0;
 	 PUCHAR CurName;
 
 	 while (pNode) {
 
-			CurName = jx_NodeName (pNode, SkipNameSpace);
+			CurName = nox_NodeName (pNode, SkipNameSpace);
 			if (CurName && stricmp(Key , CurName) == 0) {
 				 if (index == i) return (pNode); // Found :)
 				 i++;
@@ -1876,7 +1876,7 @@ PJXNODE  jx_FindNodeAtIndex(PJXNODE pNode , PUCHAR Key , int index , BOOL SkipNa
 }
 /* --------------------------------------------------------------------------- */
 /**********'' OLD
-void jx_GetKeyFromName (PUCHAR tempKey , PBOOL SkipNameSpace , PUCHAR KeyName , PUCHAR SearchName)
+void nox_GetKeyFromName (PUCHAR tempKey , PBOOL SkipNameSpace , PUCHAR KeyName , PUCHAR SearchName)
 {
 	 int l=0;
 
@@ -1892,7 +1892,7 @@ void jx_GetKeyFromName (PUCHAR tempKey , PBOOL SkipNameSpace , PUCHAR KeyName , 
 	 substr(tempKey , KeyName, l);
 }
 */
-void jx_GetKeyFromName (PUCHAR tempKey , PBOOL SkipNameSpace , PUCHAR prevKey)
+void nox_GetKeyFromName (PUCHAR tempKey , PBOOL SkipNameSpace , PUCHAR prevKey)
 {
 	 *SkipNameSpace = (* prevKey  == '*');
 	 if (*SkipNameSpace) {
@@ -1913,7 +1913,7 @@ static BOOL isNextDelimiter(UCHAR c)
 /* ---------------------------------------------------------------------------
 	 name contains [UBOUND]
 	 --------------------------------------------------------------------------- */
-BOOL jx_isUbound (PUCHAR name)
+BOOL nox_isUbound (PUCHAR name)
 {
 	 if (name[0] != BraBeg)  return false;
 	 if (memicmp(name+1  , "UBOUND" , 6) != 0) return false;
@@ -1923,9 +1923,9 @@ BOOL jx_isUbound (PUCHAR name)
 /* ---------------------------------------------------------------------------
 	 Set the counter
 	 --------------------------------------------------------------------------- */
-PJXNODE jx_CountChildren(PJXNODE pNode)
+PNOXNODE nox_CountChildren(PNOXNODE pNode)
 {
-		PJXNODE p;
+		PNOXNODE p;
 
 		// Arrays are already counted
 		if (pNode->type == ARRAY) {
@@ -1943,16 +1943,16 @@ PJXNODE jx_CountChildren(PJXNODE pNode)
 /* ---------------------------------------------------------------------------
 	 Return the node ; With counter flag or not
 	 --------------------------------------------------------------------------- */
-static PJXNODE jx_ReturnNode (PJXNODE pNode, BOOL asCounter)
+static PNOXNODE nox_ReturnNode (PNOXNODE pNode, BOOL asCounter)
 {
 		if (pNode) pNode->doCount = asCounter;
-		jx_traceNode("GetNode return", pNode);
+		nox_traceNode("GetNode return", pNode);
 		return pNode;
 }
 /* ---------------------------------------------------------------------------
 	 Return the node with name match
 	 --------------------------------------------------------------------------- */
-static PJXNODE jx_lookUpSiblingByName(PJXNODE pNode , PUCHAR keyName)
+static PNOXNODE nox_lookUpSiblingByName(PNOXNODE pNode , PUCHAR keyName)
 {
 	 PUCHAR curName;
 	 BOOL   SkipNameSpace;
@@ -1966,7 +1966,7 @@ static PJXNODE jx_lookUpSiblingByName(PJXNODE pNode , PUCHAR keyName)
 
 	 // Locate name match
 	 while (pNode) {
-			curName = jx_NodeName (pNode,SkipNameSpace);
+			curName = nox_NodeName (pNode,SkipNameSpace);
 
 			if (curName == NULL ) {
 				 pNode=pNode->pNodeSibling;
@@ -1986,36 +1986,36 @@ static PJXNODE jx_lookUpSiblingByName(PJXNODE pNode , PUCHAR keyName)
 /* ---------------------------------------------------------------------------
 	 count nodes with same name
 	 --------------------------------------------------------------------------- */
-static PJXNODE jx_CalculateUbound(PJXNODE pNode , PUCHAR key , BOOL SkipNameSpace)
+static PNOXNODE nox_CalculateUbound(PNOXNODE pNode , PUCHAR key , BOOL SkipNameSpace)
 {
 
-	 PJXNODE pNodeTemp = pNode;
+	 PNOXNODE pNodeTemp = pNode;
 
 	 // JSON has an array type
 	 if (pNode == NULL) return NULL;
 
 	 // JSON can count faster:
 	 if (pNode->type == ARRAY || pNode->type == OBJECT) {
-			jx_CountChildren(pNode);
-			return jx_ReturnNode (pNode, true ); // Done !! return the current node with the counter updated
+			nox_CountChildren(pNode);
+			return nox_ReturnNode (pNode, true ); // Done !! return the current node with the counter updated
 	 }
 
 	 pNode->Count = 0;
 
 	 while (pNodeTemp) {
 			// Skip namespace ? - when namespace is a *:
-			PUCHAR CurName = jx_NodeName (pNodeTemp, SkipNameSpace);
+			PUCHAR CurName = nox_NodeName (pNodeTemp, SkipNameSpace);
 			if (CurName && stricmp(key , CurName) == 0) {
 				 pNode->Count ++;
 			}
 			pNodeTemp=pNodeTemp->pNodeSibling;
 	 }
-	 return jx_ReturnNode (pNode, true ); // Done !! return the current node with the counter updated
+	 return nox_ReturnNode (pNode, true ); // Done !! return the current node with the counter updated
 }
 /* ---------------------------------------------------------------------------
 	 Use index subscription to locate the node
 	 --------------------------------------------------------------------------- */
-static PJXNODE jx_lookupByIndex(PJXNODE pNode , PUCHAR tempKey , int Index, BOOL SkipNameSpace)
+static PNOXNODE nox_lookupByIndex(PNOXNODE pNode , PUCHAR tempKey , int Index, BOOL SkipNameSpace)
 {
 	 if (pNode == NULL) return NULL;
 
@@ -2031,7 +2031,7 @@ static PJXNODE jx_lookupByIndex(PJXNODE pNode , PUCHAR tempKey , int Index, BOOL
 	 } else if (pNode->type == VALUE) {
 			return NULL; // Indexing values makes no sense - This is only for JSON; JSON sets the pNode->type
 	 } else {
-			return jx_FindNodeAtIndex(pNode , tempKey , Index , SkipNameSpace);
+			return nox_FindNodeAtIndex(pNode , tempKey , Index , SkipNameSpace);
 	 }
 }
 /* ---------------------------------------------------------------------------
@@ -2039,7 +2039,7 @@ static PJXNODE jx_lookupByIndex(PJXNODE pNode , PUCHAR tempKey , int Index, BOOL
 	 This has to be conservative: if not every characters
 	 is numeric we return -1 for not fully numeric
 	 --------------------------------------------------------------------------- */
-int jx_getNumericKey (PUCHAR pStr, PUCHAR pEnd)
+int nox_getNumericKey (PUCHAR pStr, PUCHAR pEnd)
 {
 	 int index = 0;
 
@@ -2056,15 +2056,15 @@ int jx_getNumericKey (PUCHAR pStr, PUCHAR pEnd)
 /* ---------------------------------------------------------------------------
 	 Find node by name, by parsing a name string and traverse the tree
 	 --------------------------------------------------------------------------- */
-PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
+PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
 {
 	 PUCHAR  pStart   = Name;
-	 PJXNODE pNodeTemp = NULL;
+	 PNOXNODE pNodeTemp = NULL;
 	 BOOL    Found = FALSE;
 	 int     Len=0, l , i, StartIx;
 	 LONG    index;
 	 PUCHAR  p, pName, pEnd = "";
-	 PJXNODE refNode;
+	 PNOXNODE refNode;
 	 UCHAR   refName [256];
 
 	 if (pNode == NULL
@@ -2073,23 +2073,23 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
 	 }
 
 	 // You can change the "debug" in a debugsession to dump the source node
-	 jx_traceNode ( "GetNode " , pNode);
+	 nox_traceNode ( "GetNode " , pNode);
 
 	 // Only "/" in the name ... that is my self
 	 if (Name == NULL || *Name == '\0'  ) {
-			return jx_ReturnNode (pNode, false); // Done !! Just want the root
+			return nox_ReturnNode (pNode, false); // Done !! Just want the root
 	 }
 	 // Ubound on the root node
-	 if (jx_isUbound(Name)) {
-			jx_CountChildren(pNode);
-			return jx_ReturnNode (pNode, true ); // Done !! return the current node with the counter updated
+	 if (nox_isUbound(Name)) {
+			nox_CountChildren(pNode);
+			return nox_ReturnNode (pNode, true ); // Done !! return the current node with the counter updated
 	 }
 
 	 if (isNextDelimiter(*Name)) {
-			pNode = jx_GetRoot(pNode);
+			pNode = nox_GetRoot(pNode);
 			Name++; // Skip root
 			// dont do this - list will break since it will use the firs child on the list .. see later:
-			// if (*Name == '\0') return jx_ReturnNode (pNode, false);; // Done
+			// if (*Name == '\0') return nox_ReturnNode (pNode, false);; // Done
 	 }
 
 
@@ -2099,7 +2099,7 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
 	 if (*Name != BraBeg) {
 			pNode = pNode->pNodeChildHead;
 			// .. but we can do it here: baically: "/" gives the first child to the root
-			if (*Name == '\0') return jx_ReturnNode (pNode, false);; // Done
+			if (*Name == '\0') return nox_ReturnNode (pNode, false);; // Done
 	 }
 
 	 // Setup for iteration
@@ -2147,22 +2147,22 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
 
 				 UCHAR  tempKey [256];
 				 BOOL   SkipNameSpace;
-				 jx_GetKeyFromName (tempKey , &SkipNameSpace , refName);
+				 nox_GetKeyFromName (tempKey , &SkipNameSpace , refName);
 
 
 				 if (memicmp (pName , "UBOUND" , 6) == 0) {
-						return jx_CalculateUbound(refNode, tempKey, SkipNameSpace);
+						return nox_CalculateUbound(refNode, tempKey, SkipNameSpace);
 				 }
 
 				 // .. If the name is numeric, it is a subscription
-				 index = jx_getNumericKey (pName , pEnd);
+				 index = nox_getNumericKey (pName , pEnd);
 
 				 // When a subscription is found, then locate the occurens
 				 if (index >= 0) {
-						pNode = jx_lookupByIndex(refNode , tempKey, index, SkipNameSpace);
+						pNode = nox_lookupByIndex(refNode , tempKey, index, SkipNameSpace);
 				 } else {
 						// X-path Nodeent search:
-						pNode = jx_lookupByXpath(refNode , &pName);
+						pNode = nox_lookupByXpath(refNode , &pName);
 						pEnd = pName +1;
 				 }
 				 if (pNode == NULL) return NULL;
@@ -2170,7 +2170,7 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
 			} else {
 				 // "Normal" nodes with "normal" names. Store the name for furthere references "refName"
 				 substr(refName, pName, Len);
-				 pNode = jx_lookUpSiblingByName(pNode , refName);
+				 pNode = nox_lookUpSiblingByName(pNode , refName);
 
 			}
 
@@ -2195,14 +2195,14 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
 				 pName = pEnd +1 ; // Skip the '.' or '/' and set up next iteration
 
 			} else {
-				 return jx_ReturnNode (pNode, false ); // Done !! return the current node with the counter updated
+				 return nox_ReturnNode (pNode, false ); // Done !! return the current node with the counter updated
 			}
 	 }
 }
 /* ------------------------------------------------------------- */
-LGL jx_Has  (PJXNODE pNode, PUCHAR Name)
+LGL nox_Has  (PNOXNODE pNode, PUCHAR Name)
 {
-	 PJXNODE p = jx_GetNode  (pNode, Name);
+	 PNOXNODE p = nox_GetNode  (pNode, Name);
 	 if (p == NULL) return OFF;
 	 if (p->type == VALUE) {
 			if (p->Value == NULL) return OFF;
@@ -2211,9 +2211,9 @@ LGL jx_Has  (PJXNODE pNode, PUCHAR Name)
 	 return (ON );
 }
 /* ------------------------------------------------------------- */
-LGL jx_IsTrue  (PJXNODE pNode, PUCHAR Name)
+LGL nox_IsTrue  (PNOXNODE pNode, PUCHAR Name)
 {
-	 PJXNODE p = jx_GetNode  (pNode, Name);
+	 PNOXNODE p = nox_GetNode  (pNode, Name);
 	 if (p == NULL) return OFF;
 	 if (p->type == VALUE) {
 		 if (p->Value == NULL)  return OFF;
@@ -2224,9 +2224,9 @@ LGL jx_IsTrue  (PJXNODE pNode, PUCHAR Name)
 	 return (ON );
 }
 /* ------------------------------------------------------------- */
-LGL jx_IsNull  (PJXNODE pNode, PUCHAR Name)
+LGL nox_IsNull  (PNOXNODE pNode, PUCHAR Name)
 {
-	 PJXNODE p = jx_GetNode  (pNode, Name);
+	 PNOXNODE p = nox_GetNode  (pNode, Name);
 	 if (p == NULL) return ON;
 	 if (p->type == VALUE) {
 		 if (p->Value == NULL)  return ON;
@@ -2234,7 +2234,7 @@ LGL jx_IsNull  (PJXNODE pNode, PUCHAR Name)
 	 return (OFF);
 }
 /* ------------------------------------------------------------- */
-LGL jx_isNode  (PJXNODE pNode)
+LGL nox_isNode  (PNOXNODE pNode)
 {
 	 return (
 				 (pNode == NULL)
@@ -2245,7 +2245,7 @@ LGL jx_isNode  (PJXNODE pNode)
 /* -------------------------------------------------------------
 	 Find attribute to a Nodeent; traverse the chain
 	 ------------------------------------------------------------- */
-PXMLATTR jx_AttributeLookup   (PJXNODE pNode, PUCHAR Name)
+PXMLATTR nox_AttributeLookup   (PNOXNODE pNode, PUCHAR Name)
 {
 	 PXMLATTR pAttr;
 	 SHORT    NameLen;
@@ -2270,25 +2270,25 @@ PXMLATTR jx_AttributeLookup   (PJXNODE pNode, PUCHAR Name)
 /* -------------------------------------------------------------
 	 returns the value of the node
 	 ------------------------------------------------------------- */
-PJXNODE jx_GetNodeByName  (PJXNODE  pNode, PUCHAR Ctlstr , ... )
+PNOXNODE nox_GetNodeByName  (PNOXNODE  pNode, PUCHAR Ctlstr , ... )
 {
 	 va_list arg_ptr;
 	 UCHAR Name[1024];
 	 SHORT l;
-	 PJXNODE pNodeOut;
+	 PNOXNODE pNodeOut;
 
 /* Build a temp string with the formated data  */
 	 va_start(arg_ptr, Ctlstr);
 	 l = vsprintf(Name, Ctlstr, arg_ptr);
 	 va_end(arg_ptr);
 
-	 pNodeOut = jx_GetNode(pNode, Name);
+	 pNodeOut = nox_GetNode(pNode, Name);
 	 return (pNodeOut);
 }
 /* -------------------------------------------------------------
 	 returns the value of the node
 	 ------------------------------------------------------------- */
-PUCHAR  jx_GetNodeValuePtr  (PJXNODE pNode , PUCHAR DefaultValue)
+PUCHAR  nox_GetNodeValuePtr  (PNOXNODE pNode , PUCHAR DefaultValue)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 if (pNode == NULL
@@ -2301,11 +2301,11 @@ PUCHAR  jx_GetNodeValuePtr  (PJXNODE pNode , PUCHAR DefaultValue)
 /* -------------------------------------------------------------
 	 returns the value of the node
 	 ------------------------------------------------------------- */
-PUCHAR  jx_GetNodeAttrValuePtr  (PJXNODE pNode , PUCHAR AttrName, PUCHAR DefaultValue)
+PUCHAR  nox_GetNodeAttrValuePtr  (PNOXNODE pNode , PUCHAR AttrName, PUCHAR DefaultValue)
 {
 	 PXMLATTR pAttr;
 
-	 pAttr = jx_AttributeLookup   (pNode, AttrName);
+	 pAttr = nox_AttributeLookup   (pNode, AttrName);
 	 if (pAttr == NULL
 	 ||  pAttr->Value == NULL) {
 			return ( DefaultValue);
@@ -2316,7 +2316,7 @@ PUCHAR  jx_GetNodeAttrValuePtr  (PJXNODE pNode , PUCHAR AttrName, PUCHAR Default
 /* -------------------------------------------------------------
 	 Add a attribute to the end of the attribute list for an Nodeent
 	 ------------------------------------------------------------- */
-PXMLATTR jx_NodeAddAttributeValue  (PJXNODE pNode , PUCHAR AttrName, PUCHAR Value)
+PXMLATTR nox_NodeAddAttributeValue  (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Value)
 {
 
 	 PXMLATTR pAttrTemp;
@@ -2337,13 +2337,13 @@ PXMLATTR jx_NodeAddAttributeValue  (PJXNODE pNode , PUCHAR AttrName, PUCHAR Valu
 /* -------------------------------------------------------------
 	 Update or add an attribue
 	 ------------------------------------------------------------- */
-VOID jx_SetNodeAttrValue  (PJXNODE pNode , PUCHAR AttrName, PUCHAR Value)
+VOID nox_SetNodeAttrValue  (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Value)
 {
 	 PXMLATTR pAttr;
 
-	 pAttr = jx_AttributeLookup   (pNode, AttrName);
+	 pAttr = nox_AttributeLookup   (pNode, AttrName);
 	 if (pAttr == NULL) {
-			jx_NodeAddAttributeValue( pNode , AttrName, Value);
+			nox_NodeAddAttributeValue( pNode , AttrName, Value);
 			return;
 	 } else {
 			memFree(&pAttr->Value);
@@ -2355,7 +2355,7 @@ VOID jx_SetNodeAttrValue  (PJXNODE pNode , PUCHAR AttrName, PUCHAR Value)
 	 X-path: Find node by name, by parsing a name string and traverse the tree
 	 It can be relative by giging either a Nodeent or a XML-common pointer
 	 --------------------------------------------------------------------------- */
-PUCHAR jx_GetValuePtr (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Default)
+PUCHAR nox_GetValuePtr (PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Default)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 // from "C" return null in number of parms
@@ -2365,7 +2365,7 @@ PUCHAR jx_GetValuePtr (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Default)
 
 	 PUCHAR    pNodeKey, pAtrKey;
 	 PXMLATTR  pAtr;
-	 PJXNODE   pNode;
+	 PNOXNODE   pNode;
 	 static UCHAR temp [10];
 
 	 if (pNodeRoot == NULL) {
@@ -2382,11 +2382,11 @@ PUCHAR jx_GetValuePtr (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Default)
 			}
 	 }
 
-	 pNode = jx_GetNode  (pNodeRoot , Name);
+	 pNode = nox_GetNode  (pNodeRoot , Name);
 	 if (pNode == NULL) return dft;
 
 	 if (pAtrKey) {
-			pAtr =  jx_AttributeLookup   (pNode, pAtrKey);
+			pAtr =  nox_AttributeLookup   (pNode, pAtrKey);
 			if (pAtr == NULL)        return dft;
 			if (pAtr->Value == NULL) return dft;
 			return pAtr->Value;
@@ -2399,9 +2399,9 @@ PUCHAR jx_GetValuePtr (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Default)
 	 }
 }
 /* --------------------------------------------------------------------------- */
-static void jx_joinArray2vc (PVARCHAR pRes , PJXNODE pNode)
+static void nox_joinArray2vc (PVARCHAR pRes , PNOXNODE pNode)
 {
-		PJXNODE p = pNode->pNodeChildHead;
+		PNOXNODE p = pNode->pNodeChildHead;
 		int len;
 		pRes->Length = 0;
 		while (p) {
@@ -2413,7 +2413,7 @@ static void jx_joinArray2vc (PVARCHAR pRes , PJXNODE pNode)
 		}
 }
 /* --------------------------------------------------------------------------- */
-static void str2vcXlate (PJXNODE pNode , PVARCHAR pRes , PUCHAR str)
+static void str2vcXlate (PNOXNODE pNode , PVARCHAR pRes , PUCHAR str)
 {
 	 if (pNode->ccsid == 0) {
 			str2vc ( pRes , str);
@@ -2429,7 +2429,7 @@ static void str2vcXlate (PJXNODE pNode , PVARCHAR pRes , PUCHAR str)
 /* ---------------------------------------------------------------------------
 	 Take the name after the last  @ - that is the attributename
 	 --------------------------------------------------------------------------- */
-PUCHAR jx_splitAtrFromName (PUCHAR name)
+PUCHAR nox_splitAtrFromName (PUCHAR name)
 {
 	 int balance = 0;
 	 PUCHAR pEnd;
@@ -2452,24 +2452,24 @@ PUCHAR jx_splitAtrFromName (PUCHAR name)
 	 X-path: Find node by name, by parsing a name string and traverse the tree
 	 It can be relative by giging either a Nodeent or a XML-common pointer
 	 --------------------------------------------------------------------------- */
-void jx_CopyValueByNameVC (PVARCHAR pRes, PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Default , BOOL joinString)
+void nox_CopyValueByNameVC (PVARCHAR pRes, PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Default , BOOL joinString)
 {
 	 PUCHAR    pNodeKey, pAtrKey;
 	 PXMLATTR  pAtr;
-	 PJXNODE   pNode;
+	 PNOXNODE   pNode;
 
 	 // Assume : Not found
 	 str2vc(pRes , Default);
 
 	 if (pNodeRoot == NULL) return;
 
-	 pAtrKey = jx_splitAtrFromName (Name);
+	 pAtrKey = nox_splitAtrFromName (Name);
 
-	 pNode = jx_GetNode  (pNodeRoot , Name);
+	 pNode = nox_GetNode  (pNodeRoot , Name);
 	 if (pNode == NULL) return;
 
 	 if (pAtrKey) {
-			pAtr =  jx_AttributeLookup   (pNode, pAtrKey);
+			pAtr =  nox_AttributeLookup   (pNode, pAtrKey);
 			if (pAtr == NULL)        return;
 			if (pAtr->Value == NULL) return;
 			str2vc(pRes , pAtr->Value);
@@ -2478,13 +2478,13 @@ void jx_CopyValueByNameVC (PVARCHAR pRes, PJXNODE pNodeRoot, PUCHAR Name, PUCHAR
 			vcprintf( pRes, "%ld" , pNode->Count);
 
 	 } else if (joinString &&  pNode->type == ARRAY) {
-			jx_joinArray2vc (pRes , pNode);
+			nox_joinArray2vc (pRes , pNode);
 			if (pRes->Length == 0) { // No data found when joining arrays as string - Now serialize it as usual
-				 pRes->Length  = jx_AsJsonTextMem (pNode , pRes->String , 32760);
+				 pRes->Length  = nox_AsJsonTextMem (pNode , pRes->String , 32760);
 			}
 
 	 } else if (pNode->type == OBJECT ||  pNode->type == ARRAY ) {
-			pRes->Length  = jx_AsJsonTextMem (pNode , pRes->String, 32760);
+			pRes->Length  = nox_AsJsonTextMem (pNode , pRes->String, 32760);
 
 	 } else if (pNode->Value) {
 			str2vcXlate(pNode, pRes , pNode->Value);
@@ -2492,36 +2492,36 @@ void jx_CopyValueByNameVC (PVARCHAR pRes, PJXNODE pNodeRoot, PUCHAR Name, PUCHAR
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
-void  jx_SetByParseString (PJXNODE pDest , PUCHAR pSourceStr , MERGEOPTION merge , BOOL move)
+void  nox_SetByParseString (PNOXNODE pDest , PUCHAR pSourceStr , MERGEOPTION merge , BOOL move)
 {
-	 PJXNODE pSource = NULL;
+	 PNOXNODE pSource = NULL;
 	 PUCHAR  firstNonBlank = pSourceStr;
 
 	 // quick trim
 	 for (;*firstNonBlank == ' '; firstNonBlank++);
 
-	 // TODO :  jx_ParseString returns object for any string which is an error; now dont use
+	 // TODO :  nox_ParseString returns object for any string which is an error; now dont use
 	 // the paser if it is not an OBJECT or ARRAY
 	 if ( *firstNonBlank == BraBeg ||  *firstNonBlank == CurBeg) {
-			pSource = jx_ParseCString( firstNonBlank);
+			pSource = nox_ParseCString( firstNonBlank);
 	 }
 
 	 if (pSource) {
 			// TODO !!! Arrays dont work in NodeMerger.. This is a simple workarround
 			if (pSource->type == ARRAY) {
-				 jx_NodeMoveAndReplace (pDest, pSource);
-			// jx_NodeFree(pSource); Why delete what we just made .. NLI removed line
+				 nox_NodeMoveAndReplace (pDest, pSource);
+			// nox_NodeFree(pSource); Why delete what we just made .. NLI removed line
 				 return;
 			}
 
 			if (move) {
-				jx_NodeMoveAndReplace (pDest, pSource);
-				// jx_NodeFree(pSource); Why delete what we just made .. NLI removed line
+				nox_NodeMoveAndReplace (pDest, pSource);
+				// nox_NodeFree(pSource); Why delete what we just made .. NLI removed line
 			} else {
-				jx_NodeMerge(pDest, pSource, merge  );
+				nox_NodeMerge(pDest, pSource, merge  );
 			}
 	 } else {
-			jx_NodeSet (pDest  , pSourceStr);
+			nox_NodeSet (pDest  , pSourceStr);
 			pDest->type      = VALUE;
 			pDest->isLiteral =  // isdigit (*pSourceStr)  !! No !! the "123 - John" is not a number
 													strcmp(pSourceStr ,"true") == 0
@@ -2532,9 +2532,9 @@ void  jx_SetByParseString (PJXNODE pDest , PUCHAR pSourceStr , MERGEOPTION merge
 /* ---------------------------------------------------------------------------
 	 Insert a node as tail in an array - as copy or move it into
 	 --------------------------------------------------------------------------- */
-PJXNODE  jx_ArrayPush (PJXNODE pDest, PJXNODE pSource , BOOL16 copyP)
+PNOXNODE  nox_ArrayPush (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
 {
-	 PJXNODE  pNewNode;
+	 PNOXNODE  pNewNode;
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 BOOL copy = (pParms->OpDescList->NbrOfParms >= 3) ? copyP : false;
 
@@ -2545,25 +2545,25 @@ PJXNODE  jx_ArrayPush (PJXNODE pDest, PJXNODE pSource , BOOL16 copyP)
 			pNewNode  = NewNode  (NULL  , "null" , LITERAL);
 	 } else if (pSource->signature != NODESIG) {
 			if (*(PUCHAR) pSource == BraBeg || *(PUCHAR) pSource == CurBeg ) {
-					pNewNode = jx_ParseCString((PUCHAR) pSource);
+					pNewNode = nox_ParseCString((PUCHAR) pSource);
 			} else {
 					pNewNode  = NewNode  (NULL  , (PUCHAR) pSource , VALUE);
 			}
 	 } else if (copy) {
-			pNewNode = jx_NodeClone (pSource);
+			pNewNode = nox_NodeClone (pSource);
 	 } else {
-			pNewNode = jx_NodeUnlink  (pSource);
+			pNewNode = nox_NodeUnlink  (pSource);
 	 }
 
-	 jx_NodeAddChildTail (pDest, pNewNode);
+	 nox_NodeAddChildTail (pDest, pNewNode);
 
 }
 /* ---------------------------------------------------------------------------
 	 Appends an array to the end of another array
 	 --------------------------------------------------------------------------- */
-PJXNODE  jx_ArrayAppend  (PJXNODE pDest, PJXNODE pSource , BOOL16 copyP)
+PNOXNODE  nox_ArrayAppend  (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
 {
-	 PJXNODE  pNewNode, pNode, pNext;
+	 PNOXNODE  pNewNode, pNode, pNext;
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 BOOL copy = (pParms->OpDescList->NbrOfParms >= 3) ? copyP : false;
 
@@ -2574,21 +2574,21 @@ PJXNODE  jx_ArrayAppend  (PJXNODE pDest, PJXNODE pSource , BOOL16 copyP)
 			pNewNode  = NewNode  (NULL  , "null" , LITERAL);
 	 } else if (pSource->signature != NODESIG) {
 			if (*(PUCHAR) pSource == BraBeg || *(PUCHAR) pSource == CurBeg ) {
-					pNewNode = jx_ParseCString((PUCHAR) pSource);
+					pNewNode = nox_ParseCString((PUCHAR) pSource);
 			} else {
 					pNewNode  = NewNode  (NULL  , (PUCHAR) pSource , VALUE);
 			}
 	 } else if (copy) {
-			pNewNode = jx_NodeClone (pSource);
+			pNewNode = nox_NodeClone (pSource);
 	 } else {
-			pNewNode = jx_NodeUnlink  (pSource);
+			pNewNode = nox_NodeUnlink  (pSource);
 	 }
 
 		// Arrays - need first child;
 	 pNode = pNewNode->pNodeChildHead;
 	 while (pNode) {
 			pNext = pNode->pNodeSibling;
-			jx_ArrayPush (pDest , pNode , false);
+			nox_ArrayPush (pDest , pNode , false);
 			pNode = pNext;
 	 }
 
@@ -2598,9 +2598,9 @@ PJXNODE  jx_ArrayAppend  (PJXNODE pDest, PJXNODE pSource , BOOL16 copyP)
 	 Slice from element to element in an array
 
 	 --------------------------------------------------------------------------- */
-PJXNODE  jx_ArraySlice   (PJXNODE pSource , int from , int to, BOOL16 copyP)
+PNOXNODE  nox_ArraySlice   (PNOXNODE pSource , int from , int to, BOOL16 copyP)
 {
-	 PJXNODE  pNewNode, pNode, pNext, pOut;
+	 PNOXNODE  pNewNode, pNode, pNext, pOut;
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 BOOL copy = (pParms->OpDescList->NbrOfParms >= 2) ? copyP : false;
 	 int i =0;
@@ -2610,14 +2610,14 @@ PJXNODE  jx_ArraySlice   (PJXNODE pSource , int from , int to, BOOL16 copyP)
 
 	 if (pSource->signature != NODESIG) {
 			if (*(PUCHAR) pSource == BraBeg || *(PUCHAR) pSource == CurBeg ) {
-				 pSource = jx_ParseCString((PUCHAR) pSource);
+				 pSource = nox_ParseCString((PUCHAR) pSource);
 			}
 			if (pSource == NULL)  return null;
 			deleteAfter = true;
 			copy = false;
 	 }
 
-	 pOut = jx_NewArray(NULL);
+	 pOut = nox_NewArray(NULL);
 
 	 // first locate first element;
 	 pNode = pSource->pNodeChildHead;
@@ -2628,12 +2628,12 @@ PJXNODE  jx_ArraySlice   (PJXNODE pSource , int from , int to, BOOL16 copyP)
 	 // now keep on pushing
 	 for (; pNode && (i < to || to == -1); i++) {
 			pNext = pNode->pNodeSibling;
-			jx_ArrayPush (pOut , pNode , copy);
+			nox_ArrayPush (pOut , pNode , copy);
 			pNode = pNext;
 	 }
 
 	 if (deleteAfter) {
-			jx_NodeDelete (pSource);
+			nox_NodeDelete (pSource);
 	 }
 
 	 return pOut;
@@ -2641,9 +2641,9 @@ PJXNODE  jx_ArraySlice   (PJXNODE pSource , int from , int to, BOOL16 copyP)
 /* ---------------------------------------------------------------------------
 	 Find node by name, by parsing a name string and traverse the array list
 	 --------------------------------------------------------------------------- */
-PJXNODE  jx_lookupValue (PJXNODE pNode, PUCHAR expr, BOOL16 ignorecaseP)
+PNOXNODE  nox_lookupValue (PNOXNODE pNode, PUCHAR expr, BOOL16 ignorecaseP)
 {
-	 PJXNODE  pTemp;
+	 PNOXNODE  pTemp;
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 BOOL  ignorecase = (pParms->OpDescList->NbrOfParms >= 3) ? ignorecaseP : false;
 
@@ -2668,9 +2668,9 @@ PJXNODE  jx_lookupValue (PJXNODE pNode, PUCHAR expr, BOOL16 ignorecaseP)
 /* ---------------------------------------------------------------------------
 	 Find node by name, by parsing a name string and traverse the array list
 	 --------------------------------------------------------------------------- */
-LONG jx_getLength (PJXNODE pNode)
+LONG nox_getLength (PNOXNODE pNode)
 {
-	 PJXNODE  pTemp;
+	 PNOXNODE  pTemp;
 	 LONG len = 0;
 
 	 // Works for array and objects
@@ -2688,13 +2688,13 @@ LONG jx_getLength (PJXNODE pNode)
 // -----------------------------------------------------------------------------------------
 // Enshure that the complete path has a assoiceated node
 // -----------------------------------------------------------------------------------------
-PJXNODE jx_CreateSubNodes  (PJXNODE pNodeRoot , PUCHAR Path )
+PNOXNODE nox_CreateSubNodes  (PNOXNODE pNodeRoot , PUCHAR Path )
 {
 
 	 UCHAR    tempName [256];
 	 PUCHAR   pName = tempName;
 	 PUCHAR   pEnd;
-	 PJXNODE  pParentNode, pNodeTemp;
+	 PNOXNODE  pParentNode, pNodeTemp;
 	 BOOL     isNewArray = false;
 
 	 strcpy(tempName, Path);
@@ -2702,14 +2702,14 @@ PJXNODE jx_CreateSubNodes  (PJXNODE pNodeRoot , PUCHAR Path )
 	 if  (pName[0] == BraBeg && pName[1] == BraEnd) {   // the empty array: []
 		 pName += 2;
 		 pNodeRoot->type = ARRAY;
-		 pParentNode = jx_NodeAdd (pNodeRoot, RL_LAST_CHILD, NULL , NULL, VALUE);
+		 pParentNode = nox_NodeAdd (pNodeRoot, RL_LAST_CHILD, NULL , NULL, VALUE);
 		 isNewArray = true;
 	 } else if  (*pName == BraBeg) {
 		 pName ++ ;
 		 pParentNode = pNodeRoot;
 	 } else if (findchr(pName , delimiters , sizeof(delimiters)) == pName) {
 		 pName ++ ;
-		 pParentNode = jx_GetRoot(pNodeRoot);
+		 pParentNode = nox_GetRoot(pNodeRoot);
 	 } else {
 		 pParentNode = pNodeRoot;
 	 }
@@ -2731,21 +2731,21 @@ PJXNODE jx_CreateSubNodes  (PJXNODE pNodeRoot , PUCHAR Path )
 				*pEnd = '\0'; // temp termination
 			}
 			if (*pName) {
-				pNodeTemp = jx_GetNode  (pParentNode , pName);
+				pNodeTemp = nox_GetNode  (pParentNode , pName);
 				if (pNodeTemp == NULL) {
 					 freeNodeValue (pParentNode); // Can not have values if we have childrens
 					 // When i have children, then i must be an object or an array
 					 if (pParentNode->type != ARRAY) {
 							pParentNode->type = OBJECT;
 					 }
-					 pNodeTemp = jx_NodeAdd (pParentNode, RL_LAST_CHILD, pName , NULL, isNewArray ? ARRAY : nodeType);
+					 pNodeTemp = nox_NodeAdd (pParentNode, RL_LAST_CHILD, pName , NULL, isNewArray ? ARRAY : nodeType);
 				}
 
 				// The [] syntax  - Add the new entry to the array
 				if (isNewArray) {
 					 freeNodeValue(pNodeTemp);     // Can not have values if we have childrens
 					 pNodeTemp->type = ARRAY ;     // When i have childrne then i must be an object or array
-					 pNodeTemp = jx_NodeAdd (pNodeTemp, RL_LAST_CHILD, NULL , NULL, nodeType);
+					 pNodeTemp = nox_NodeAdd (pNodeTemp, RL_LAST_CHILD, NULL , NULL, nodeType);
 					 pName = pEnd + 2;
 					 if (isNextDelimiter(*pName))  pName++;
 					 isNewArray = false; // Done with array chekking
@@ -2768,16 +2768,16 @@ PJXNODE jx_CreateSubNodes  (PJXNODE pNodeRoot , PUCHAR Path )
 /* ---------------------------------------------------------------------------
 	 Get the node. If not exists the produce all nodes required
 	 --------------------------------------------------------------------------- */
-PJXNODE  jx_GetOrCreateNode (PJXNODE pNodeRoot, PUCHAR Name)
+PNOXNODE  nox_GetOrCreateNode (PNOXNODE pNodeRoot, PUCHAR Name)
 {
 
-	 PJXNODE pDest;
+	 PNOXNODE pDest;
 
-	 pDest  = jx_GetNode  (pNodeRoot , Name);
+	 pDest  = nox_GetNode  (pNodeRoot , Name);
 
 	 // Not found? Build the Nodeents
 	 if (pDest  == NULL) {
-			pDest  = jx_CreateSubNodes (pNodeRoot , Name);
+			pDest  = nox_CreateSubNodes (pNodeRoot , Name);
 	 }
 	 return pDest;
 }
@@ -2785,12 +2785,12 @@ PJXNODE  jx_GetOrCreateNode (PJXNODE pNodeRoot, PUCHAR Name)
 	 X-path: Find node by name, by parsing a name string and traverse the tree
 	 It can be relative by giving either a Node and a name
 	 --------------------------------------------------------------------------- */
-PJXNODE  jx_SetValueByName (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETYPE typePP)
+PNOXNODE  nox_SetValueByName (PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETYPE typePP)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 PUCHAR        pNodeKey, pAtrKey;
 	 PXMLATTR      pAtr;
-	 PJXNODE       pParentNode, pNodeTemp;
+	 PNOXNODE       pParentNode, pNodeTemp;
 	 NODETYPE      typeP = (pParms->OpDescList->NbrOfParms >= 4) ? typePP : UNKNOWN;
 	 NODETYPE      type  = typeP & 255;   // Strip the modifiers
 	 MERGEOPTION   merge = typeP & (MO_MERGE_NEW + MO_MERGE_MATCH + MO_MERGE_REPLACE); // All mergeoptions
@@ -2812,21 +2812,21 @@ PJXNODE  jx_SetValueByName (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETY
 	 }
 
 	 // Get the node or create it if it does not exists
-	 pParentNode = jx_GetOrCreateNode (pNodeRoot, Name);
+	 pParentNode = nox_GetOrCreateNode (pNodeRoot, Name);
 
 	 if (pAtrKey) {
-			jx_SetNodeAttrValue  (pParentNode , pAtrKey, Value);
-			return jx_traceNode("Attributes" ,pParentNode);
+			nox_SetNodeAttrValue  (pParentNode , pAtrKey, Value);
+			return nox_traceNode("Attributes" ,pParentNode);
 	 }
 
 	 if (pParms->OpDescList->NbrOfParms >= 4) {
 			if ( type == PARSE_STRING) {
-				 jx_SetByParseString (pParentNode , Value, merge , move);
-				 return jx_traceNode("Parse String", pParentNode);
+				 nox_SetByParseString (pParentNode , Value, merge , move);
+				 return nox_traceNode("Parse String", pParentNode);
 			}
 			if ( type == POINTER_VALUE) {
-				 jx_NodeSetAsPointer (pParentNode , Value);
-				 return jx_traceNode("Pointer", pParentNode);
+				 nox_NodeSetAsPointer (pParentNode , Value);
+				 return nox_traceNode("Pointer", pParentNode);
 			}
 	 }
 
@@ -2835,19 +2835,19 @@ PJXNODE  jx_SetValueByName (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETY
 			// TODO!! Clean this up ... Node copy replace the node value
 			// where NodeCloneAndReplace replace the node it self
 			// if ( pParms->OpDescList->NbrOfParms >= 4 && (type == CLONE || type == CLONE_OLD)) {
-			//    jx_NodeCopy (pParentNode , (PJXNODE) Value, RL_LAST_CHILD);
-			//   return jx_traceNode("Node Copy " , pParentNode);
+			//    nox_NodeCopy (pParentNode , (PNOXNODE) Value, RL_LAST_CHILD);
+			//   return nox_traceNode("Node Copy " , pParentNode);
 
 			if (move) {
-				 jx_NodeMoveAndReplace (pParentNode , (PJXNODE) Value);
-				 return jx_traceNode("Node Move and Replace " , pParentNode);
+				 nox_NodeMoveAndReplace (pParentNode , (PNOXNODE) Value);
+				 return nox_traceNode("Node Move and Replace " , pParentNode);
 			} else {
-				 jx_NodeCloneAndReplace (pParentNode , (PJXNODE) Value);
-				 return jx_traceNode("Node Clone and replace" , pParentNode);
+				 nox_NodeCloneAndReplace (pParentNode , (PNOXNODE) Value);
+				 return nox_traceNode("Node Clone and replace" , pParentNode);
 			}
 	 }
 
-	 jx_NodeSet (pParentNode , Value);
+	 nox_NodeSet (pParentNode , Value);
 	 if (pParms->OpDescList->NbrOfParms >= 4) {
 			if (type == LITERAL) {
 				pParentNode->type      = VALUE;
@@ -2858,21 +2858,21 @@ PJXNODE  jx_SetValueByName (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETY
 			}
 	 }
 
-	 return jx_traceNode("Set value" , pParentNode);
+	 return nox_traceNode("Set value" , pParentNode);
 }
 /* -------------------------------------------------------------
 	 Set integer by name
 	 ------------------------------------------------------------- */
-PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value)
+PNOXNODE  nox_SetIntByName (PNOXNODE pNode, PUCHAR Name, LONG Value)
 {
 	 UCHAR  s [32];
 	 sprintf(s , "%ld" , Value);
-	 return jx_SetValueByName(pNode , Name , s, LITERAL );
+	 return nox_SetValueByName(pNode , Name , s, LITERAL );
 }
 /* -------------------------------------------------------------
 	 Set decimal  by name
 	 ------------------------------------------------------------- */
-PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value)
+PNOXNODE  nox_SetDecByName (PNOXNODE pNode, PUCHAR Name, FIXEDDEC Value)
 {
 	 UCHAR  s [32];
 	 PUCHAR t;
@@ -2895,73 +2895,73 @@ PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value)
 			p--;
 	 }
 
-	 return jx_SetValueByName(pNode , Name , s, LITERAL );
+	 return nox_SetValueByName(pNode , Name , s, LITERAL );
 }
 /* -------------------------------------------------------------
 	 Set BOOL by name
 	 ------------------------------------------------------------- */
-PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value)
+PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR Name, LGL Value)
 {
-	 return jx_SetValueByName(pNode , Name , Value == OFF ? "false":"true", LITERAL );
+	 return nox_SetValueByName(pNode , Name , Value == OFF ? "false":"true", LITERAL );
 }
 /* -------------------------------------------------------------
 	 Set BOOL by name
 	 ------------------------------------------------------------- */
-PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
+PNOXNODE  nox_SetStrByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Value)
 {
-	 return jx_SetValueByName(pNode , Name , Value , VALUE );
+	 return nox_SetValueByName(pNode , Name , Value , VALUE );
 }
 /* -------------------------------------------------------------
 	 Set BOOL by name
 	 ------------------------------------------------------------- */
-PJXNODE  jx_SetEvalByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
+PNOXNODE  nox_SetEvalByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Value)
 {
-	 return jx_SetValueByName(pNode , Name , Value , PARSE_STRING );
+	 return nox_SetValueByName(pNode , Name , Value , PARSE_STRING );
 }
 /* -------------------------------------------------------------
 	 Set BOOL by name
 	 ------------------------------------------------------------- */
-PJXNODE  jx_SetPtrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL isStringP)
+PNOXNODE  nox_SetPtrByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Value, LGL isStringP)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 BOOL isString  = (pParms->OpDescList->NbrOfParms >= 4 && isStringP == ON);
-	 PJXNODE pRes = jx_SetValueByName(pNode , Name , Value , POINTER_VALUE );
+	 PNOXNODE pRes = nox_SetValueByName(pNode , Name , Value , POINTER_VALUE );
 	 pRes->isLiteral = ! isString;
 	 return pRes;
 }
 /* -------------------------------------------------------------
 	 RPG Wrappers
 	 ------------------------------------------------------------- */
-LGL jx_ParseStmfFile (PJXNODE  * ppRoot , PUCHAR FileName , PUCHAR Mode)
+LGL nox_ParseStmfFile (PNOXNODE  * ppRoot , PUCHAR FileName , PUCHAR Mode)
 {
 	 BOOL ok;
-	 PJXNODE pRoot = jx_ParseFile(FileName, Mode);
+	 PNOXNODE pRoot = nox_ParseFile(FileName, Mode);
 	 *ppRoot = pRoot;
 	 return ((jxError) ?  OFF: ON );
 }
 // -------------------------------------------------------------
-VARCHAR jx_GetValueVC(PJXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP)
+VARCHAR nox_GetValueVC(PNOXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 PUCHAR  Default = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultP : "";
 	 PUCHAR  Name    = (pParms->OpDescList->NbrOfParms >= 2) ? NameP    : "";
 	 VARCHAR res;
-	 jx_CopyValueByNameVC ( &res , pNodeRoot, Name , Default , false) ;
+	 nox_CopyValueByNameVC ( &res , pNodeRoot, Name , Default , false) ;
 	 return (res);
 }
 // -------------------------------------------------------------
-VARCHAR jx_GetStrJoinVC(PJXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP)
+VARCHAR nox_GetStrJoinVC(PNOXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 PUCHAR  Default = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultP : "";
 	 PUCHAR  Name    = (pParms->OpDescList->NbrOfParms >= 2) ? NameP    : "";
 	 VARCHAR res;
-	 jx_CopyValueByNameVC ( &res , pNodeRoot, Name , Default , true ) ;
+	 nox_CopyValueByNameVC ( &res , pNodeRoot, Name , Default , true ) ;
 	 return (res);
 }
 
 // -------------------------------------------------------------
-FIXEDDEC jx_GetValueNum (PJXNODE pNode , PUCHAR Name  , FIXEDDEC dftParm)
+FIXEDDEC nox_GetValueNum (PNOXNODE pNode , PUCHAR Name  , FIXEDDEC dftParm)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 FIXEDDEC dft   =  (pParms->OpDescList->NbrOfParms >= 3) ? dftParm : 0;
@@ -2969,14 +2969,14 @@ FIXEDDEC jx_GetValueNum (PJXNODE pNode , PUCHAR Name  , FIXEDDEC dftParm)
 
 	 PUCHAR  value;
 
-	 value = jx_GetValuePtr    (pNode , path , NULL ) ;
+	 value = nox_GetValuePtr    (pNode , path , NULL ) ;
 	 if (value == NULL) {
 			 return  dft;
 	 }
-	 return jx_Num(value);
+	 return nox_Num(value);
 }
 // -------------------------------------------------------------
-INT64 jx_GetValueInt (PJXNODE pNode , PUCHAR Name  , INT64 dftParm)
+INT64 nox_GetValueInt (PNOXNODE pNode , PUCHAR Name  , INT64 dftParm)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 INT64    dft   =  (pParms->OpDescList->NbrOfParms >= 3) ? dftParm : 0;
@@ -2984,43 +2984,43 @@ INT64 jx_GetValueInt (PJXNODE pNode , PUCHAR Name  , INT64 dftParm)
 
 	 PUCHAR  value;
 
-	 value = jx_GetValuePtr    (pNode , path , NULL ) ;
+	 value = nox_GetValuePtr    (pNode , path , NULL ) ;
 	 if (value == NULL) {
 			 return  dft;
 	 }
-	 return jx_Num(value);
+	 return nox_Num(value);
 }
 // -------------------------------------------------------------
-VARCHAR jx_GetNodeValueVC (PJXNODE pNode , PUCHAR DefaultValue)
+VARCHAR nox_GetNodeValueVC (PNOXNODE pNode , PUCHAR DefaultValue)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 PUCHAR dft = (pParms->OpDescList->NbrOfParms >= 2) ? DefaultValue : "";
 	 PUCHAR value;
 	 VARCHAR res;
 
-	 value =  jx_GetNodeValuePtr  (pNode , dft);
+	 value =  nox_GetNodeValuePtr  (pNode , dft);
 	 res.Length = strlen(value);
 	 memcpy(res.String , value , res.Length);
 	 return (res);
 }
-FIXEDDEC jx_GetNodeValueNum (PJXNODE pNode , FIXEDDEC DefaultValue)
+FIXEDDEC nox_GetNodeValueNum (PNOXNODE pNode , FIXEDDEC DefaultValue)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 FIXEDDEC dft = (pParms->OpDescList->NbrOfParms >= 2) ? DefaultValue : 0;
-	 PUCHAR value =  jx_GetNodeValuePtr  (pNode , NULL  );
+	 PUCHAR value =  nox_GetNodeValuePtr  (pNode , NULL  );
 	 if (value == NULL) {
 		 return dft;
 	 } else {
-			return jx_Num(value);
+			return nox_Num(value);
 	 }
  }
 // -------------------------------------------------------------
-PUCHAR  jx_GetNodeNamePtr (PJXNODE pNode)
+PUCHAR  nox_GetNodeNamePtr (PNOXNODE pNode)
 {
 	 return (pNode && pNode->Name) ? pNode->Name : "";
 }
 // -------------------------------------------------------------
-VARCHAR jx_GetNodeNameVC (PJXNODE pNode)
+VARCHAR nox_GetNodeNameVC (PNOXNODE pNode)
 {
 	 VARCHAR res;
 
@@ -3032,32 +3032,32 @@ VARCHAR jx_GetNodeNameVC (PJXNODE pNode)
 	 return (res);
 }
 // -------------------------------------------------------------
-VARCHAR jx_GetNodeAttrValueVC (PJXNODE pNode ,PUCHAR AttrName, PUCHAR DefaultValue)
+VARCHAR nox_GetNodeAttrValueVC (PNOXNODE pNode ,PUCHAR AttrName, PUCHAR DefaultValue)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 PUCHAR  dft = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultValue : "";
 	 VARCHAR res;
-	 PUCHAR value =  jx_GetNodeAttrValuePtr  ( pNode , AttrName,  dft) ;
+	 PUCHAR value =  nox_GetNodeAttrValuePtr  ( pNode , AttrName,  dft) ;
 	 res.Length = strlen(value);
 	 memcpy(res.String , value , res.Length);
 	 return (res);
 }
 // -------------------------------------------------------------
-FIXEDDEC jx_GetNodeAttrValueNum (PJXNODE pNode , PUCHAR AttrName, FIXEDDEC DefaultValue)
+FIXEDDEC nox_GetNodeAttrValueNum (PNOXNODE pNode , PUCHAR AttrName, FIXEDDEC DefaultValue)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 FIXEDDEC dft = (pParms->OpDescList->NbrOfParms >= 2) ? DefaultValue : 0;
-	 PXMLATTR pAttr = jx_AttributeLookup   (pNode, AttrName);
+	 PXMLATTR pAttr = nox_AttributeLookup   (pNode, AttrName);
 
 	 if (pAttr == NULL
 	 ||  pAttr->Value == NULL) {
 			return ( dft );
 	 } else {
-			return jx_Num(pAttr->Value);
+			return nox_Num(pAttr->Value);
 	 }
 }
 // -------------------------------------------------------------
-PJXNODE jx_GetNodeNext (PJXNODE pNode)
+PNOXNODE nox_GetNodeNext (PNOXNODE pNode)
 {
 	 if (pNode == NULL) {
 			return  NULL ;
@@ -3066,7 +3066,7 @@ PJXNODE jx_GetNodeNext (PJXNODE pNode)
 	 }
 }
 // -------------------------------------------------------------
-PJXNODE jx_GetNodeChild  (PJXNODE pNode)
+PNOXNODE nox_GetNodeChild  (PNOXNODE pNode)
 {
 	 if (pNode == NULL) {
 			return  NULL ;
@@ -3075,18 +3075,18 @@ PJXNODE jx_GetNodeChild  (PJXNODE pNode)
 	 }
 }
 // -------------------------------------------------------------
-PJXNODE jx_GetNodeChildNo ( PJXNODE pNode , int childNo)
+PNOXNODE nox_GetNodeChildNo ( PNOXNODE pNode , int childNo)
 {
-	 PJXNODE pChild =  jx_GetNodeChild (pNode);
+	 PNOXNODE pChild =  nox_GetNodeChild (pNode);
 	 int i =0;
 	 while (i < childNo && pChild) {
-			pChild  = jx_GetNodeNext(pChild);
+			pChild  = nox_GetNodeNext(pChild);
 			i++;
 	 }
 	 return pChild;
 }
 // -------------------------------------------------------------
-PXMLATTR  jx_GetAttrFirst (PJXNODE pNode)
+PXMLATTR  nox_GetAttrFirst (PNOXNODE pNode)
 {
 	 if (pNode == NULL) {
 			return (NULL);
@@ -3095,7 +3095,7 @@ PXMLATTR  jx_GetAttrFirst (PJXNODE pNode)
 	 }
 }
 // -------------------------------------------------------------
-PXMLATTR  jx_GetAttrNext  (PXMLATTR pAttr)
+PXMLATTR  nox_GetAttrNext  (PXMLATTR pAttr)
 {
 	 if (pAttr == NULL) {
 			return (NULL);
@@ -3104,7 +3104,7 @@ PXMLATTR  jx_GetAttrNext  (PXMLATTR pAttr)
 	 }
 }
 // -------------------------------------------------------------
-VARCHAR jx_GetAttrNameVC (PXMLATTR pAttr)
+VARCHAR nox_GetAttrNameVC (PXMLATTR pAttr)
 {
 	 VARCHAR res;
 
@@ -3116,25 +3116,25 @@ VARCHAR jx_GetAttrNameVC (PXMLATTR pAttr)
 	 return (res);
 }
 // -------------------------------------------------------------
-PUCHAR  jx_GetAttrNamePtr (PXMLATTR pAttr)
+PUCHAR  nox_GetAttrNamePtr (PXMLATTR pAttr)
 {
 	 return (pAttr && pAttr->Name) ? pAttr->Name : null;
 }
 // -------------------------------------------------------------
-PUCHAR  jx_GetAttrValuePtr (PXMLATTR pAttr)
+PUCHAR  nox_GetAttrValuePtr (PXMLATTR pAttr)
 {
 	 return (pAttr && pAttr->Value) ? pAttr->Value : null;
 }
 // -------------------------------------------------------------
-FIXEDDEC jx_GetAttrValueNum  (PXMLATTR pAttr, FIXEDDEC dftParm)
+FIXEDDEC nox_GetAttrValueNum  (PXMLATTR pAttr, FIXEDDEC dftParm)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 FIXEDDEC dft = (pParms->OpDescList->NbrOfParms >= 2) ? dftParm  : 0;
-	 PUCHAR  value = jx_GetAttrValuePtr (pAttr);
-	 return  value ? jx_Num(value)  : dft;
+	 PUCHAR  value = nox_GetAttrValuePtr (pAttr);
+	 return  value ? nox_Num(value)  : dft;
 }
 // -------------------------------------------------------------
-VARCHAR jx_GetAttrValueVC (PXMLATTR pAttr, PUCHAR DefaultValue)
+VARCHAR nox_GetAttrValueVC (PXMLATTR pAttr, PUCHAR DefaultValue)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 PUCHAR  dft = (pParms->OpDescList->NbrOfParms >= 2) ? DefaultValue : "";
@@ -3153,99 +3153,99 @@ VARCHAR jx_GetAttrValueVC (PXMLATTR pAttr, PUCHAR DefaultValue)
 	 return (res);
 }
 // -------------------------------------------------------------
-LGL  jx_Error (PJXNODE  pNode)
+LGL  nox_Error (PNOXNODE  pNode)
 {
 	 return ( jxError || pNode == NULL) ? ON : OFF;
 }
 // -------------------------------------------------------------
-PUCHAR jx_ErrStr (PJXNODE pJxNode)
+PUCHAR nox_ErrStr (PNOXNODE pJxNode)
 {
 	 return jxMessage;
 }
 
 // -------------------------------------------------------------
-VOID jx_SetApiErr (PJXNODE pJxNode, PAPIERR pApiErr)
+VOID nox_SetApiErr (PNOXNODE pJxNode, PAPIERR pApiErr)
 {
 		 strcpy (pApiErr->msgid , "CPF9898");
 		 substr  (pApiErr->msgdta , jxMessage ,pApiErr->size - 25 );  // not inc. the header
 		 pApiErr->avail  = strlen(pApiErr->msgdta);
 }
 // -------------------------------------------------------------
-VARCHAR1024 jx_Message  (PJXNODE pJxNode)
+VARCHAR1024 nox_Message  (PNOXNODE pJxNode)
 {
 	 VARCHAR1024 res;
 	 str2vc (&res  ,  jxMessage);
 	 return (res);
 }
 // -------------------------------------------------------------
-PJXNODE jx_GetMessageObject (PUCHAR msgId , PUCHAR msgDta)
+PNOXNODE nox_GetMessageObject (PUCHAR msgId , PUCHAR msgDta)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	 PJXNODE pMsg = jx_NewObject(NULL);
-	 jx_SetBoolByName (pMsg , "success" ,  OFF);
+	 PNOXNODE pMsg = nox_NewObject(NULL);
+	 nox_SetBoolByName (pMsg , "success" ,  OFF);
 	 if (pParms->OpDescList->NbrOfParms > 0)  {
-		 jx_SetStrByName (pMsg , "msgId" ,  msgId);
-		 jx_SetStrByName (pMsg , "msgDta",  msgDta);
+		 nox_SetStrByName (pMsg , "msgId" ,  msgId);
+		 nox_SetStrByName (pMsg , "msgDta",  msgDta);
 		 // TODO - convert the msgid / msgData to text
 	 } else  {
-		 jx_SetStrByName (pMsg , "msg" ,  jxMessage);
+		 nox_SetStrByName (pMsg , "msg" ,  jxMessage);
 	 }
 	 return pMsg;
 }
 // -------------------------------------------------------------
-PJXNODE jx_SuccessTrue ()
+PNOXNODE nox_SuccessTrue ()
 {
-	 PJXNODE pMsg = jx_NewObject(NULL);
-	 jx_SetBoolByName (pMsg , "success" ,  ON);
+	 PNOXNODE pMsg = nox_NewObject(NULL);
+	 nox_SetBoolByName (pMsg , "success" ,  ON);
 	 return pMsg;
 }
 // -------------------------------------------------------------
-// was jx_Close2
+// was nox_Close2
 // Avoid closing an already closed XML
 // -------------------------------------------------------------
-void jx_Close (PJXNODE * ppNode)
+void nox_Close (PNOXNODE * ppNode)
 {
-	 PJXNODE  pRoot  =  jx_GetRoot (*ppNode);
-	 jx_NodeDelete (pRoot);
+	 PNOXNODE  pRoot  =  nox_GetRoot (*ppNode);
+	 nox_NodeDelete (pRoot);
 
 	 *ppNode = NULL;
 }
 // -------------------------------------------------------------
 // remove all children from an object / array
 // -------------------------------------------------------------
-void jx_Clear  (PJXNODE pNode)
+void nox_Clear  (PNOXNODE pNode)
 {
 	 if (pNode != NULL) {
-			jx_FreeChildren(pNode);
+			nox_FreeChildren(pNode);
 	 }
 }
 // -------------------------------------------------------------
-void jx_Free  (PJXNODE pNode)
+void nox_Free  (PNOXNODE pNode)
 {
-	 jx_FreeSiblings(pNode);
+	 nox_FreeSiblings(pNode);
 }
 //---------------------------------------------------------------------------
-BOOL jx_HasMore(PJXNODE pNode)
+BOOL nox_HasMore(PNOXNODE pNode)
 {
 	 return (pNode != NULL);
 }
 //---------------------------------------------------------------------------
-LGL jx_IsJson(PJXNODE pNode)
+LGL nox_IsJson(PNOXNODE pNode)
 {
 		 return  (pNode->signature == NODESIG) ? ON : OFF;
 }
 //---------------------------------------------------------------------------
-LGL jx_MemLeak(VOID)
+LGL nox_MemLeak(VOID)
 {
 		return  isOn(memLeak());
 }
 //---------------------------------------------------------------------------
-VOID jx_MemStat(VOID)
+VOID nox_MemStat(VOID)
 {
 		memStat();
 }
 //---------------------------------------------------------------------------
-INT64 jx_MemUse(VOID)
+INT64 nox_MemUse(VOID)
 {
 		return memUse();
 }

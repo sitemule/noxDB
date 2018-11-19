@@ -42,22 +42,22 @@ compile:
 	system "CHGATR OBJ('src/ext/*') ATR(*CCSID) VALUE(1208)"
 	system "CHGATR OBJ('headers/*') ATR(*CCSID) VALUE(1208)"
 	system "CHGATR OBJ('headers/ext/*') ATR(*CCSID) VALUE(1208)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM001) SRCSTMF('src/noxdb.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM002) SRCSTMF('src/sqlio.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM003) SRCSTMF('src/xmlparser.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM004) SRCSTMF('src/jsonparser.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM005) SRCSTMF('src/serializer.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM006) SRCSTMF('src/reader.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM007) SRCSTMF('src/segments.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM008) SRCSTMF('src/iterator.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM010) SRCSTMF('src/http.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM900) SRCSTMF('src/generic.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/NOXM001) SRCSTMF('src/noxdb.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/NOXM002) SRCSTMF('src/sqlio.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/NOXM003) SRCSTMF('src/xmlparser.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/NOXM004) SRCSTMF('src/jsonparser.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/NOXM005) SRCSTMF('src/serializer.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/NOXM006) SRCSTMF('src/reader.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/NOXM007) SRCSTMF('src/segments.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/NOXM008) SRCSTMF('src/iterator.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/NOXM010) SRCSTMF('src/http.c') $(CCFLAGS)"
+	system "CRTCMOD MODULE($(BIN_LIB)/NOXM900) SRCSTMF('src/generic.c') $(CCFLAGS)"
 
 	system "CRTSRCPF FILE($(BIN_LIB)/QCLLESRC) RCDLEN(112)"
-	system "CPYFRMSTMF FROMSTMF('src/runqsh.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/JXM901.mbr') MBROPT(*ADD)"
-	system "CPYFRMSTMF FROMSTMF('src/trace.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/JXM902.mbr') MBROPT(*ADD)"
-	system -s "CRTCLMOD MODULE($(BIN_LIB)/JXM901) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
-	system -s "CRTCLMOD MODULE($(BIN_LIB)/JXM902) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
+	system "CPYFRMSTMF FROMSTMF('src/runqsh.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/NOXM901.mbr') MBROPT(*ADD)"
+	system "CPYFRMSTMF FROMSTMF('src/trace.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/NOXM902.mbr') MBROPT(*ADD)"
+	system -s "CRTCLMOD MODULE($(BIN_LIB)/NOXM901) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
+	system -s "CRTCLMOD MODULE($(BIN_LIB)/NOXM902) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
 	
 
 ext:
@@ -75,11 +75,11 @@ ext:
 bind:
 	-system -q "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
 	system "CPYFRMSTMF FROMSTMF('headers/JSONXML.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/JSONXML.mbr') MBROPT(*replace)"
-	system -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/JXM* $(DEPS_LIST)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
+	system -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/NOXM* $(DEPS_LIST)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
 
 hdr:
-	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
-	sed "s/ jx_/ xml_/g; s/ JX_/ xml_/g" headers/JSONXML.rpgle > headers/XMLPARSER.rpgle
+	sed "s/ nox_/ json_/g; s/ NOX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
+	sed "s/ nox_/ xml_/g; s/ NOX_/ xml_/g" headers/JSONXML.rpgle > headers/XMLPARSER.rpgle
 
 	system "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(112)"
 	system "CRTSRCPF FILE($(BIN_LIB)/QCREF) RCDLEN(112)"
