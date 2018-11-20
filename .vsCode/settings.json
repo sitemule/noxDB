@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.sqlrpgle": "rpg",
+        "*.dmd": "json",
+        "*.widget": "javascript",
+        "ostypes.h": "c"
+    }
+}

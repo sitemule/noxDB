@@ -157,7 +157,7 @@ void nox_AppendName (PNOXCOM pJxCom)
 // ---------------------------------------------------------------------------
 static void nox_AttrAppendName  (PNOXCOM pJxCom)
 {
-	PXMLATTR pAttr;
+	PNOXATTR pAttr;
 	UCHAR c = *pJxCom->pFileBuf;
 
 /*
@@ -186,7 +186,7 @@ static void nox_AttrAppendName  (PNOXCOM pJxCom)
 
 /* Name complete .. Add node */
 	if ( pJxCom->DataIx > 0) {
-		pAttr = (PXMLATTR) memAlloc (sizeof(*pAttr));
+		pAttr = (PNOXATTR) memAlloc (sizeof(*pAttr));
 		memset (pAttr , 0, sizeof(*pAttr));
 		pAttr->signature  = NODESIG;
 		pAttr->Name = memStrDup (pJxCom->Data);
@@ -262,7 +262,7 @@ void nox_AppendData (PNOXCOM pJxCom)
 // ---------------------------------------------------------------------------
 static void nox_AttrAppendValue  (PNOXCOM pJxCom)
 {
-	PXMLATTR pAttr;
+	PNOXATTR pAttr;
 	UCHAR c = *pJxCom->pFileBuf;
 
 	// Find wich kind of quote 

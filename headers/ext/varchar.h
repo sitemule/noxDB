@@ -103,7 +103,7 @@ PUCHAR vc2strtrim(PVOID pv);
 void substr2vc ( PVAR_CHAR out , PUCHAR in , LONG len);
 PUCHAR vc2strcpy(PUCHAR res,  PVOID pv);
 PUCHAR vc2str  (PVAR_CHAR pv);
-PUCHAR lvc2str (PLVARCHAR pv);
+PUCHAR plvc2str (PLVARCHAR pv);
 void vccpy     (PVARCHAR out , PVARCHAR in);
 void vccatstr  (PVARCHAR out , PUCHAR s   );
 void vccatc    (PVARCHAR out, UCHAR in);
@@ -118,5 +118,9 @@ void lvpc2lvc (PLVARCHAR out, PLVARPUCHAR in);
 void lvpc2vc  (PVARCHAR out, PLVARPUCHAR in);
 BOOL vpcIsEqual(PVARPUCHAR p1, PVARPUCHAR p2);
 BOOL lvpcIsEqual(PLVARPUCHAR p1, PLVARPUCHAR p2);
+PUCHAR pplvc2str (PLVARCHAR s);
+ 
 
+INT64 LVARCHARNULL =0;
+PLVARCHAR PLVARCHARNULL = (PLVARCHAR) &LVARCHARNULL;
 #endif

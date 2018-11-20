@@ -16,7 +16,7 @@ pgm (&libC &trace &job)
    dcl &n           type(*CHAR) len(6)
    dcl &null        type(*CHAR) len(1)  value(x'00')
 
-   rtvobjd    OBJ(JSONXML) OBJTYPE(*SRVPGM) RTNLIB(&LIB)
+   rtvobjd    OBJ(NOXDB) OBJTYPE(*SRVPGM) RTNLIB(&LIB)
    rtvDtaAra  DTAARA(&LIB/SQLTRACE) RTNVAR(&TRACE)
    monmsg  cpf0000 exec(do)
       CRTDTAARA  DTAARA(&LIB/SQLTRACE) TYPE(*LGL) VALUE('0') +

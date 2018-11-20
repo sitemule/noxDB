@@ -55,8 +55,10 @@ VARPUCHAR vc2varpuchar(PVARCHAR in)
 	res.String = in->String;
 	return(res);
 }
+/* ---------------------------------------------------------------------------------------- */
+
 /* --------------------------------------------------------------------------- */
-PUCHAR lvc2str(PLVARCHAR p)
+PUCHAR plvc2str(PLVARCHAR p)
 {
 	p->String[p->Length] = '\0';
 	return(p->String);

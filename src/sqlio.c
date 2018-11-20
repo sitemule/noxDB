@@ -12,7 +12,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
                                                                 */
 /* By     Date       PTF     Description                         */
 /* NL     21.10.2006         New program                         */
-/* NL     16.10.2014         Added to JSONXML library            */
+/* NL     16.10.2014         Added to NOXDB library            */
 /* ------------------------------------------------------------- */
 
 #include <unistd.h>

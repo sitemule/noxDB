@@ -5,7 +5,7 @@
 # NOTE - UTF is only alowed for C 
 
 # The shell we use
-SHELL=/QOpenSys/usr/bin/qsh
+XXSHELL=/QOpenSys/usr/bin/qsh
 
 # BIN_LIB is the destination library for the service program.
 # the rpg modules and the binder source file are also created in BIN_LIB.
@@ -31,10 +31,10 @@ all: clean env compile ext bind hdr
 
 env:
 	-system -q "CRTLIB $(BIN_LIB) TYPE(*TEST) TEXT('Nox.DB build library')"
-	-system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/JSONXML)"
-	-system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/JSONXML) OBJ((JSONXML))"
 	-system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/NOXDB)"
-	-system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/NOXDB) OBJ((JSONXML))"
+	-system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/NOXDB) OBJ((NOXDB))"
+	-system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/NOXDB)"
+	-system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/NOXDB) OBJ((NOXDB))"
 
 
 compile:
@@ -74,19 +74,19 @@ ext:
 
 bind:
 	-system -q "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
-	system "CPYFRMSTMF FROMSTMF('headers/JSONXML.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/JSONXML.mbr') MBROPT(*replace)"
-	system -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/NOXM* $(DEPS_LIST)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
+	system "CPYFRMSTMF FROMSTMF('headers/NOXDB.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/NOXDB.mbr') MBROPT(*replace)"
+	system -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/NOXDB) MODULE($(BIN_LIB)/NOXM* $(DEPS_LIST)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
 
 hdr:
-	sed "s/ nox_/ json_/g; s/ NOX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
-	sed "s/ nox_/ xml_/g; s/ NOX_/ xml_/g" headers/JSONXML.rpgle > headers/XMLPARSER.rpgle
+	sed "s/ nox_/ json_/g; s/ NOX_/ json_/g" headers/NOXDB.rpgle > headers/JSONPARSER.rpgle
+	sed "s/ nox_/ xml_/g; s/ NOX_/ xml_/g" headers/NOXDB.rpgle > headers/XMLPARSER.rpgle
 
 	system "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(112)"
 	system "CRTSRCPF FILE($(BIN_LIB)/QCREF) RCDLEN(112)"
   
 	system "CPYFRMSTMF FROMSTMF('headers/JSONPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONPARSER.mbr') MBROPT(*ADD)"
 	system "CPYFRMSTMF FROMSTMF('headers/XMLPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/XMLPARSER.mbr') MBROPT(*ADD)"
-	system "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCREF.file/JSONXML.mbr') MBROPT(*ADD)"
+	system "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCREF.file/NOXDB.mbr') MBROPT(*ADD)"
 
 clean:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/QCLLESRC) OBJTYPE(*FILE)"
