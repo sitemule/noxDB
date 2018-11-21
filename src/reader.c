@@ -27,8 +27,8 @@
 #include "xlate.h"
 #include "noxdb.h"
 #include "parms.h"
-#include "rtvsysval.h"
-#include "mem001.h"
+// #include "rtvsysval.h"
+#include "memUtil.h"
 #include "strUtil.h"
 
 // Just for debugging
@@ -171,7 +171,7 @@ void nox_CheckEnd(PNOXCOM pJxCom)
 		pJxCom->Data[0]='\0';
 		return;
 	}
-	if (BeginsWith (pJxCom->pFileBuf ,SLASHGT))  {  // Check for short form   />
+	if (memBeginsWith (pJxCom->pFileBuf ,SLASHGT))  {  // Check for short form   />
 		pJxCom->pNodeWorkRoot = pJxCom->pNodeWorkRoot->pNodeParent;
 		pJxCom->Level --;
 		pJxCom->State = XML_FIND_START_TOKEN;

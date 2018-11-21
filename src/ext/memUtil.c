@@ -26,7 +26,7 @@
 #include "ostypes.h"
 #include "minmax.h"
 #include "parms.h"
-#include "mem001.h"
+#include "memUtil.h"
 
 static INT64 used = 0;
 static INT64 allocated = 0;

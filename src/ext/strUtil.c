@@ -787,3 +787,12 @@ LONG strTrimLen(PUCHAR str)
     }
     return len;
 }
+/* ------------------------------------------------------------- */
+PUCHAR strTrim(PUCHAR s)
+{
+	PUCHAR e;
+	for(e = s + strlen(s); e > s && *e <= ' '; e--);
+	*(e+1) = '\0';
+	return (s);
+}
+

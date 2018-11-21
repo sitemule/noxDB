@@ -93,7 +93,7 @@
         End-PR;
 
         //Returns node nox_object tree
-        Dcl-PR nox_ParseString Pointer extproc(*CWIDEN:'nox_ParseString');
+        Dcl-PR nox_ParseStringVC Pointer extproc(*CWIDEN:'nox_ParseStringVC');
           //String to parse
           String         Like(UTF8) value;
           //Parsing options

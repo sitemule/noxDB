@@ -21,9 +21,20 @@ typedef enum {
 
 typedef decimal(30,15) FIXEDDEC, * PFIXEDDEC;
 
+/*
+#define UTF8CONST(a) (\
+#pragma convert(1252) \ 
+a \ 
+#pragma convert(0)\
+)
+*/
+
 #pragma convert(1252)
 
-#define  NULLSTR "null"
+#define  UBOUND    "UBOUND"
+#define  NULLSTR   "null"
+#define  TRUESTR   "true"
+#define  FALSESTR  "false"
 #define  REMARK    "!--"
 #define  DOCTYPE   "!DOCTYPE"
 #define  ENDREMARK "-->"
@@ -264,12 +275,6 @@ UCHAR unicode2ebcdic (USHORT c)                                      ;
 int parsehex(UCHAR c)                                                ;
 BOOL isTerm(UCHAR c, PUCHAR term);
 
-// Prototypes - segments
-void  SegmentNodeDelete(PNOXNODE pNode);
-void SegmentNodeAdd (PNOXNODE pNode)    ;
-VOID nox_SegmentDispose(PNOXSEGMENT pSeg) ;
-PNOXSEGMENT nox_SegmentSelectNo(SHORT  i)  ;
-
 
 // Prototypes  - file reader
 void initconst(int ccsid);
@@ -301,9 +306,10 @@ PNOXNODE nox_NodeClone  (PNOXNODE pSource);
 void nox_NodeMoveAndReplace (PNOXNODE  pDest, PNOXNODE pSource);
 /* ------ */
 void nox_SetDecPoint(PUCHAR p);
-void nox_SetDelimiters(PNOXDELIM pDelim);
-void nox_SetDelimiters2(PNOXDELIM pDelim);
-void nox_CloneFormat(PNOXNODE pNode, PNOXNODE pSource);
+//void nox_SetDelimiters(PNOXDELIM pDelim);
+//void nox_SetDelimiters2(PNOXDELIM pDelim);
+//void nox_CloneFormat(PNOXNODE pNode, PNOXNODE pSource);
+
 LGL nox_Has  (PNOXNODE pNode, PUCHAR Name);
 #pragma descriptor ( void nox_Has                               (void))
 
@@ -329,6 +335,9 @@ VARCHAR nox_GetNodeNameAsPath (PNOXNODE pNode, UCHAR Delimiter);
 void nox_CopyValueByNameVC (PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR pName, PLVARCHAR pDefault , BOOL joinString);
 #pragma descriptor ( void  nox_CopyValueByNameVC                (void))
 
+
+void nox_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PNOXNODE pNode);
+
 void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , PNOXNODE options);
 #pragma descriptor ( void nox_WriteXmlStmf       (void))
 
@@ -338,16 +347,10 @@ void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut,
 void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options);
 #pragma descriptor ( void nox_WriteCsvStmf      (void))
 
-PNOXNODE  nox_ParseFile (PUCHAR FileName);
-
-PNOXNODE  nox_ParseString  (PUCHAR Buf, PUCHAR Options);
-#pragma descriptor ( void nox_ParseString     (void))
-
-PNOXNODE  nox_ParseCString  (PUCHAR Buf);
-
-PNOXNODE nox_NewObject (PNOXNODE pDest);
-
-PNOXNODE nox_NewArray (PNOXNODE pDest);
+PNOXNODE  nox_ParseFile  (PUCHAR FileName);
+PNOXNODE  nox_ParseString  (PUCHAR Buf);
+PNOXNODE  nox_NewObject (void);
+PNOXNODE  nox_NewArray (void);
 
 PUCHAR   nox_GetValueByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Default);
 #pragma descriptor ( void nox_GetValueByName (void))
@@ -355,14 +358,13 @@ PUCHAR   nox_GetValueByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Default);
 PNOXNODE  nox_SetValueByName (PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETYPE type);
 #pragma descriptor ( void nox_SetValueByName (void))
 
-void   nox_AsXmlText (PLVARCHAR retVal, PNOXNODE pNode);
+void     nox_AsXmlText (PLVARCHAR retVal, PNOXNODE pNode);
 PUCHAR   nox_NodeAsXmlTextList (PNOXNODE pNode, PUCHAR temp);
 BOOL     nox_Parse (PNOXCOM pJxCom);
 LGL      nox_Error (PNOXNODE pJxNode);
 VOID     nox_SetApiErr  (PNOXNODE pJxNode , PAPIERR pApiErr );
 PUCHAR   nox_ErrStr(PNOXNODE pJxNode);
-// VARCHAR1024 nox_Msg (PNOXNODE pJxNode);
-VARCHAR1024 nox_Message (PNOXNODE pJxNode);
+void     nox_MessageVC  (PLVARCHAR pRes,PNOXNODE pJxNode);
 void     nox_Dump  (PNOXNODE pJxNode);
 void     nox_Free  (PNOXNODE pJxNode);
 PNOXNODE  nox_GetNode  (PNOXNODE pNode, PUCHAR Name) ;
@@ -375,14 +377,19 @@ PNOXNODE  nox_GetNodeParent  (PNOXNODE pNode);
 PNOXATTR nox_AttributeLookup   (PNOXNODE pNode, PUCHAR Name);
 PNOXATTR nox_NodeAddAttributeValue  (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Value);
 PNOXNODE  nox_GetNodeByName   (PNOXNODE pNode, PUCHAR Ctlstr , ... );
+
 PUCHAR   nox_GetNodeValuePtr (PNOXNODE pNode, PUCHAR DefaultValue);
 #pragma descriptor ( void nox_GetNodeValuePtr                                      (void))
-LVARCHAR  nox_GetNodeValueVC  (PNOXNODE pNode , PUCHAR DefaultValue);
+
+
+void    nox_GetNodeValueVC  (PLVARCHAR pRes, PNOXNODE pNode , PLVARCHAR DefaultValue);
 #pragma descriptor ( void nox_GetNodeValueVC                                       (void))
+
 FIXEDDEC nox_GetNodeValueNum (PNOXNODE pNode , FIXEDDEC DefaultValue);
 #pragma descriptor ( void nox_GetNodeValueNum                                      (void))
+
 PUCHAR   nox_GetNodeNamePtr  (PNOXNODE pNode);
-VARCHAR  nox_GetNodeNameVC   (PNOXNODE pNode);
+void    nox_GetNodeNameVC   (PLVARCHAR name, PNOXNODE pNode);
 
 PNOXNODE  nox_NodeAdd (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type) ;
 void     nox_NodeSet (PNOXNODE pNode , PUCHAR Value);
@@ -396,29 +403,33 @@ PNOXNODE  nox_GetOrCreateNode (PNOXNODE pNodeRoot, PUCHAR Name);
 PNOXATTR nox_GetAttrFirst     (PNOXNODE pNode);
 PNOXATTR nox_GetAttrNext      (PNOXATTR pAttr);
 PUCHAR   nox_GetAttrNamePtr   (PNOXATTR pAttr);
-VARCHAR  nox_GetAttrNameVC    (PNOXATTR pAttr);
+void     nox_GetAttrNameVC     (PLVARCHAR pRes, PNOXATTR pAttr);
+
 PUCHAR   nox_GetAttrValuePtr  (PNOXATTR pAttr);
-VARCHAR  nox_GetAttrValueVC   (PNOXATTR pAttr, PUCHAR DefaultValue);
+
+void     nox_GetAttrValueVC (PLVARCHAR pRes, PNOXATTR pAttr, PLVARCHAR pDefaultValue);
 #pragma descriptor ( void nox_GetAttrValueVC                                       (void))
+
 FIXEDDEC nox_GetAttrValueNum  (PNOXATTR pAttr, FIXEDDEC dftParm);
 #pragma descriptor ( void nox_GetAttrValueNum                                      (void))
 
 // Get Node Attribute value variants:
 PUCHAR   nox_GetNodeAttrValuePtr  (PNOXNODE pNode, PUCHAR AttrName, PUCHAR DefaultValue);
 #pragma descriptor ( void nox_GetNodeAttrValuePtr                                  (void))
-VARCHAR  nox_GetNodeAttrValueVC   (PNOXNODE pNode ,PUCHAR AttrName, PUCHAR DefaultValue);
+
+void     nox_GetNodeAttrValueVC (PLVARCHAR pRes, PNOXNODE pNode ,PLVARCHAR pAttrName, PLVARCHAR  pDefaultValue);
 #pragma descriptor ( void nox_GetNodeAttrValueVC                                   (void))
+
 FIXEDDEC nox_GetNodeAttrValueNum  (PNOXNODE pNode , PUCHAR AttrName, FIXEDDEC DefaultValue);
 #pragma descriptor ( void nox_GetNodeAttrValueNum                                  (void))
 
 VOID     nox_SetNodeAttrValue     (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Value);
-void     nox_SetCcsid(int pInputCcsid, int pOutputCcsid);
 
 // Get value variants:
 PUCHAR  nox_GetValuePtr (PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Default) ;
 #pragma descriptor ( void nox_GetValuePtr    (void))
-VOID nox_GetValueVC (PLVARCHAR retVal, PNOXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP);
 
+void nox_GetValueVC(PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR NameP, PLVARCHAR DefaultP);
 #pragma descriptor ( void nox_GetValueVC     (void))
 
 FIXEDDEC nox_GetValueNum (PNOXNODE pNode , PUCHAR Name  , FIXEDDEC dftParm);
@@ -440,12 +451,6 @@ PNOXNODE NewNode (PUCHAR Name , PUCHAR Value, NODETYPE type);
 PNOXNODE CloneNode  (PNOXNODE pSource);
 PNOXNODE NewRoot(void);
 
-void SegmentNodeAdd   (PNOXNODE pNode);
-void SegmentNodeDelete(PNOXNODE pNode);
-
-
-PNOXDELIM nox_GetDelimiters(void);
-
 PNOXNODE  nox_ArrayPush (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copy);
 #pragma descriptor ( void nox_ArrayPush      (void))
 
@@ -453,10 +458,10 @@ PNOXNODE  nox_LookupValue (PNOXNODE pDest, PUCHAR expr , BOOL16 ignorecase);
 #pragma descriptor ( void nox_LookupValue    (void))
 
 LONG     nox_getLength (PNOXNODE pNode);
-ULONG     nox_NodeCheckSum (PNOXNODE pNode);
+ULONG    nox_NodeCheckSum (PNOXNODE pNode);
 
 PNOXNODE  nox_SetStrByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Value);
-PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR Name, LGL Value);
+PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR Name, BOOL Value);
 PNOXNODE  nox_SetDecByName (PNOXNODE pNode, PUCHAR Name, FIXEDDEC Value);
 PNOXNODE  nox_SetIntByName (PNOXNODE pNode, PUCHAR Name, LONG Value);
 PNOXNODE  nox_NodeMoveInto (PNOXNODE  pDest, PUCHAR Name , PNOXNODE pSource);
@@ -557,7 +562,7 @@ typedef enum _NOX_RESULTSET {
 	 NOX_APROXIMATE_TOTALROWS = 16
 } NOX_RESULTSET, *PNOX_RESULTSET;
 
-VOID NOXM902 ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);
+VOID TRACE ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);
 
 PNOXNODE nox_sqlResultRow ( PUCHAR sqlstmt, PNOXNODE pSqlParmsP ) ;
 #pragma descriptor ( void nox_sqlResultRow   (void))

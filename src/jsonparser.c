@@ -26,8 +26,10 @@
 #include "varchar.h"
 #include "xlate.h"
 #include "parms.h"
-#include "rtvsysval.h"
-#include "mem001.h"
+// #include "rtvsysval.h"
+#include "memUtil.h"
+#include "strUtil.h"
+
 #include "noxdb.h"
 
 
@@ -200,7 +202,7 @@ PNOXNODE nox_AppendType (PNOXCOM pJxCom , PNOXNODE pCurNode , JSTATE type , PUCH
 void nox_setRootNode( PNOXNODE pNode, TOK t)
 {
 
-	PUCHAR value = (BeginsWith(t.data, NULLSTR) && t.isLiteral) ? NULL : t.data;
+	PUCHAR value = (memBeginsWith(t.data, NULLSTR) && t.isLiteral) ? NULL : t.data;
 	nox_NodeSet (pNode , value);
 	pNode->isLiteral = t.isLiteral;
 }
@@ -235,7 +237,7 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 			} else if (state == ROOT) {
 				nox_setRootNode( pCurNode, t);
 				return FALSE;
-			} else if (BeginsWith(t.data, NULLSTR) && t.isLiteral) {
+			} else if (memBeginsWith(t.data, NULLSTR) && t.isLiteral) {
 				pNewNode = nox_NodeAdd (pCurNode, RL_LAST_CHILD, name , NULL , VALUE);
 			} else {
 				pNewNode = nox_NodeAdd (pCurNode, RL_LAST_CHILD, name , t.data , VALUE);
@@ -326,7 +328,7 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 				}
 				if (key.token != COMMA)  {
 					nox_SetMessage( "Invalid token at (%d:%d) token number: %d. Was expecting an ',' but got a %s near %s"
-												, pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo, c2s(key.token), a2eStr(key.data) );
+												, pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo, c2s(key.token), stra2e(key.data) );
 					pJxCom->State = XML_EXIT_ERROR;
 					memFree (&key.data);
 					return TRUE;
@@ -345,7 +347,7 @@ BOOL nox_ParseJson(PNOXCOM pJxCom)
 
 	if (pJxCom->UseIconv) iconv_close(pJxCom->Iconv );
 	memFree(&pJxCom->Data);
-	fcloseAndSetNull(&pJxCom->File);
+	//fcloseAndSetNull(&pJxCom->File);
 
 	return (pJxCom->State == XML_EXIT_ERROR);
 

@@ -185,7 +185,7 @@
      97+   End-PR;                                                                                                          1000090
      98+                                                                                                                    1000091
      99+   //Returns node json_object tree                                                                                  1000092
-    100+   Dcl-PR json_ParseString Pointer extproc(*CWIDEN:'nox_ParseString');                                               1000093
+    100+   Dcl-PR json_ParseString Pointer extproc(*CWIDEN:'nox_ParseStringVC');                                               1000093
     101+     //String to parse                                                                                              1000094
     102+     String         Pointer    value options(*string);                                                              1000095
     103+     //Parsing options                                                                                              1000096
@@ -1732,7 +1732,7 @@
           nox_sqlGetMeta                           935
           nox_sqlConnect                           940
           nox_traceSetId                           966
-          nox_ParseString                          100
+          nox_ParseStringVC                          100
           nox_SetDecPoint                          108
           nox_GetNodeNext                          183    1064
           nox_GetNodeType                          300    1044

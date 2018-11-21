@@ -11,7 +11,7 @@
 #include <ctype.h>
 #include "ostypes.h"
 #include "apierr.h"
-#include "rtvsysval.h"
+// #include "rtvsysval.h"
 
 /* ------------------------------------------------------------- */
 PUCHAR RtvSysVal(PUCHAR sysvalvalue, PUCHAR sysvalname)

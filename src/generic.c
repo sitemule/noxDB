@@ -27,25 +27,9 @@
 #include "varchar.h"
 #include "xlate.h"
 #include "parms.h"
-#include "rtvsysval.h"
-#include "mem001.h"
+// #include "rtvsysval.h"
+#include "memUtil.h"
 #include "noxdb.h"
-
-extern int   InputCcsid , OutputCcsid;
-extern iconv_t xlateEto1208;
-extern iconv_t xlate1208toE;
-
-
-/* --------------------------------------------------------------------------- *\
-	 TODO - move to environmet
-\* --------------------------------------------------------------------------- */
-void ensureOpenXlate(void) {
-	static BOOL isOpen = false;
-	if (isOpen) return;
-	xlateEto1208 = OpenXlate(0, 1208);
-	xlate1208toE = OpenXlate(1208, 0);
-	isOpen = true;
-}
 
 /* --------------------------------------------------------------------------- */
 PUCHAR c2s(UCHAR c)
@@ -57,14 +41,6 @@ PUCHAR c2s(UCHAR c)
 		sprintf(s , "%c" , c);
 	}
 	return s;
-}
-/* ------------------------------------------------------------- */
-PUCHAR strTrim(PUCHAR s)
-{
-	PUCHAR e;
-	for(e = s + strlen(s); e > s && *e <= ' '; e--);
-	*(e+1) = '\0';
-	return (s);
 }
 /* ------------------------------------------------------------- */
 UCHAR hex (UCHAR c)
@@ -91,29 +67,6 @@ PUCHAR findchr (PUCHAR base , PUCHAR chars, SHORT charslen)
 		}
 	}
 	return NULL;
-}
-/* --------------------------------------------------------------------------- */
-LONG xlateMem  (iconv_t xid , PUCHAR out , PUCHAR in, LONG len)
-{
-	size_t buflen, outbytes, outlen, inbytesleft, outbytesleft;
-	PUCHAR outWork = out;
-	inbytesleft  = len;
-	outbytesleft = 2 * len;
-	iconv ( xid , &in , &inbytesleft, &outWork, &outbytesleft);
-	outlen = outWork - out;;
-	out[outlen] = '\0';
-	return outlen;
-}
-/* --------------------------------------------------------------------------- */
-void xlatecpy( PNOXCOM pJxCom ,PUCHAR out , PUCHAR in  , LONG len)
-{
-	size_t buflen, before, inbytesleft, outbytesleft;
-
-	if ( pJxCom->UseIconv) {
-		xlateMem ( pJxCom->Iconv, out, in , len);
-	} else {
-		memcpy (out , in , len);
-	}
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
@@ -267,7 +220,7 @@ UCHAR unicode2ebcdic (USHORT c)
 
 	 // if  (ic.cd  == NULL) ic = OpenXlate (13488, 0);
 	 if (doOpen) {
-		 ic = OpenXlate (1200  , 0 );
+		 ic = XlateOpen(1200  , 0 );
 		 doOpen = FALSE;
 	 }
 	 outbytesleft = 1  ;
@@ -288,7 +241,7 @@ int unicode2utf8 (PUCHAR out, USHORT c)
 
 	// if  (ic.cd  == NULL) ic = OpenXlate (13488, 0);
 	if (doOpen) {
-		ic = OpenXlate (1200  , 1208);
+		ic = XlateOpen (1200  , 1208);
 		doOpen = FALSE;
 	}
 	outbytesleft = 2  ;

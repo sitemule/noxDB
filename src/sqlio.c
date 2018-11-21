@@ -30,7 +30,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #include "minmax.h"
 #include "parms.h"
 #include "noxdb.h"
-#include "mem001.h"
+#include "memUtil.h"
 #include "timestamp.h"
 
 // Globlas: TODO !!! remove to make code reintrant
@@ -305,7 +305,7 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PNOXNODE parms)
 	}
 
 	if (OFF == nox_isNode (parms)) {
-	pParms =  nox_ParseString((PUCHAR) parms, NULL);
+		pParms =  nox_ParseString((PUCHAR) parms);
 	}
 
 	while (*in) {
@@ -565,7 +565,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 	||   pSQL->rc == SQL_SUCCESS_WITH_INFO ) {
 		jxError = false;
 
-		pRow = nox_NewObject(NULL);
+		pRow = nox_NewObject();
 
 		for (i = 0; i < pSQL->nresultcols; i++) {
 
@@ -666,7 +666,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 						// Predicts json data i columns
 						if (pConnection->options.autoParseContent == ON) {
 							if (*p == BRABEG || *p == CURBEG) {
-							PNOXNODE pNode = nox_ParseString(p, NULL);
+							PNOXNODE pNode = nox_ParseString(p);
 							if (pNode) {
 								nox_NodeRename(pNode, pCol->colname);
 								nox_NodeAddChildTail (pRow, pNode);
@@ -810,7 +810,7 @@ PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
 
 	if (pSQL == NULL) return(NULL);
 
-	pFields  = nox_NewArray(NULL);
+	pFields  = nox_NewArray();
 
 	/*****  need to be done before the cursor is closed !!
 
@@ -823,7 +823,7 @@ PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
 	******/
 
 	for (i = 1; i <= pSQL->nresultcols; i++) {
-		PNOXNODE pField  = nox_NewObject (NULL);
+		PNOXNODE pField  = nox_NewObject ();
 		PNOXCOL  pCol     = &pSQL->cols[i-1];
 		PUCHAR  type = "string";
 		UCHAR   temp [256];
@@ -1015,7 +1015,7 @@ PNOXNODE nox_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG format
 	LONG    limit     = (pParms->OpDescList->NbrOfParms >= 3) ? limitP     : -1; // All row
 	LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;  // Arrray only
 	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 5) ? pSqlParmsP : NULL;
-	PNOXNODE pRows     = nox_NewArray(NULL);
+	PNOXNODE pRows     = nox_NewArray();
 	PNOXNODE pRow      ;
 	PNOXNODE pResult;
 	PNOXSQL  pSQL;
@@ -1043,8 +1043,8 @@ PNOXNODE nox_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG format
 	// need a object as return value
 	if (format & (NOX_META | NOX_FIELDS | NOX_TOTALROWS | NOX_APROXIMATE_TOTALROWS)) {
 		PNOXNODE pMeta;
-		pResult  = nox_NewObject(NULL);
-		pMeta    = nox_NewObject(NULL);
+		pResult  = nox_NewObject();
+		pMeta    = nox_NewObject();
 		nox_SetValueByName(pResult  , "success" , "true" , LITERAL);
 		nox_SetValueByName(pResult , "root"    , "rows" , VALUE);
 		if (format & NOX_FIELDS ) {
@@ -1339,7 +1339,7 @@ void nox_traceOpen (PNOXSQLCONNECT pCon)
 	PUCHAR insertStmt = "insert into sqltrace (STSTART,STEND,STSQLSTATE,STTEXT,STJOB,STTRID,STSQLSTMT) "
 						"values (?,?,?,?,?,?,?)";
 
-	NOXM902 ( pTrc->lib , &pTrc->doTrace , pTrc->job);
+	TRACE ( pTrc->lib , &pTrc->doTrace , pTrc->job);
 	if (pTrc->doTrace == OFF) return;
 	createTracetable(pCon);
 	rc = SQLAllocStmt(pCon->hdbc, &pTrc->handle);
@@ -1603,12 +1603,12 @@ LGL nox_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PNOXNODE pRowP , PUCHAR 
 
 	SQLSMALLINT   length;
 	SQLRETURN     rc;
-	PNOXSQL        pSQL     = nox_sqlNewStatement (NULL, true, false);
-	PNOXSQL        pSQLmeta;
+	PNOXSQL       pSQL     = nox_sqlNewStatement (NULL, true, false);
+	PNOXSQL       pSQLmeta;
 	SQLCHUNK      sqlChunk[32];
 	SHORT         sqlChunkIx =0;
 	PUCHAR        sqlNullPtr = NULL;
-	PNOXNODE       pRow = nox_ParseString((PUCHAR) pRowP, NULL);
+	PNOXNODE      pRow = nox_ParseString((PUCHAR) pRowP);
 	LGL err = ON; // assume error
 
 
@@ -1646,7 +1646,7 @@ LGL nox_sqlUpdate (PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlP
 	UCHAR  whereStr [1024];
 	str2upper(table , table);
 	for(; *where == ' ' ; where++); // skip leading blanks
-	if (*where > ' ' && ! BeginsWith(where, "where")) {
+	if (*where > ' ' && ! memBeginsWith(where, "where")) {
 		sprintf (whereStr , "where %s" , where);
 		where = whereStr;
 	}
@@ -1715,7 +1715,7 @@ void nox_sqlSetOptions (PNOXNODE pOptionsP)
 	if (ON == nox_isNode(pOptionsP)) {
 		pConnection->pOptions = pOptionsP;
 	} else if (pOptionsP != NULL) {
-		pConnection->pOptions = nox_ParseString ((PUCHAR) pOptionsP , NULL);
+		pConnection->pOptions = nox_ParseString ((PUCHAR) pOptionsP);
 		pConnection->pOptionsCleanup = true;
 	}
 
@@ -1728,22 +1728,22 @@ void nox_sqlSetOptions (PNOXNODE pOptionsP)
 		value = nox_GetNodeValuePtr  (pNode , NULL);
 
 		// Is header overriden by userprogram ?
-		if (BeginsWith(name , "upperCaseColName")) {
+		if (memBeginsWith(name , "upperCaseColName")) {
 			po->upperCaseColName = *value == 't'? ON:OFF; // for true
 		}
-		else if (BeginsWith(name , "autoParseContent")) {
+		else if (memBeginsWith(name , "autoParseContent")) {
 			po->autoParseContent = *value == 't' ? ON:OFF; // for true
 		}
-		else if (BeginsWith(name , "DecimalPoint")) {
+		else if (memBeginsWith(name , "DecimalPoint")) {
 			po->DecimalPoint = *value;
 		}
-		else if (BeginsWith(name , "sqlNaming")) {
+		else if (memBeginsWith(name , "sqlNaming")) {
 			po->sqlNaming = *value == 't' ? ON:OFF; // for true
 			attrParm = po->sqlNaming == OFF; // sysname is invers of SQL naming :(
 			rc = SQLSetConnectAttr     (pConnection->hdbc , SQL_ATTR_DBC_SYS_NAMING, &attrParm  , 0);
 		}
 		// NOTE !! hexSort can only be set at environlevel - befor connect time !!!
-		// else if (BeginsWith(name , "hexSort")) {
+		// else if (memBeginsWith(name , "hexSort")) {
 		//   po->hexSort = *value == 't' ? ON:OFF; // for true
 		//}
 		if (rc  != SQL_SUCCESS ) {

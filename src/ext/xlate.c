@@ -22,14 +22,10 @@
 
 
 /* ------------------------------------------------------------- */
-PXLATEDESC XlateXdOpen (int FromCCSID, int ToCCSID)
+iconv_t XlateOpen (int FromCCSID, int ToCCSID)
 {
-   PXLATEDESC pXd = malloc(sizeof(XLATEDESC));
    QtqCode_T To;
    QtqCode_T From;
-
-   pXd->FromCCSID = FromCCSID ;
-   pXd->ToCCSID   = ToCCSID;
 
    memset(&From , 0, sizeof(From));
    From.CCSID = FromCCSID;
@@ -48,7 +44,18 @@ PXLATEDESC XlateXdOpen (int FromCCSID, int ToCCSID)
    To.mx_error_option = 0;
 
    // Get descriptor
-   pXd->Iconv = QtqIconvOpen( &To, &From);
+   return QtqIconvOpen( &To, &From);
+}
+/* ------------------------------------------------------------- */
+PXLATEDESC XlateXdOpen (int FromCCSID, int ToCCSID)
+{
+   PXLATEDESC pXd = malloc(sizeof(XLATEDESC));
+  
+   pXd->FromCCSID = FromCCSID ;
+   pXd->ToCCSID   = ToCCSID;
+
+   // Get descriptor
+   pXd->Iconv = XlateOpen (FromCCSID, ToCCSID);
    pXd->Open = (pXd->Iconv.return_value != -1);
    if (! pXd->Open) {
       free (pXd);

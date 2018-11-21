@@ -26,33 +26,27 @@
 #include "varchar.h"
 #include "xlate.h"
 #include "parms.h"
-#include "rtvsysval.h"
+// #include "rtvsysval.h"
 #include "strUtil.h"
-#include "mem001.h"
+#include "memUtil.h"
 #include "streamer.h"
 #include "noxdb.h"
+#include "e2aa2e.h"
 
-// Prototypes --
-//PNOXNODE nox_ParseString(PUCHAR Buf, PUCHAR pOptions);
-
-// Global
+// Global thread vars
 __thread UCHAR jxMessage[512];
 __thread BOOL  jxError = false;
 
-
 //  BOOL  skipBlanks = TRUE;
 __thread BOOL  doTrim;
-
 __thread PNOXCOM pJxCom;
 __thread BOOL   debugger = false;
 __thread UCHAR  nox_DecPoint = '.';
 
-UCHAR  e2aTbl[256];
-UCHAR  a2eTbl[256];
-iconv_t xlateEto1208;
-iconv_t xlate1208toE;
-
-
+// iconv_t xlateEto1208;
+// iconv_t xlate1208toE;
+static INT64 LVARCHARNULL =0;
+static PLVARCHAR PLVARCHARNULL = (PLVARCHAR) &LVARCHARNULL;
 
 
 // --------------------------------------------------------------------------- 
@@ -73,8 +67,6 @@ void  freeNodeValue(PNOXNODE pNode)
 		memFree(&pNode->Value );
 	}
 }
-/* ------------------------------------------------------------- */
-//void dummy01(){}
 /* ------------------------------------------------------------- */
 PNOXNODE nox_traceNode (PUCHAR text, PNOXNODE pNode)
 {
@@ -203,11 +195,11 @@ static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 		c = *(in);
 		if (c == AMP) {
 			PUCHAR kwd = in+1;
-			if       (BeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
-			else if  (BeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
-			else if  (BeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
-			else if  (BeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
-			else if  (BeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
+			if       (memBeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
+			else if  (memBeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
+			else if  (memBeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
+			else if  (memBeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
+			else if  (memBeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
 			else if  (in[1] == HASH) {
 				int n = 0;
 				in += 2; // Skip the '&#'
@@ -368,7 +360,7 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
 		if (*subword(key, fields, kix , ",") == '\0') break;
 		subword(keys[kix], key, 0 , ":");
 		subword(descStr  , key, 1 , ":");
-		descending[kix] = BeginsWith(descStr , "desc");
+		descending[kix] = memBeginsWith(descStr , "desc");
 	}
 
 	do {
@@ -502,7 +494,7 @@ ULONG nox_NodeCheckSum (PNOXNODE pNode)
 }
 // ---------------------------------------------------------------------------
 #pragma convert(1252)
-static void nox_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PNOXNODE pNode)
+void nox_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PNOXNODE pNode)
 {
 	PNOXNODE  pNodeTemp, pNodeNext;
 	PNOXATTR pAttrTemp;
@@ -673,7 +665,7 @@ VARCHAR nox_GetNodeNameAsPath (PNOXNODE pNode, UCHAR Delimiter)
 				*pBuf = Delimiter;
 			}
 
-			len = memLength(p->Name);
+			len = memSize(p->Name);
 			pBuf -= len ;
 			memcpy(pBuf,p->Name, len);
 		}
@@ -683,121 +675,6 @@ VARCHAR nox_GetNodeNameAsPath (PNOXNODE pNode, UCHAR Delimiter)
 	res.Length = pBufEnd - pBuf;
 	substr(res.String , pBuf , res.Length );
 	return res;
-}
-// --------------------------------------------------------------------------- 
-// CSV Helpers
-// --------------------------------------------------------------------------- 
-void csvReplaceDecpoint ( PUCHAR out , PUCHAR in , UCHAR decpoint)
-{
-	for(;*in; in++) {
-		*out++ = (*in == '.') ? decpoint: *in;
-	}
-	*out = '\0';
-}
-// --------------------------------------------------------------------------- 
-void csvStringEscape (PUCHAR out, PUCHAR in)
-{
-
-	*out++ = '"';
-	while(*in) {
-		if (*in == '"') *out++ = '"';
-		*out++ = *in++;
-	}
-	*out++ = '"';
-	*out = '\0';
-}
-// --------------------------------------------------------------------------- 
-void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options)
-{
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	JWRITE jWrite;
-	PJWRITE pjWrite = &jWrite;
-	UCHAR  mode[32];
-	UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
-	UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
-	UCHAR  CrLf []= {0x0d, 0x0a , 0x00};
-	UCHAR  wTemp[100000];
-	UCHAR  temp [32766];
-	UCHAR  comma    = ';';
-	UCHAR  decpoint = '.';
-	BOOL   headers  = false;
-
-	if (pNode == NULL) return;
-	memset(pjWrite , 0 , sizeof(jWrite));
-
-	sprintf(mode , "wb,codepage=%d", Ccsid);
-	pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
-	if (pjWrite->outFile == NULL) return;
-
-	if (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 5) {
-		PNOXNODE  pOptions  = nox_ParseCString((PUCHAR) options ); // When already a object: simply returns that
-		comma    = *nox_GetValuePtr    (pOptions , "delimiter" , &comma );
-		decpoint = *nox_GetValuePtr    (pOptions , "decPoint"  , &decpoint );
-		headers  = (ON == nox_IsTrue   (pOptions , "headers"));
-		if (pOptions != options) nox_Close(&pOptions); // It was already a josn object , then don't close
-	}
-
-	pjWrite->buf    = wTemp;
-	pjWrite->iconv  = OpenXlate(1208 , Ccsid );
-
-	switch(Ccsid) {
-		case 1208 :
-			fputs (sigUtf8 , pjWrite->outFile);
-			break;
-		case 1200 :
-			fputs (sigUtf16 , pjWrite->outFile);
-			break;
-	}
-
-	if ( pNode == NULL || pNode->pNodeChildHead  == NULL) return;
-
-	// Arrays - need first child;
-	pNode = pNode->pNodeChildHead;
-
-	// Need the headers as first row;
-	if (headers) {
-		PNOXNODE pHead  = pNode->pNodeChildHead;
-		while (pHead) {
-			csvStringEscape (temp , pHead->Name);
-			iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);
-			pHead  = pHead->pNodeSibling;
-			if (pHead) iconvPutc(pjWrite->outFile , &pjWrite->iconv, comma);
-		}
-		// newline
-		fwrite (CrLf , 1 , 2 , pjWrite->outFile);
-	}
-
-	while (pNode) {
-
-		PNOXNODE pCol  = pNode->pNodeChildHead;
-
-		while (pCol) {
-
-			if (pCol->Value) {
-
-				if (pCol->isLiteral) {
-					if (decpoint == '.') {
-						iconvWrite(pjWrite->outFile ,&pjWrite->iconv, pCol->Value, FALSE);
-					} else {
-						csvReplaceDecpoint (temp , pCol->Value , decpoint);
-						iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);
-					}
-				} else {
-					csvStringEscape (temp , pCol->Value);
-					iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);
-				}
-			}
-			pCol  = pCol->pNodeSibling;
-			if ( pCol) iconvPutc(pjWrite->outFile , &pjWrite->iconv, comma);
-		}
-		// newline
-		fwrite (CrLf , 1 , 2 , pjWrite->outFile);
-		pNode = pNode->pNodeSibling;
-
-	}
-
-	fclose(pjWrite->outFile);
-	iconv_close(pjWrite->iconv);
 }
 /* --------------------------------------------------------------------------- */
 SHORT nox_GetNodeType (PNOXNODE pNode)
@@ -813,6 +690,7 @@ void nox_NodeCloneAndReplace (PNOXNODE pDest , PNOXNODE pSource)
 // ---------------------------------------------------------------------------
 //	 This works great, have to go back and update the "cloneFormat" logic to do similar
 // --------------------------------------------------------------------------- 
+#pragma convert(1252)
 void  nox_MergeList (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, PUCHAR name, PNOXNODE pParent, MERGEOPTION merge)
 {
 	PNOXNODE  p;
@@ -857,6 +735,7 @@ void  nox_MergeList (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, PUCHAR n
 		pSource = pSource->pNodeSibling;
 	}
 }
+#pragma convert(1252)
 /* --------------------------------------------------------------------------- */
 PNOXNODE  nox_InsertByName (PNOXNODE pDest , PUCHAR name , PNOXNODE pSource )
 {
@@ -870,6 +749,11 @@ PNOXNODE  nox_InsertByName (PNOXNODE pDest , PUCHAR name , PNOXNODE pSource )
 		pNode->isLiteral = pSource->isLiteral;
 	}
 	return pNode;
+}
+/* --------------------------------------------------------------------------- */
+PNOXNODE  nox_InsertByNameVC (PNOXNODE pDest , PLVARCHAR name , PNOXNODE pSource )
+{
+	return nox_InsertByName (pDest , plvc2str(name), pSource );
 }
 /* --------------------------------------------------------------------------- */
 PNOXNODE  nox_CopyValue (PNOXNODE pDest , PUCHAR destName , PNOXNODE pSource , PUCHAR sourceName)
@@ -891,6 +775,11 @@ PNOXNODE  nox_CopyValue (PNOXNODE pDest , PUCHAR destName , PNOXNODE pSource , P
 	}
 
 	return pDest ;
+}
+/* --------------------------------------------------------------------------- */
+PNOXNODE  nox_CopyValueVC (PNOXNODE pDest , PLVARCHAR destName , PNOXNODE pSource , PLVARCHAR sourceName)
+{
+	return nox_CopyValue (pDest , plvc2str(destName) , pSource , plvc2str(sourceName));
 }
 /* --------------------------------------------------------------------------- */
 static void  nox_MergeObj  (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, MERGEOPTION merge)
@@ -985,75 +874,6 @@ void  nox_NodeSanitize(PNOXNODE pNode)
 		}
 		pNode = pNext;
 	}
-}
-// ---------------------------------------------------------------------------
-void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , PNOXNODE options)
-{
-	FILE * f;
-	iconv_t Iconv;
-	UCHAR mode[32];
-	PUCHAR enc;
-	PUCHAR sig;
-	UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
-	UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PUCHAR  value;
-	PUCHAR  dft;
-	VARCHAR res;
-
-	doTrim = (pParms->OpDescList &&  pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
-
-	if (pNode == NULL) return;
-
-	if (pNode->pNodeParent == NULL
-	&&  pNode->Name       == NULL) {
-		if (pNode->pNodeChildHead != NULL) {
-			// TODO!! This root Nodeens empty in some case; the first child is actually the root
-			pNode = pNode->pNodeChildHead;
-		}
-	}
-	if (pNode == NULL) return;
-
-	// TODO!! need unlink to replace !!
-	sprintf(mode , "wb,codepage=%d", Ccsid);
-	f = fopen ( strTrim(FileName) , mode );
-	if (f == NULL) return;
-
-	Iconv = OpenXlate(1208 , Ccsid );
-
-	#pragma convert(1252)
-	switch(Ccsid) {
-		case 1252 :
-			enc = "WINDOWS-1252";
-			sig = "";
-			break;
-		case 1208 :
-			enc = "UTF-8";
-			sig = sigUtf8;
-			break;
-		case 1200 :
-			enc = "UTF-16";
-			sig = sigUtf16;
-			break;
-		case 819  :
-			enc = "ISO-8859-1";
-			sig = "";
-			break;
-		default   :
-			enc = "windows-1252";
-			sig = "";
-	}
-
-	fputs (sig , f);
-	fputs ("<?xml version=\"1.0\" encoding=\"", f);
-	fputs (enc, f);
-	fputs ("\" ?>", f);
-
-
-	#pragma convert(0)
-	nox_WriteXmlStmfNodeList (f , &Iconv , pNode);
-	fclose(f);
-	iconv_close(Iconv);
 }
 // ---------------------------------------------------------------------------
 void nox_Dump(PNOXNODE  pNode)
@@ -1151,9 +971,9 @@ PUCHAR detectEncoding(PNOXCOM pJxCom, PUCHAR pIn)
 				// For other codepages than 277
 				if (*p == BRABEG || *p == CurBeg || *p == Quot || *p == Apos
 				||  isdigit(*p)
-				||  BeginsWith(p , "true" )
-				||  BeginsWith(p , "false")
-				||  BeginsWith(p , "null" )) {
+				||  memBeginsWith(p , "true" )
+				||  memBeginsWith(p , "false")
+				||  memBeginsWith(p , "null" )) {
 					 pJxCom->isJson = TRUE;
 					 done = TRUE;
 					 break;
@@ -1286,14 +1106,12 @@ static PNOXNODE DupNode(PNOXNODE pSource)
 
 	// Dupling a nodex which is a string simply kicks in the parser
 	if (pSource->signature != NODESIG) {
-		pNode = nox_ParseCString((PUCHAR) pSource);
+		pNode = nox_ParseString((PUCHAR) pSource);
 		return pNode;
 	}
 
 	pNode = (PNOXNODE) memAlloc (sizeof(*pNode));
 	memcpy  (pNode , pSource, sizeof(*pNode));
-
-	SegmentNodeAdd(pNode);
 
 	pNode->pAttrList  = NULL;
 	pNode->pNodeParent = pNode->pNodeChildHead = pNode->pNodeChildTail = pNode->pNodeSibling = NULL;
@@ -1451,6 +1269,11 @@ PNOXNODE nox_NodeMoveInto (PNOXNODE  pDest, PUCHAR name , PNOXNODE pSource)
 
 }
 // ---------------------------------------------------------------------------
+PNOXNODE nox_NodeMoveIntoVC (PNOXNODE  pDest, PLVARCHAR  name , PNOXNODE pSource)
+{
+	return nox_NodeMoveInto (pDest, plvc2str (name) ,  pSource);
+}
+// ---------------------------------------------------------------------------
 void nox_NodeMoveAndReplace (PNOXNODE  pDest, PNOXNODE pSource)
 {
 	if (pDest == pSource
@@ -1588,22 +1411,14 @@ PNOXNODE nox_NodeAdd (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value,
 	return pNewNode;
 }
 // ---------------------------------------------------------------------------
-PNOXNODE nox_NewObject (PNOXNODE pDest)
+PNOXNODE nox_NewObject ()
 {
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PNOXNODE pParent = pDest == NULL || pParms->OpDescList->NbrOfParms == 0 ? NULL:pDest;
-
-	return nox_NodeAdd (pParent, RL_LAST_CHILD, NULL  , NULL , OBJECT);
-
+	return NewNode  (NULL , NULL,  OBJECT);
 }
 // ---------------------------------------------------------------------------
-PNOXNODE nox_NewArray (PNOXNODE pDest)
+PNOXNODE nox_NewArray ()
 {
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PNOXNODE pParent = pDest == NULL || pParms->OpDescList->NbrOfParms == 0 ? NULL:pDest;
-
-	return nox_NodeAdd (pParent, RL_LAST_CHILD, NULL  , NULL , ARRAY);
-
+	return NewNode  (NULL , NULL,  ARRAY);
 }
 // ---------------------------------------------------------------------------
 void nox_NodeSet (PNOXNODE pNode , PUCHAR Value)
@@ -1620,6 +1435,11 @@ void nox_NodeSet (PNOXNODE pNode , PUCHAR Value)
 	if (Value) {
 		pNode->Value = memStrDup(Value);
 	}
+}
+// ---------------------------------------------------------------------------
+void nox_NodeSetVC (PNOXNODE pNode , PLVARCHAR Value)
+{
+	nox_NodeSet (pNode , plvc2str(Value));
 }
 // ---------------------------------------------------------------------------
 void nox_NodeSetAsPointer (PNOXNODE pNode , PUCHAR Value)
@@ -1696,7 +1516,7 @@ PNOXDELIM nox_GetDelimiters(void)
 }
 */
 // ---------------------------------------------------------------------------
-PNOXNODE nox_ParseCString(PUCHAR Buf)
+PNOXNODE nox_ParseString(PUCHAR Buf)
 {
 	PNOXNODE pRoot;
 	PNOXCOM  pJxCom;
@@ -1733,9 +1553,9 @@ PNOXNODE nox_ParseCString(PUCHAR Buf)
 	return (pRoot);
 }
 // ---------------------------------------------------------------------------
-PNOXNODE nox_ParseLVC(PLVARCHAR buf)
+PNOXNODE nox_ParseStringVC(PLVARCHAR buf)
 {
-	return nox_ParseCString ( plvc2str (buf));
+	return nox_ParseString ( plvc2str (buf));
 }
 // ---------------------------------------------------------------------------
 PNOXNODE nox_ParseFile(PUCHAR FileName)
@@ -1780,7 +1600,7 @@ PNOXNODE nox_ParseFile(PUCHAR FileName)
 
 	// make it a string
 	streamBuf[len] = '\0';
-	pRoot = nox_ParseCString(streamBuf);
+	pRoot = nox_ParseString(streamBuf);
 	memFree (&streamBuf);
 
 	return (pRoot);
@@ -1808,6 +1628,7 @@ PNOXNODE  nox_GetRoot (PNOXNODE pNode)
 	return ( pNode);
 }
 /* --------------------------------------------------------------------------- */
+#pragma convert(1252)
 PNOXNODE nox_lookupByXpath (PNOXNODE pRootNode, PUCHAR * ppName)
 {
 	PUCHAR  Name = * ppName;
@@ -1871,6 +1692,7 @@ PNOXNODE nox_lookupByXpath (PNOXNODE pRootNode, PUCHAR * ppName)
 	return NULL;
 
 }
+#pragma convert(0)
 /* --------------------------------------------------------------------------- */
 PUCHAR nox_NodeName (PNOXNODE pNode,BOOL SkipNameSpace)
 {
@@ -1889,6 +1711,12 @@ PUCHAR nox_NodeName (PNOXNODE pNode,BOOL SkipNameSpace)
 	}
 	return p;
 }
+/* --------------------------------------------------------------------------- */
+nox_NodeNameVC (PLVARCHAR name, PNOXNODE pNode,BOOL SkipNameSpace)
+{
+	str2plvc(name , nox_NodeName (pNode,SkipNameSpace));
+}
+
 /* --------------------------------------------------------------------------- */
 PNOXNODE  nox_FindNodeAtIndex(PNOXNODE pNode , PUCHAR Key , int index , BOOL SkipNameSpace)
 {
@@ -2172,8 +2000,8 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
 			BOOL   SkipNameSpace;
 			nox_GetKeyFromName (tempKey , &SkipNameSpace , refName);
 
-
-			if (memicmp (pName , "UBOUND" , 6) == 0) {
+			
+			if (memicmp (pName , UBOUND , 6) == 0) {
 				return nox_CalculateUbound(refNode, tempKey, SkipNameSpace);
 			}
 
@@ -2225,7 +2053,7 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
 	 --------------------------------------------------------------------------- */
 PNOXNODE nox_GetNodeVC  (PNOXNODE pNode, PLVARCHAR pName)
 {
-	return nox_GetNodeVC (pNode , lvc2str(pName));
+	return nox_GetNode (pNode , plvc2str(pName));
 }
 /* ------------------------------------------------------------- */
 LGL nox_Has  (PNOXNODE pNode, PUCHAR Name)
@@ -2234,13 +2062,13 @@ LGL nox_Has  (PNOXNODE pNode, PUCHAR Name)
 	if (p == NULL) return OFF;
 	if (p->type == VALUE) {
 		if (p->Value == NULL) return OFF;
-		if (p->isLiteral && BeginsWith(p->Value, "null")) return OFF;
+		if (p->isLiteral && memBeginsWith(p->Value, "null")) return OFF;
 	}
 	return (ON );
 }
 LGL nox_HasVC  (PNOXNODE pNode, PLVARCHAR  pName)
 {
-	return LGL nox_Has  (pNode, lvc2str(pName));
+	return nox_Has  (pNode, plvc2str(pName));
 }
 /* ------------------------------------------------------------- */
 LGL nox_IsTrue  (PNOXNODE pNode, PUCHAR Name)
@@ -2251,13 +2079,13 @@ LGL nox_IsTrue  (PNOXNODE pNode, PUCHAR Name)
 		if (p->Value == NULL)  return OFF;
 		if (p->Value[0] == 0 ) return OFF;
 		if (p->Value[0] == '0' && p->Value[1] == 0 )  return OFF;
-		if (p->isLiteral && BeginsWith(p->Value, "false")) return OFF;
+		if (p->isLiteral && memBeginsWith(p->Value, "false")) return OFF;
 	}
 	return (ON );
 }
 LGL nox_IsTrueVC  (PNOXNODE pNode, PLVARCHAR  pName)
 {
-	return LGL nox_IsTrue  (pNode, lvc2str(pName));
+	return nox_IsTrue  (pNode, plvc2str(pName));
 }
 /* ------------------------------------------------------------- */
 LGL nox_IsNull  (PNOXNODE pNode, PUCHAR Name)
@@ -2271,9 +2099,8 @@ LGL nox_IsNull  (PNOXNODE pNode, PUCHAR Name)
 }
 LGL nox_IsNullVC  (PNOXNODE pNode, PLVARCHAR  pName)
 {
-	return LGL nox_IsNull  (pNode, lvc2str(pName));
+	return nox_IsNull  (pNode, plvc2str(pName));
 }
-
 /* ------------------------------------------------------------- */
 LGL nox_isNode  (PNOXNODE pNode)
 {
@@ -2307,6 +2134,10 @@ PNOXATTR nox_AttributeLookup   (PNOXNODE pNode, PUCHAR Name)
 		pAttr = pAttr->pAttrSibling;
 	}
 	return (NULL);
+}
+PNOXATTR nox_AttributeLookupVC   (PNOXNODE pNode, PLVARCHAR Name)
+{
+	return nox_AttributeLookup   (pNode, plvc2str(Name));
 }
 /* -------------------------------------------------------------
 	 returns the value of the node
@@ -2448,7 +2279,7 @@ static void nox_joinArray2vc (PLVARCHAR pRes , PNOXNODE pNode)
 	while (p) {
 		PUCHAR v = p->Value;
 		if (v  && *v) {
-			lvccatstr(pRes , v);
+			plvccatstr(pRes , v);
 		}
 		p = p->pNodeSibling;
 	}
@@ -2488,7 +2319,7 @@ void nox_CopyValueByNameVC (PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR pName,
 	PUCHAR    Name = plvc2str(pName);
 
 	// Assume : Not found
-	lvcCopy (pRes , pDefault);
+	plvccopy (pRes , pDefault);
 
 	if (pNodeRoot == NULL) return;
 
@@ -2501,7 +2332,7 @@ void nox_CopyValueByNameVC (PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR pName,
 		pAtr =  nox_AttributeLookup   (pNode, pAtrKey);
 		if (pAtr == NULL)        return;
 		if (pAtr->Value == NULL) return;
-		str2lvc(pRes , pAtr->Value);
+		str2plvc(pRes , pAtr->Value);
 
 	} else if (pNode->doCount) {
 		vcprintf( pRes, "%ld" , pNode->Count);
@@ -2516,11 +2347,28 @@ void nox_CopyValueByNameVC (PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR pName,
 		nox_AsJsonText (pRes, pNode );
 
 	} else if (pNode->Value) {
-		pRes->Length = memLength(pNode->Value)
-		memcpy(pRes->String, pNode->Value);
+		pRes->Length = memSize(pNode->Value);
+		memcpy(pRes->String, pNode->Value, pRes->Length);
 	}
 }
 #pragma convert(0)
+/* ---------------------------------------------------------------------------
+   Obsolete- use MergeObjects, but still used by nox_SetByParseString !! TODO !!
+   --------------------------------------------------------------------------- */
+void nox_NodeMerge(PNOXNODE pDest, PNOXNODE pSource, SHORT replace)
+{
+  JWRITE jWrite;
+  MERGEOPTION merge;
+  switch (replace) {
+     case true :  merge = MO_MERGE_REPLACE; break;
+     case false:  merge = MO_MERGE_NEW    ; break;
+     default   :  merge = replace;
+  }
+  memset(&jWrite , 0 , sizeof(jWrite));
+  if (pDest == NULL || pSource == NULL  || pSource->pNodeChildHead == NULL) return;
+  // jx_MergeList(pDest, pSource->pNodeChildHead, &jWrite, "", pSource, merge);
+  nox_MergeObj (pDest, pSource, &jWrite, merge);
+}
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
 #pragma convert(1252)
@@ -2532,10 +2380,10 @@ void  nox_SetByParseString (PNOXNODE pDest , PUCHAR pSourceStr , MERGEOPTION mer
 	// quick trim
 	for (;*firstNonBlank == ' '; firstNonBlank++);
 
-	// TODO :  nox_ParseString returns object for any string which is an error; now dont use
+	// TODO :  nox_ParseStringVC returns object for any string which is an error; now dont use
 	// the paser if it is not an OBJECT or ARRAY
 	if ( *firstNonBlank == BRABEG ||  *firstNonBlank == CURBEG) {
-		pSource = nox_ParseCString( firstNonBlank);
+		pSource = nox_ParseString( firstNonBlank);
 	}
 
 	if (pSource) {
@@ -2556,9 +2404,9 @@ void  nox_SetByParseString (PNOXNODE pDest , PUCHAR pSourceStr , MERGEOPTION mer
 		nox_NodeSet (pDest  , pSourceStr);
 		pDest->type      = VALUE;
 		pDest->isLiteral =  // isdigit (*pSourceStr)  !! No !! the "123 - John" is not a number
-				strcmp(pSourceStr ,"true") == 0
-			|| strcmp(pSourceStr ,"false") == 0
-			|| strcmp(pSourceStr ,"null") == 0;
+				strcmp(pSourceStr ,TRUESTR) == 0
+			|| strcmp(pSourceStr ,FALSESTR) == 0
+			|| strcmp(pSourceStr ,NULLSTR) == 0;
 	}
 }
 #pragma convert(0)
@@ -2575,10 +2423,10 @@ PNOXNODE  nox_ArrayPush (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
 	// TODO - rather have NULL as value, that literal null,
 	// But this requires to check the serialized .....
 	// pNewNode  = NewNode  (NULL  , NULL , VALUE);
-		pNewNode  = NewNode  (NULL  , "null" , LITERAL);
+		pNewNode  = NewNode  (NULL  , NULLSTR , LITERAL);
 	} else if (pSource->signature != NODESIG) {
 		if (*(PUCHAR) pSource == BRABEG || *(PUCHAR) pSource == CURBEG ) {
-			pNewNode = nox_ParseCString((PUCHAR) pSource);
+			pNewNode = nox_ParseString((PUCHAR) pSource);
 		} else {
 			pNewNode  = NewNode  (NULL  , (PUCHAR) pSource , VALUE);
 		}
@@ -2604,10 +2452,10 @@ PNOXNODE  nox_ArrayAppend  (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
 	// TODO - rather have NULL as value, that literal null,
 	// But this requires to check the serialized .....
 	// pNewNode  = NewNode  (NULL  , NULL , VALUE);
-		pNewNode  = NewNode  (NULL  , "null" , LITERAL);
+		pNewNode  = NewNode  (NULL  , NULLSTR , LITERAL);
 	} else if (pSource->signature != NODESIG) {
 		if (*(PUCHAR) pSource == BRABEG || *(PUCHAR) pSource == CURBEG ) {
-			pNewNode = nox_ParseCString((PUCHAR) pSource);
+			pNewNode = nox_ParseString((PUCHAR) pSource);
 		} else {
 			pNewNode  = NewNode  (NULL  , (PUCHAR) pSource , VALUE);
 		}
@@ -2642,14 +2490,14 @@ PNOXNODE  nox_ArraySlice   (PNOXNODE pSource , int from , int to, BOOL16 copyP)
 
 	if (pSource->signature != NODESIG) {
 		if (*(PUCHAR) pSource == BRABEG || *(PUCHAR) pSource == CURBEG ) {
-			pSource = nox_ParseCString((PUCHAR) pSource);
+			pSource = nox_ParseString((PUCHAR) pSource);
 		}
 		if (pSource == NULL)  return null;
 		deleteAfter = true;
 		copy = false;
 	}
 
-	pOut = nox_NewArray(NULL);
+	pOut = nox_NewArray();
 
 	// first locate first element;
 	pNode = pSource->pNodeChildHead;
@@ -2817,8 +2665,7 @@ PNOXNODE  nox_GetOrCreateNode (PNOXNODE pNodeRoot, PUCHAR Name)
 	 --------------------------------------------------------------------------- */
 PNOXNODE  nox_GetOrCreateNodeVC (PNOXNODE pNodeRoot, PLVARCHAR pName)
 {
-	return nox_GetOrCreateNode (pNodeRoot, lvc2str(pName));
-
+	return nox_GetOrCreateNode (pNodeRoot, plvc2str(pName));
 }
 /* ---------------------------------------------------------------------------
 	 Find node by path name, by parsing a name string and traverse the tree
@@ -2902,16 +2749,23 @@ PNOXNODE  nox_SetValueByName (PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NOD
 /* -------------------------------------------------------------
 	 Set integer by name
 	 ------------------------------------------------------------- */
-PNOXNODE  nox_SetIntByName (PNOXNODE pNode, PLVARCHAR  Name, LONG Value)
+PNOXNODE  nox_SetIntByName (PNOXNODE pNode, PUCHAR  Name, LONG Value)
 {
 	UCHAR  s [32];
 	sprintf(s , "%ld" , Value);
-	return nox_SetValueByName(pNode , Name , e2a(s,s), LITERAL );
+	return nox_SetValueByName(pNode , Name, stre2a(s,s), LITERAL );
 }
+PNOXNODE  nox_SetIntByNameVC (PNOXNODE pNode, PLVARCHAR  Name, LONG Value)
+{
+	UCHAR  s [32];
+	sprintf(s , "%ld" , Value);
+	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), LITERAL );
+}
+
 /* -------------------------------------------------------------
 	 Set decimal  by name
 	 ------------------------------------------------------------- */
-PNOXNODE  nox_SetDecByName (PNOXNODE pNode, PLVARCHAR Name, FIXEDDEC Value)
+PNOXNODE  nox_SetDecByNameVC (PNOXNODE pNode, PLVARCHAR Name, FIXEDDEC Value)
 {
 	UCHAR  s [32];
 	PUCHAR t;
@@ -2934,40 +2788,45 @@ PNOXNODE  nox_SetDecByName (PNOXNODE pNode, PLVARCHAR Name, FIXEDDEC Value)
 		p--;
 	}
 
-	return nox_SetValueByName(pNode , lvc2str(Name) , e2a(s,s);, LITERAL );
+	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), LITERAL );
 }
 /* -------------------------------------------------------------
 	 Set BOOL by name
 	 ------------------------------------------------------------- */
-#pragma convert(1252)
-PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PLVARCHAR pName, LGL Value)
+PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR pName, BOOL Value)
 {
-	return nox_SetValueByName(pNode , lvc2str(pName) , Value == OFF ? "false":"true", LITERAL );
+	return nox_SetValueByName(pNode , pName , Value ? FALSESTR:TRUESTR, LITERAL );
 }
-#pragma convert(0)
+PNOXNODE  nox_SetBoolByNameVC (PNOXNODE pNode, PLVARCHAR pName, LGL Value)
+{
+	return nox_SetValueByName(pNode , plvc2str(pName) , Value == OFF ? FALSESTR:TRUESTR, LITERAL );
+}
 /* -------------------------------------------------------------
 	 Set string value by name
 	 ------------------------------------------------------------- */
-PNOXNODE  nox_SetStrByName (PNOXNODE pNode, PLVARCHAR pName, PLVARCHAR pValue)
+PNOXNODE  nox_SetStrByName (PNOXNODE pNode, PUCHAR pName, PUCHAR pValue)
 {
-	return nox_SetValueByName(pNode , lvc2str(pName) , lvc2str(Value) , VALUE );
+	return nox_SetValueByName(pNode , pName , pValue , VALUE );
+}
+PNOXNODE  nox_SetStrByNameVC (PNOXNODE pNode, PLVARCHAR pName, PLVARCHAR pValue)
+{
+	return nox_SetValueByName(pNode , plvc2str(pName) , plvc2str(pValue) ,VALUE);
 }
 /* -------------------------------------------------------------
 	 Set evaluate by parser - set by name
 	 ------------------------------------------------------------- */
-PNOXNODE  nox_SetEvalByName (PNOXNODE pNode, PLVARCHAR Name, PLVARCHAR pValue)
+PNOXNODE  nox_SetEvalByNameVC (PNOXNODE pNode, PLVARCHAR Name, PLVARCHAR pValue)
 {
-	
-	return nox_SetValueByName(pNode , lvc2str(Name) , lvc2str(pValue) , PARSE_STRING );
+	return nox_SetValueByName(pNode , plvc2str(Name) , plvc2str(pValue) , PARSE_STRING );
 }
 /* -------------------------------------------------------------
 	 Set pointer by name
 	 ------------------------------------------------------------- */
-PNOXNODE  nox_SetPtrByName (PNOXNODE pNode, PLVARCHAR pName, PUCHAR Value, LGL isStringP)
+PNOXNODE  nox_SetPtrByNameVC (PNOXNODE pNode, PLVARCHAR pName, PUCHAR Value, LGL isStringP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	BOOL isString  = (pParms->OpDescList->NbrOfParms >= 4 && isStringP == ON);
-	PNOXNODE pRes = nox_SetValueByName(pNode , lvc2str(pName) , Value , POINTER_VALUE );
+	PNOXNODE pRes = nox_SetValueByName(pNode , plvc2str(pName) , Value , POINTER_VALUE );
 	pRes->isLiteral = ! isString;
 	return pRes;
 }
@@ -2985,11 +2844,10 @@ void nox_GetStrJoinVC(PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR NameP, PLVAR
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PLVARCHAR  Name    = (pParms->OpDescList->NbrOfParms >= 2) ? NameP    : PLVARCHARNULL;
 	PLVARCHAR  Default = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultP : PLVARCHARNULL;
-	nox_CopyValueByNameVC ( pRres , pNodeRoot, Name , Default , true ) ;
+	nox_CopyValueByNameVC ( pRes , pNodeRoot, Name , Default , true ) ;
 }
-
 // -------------------------------------------------------------
-FIXEDDEC nox_GetValueNum (PNOXNODE pNode , PLVARCHAR NameP  , FIXEDDEC dftParm)
+FIXEDDEC nox_GetValueNumVC (PNOXNODE pNode , PLVARCHAR NameP  , FIXEDDEC dftParm)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PLVARCHAR  path  =  (pParms->OpDescList->NbrOfParms >= 2) ? NameP  : PLVARCHARNULL;
@@ -2997,21 +2855,21 @@ FIXEDDEC nox_GetValueNum (PNOXNODE pNode , PLVARCHAR NameP  , FIXEDDEC dftParm)
 	
 	PUCHAR  value;
 
-	value = nox_GetValuePtr    (pNode , path , NULL ) ;
+	value = nox_GetValuePtr    (pNode , plvc2str(path) , NULL ) ;
 	if (value == NULL) {
 		return  dft;
 	}
 	return nox_aNum(value);
 }
 // -------------------------------------------------------------
-INT64 nox_GetValueInt (PNOXNODE pNode , PLVARCHAR NameP  , INT64 dftParm)
+INT64 nox_GetValueIntVC (PNOXNODE pNode , PLVARCHAR NameP  , INT64 dftParm)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PLVARCHAR  path  =  (pParms->OpDescList->NbrOfParms >= 2) ? NameP  : PLVARCHARNULL;
 	INT64      dft   =  (pParms->OpDescList->NbrOfParms >= 3) ? dftParm : 0;
 	PUCHAR   value;
 
-	value = nox_GetValuePtr    (pNode , path , NULL ) ;
+	value = nox_GetValuePtr    (pNode , plvc2str(path) , NULL ) ;
 	if (value == NULL) {
 		return  dft;
 	}
@@ -3021,11 +2879,11 @@ INT64 nox_GetValueInt (PNOXNODE pNode , PLVARCHAR NameP  , INT64 dftParm)
 void nox_GetNodeValueVC (PLVARCHAR pRes, PNOXNODE pNode , PLVARCHAR pDefaultValue)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PLVARCHAR dft = (pParms->OpDescList->NbrOfParms >= 2) ? DefaultValue : PLVARCHARNULL;
+	PLVARCHAR dft = (pParms->OpDescList->NbrOfParms >= 2) ? pDefaultValue : PLVARCHARNULL;
 	PUCHAR value;
 
-	value =  nox_GetNodeValuePtr  (pNode , dft);
-	pRes->Length = memLength(value); //!! memLength()?
+	value =  nox_GetNodeValuePtr  (pNode , plvc2str(dft));
+	pRes->Length = memSize(value); //!! memSize()?
 	memcpy(pRes->String , value , pRes->Length);
 }
 // -------------------------------------------------------------
@@ -3050,7 +2908,7 @@ void nox_GetNodeNameVC (PLVARCHAR pRes, PNOXNODE pNode)
 {
 	pRes->Length = 0;
 	if (pNode && pNode->Name) {
-		pRes->Length = memLength(pNode->Name);
+		pRes->Length = memSize(pNode->Name);
 		memcpy(pRes->String , pNode->Name , pRes->Length);
 	}
 }
@@ -3059,16 +2917,16 @@ void nox_GetNodeAttrValueVC (PLVARCHAR pRes, PNOXNODE pNode ,PLVARCHAR pAttrName
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PLVARCHAR dft = (pParms->OpDescList->NbrOfParms >= 3) ? pDefaultValue : PLVARCHARNULL;
-	PUCHAR value =  nox_GetNodeAttrValuePtr  ( pNode , pAttrName,  dft) ;
-	pRes->Length = memLength(value);
+	PUCHAR value =  nox_GetNodeAttrValuePtr  ( pNode , plvc2str(pAttrName),  plvc2str(dft)) ;
+	pRes->Length = memSize(value);
 	memcpy(pRes->String , value , pRes->Length);
 }
 // -------------------------------------------------------------
-FIXEDDEC nox_GetNodeAttrValueNum (PNOXNODE pNode , PLVARCHAR pAttrName, FIXEDDEC DefaultValue)
+FIXEDDEC nox_GetNodeAttrValueNumVC (PNOXNODE pNode , PLVARCHAR pAttrName, FIXEDDEC DefaultValue)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	FIXEDDEC dft = (pParms->OpDescList->NbrOfParms >= 2) ? DefaultValue : 0;
-	PNOXATTR pAttr = nox_AttributeLookup   (pNode, pAttrName);
+	PNOXATTR pAttr = nox_AttributeLookup   (pNode, plvc2str(pAttrName));
 
 	if (pAttr == NULL
 	||  pAttr->Value == NULL) {
@@ -3129,7 +2987,7 @@ void nox_GetAttrNameVC (PLVARCHAR pRes, PNOXATTR pAttr)
 {
 	pRes->Length = 0;
 	if (pAttr) {
-		pRes->Length = memLength(pAttr->Name);
+		pRes->Length = memSize(pAttr->Name);
 		memcpy(pRes->String , pAttr->Name , pRes->Length);
 	}
 }
@@ -3159,12 +3017,12 @@ void nox_GetAttrValueVC (PLVARCHAR pRes, PNOXATTR pAttr, PLVARCHAR pDefaultValue
 
 	pRes->Length = 0;
 	if (pAttr &&  pAttr->Value ) {
-		pRes->Length = memLength(pAttr->Value);
+		pRes->Length = memSize(pAttr->Value);
 		memcpy(pRes->String , pAttr->Value, pRes->Length);
 	}
 
 	if (pRes->Length ==0) {
-		lvcCopy (pRes , dft);
+		plvccopy (pRes , dft);
 	}
 }
 // -------------------------------------------------------------
@@ -3178,6 +3036,11 @@ PUCHAR nox_ErrStr (PNOXNODE pJxNode)
 	return jxMessage;
 }
 // -------------------------------------------------------------
+void nox_MessageVC  (PLVARCHAR pRes,PNOXNODE pJxNode)
+{
+	 str2plvc (pRes ,  jxMessage);
+}
+// -------------------------------------------------------------
 VOID nox_SetApiErr (PNOXNODE pJxNode, PAPIERR pApiErr)
 {
 	strcpy (pApiErr->msgid , "CPF9898");
@@ -3185,24 +3048,18 @@ VOID nox_SetApiErr (PNOXNODE pJxNode, PAPIERR pApiErr)
 	pApiErr->avail  = strlen(pApiErr->msgdta);
 }
 // -------------------------------------------------------------
-void nox_Message  (PLVARCHAR pRes,PNOXNODE pJxNode)
-{
-	 str2lvc (pRes ,  jxMessage);
-}
-// -------------------------------------------------------------
 #pragma convert(1252)
 PNOXNODE nox_GetMessageObject (PUCHAR msgId , PUCHAR msgDta)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PNOXNODE pMsg = nox_NewObject();
-	LVARCHAR256 t;
-	nox_SetBoolByName (pMsg , str2lvc(&t,"success") ,  OFF);
+	nox_SetBoolByName (pMsg , "success" ,  false);
 	if (pParms->OpDescList->NbrOfParms > 0)  {
-		nox_SetStrByName (pMsg , str2lvc(&t,"msgId") ,  msgId);
-		nox_SetStrByName (pMsg , str2lvc(&t,"msgDta"),  msgDta);
+		nox_SetStrByName (pMsg , "msgId" ,  msgId);
+		nox_SetStrByName (pMsg , "msgDta",  msgDta);
 		// TODO - convert the msgid / msgData to text
 	} else  {
-		nox_SetStrByName (pMsg , str2lvc(&t,"msg") ,  jxMessage);
+		nox_SetStrByName (pMsg , "msg",  jxMessage);
 	}
 	return pMsg;
 }
@@ -3211,9 +3068,8 @@ PNOXNODE nox_GetMessageObject (PUCHAR msgId , PUCHAR msgDta)
 #pragma convert(1252)
 PNOXNODE nox_SuccessTrue ()
 {
-	LVARCHAR256 t;
 	PNOXNODE pMsg = nox_NewObject();
-	nox_SetBoolByName (pMsg , str2lvc(&t,"success") ,  ON);
+	nox_SetBoolByName (pMsg , "success" ,  true);
 	return pMsg;
 }
 #pragma convert(0)

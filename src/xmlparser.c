@@ -27,13 +27,16 @@
 #include "xlate.h"
 #include "noxdb.h"
 #include "parms.h"
-#include "rtvsysval.h"
-#include "mem001.h"
+// #include "rtvsysval.h"
+#include "memUtil.h"
+#include "strUtil.h"
 
 
-extern UCHAR e2aTbl[256];
-extern UCHAR a2eTbl[256];
-extern LONG  dbgStep=0;
+
+// LONG  dbgStep=0;
+
+//__thread BOOL  doTrim;
+
 
 /* --------------------------------------------------------------------------- */
 #pragma convert(1252)
@@ -47,11 +50,11 @@ static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 		c = *(in);
 		if (c == AMP) {
 			PUCHAR kwd = in+1;
-			if       (BeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
-			else if  (BeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
-			else if  (BeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
-			else if  (BeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
-			else if  (BeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
+			if       (memBeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
+			else if  (memBeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
+			else if  (memBeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
+			else if  (memBeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
+			else if  (memBeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
 			else if  (in[1] == HASH) {
 				int n = 0;
 				in += 2; // Skip the '&#'
@@ -208,7 +211,7 @@ void nox_CopyCdata (PNOXCOM pJxCom)
 
 	nox_SkipChars(pJxCom , sizeof("<![CDATA[") -2) ; // omit the zero terminator
 	p = nox_GetChar(pJxCom);
-	while (! BeginsWith(p , BRABRAGT  ) &&  pJxCom->State != XML_EXIT) {  // the "]]>"
+	while (! memBeginsWith(p , BRABRAGT  ) &&  pJxCom->State != XML_EXIT) {  // the "]]>"
 		CheckBufSize(pJxCom);
 		pJxCom->Data[pJxCom->DataIx++] = *p;
 		p = nox_GetChar(pJxCom);
@@ -225,7 +228,7 @@ void nox_AppendData (PNOXCOM pJxCom)
 /* Still a valid name � */
 	if (c == LT ) {
 	// Check for CDATA stream ... copy until ]]>
-		if (BeginsWith(pJxCom->pFileBuf , CDATA )) {   // the "<![CDATA["
+		if (memBeginsWith(pJxCom->pFileBuf , CDATA )) {   // the "<![CDATA["
 			nox_CopyCdata (pJxCom);
 			return;
 		}
@@ -308,7 +311,7 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 	UCHAR  c;
 	PUCHAR p;
 	BOOL  debug = FALSE;
-	dbgStep=0;
+	// dbgStep=0;
 
 	for(;;) {
 		p = nox_GetChar(pJxCom);
@@ -322,17 +325,17 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 
 			case XML_DETERMIN_TAG_TYPE:
 
-				if (BeginsWith(p , REMARK  )) {  // the "!--"
+				if (memBeginsWith(p , REMARK  )) {  // the "!--"
 					int commentIx =0;
 					do {
 						p = nox_GetChar(pJxCom);
 						if (commentIx < COMMENT_SIZE -1) {
 							pJxCom->Comment[commentIx++] = *p;
 						}
-					} while (! BeginsWith (p , ENDREMARK ) && pJxCom->State != XML_EXIT);  // EndRemark "-->"
+					} while (! memBeginsWith (p , ENDREMARK ) && pJxCom->State != XML_EXIT);  // EndRemark "-->"
 					pJxCom->Comment[commentIx-1] = '\0';
 					pJxCom->State = XML_FIND_END_TOKEN;
-				} else if (BeginsWith(p , DOCTYPE  )) {  // the "!DOCTYPE"
+				} else if (memBeginsWith(p , DOCTYPE  )) {  // the "!DOCTYPE"
 					pJxCom->State = XML_FIND_END_TOKEN;
 				} else if (c == QUESTION) {  // the ?
 					pJxCom->State = XML_FIND_END_TOKEN;
@@ -394,4 +397,73 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 				return true;
 		}
 	}
+}
+// ---------------------------------------------------------------------------
+void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , PNOXNODE options)
+{
+	FILE * f;
+	iconv_t Iconv;
+	UCHAR mode[32];
+	PUCHAR enc;
+	PUCHAR sig;
+	UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
+	UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PUCHAR  value;
+	PUCHAR  dft;
+	VARCHAR res;
+
+	// doTrim = (pParms->OpDescList &&  pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
+
+	if (pNode == NULL) return;
+
+	if (pNode->pNodeParent == NULL
+	&&  pNode->Name       == NULL) {
+		if (pNode->pNodeChildHead != NULL) {
+			// TODO!! This root Nodeens empty in some case; the first child is actually the root
+			pNode = pNode->pNodeChildHead;
+		}
+	}
+	if (pNode == NULL) return;
+
+	// TODO!! need unlink to replace !!
+	sprintf(mode , "wb,codepage=%d", Ccsid);
+	f = fopen ( strTrim(FileName) , mode );
+	if (f == NULL) return;
+
+	Iconv = XlateOpen (1208 , Ccsid );
+
+	#pragma convert(1252)
+	switch(Ccsid) {
+		case 1252 :
+			enc = "WINDOWS-1252";
+			sig = "";
+			break;
+		case 1208 :
+			enc = "UTF-8";
+			sig = sigUtf8;
+			break;
+		case 1200 :
+			enc = "UTF-16";
+			sig = sigUtf16;
+			break;
+		case 819  :
+			enc = "ISO-8859-1";
+			sig = "";
+			break;
+		default   :
+			enc = "windows-1252";
+			sig = "";
+	}
+
+	fputs (sig , f);
+	fputs ("<?xml version=\"1.0\" encoding=\"", f);
+	fputs (enc, f);
+	fputs ("\" ?>", f);
+
+
+	#pragma convert(0)
+	nox_WriteXmlStmfNodeList (f , &Iconv , pNode);
+	fclose(f);
+	iconv_close(Iconv);
 }

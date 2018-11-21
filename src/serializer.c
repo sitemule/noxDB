@@ -18,9 +18,9 @@
 #include "varchar.h"
 #include "sndpgmmsg.h"
 #include "trycatch.h"
-#include "rtvsysval.h"
+// #include "rtvsysval.h"
 #include "parms.h"
-#include "mem001.h"
+#include "memUtil.h"
 #include "streamer.h"
 #include "noxdb.h"
 
@@ -334,7 +334,7 @@ void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut,
 	if (pjWrite->outFile == NULL) return;
 
 	pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
-	pjWrite->iconv  = OpenXlate(1208, Ccsid);
+	pjWrite->iconv  = XlateOpen(1208, Ccsid);
 
 	if (makeBomCode) {
 		switch(Ccsid) {

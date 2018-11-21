@@ -111,16 +111,17 @@ void vccatvc   (PVARCHAR out, PVARCHAR in);
 void vccatmem  (PVARCHAR out , PUCHAR s , LONG len);
 void vcprintf  ( PVAR_CHAR VarChar, PUCHAR Ctlstr , ...);
 void vccatf    ( PVAR_CHAR VarChar, PUCHAR Ctlstr , ...);
-#define VARCHAR2PUCHAR(a) ((PVARCHAR) a)->String; ((PVARCHAR) a)->String[((PVARCHAR) a)->Length] = '\0';
 
 // Long versions
 void lvpc2lvc (PLVARCHAR out, PLVARPUCHAR in);
 void lvpc2vc  (PVARCHAR out, PLVARPUCHAR in);
 BOOL vpcIsEqual(PVARPUCHAR p1, PVARPUCHAR p2);
 BOOL lvpcIsEqual(PLVARPUCHAR p1, PLVARPUCHAR p2);
-PUCHAR pplvc2str (PLVARCHAR s);
- 
+PUCHAR plvc2str (PLVARCHAR s);
+void   str2plvc (PLVARCHAR out , PUCHAR in);
+void plvccatstr (PLVARCHAR out , PUCHAR s   );
+void plvccopy (PLVARCHAR out, PLVARCHAR in);
 
-INT64 LVARCHARNULL =0;
-PLVARCHAR PLVARCHARNULL = (PLVARCHAR) &LVARCHARNULL;
+
+
 #endif

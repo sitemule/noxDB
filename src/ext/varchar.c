@@ -26,6 +26,15 @@ void lvpc2lvc (PLVARCHAR out, PLVARPUCHAR in)
 	out->String[in->Length] = '\0'; 
 }
 /* ------------------------------------------------------------- */
+// LONG (  4 byte length)
+/* ------------------------------------------------------------- */ 
+void plvccopy (PLVARCHAR out, PLVARCHAR in)
+{
+	out->Length = in->Length;
+	memcpy(out->String , in->String, in->Length);
+	out->String[in->Length] = '\0'; 
+}
+/* ------------------------------------------------------------- */
 // SHORT (  2 byte length)
 /* ------------------------------------------------------------- */
 void lvpc2vc (PVARCHAR out, PLVARPUCHAR in)
@@ -55,13 +64,19 @@ VARPUCHAR vc2varpuchar(PVARCHAR in)
 	res.String = in->String;
 	return(res);
 }
-/* ---------------------------------------------------------------------------------------- */
-
 /* --------------------------------------------------------------------------- */
 PUCHAR plvc2str(PLVARCHAR p)
 {
 	p->String[p->Length] = '\0';
 	return(p->String);
+}
+/* --------------------------------------------------------------------------- */
+void str2plvc (PLVARCHAR out , PUCHAR in)
+{
+
+	out->Length = strlen(in);
+	memcpy(out->String , in, out->Length );
+	out->String[out->Length] = '\0';
 }
 /* --------------------------------------------------------------------------- */
 PUCHAR vc2str(PVOID pv)
@@ -88,6 +103,13 @@ PUCHAR vc2strcpy(PUCHAR res,  PVOID pv)
 	memcpy (res,  p->String, p->Length );
 	res [p->Length] = '\0';
 	return res;
+}
+/* --------------------------------------------------------------------------- */
+void  plvccatstr (PLVARCHAR out , PUCHAR s   )
+{
+	int l = strlen (s);
+	memcpy(out->String + out->Length , s , l );
+	out->Length += l;
 }
 /* --------------------------------------------------------------------------- */
 void  vccatstr (PVARCHAR out , PUCHAR s   )

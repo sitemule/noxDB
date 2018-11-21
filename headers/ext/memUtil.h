@@ -8,6 +8,7 @@ PUCHAR memStrDup (PUCHAR s);
 PVOID  memRealloc(PVOID * p, ULONG len);
 PVOID  memShare (PUCHAR path, ULONG len);
 ULONG  memSize   (PVOID p);
+
 void   memStat   (void);
 BOOL   memLeak   (void);
 INT64  memUse    (void);

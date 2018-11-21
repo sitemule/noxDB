@@ -49,6 +49,7 @@ FIXEDDEC str2dec(PUCHAR str, UCHAR decPoint);
 LONG packedMem2Int(PUCHAR buf, SHORT bytes);
 PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen, 
                 PUCHAR needle , ULONG needleLen);
+#define memBeginsWith(a,b) (memicmp(a, b, strlen(b)) == 0)                
 
 
 
