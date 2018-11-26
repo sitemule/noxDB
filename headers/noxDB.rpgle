@@ -73,13 +73,13 @@
         // Returns node nox_object tree
         Dcl-PR nox_ParseStringVC Pointer extproc(*CWIDEN:'nox_ParseStringVC');
           // String to parse
-          String         Like(UTF8) value;
+          String         Like(UTF8) const options(*varsize);
         End-PR;
 
         // Set , or . for numeri decimal point
         Dcl-PR nox_setDecPoint  extproc(*CWIDEN : 'nox_SetDecPoint');
           // decimal point char
-          decPoint       Like(UTF8) value;
+          decPoint       Like(UTF8) const options(*varsize);
         End-PR;
 
         // Bool true if errors occures
@@ -126,7 +126,7 @@
           // Pointer to tree or node
           pNode          Pointer    value;
           // location expression
-          Expression     Like(UTF8) value;
+          Expression     Like(UTF8) const options(*varsize);
         End-PR;
 
         // Returns 'ON' if node exists
@@ -134,7 +134,7 @@
           // Pointer to tree or node
           pNode          Pointer    value;
           // Path to node
-          NodeName       Like(UTF8) value;
+          NodeName       Like(UTF8) const options(*varsize);
         End-PR;
 
         // Returns 'ON' if node exists and has <> 0
@@ -142,7 +142,7 @@
           // Pointer to tree or node
           pNode          Pointer    value;
           // Path to node
-          NodeName       Like(UTF8) value;
+          NodeName       Like(UTF8) const options(*varsize);
         End-PR;
 
         // Returns 'ON' if node exists and has <> 0
@@ -150,7 +150,7 @@
           // Pointer to tree or node
           pNode          Pointer    value;
           // Path to node
-          NodeName       Like(UTF8) value;
+          NodeName       Like(UTF8) const options(*varsize);
         End-PR;
 
         // Returns 'ON' if it is a valid node
@@ -164,7 +164,7 @@
           // Pointer to tree or node
           pNode          Pointer    value;
           // Path to node
-          NodeName       Like(UTF8) value;
+          NodeName       Like(UTF8) const options(*varsize);
         End-PR;
 
         // Returns pointer to next sibling (elem)
@@ -187,24 +187,24 @@
 
         Dcl-PR nox_SetEval pointer extproc(*CWIDEN:'nox_SetEvalByName');
           pNode          Pointer    value;
-          Expresion      Like(UTF8) value;
-          Value          Like(UTF8) value;
+          Expresion      Like(UTF8) const options(*varsize);
+          Value          Like(UTF8) const options(*varsize);
         End-PR;
 
         Dcl-PR nox_SetStr Pointer extproc(*CWIDEN: 'nox_SetStrByName');
           // Pointer to nox_ tree
           pNode          Pointer    value;
           // X-path locations to node or attributes
-          Expresion      Like(UTF8) value;
+          Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
-          Value          Like(UTF8) value;
+          Value          Like(UTF8) const options(*varsize);
         End-PR;
 
         Dcl-PR nox_SetInt Pointer extproc(*CWIDEN: 'nox_SetIntByName');
           // Pointer to nox_ tree
           pNode          Pointer    value;
           // X-path locations to node or attributes
-          Expresion      Like(UTF8) value;
+          Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Int(10)    value;
         End-PR;
@@ -213,7 +213,7 @@
           // Pointer to nox_ tree
           pNode          Pointer    value;
           // X-path locations to node or attributes
-          Expresion      Like(UTF8) value;
+          Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Packed(30:15) value;
         End-PR;
@@ -222,7 +222,7 @@
           // Pointer to nox_ tree
           pNode          Pointer    value;
           // X-path locations to node or attributes
-          Expresion      Like(UTF8) value;
+          Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Ind        value;
         End-PR;
@@ -231,7 +231,7 @@
           // Pointer to nox_ tree
           pNode          Pointer    value;
           // X-path locations to node or attributes
-          Expresion      Like(UTF8) value;
+          Expresion      Like(UTF8) const options(*varsize);
           // Pointer to anything - You do the cleanup
           Value          Pointer    value;
         End-PR;
@@ -239,7 +239,7 @@
         Dcl-PR nox_SetProcPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByName');
           pNode          Pointer    value; // Pointer to nox_ tree
           // X-path locations to node or attributes
-          Expresion      Like(UTF8) value;
+          Expresion      Like(UTF8) const options(*varsize);
           Proc           Pointer(*Proc); // Pointer to a procedure
           // *ON=String escape, *OFF=If literals
           isString       Ind        value options(*nopass);
@@ -249,7 +249,7 @@
           // Pointer to nox_ tree
           pNode          Pointer    value;
           // X-path locations to node or attributes
-          Expresion      Like(UTF8) value;
+          Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Like(UTF8) const options(*nopass:*varsize);
           // Optional new type (Refer "node type"
@@ -359,18 +359,18 @@
           // Pointer to tree
           pNode          Pointer    value;
           // X-path locations to node or attributes
-          Expression     Like(UTF8) value;
+          Expression     Like(UTF8) const options(*varsize);
         End-PR;
 
         Dcl-PR nox_CopyValue Pointer extproc(*CWIDEN : 'nox_CopyValue');
           // destination node
           pDest          Pointer    value;
           // destiantion name (or *NULL or '')
-          destName       Like(UTF8) value;
+          destName       Like(UTF8) const options(*varsize);
           // source node
           pSource        Pointer    value;
           // source name (or *NULL or '')
-          sourceName     Like(UTF8) value;
+          sourceName     Like(UTF8) const options(*varsize);
         End-PR;
 
         Dcl-PR nox_NodeCopy extproc(*CWIDEN : 'nox_NodeCopy');
@@ -400,9 +400,9 @@
           // Reference location to where it arrive
           RefLocation    Int(10)    value;
           // Name of node
-          Name           Like(UTF8) value;
+          Name           Like(UTF8) const options(*varsize);
           // Value or expression
-          Value          Like(UTF8) value;
+          Value          Like(UTF8) const options(*varsize);
           // New type (Refer "node type"
           Type           Uns(5)     value;
         End-PR;
@@ -454,7 +454,7 @@
           // Destination. Retrive from Locate()
           pDestArray     Pointer    value;
           // source node to append
-          pSourceNode    Like(UTF8) value;
+          pSourceNode    Like(UTF8) const options(*varsize);
           // 0=(Dft) Unlink and move, 1=copy a clone
           copy           Uns(5)     value options(*nopass);
         End-PR;
@@ -468,7 +468,7 @@
           // Destination. Retrive from Locate()
           pDestArray     Pointer    value;
           // source node to append
-          pSourceNode    Like(UTF8) value;
+          pSourceNode    Like(UTF8) const options(*varsize);
           // 0=(Dft) Unlink and move, 1=copy a clone
           copy           Uns(5)     value options(*nopass); 
         End-PR;
@@ -476,7 +476,7 @@
         // returns the new array fro source array
         Dcl-PR nox_ArraySlice Pointer extproc(*CWIDEN : 'nox_ArraySlice' );
           // source node or array string
-          pSourceNode    Like(UTF8) value;
+          pSourceNode    Like(UTF8) const options(*varsize);
           // From entry ( 1=First)
           from           Int(10)    value;
           // To and includ   (-1 = Until end)
@@ -502,7 +502,7 @@
           // Array/ obj to search
           pArray         Pointer    value;
           // What to search for
-          expr           Like(UTF8) value;
+          expr           Like(UTF8) const options(*varsize);
           // 0=(Dft) Same case, 1=ignore case
           ignoreCase     Uns(5)     value options(*nopass);
         End-PR;
@@ -545,7 +545,7 @@
         Dcl-PR nox_MoveObjectInto Pointer extproc(*CWIDEN : 'nox_NodeMoveInto');
           // Destination. Retrive from Locate()
           pDestObj       Pointer    value;
-          Name           Like(UTF8) value;
+          Name           Like(UTF8) const options(*varsize);
           // Source tree  Retrive from Locate()
           pSourceObj     Pointer    value;
         End-PR;
@@ -560,7 +560,7 @@
           // Pointer to tree to receive format
           pNode          Pointer    value;
           // node ptr or path with right formating
-          pCloneFrom     Like(UTF8) value;
+          pCloneFrom     Like(UTF8) const options(*varsize);
         End-PR;
 
         // **  JSON renderes ***
@@ -568,7 +568,7 @@
           // node. Retrive from Locate()
           pNode          Pointer    value;
           // Name of output stream file
-          FileName       Like(UTF8) value;
+          FileName       Like(UTF8) const options(*varsize);
           // Ccsid of output file
           Ccsid          Int(10)    value;
           Trim           Ind        value;
@@ -597,7 +597,7 @@
           // node. Retrive from Locate()
           pNode          Pointer    value;
           // Name of output stream file
-          FileName       Like(UTF8) value;
+          FileName       Like(UTF8) const options(*varsize);
           // Ccsid of output file
           Ccsid          Int(10)    value;
           Trim           Ind        value;
@@ -628,7 +628,7 @@
           // node. Retrive from Locate()
           pNode          Pointer    value;
           // Name of output stream file
-          FileName       Like(UTF8) value;
+          FileName       Like(UTF8) const options(*varsize);
           // Ccsid of output file
           Ccsid          Int(10)    value;
           // *ON=Remove inter blanks
@@ -699,7 +699,7 @@
           // Pointer to exsiting element
           pNode          Pointer    value;
           // Attribute Name
-          AttrName       Like(UTF8) value;
+          AttrName       Like(UTF8) const options(*varsize);
           // If not found - default value
           Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
         End-PR;
@@ -708,9 +708,9 @@
           // Pointer to exsiting element
           pNode          Pointer    value;
           // Attribute name
-          AttrName       Like(UTF8) value;
+          AttrName       Like(UTF8) const options(*varsize);
           // New value
-          Value          Like(UTF8) value;
+          Value          Like(UTF8) const options(*varsize);
         End-PR;
 
         Dcl-PR nox_GetAttrValue Like(UTF8) 
@@ -725,9 +725,9 @@
           // Pointer Attribute
           pAttr          Pointer    value;
           // New value
-          AttrName       Like(UTF8) value;
+          AttrName       Like(UTF8) const options(*varsize);
           // Default value
-          Value          Like(UTF8) value;
+          Value          Like(UTF8) const options(*varsize);
         End-PR;
 
         // Returns pointer to attribute list
@@ -806,7 +806,7 @@
         // Returns one SQL row as jx Obejct
         Dcl-PR nox_sqlResultRow Pointer extproc(*CWIDEN: 'nox_sqlResultRow');
           // SQL statement to run
-          sqlStmt        Like(UTF8) value;
+          sqlStmt        Like(UTF8) const options(*varsize);
           // json object template
           parms          Like(UTF8) const options(*nopass:*varsize);
         End-PR;
@@ -815,7 +815,7 @@
         // Returns SQL rows as jx Obejct
         Dcl-PR nox_sqlResultSet Pointer extproc(*CWIDEN: 'nox_sqlResultSet');
           // SQL statement to run
-          sqlStmt        Like(UTF8) value;
+          sqlStmt        Like(UTF8) const options(*varsize);
           // From row; 1=First
           start          Int(10)    value options(*nopass);
           // max number of rows; NOX_ALLROWS=all
@@ -852,7 +852,7 @@
         // Returns handle to sql statement
         Dcl-PR nox_sqlOpen Pointer extproc(*CWIDEN:'nox_sqlOpen'  );
           // SQL statement to run
-          sqlStmt        Like(UTF8) value;
+          sqlStmt        Like(UTF8) const options(*varsize);
           // json object template
           parms          Like(UTF8) const options(*nopass:*varsize);
         End-PR;
@@ -899,7 +899,7 @@
         // Returns *ON if error
         Dcl-PR nox_sqlExec Ind extproc(*CWIDEN:'nox_sqlExec'  );
           // SQL statement to run (template)
-          sqlStmt        Like(UTF8) value;
+          sqlStmt        Like(UTF8) const options(*varsize);
           // json object template data
           parms          Like(UTF8) const options(*nopass:*varsize);
         End-PR;
@@ -908,9 +908,9 @@
         // Returns *ON if error
         Dcl-PR nox_sqlUpdate Ind extproc(*CWIDEN:'nox_sqlUpdate');
           // table name
-          table          Like(UTF8) value;
+          table          Like(UTF8) const options(*varsize);
           // json object: {a:123,b:"value"}
-          row            Like(UTF8) value;
+          row            Like(UTF8) const options(*varsize);
           // where clause : 'where myKey=$key'
           where          Like(UTF8) const options(*nopass:*varsize);
           // where parameters: { key:777}
@@ -920,9 +920,9 @@
         // Returns *ON if error
         Dcl-PR nox_sqlInsert Ind extproc(*CWIDEN:'nox_sqlInsert');
           // table name
-          table          Like(UTF8) value;
+          table          Like(UTF8) const options(*varsize);
           // json object: {a:123,b:"value"}
-          row            Like(UTF8) value;
+          row            Like(UTF8) const options(*varsize);
           // extra parms
           parms          Like(UTF8) const options(*nopass:*varsize);
         End-PR;
@@ -930,9 +930,9 @@
         // Returns *ON if error
         Dcl-PR nox_sqlUpsert Ind extproc(*CWIDEN:'nox_sqlUpsert');
           // table name
-          table          Like(UTF8) value;
+          table          Like(UTF8) const options(*varsize);
           // json object: {a:123,b:"value"}
-          row            Like(UTF8) value;
+          row            Like(UTF8) const options(*varsize);
           // where clause : 'where myKey=$key'
           where          Like(UTF8) const options(*nopass:*varsize);
           // where parameters: { key:777}
@@ -945,7 +945,7 @@
 
         // Returns array of column info
         Dcl-PR nox_sqlGetMeta Pointer extproc(*CWIDEN:'nox_sqlGetMeta');
-          sqlstmt        Like(UTF8) value;
+          sqlstmt        Like(UTF8) const options(*varsize);
         End-PR;
 
       // Return pointer to database connection. No options => will be default local database
@@ -965,7 +965,7 @@
       // Returns a JSON object from a REST call
         Dcl-PR nox_httpRequest Pointer extproc(*CWIDEN:'nox_httpRequest');
           // Full URL to the resource
-          url            Like(UTF8) value;
+          url            Like(UTF8) const options(*varsize);
           // json object or string
           pReqNode       Like(UTF8) const options(*nopass:*varsize);
           // extra CURL options
