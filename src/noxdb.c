@@ -276,6 +276,12 @@ void nox_NodeRename(PNOXNODE pNode, PUCHAR name)
 	pNode->Name = memStrDup(name);
 }
 // ---------------------------------------------------------------------------
+void nox_NodeRenameVC(PNOXNODE pNode, PLVARCHAR name)
+{
+	nox_NodeRename(pNode, plvc2str(name));
+}
+
+// ---------------------------------------------------------------------------
 PUCHAR nodevalue  (PNOXNODE p)
 {
 	if (p == NULL || p->Value == NULL) return "";
@@ -335,11 +341,8 @@ LGL nox_IsLiteral (PNOXNODE node)
 // ---------------------------------------------------------------------------
 // use simple bouble-sort to sort an array by keyvalues
 // ---------------------------------------------------------------------------
-PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
+PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
 {
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PUCHAR  fields = (pParms->OpDescList->NbrOfParms >= 2) ? fieldsP : "";
-	BOOL    useLocale =  (pParms->OpDescList->NbrOfParms >= 3) ? optionsP & 1: FALSE;
 	PNOXNODE pNodeNext, pNode1, pNode2, pCompNode1, pCompNode2 ;
 	BOOL    bubles;
 	UCHAR   keys [256][256];
@@ -412,6 +415,14 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
 	} while(bubles);
 
 	return pNode;
+}
+PNOXNODE nox_ArraySortVC(PNOXNODE pNode, PLVARCHAR fieldsP, USHORT optionsP)
+{
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PUCHAR  fields = (pParms->OpDescList->NbrOfParms >= 2) ? plvc2str(fieldsP) : "";
+	BOOL    useLocale =  (pParms->OpDescList->NbrOfParms >= 3) ? optionsP & 1: false;
+
+	return nox_ArraySort(pNode, fields, useLocale);
 }
 // ---------------------------------------------------------------------------
 void nox_FreeSiblings(PNOXNODE pNode)
@@ -1467,6 +1478,11 @@ void nox_NodeDelete(PNOXNODE pNode)
 	nox_NodeUnlink (pNode);
 	nox_FreeChildren (pNode);
 	nox_NodeFree(pNode);
+}
+void nox_Delete(PNOXNODE * pNode)
+{
+	nox_NodeDelete(* pNode);
+	*pNode = NULL;
 }
 // ---------------------------------------------------------------------------
 // delim was originally only 5.
@@ -2549,6 +2565,12 @@ PNOXNODE  nox_lookupValue (PNOXNODE pNode, PUCHAR expr, BOOL16 ignorecaseP)
 	return NULL;
 
 }
+PNOXNODE  nox_lookupValueVC (PNOXNODE pNode, PLVARCHAR expr, BOOL16 ignorecaseP)
+{
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	BOOL16  ignorecase = (pParms->OpDescList->NbrOfParms >= 3) ? ignorecaseP : false;
+	return nox_lookupValue (pNode, plvc2str(expr), ignorecaseP);
+}
 /* ---------------------------------------------------------------------------
 	 Find node by name, by parsing a name string and traverse the array list
 	 --------------------------------------------------------------------------- */
@@ -2765,7 +2787,12 @@ PNOXNODE  nox_SetIntByNameVC (PNOXNODE pNode, PLVARCHAR  Name, LONG Value)
 	sprintf(s , "%ld" , Value);
 	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), LITERAL );
 }
-
+PNOXNODE  nox_SetDateByNameVC (PNOXNODE pNode, PLVARCHAR  Name, DATE Value)
+{
+	UCHAR  s [32];
+	substr(s , (PUCHAR) &Value  , sizeof(DATE));
+	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), VALUE );
+}
 /* -------------------------------------------------------------
 	 Set decimal  by name
 	 ------------------------------------------------------------- */
@@ -2878,6 +2905,25 @@ INT64 nox_GetValueIntVC (PNOXNODE pNode , PLVARCHAR NameP  , INT64 dftParm)
 		return  dft;
 	}
 	return nox_aNum(value);
+}
+// -------------------------------------------------------------
+DATE nox_GetValueDateVC (PNOXNODE pNode , PLVARCHAR NameP  , DATE dftParm)
+{
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PLVARCHAR  path  =  (pParms->OpDescList->NbrOfParms >= 2) ? NameP  : PLVARCHARNULL;
+	PUCHAR     value;
+	DATE       ret;
+
+	value = nox_GetValuePtr    (pNode , plvc2str(path) , NULL ) ;
+	if (value == NULL) {
+		if (pParms->OpDescList->NbrOfParms >= 3) {
+			return  dftParm;
+		}
+		memcpy (&ret , "0001-01-01", sizeof(DATE));
+	} else {
+		mema2e ((PUCHAR) &ret , value , sizeof(DATE));
+	}
+	return ret;
 }
 // -------------------------------------------------------------
 void nox_GetNodeValueVC (PLVARCHAR pRes, PNOXNODE pNode , PLVARCHAR pDefaultValue)

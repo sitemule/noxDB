@@ -601,7 +601,7 @@ PNOXSQLCONNECT  nox_sqlConnect(PNOXNODE pSqlParms  );
 
 void nox_SwapNodes (PNOXNODE * pNode1, PNOXNODE *  pNode2);
 
-PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, USHORT options);
+PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, BOOL useLocale);
 #pragma descriptor ( void nox_ArraySort     (void))
 
 #endif

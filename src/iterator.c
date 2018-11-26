@@ -26,9 +26,9 @@
 #include "varchar.h"
 #include "xlate.h"
 #include "parms.h"
-// #include "rtvsysval.h"
 #include "memUtil.h"
 #include "noxdb.h"
+
 
 
 /* ---------------------------------------------------------------------------
@@ -38,7 +38,7 @@ NOXITERATOR nox_SetRecursiveIterator (PNOXNODE pNode , PUCHAR path)
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	NOXITERATOR iter;
 
-	if (pParms->OpDescList->NbrOfParms == 2 && path && *path > ' ') {
+	if (path && *path > BLANK) {
 		pNode = nox_GetNode  (pNode, path );
 	}
 
@@ -53,14 +53,20 @@ NOXITERATOR nox_SetRecursiveIterator (PNOXNODE pNode , PUCHAR path)
 	iter.this = (iter.length > 0) ? iter.list [0] : NULL;
 	return iter;
 }
-/* ---------------------------------------------------------------------------
---------------------------------------------------------------------------- */
-NOXITERATOR nox_SetIterator (PNOXNODE pNode , PUCHAR path)
+// ---------------------------------------------------------------------------
+NOXITERATOR nox_SetRecursiveIteratorVC (PNOXNODE pNode , PLVARCHAR pathP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PUCHAR path = (pParms->OpDescList->NbrOfParms == 2 && pathP) ? plvc2str(pathP) : NULL;
+
+	return nox_SetRecursiveIterator (pNode , path);
+}
+// ---------------------------------------------------------------------------
+NOXITERATOR nox_SetIterator (PNOXNODE pNode , PUCHAR path)
+{
 	NOXITERATOR iter;
 
-	if (pParms->OpDescList->NbrOfParms == 2 && path && *path > ' ') {
+	if (path && *path > BLANK) {
 		pNode = nox_GetNode  (pNode, path );
 	}
 	memset(&iter , 0 , sizeof(NOXITERATOR));
@@ -82,9 +88,16 @@ NOXITERATOR nox_SetIterator (PNOXNODE pNode , PUCHAR path)
 	}
 	return iter;
 }
+// ---------------------------------------------------------------------------
+NOXITERATOR nox_SetIteratorVC (PNOXNODE pNode , PLVARCHAR pathP)
+{
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PUCHAR path = (pParms->OpDescList->NbrOfParms == 2 && pathP ) ? plvc2str(pathP) : NULL;
+	return nox_SetIterator (pNode , path);
+}
 /* ---------------------------------------------------------------------------
-Return ON for each entry in the list..
---------------------------------------------------------------------------- */
+	Return ON for each entry in the list..
+   --------------------------------------------------------------------------- */
 LGL nox_ForEach (PNOXITERATOR pIter)
 {
 	if (! pIter || ! pIter->this) return OFF;

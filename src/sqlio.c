@@ -60,6 +60,9 @@ PNOXSQLCONNECT nox_sqlNewConnection(void);
 void nox_traceOpen (PNOXSQLCONNECT pCon);
 void nox_traceInsert (PNOXSQL pSQL, PUCHAR stmt , PUCHAR sqlState);
 
+// !!!!! NOTE every constant in this module is in ASCII
+#pragma convert(1252)
+
 /* ------------------------------------------------------------- */
 SQLINTEGER nox_sqlCode(void)
 {
@@ -118,7 +121,7 @@ static int check_error (PNOXSQL pSQL)
 
 	length = 0;
 	rc = SQLGetDiagRec(hType , handle, 1, psqlState, psqlCode, psqlMsgDta,  sizeof(sqlMsgDta), &length);
-	sprintf( jxMessage , "%-5.5s %-*.*s" , psqlState, length, length, psqlMsgDta);
+	asprintf( jxMessage , "%-5.5s %-*.*s" , psqlState, length, length, psqlMsgDta);
 	nox_sqlClose (&pSQL); // Free the data
 	jxError = true;
 
@@ -135,12 +138,13 @@ static PNOXSQLCONNECT nox_sqlNewConnection(void )
 
 	// PNOXSQLCONNECT pConnection;  I hate this - bu need to go global for now !!
 	LONG          attrParm;
+	
 	PUCHAR        server = "*LOCAL";
+
 	int rc;
 	PSQLOPTIONS po;
 
-	pConnection = memAlloc(sizeof(NOXSQLCONNECT));
-	memset(pConnection , 0 , sizeof(NOXSQLCONNECT));
+	pConnection = memAllocClear(sizeof(NOXSQLCONNECT));
 	pConnection->sqlTrace.handle = -1;
 	pConnection->pCd = XlateXdOpen (13488, 0);
 	po = &pConnection->options;
@@ -281,7 +285,7 @@ int nox_sqlExecDirectTrace(PNOXSQL pSQL , int hstmt, PUCHAR sqlstmt)
 	rc = SQLExecDirect( hstmt, sqlstmt, SQL_NTS);
 	if (rc != SQL_SUCCESS) {
 		rc2= SQLGetDiagRec(SQL_HANDLE_STMT,hstmt,1,pConnection->sqlState,&sqlCode, pTrc->text,sizeof(pTrc->text), &length);
-		sprintf( jxMessage , "%-5.5s %0.*s" , pConnection->sqlState , length, pTrc->text);
+		asprintf( jxMessage , "%-5.5s %0.*s" , pConnection->sqlState , length, pTrc->text);
 		nox_sqlClose (&pSQL); // Free the data
 	}
 	pTrc->text [length] = '\0';
@@ -555,6 +559,15 @@ PNOXSQL nox_sqlOpen(PUCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scroll)
 
 }
 /* ------------------------------------------------------------- */
+PNOXSQL nox_sqlOpenVC(PLVARCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scrollP)
+{
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PNOXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 2 ) ? pSqlParmsP : NULL;
+	BOOL     scroll     =  (pParms->OpDescList->NbrOfParms >= 3 ) ? scroll = scrollP : true;
+
+	return nox_sqlOpen (plvc2str(sqlstmt) , pSqlParms, scroll);
+}
+/* ------------------------------------------------------------- */
 PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 {
 	int i;
@@ -634,7 +647,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 						// skip leading blanks
 						for (;*p == ' '; p++);
 
-						len = strTrimLen(p);
+						len = astrTrimLen(p);
 						p[len] = '\0';
 
 						// Have to fix .00 numeric as 0.00
@@ -658,7 +671,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 
 						if (pCol->coltype != SQL_BLOB
 						&&  pCol->coltype != SQL_CLOB) {
-							len = strTrimLen(p);
+							len = astrTrimLen(p);
 							p[len] = '\0';
 						}
 
@@ -848,31 +861,31 @@ PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
 			case SQL_GRAPHIC:     type = "graphic"        ; break;
 			case SQL_VARGRAPHIC:  type = "vargraphic"     ; break;
 			default: {
-			if (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE ) {
-				if (pCol->scale > 0) {
-					type = "dec"     ;
+				if (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE ) {
+					if (pCol->scale > 0) {
+						type = "dec"     ;
+					} else {
+						type = "int"     ;
+					}
 				} else {
-					type = "int"     ;
+					asprintf(temp ,"unknown%d" , pCol->coltype);
+					type = temp;
 				}
-			} else {
-				sprintf(temp ,"unknown%d" , pCol->coltype);
-				type = temp;
-			}
 			}
 		}
 		nox_NodeAdd (pField  , RL_LAST_CHILD, "datatype" , type,  VALUE );
 
-		sprintf(temp , "%d" ,  pCol->coltype);
+		asprintf(temp , "%d" ,  pCol->coltype);
 		nox_NodeAdd (pField  , RL_LAST_CHILD, "sqltype" , temp ,  LITERAL);
 
 		// Add size
-		sprintf(temp , "%d" , pCol->displaysize);
+		asprintf(temp , "%d" , pCol->displaysize);
 		nox_NodeAdd (pField  , RL_LAST_CHILD, "size"     , temp,  LITERAL  );
 
 		// Add decimal precission
 		if  (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE
 		&&   pCol->scale > 0) {
-			sprintf(temp , "%d" , pCol->scale);
+			asprintf(temp , "%d" , pCol->scale);
 			nox_NodeAdd (pField  , RL_LAST_CHILD, "prec"     , temp,  LITERAL  );
 		}
 
@@ -1254,7 +1267,7 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
 	int     colno;
 	UCHAR   temp [128];
 
-	stmt += sprintf (stmt , "update %s set " , table);
+	stmt += asprintf (stmt , "update %s set " , table);
 
 	pNode    =  nox_GetNodeChild (pSqlParms);
 	for ( colno=1; pNode; colno++) {
@@ -1262,18 +1275,18 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
 			name  = nox_GetNodeNamePtr   (pNode);
 			str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
 			if  (nodeisnull(pNode)) {
-				stmt += sprintf (stmt , "%s%s=NULL" , comma , temp);
+				stmt += asprintf (stmt , "%s%s=NULL" , comma , temp);
 			} else if  (nodeisblank(pNode)) {
-				stmt += sprintf (stmt , "%s%s=default" , comma , temp);    // because timesstamp / date can be set as ''
+				stmt += asprintf (stmt , "%s%s=default" , comma , temp);    // because timesstamp / date can be set as ''
 			} else {
-				stmt += sprintf (stmt , "%s%s=?"  , comma , temp);
+				stmt += asprintf (stmt , "%s%s=?"  , comma , temp);
 			}
 			comma = ",";
 		}
 		pNode = nox_GetNodeNext(pNode);
 	}
 
-	stmt += sprintf (stmt , " %s " , where);
+	stmt += asprintf (stmt , " %s " , where);
 }
 /* ------------------------------------------------------------- */
 static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
@@ -1289,7 +1302,7 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
 	UCHAR   temp [128];
 	PUCHAR  pMarker = markers;
 
-	stmt += sprintf (stmt , "insert into  %s (" , table);
+	stmt += asprintf (stmt , "insert into  %s (" , table);
 
 	pNode = nox_GetNodeChild (pSqlParms);
 	for ( colno=1; pNode; colno++) {
@@ -1297,11 +1310,11 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
 			if (!nodeisnull(pNode)) {
 				name     = nox_GetNodeNamePtr   (pNode);
 				str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
-				stmt    += sprintf (stmt , "%s%s" , comma , temp);
+				stmt    += asprintf (stmt , "%s%s" , comma , temp);
 				if  (nodeisblank(pNode)) {
-					pMarker+= sprintf (pMarker , "%sdefault" , comma);    // because timesstamp / date can be set as ''
+					pMarker+= asprintf (pMarker , "%sdefault" , comma);    // because timesstamp / date can be set as ''
 				} else {
-					pMarker+= sprintf (pMarker , "%s?" , comma);
+					pMarker+= asprintf (pMarker , "%s?" , comma);
 				}
 				comma = ",";
 			}
@@ -1309,9 +1322,9 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
 		pNode = nox_GetNodeNext(pNode);
 	}
 
-	stmt += sprintf (stmt , ") values( ");
-	stmt += sprintf (stmt , markers);
-	stmt += sprintf (stmt , ")") ;
+	stmt += asprintf (stmt , ") values( ");
+	stmt += asprintf (stmt , markers);
+	stmt += asprintf (stmt , ")") ;
 }
 /* ------------------------------------------------------------- */
 void createTracetable(PNOXSQLCONNECT pCon)
@@ -1326,7 +1339,7 @@ void createTracetable(PNOXSQLCONNECT pCon)
 		"   STJOB  VARCHAR ( 30) NOT NULL WITH DEFAULT,       "
 		"   STTRID BIGINT NOT NULL WITH DEFAULT,              "
 		"   STSQLSTMT VARCHAR ( 8192) NOT NULL WITH DEFAULT)  ";
-	sprintf(t , s , pTrc->lib);
+	asprintf(t , s , pTrc->lib);
 	pTrc->doTrace =  OFF; // So we don't end up in a recusive death spiral
 	nox_sqlExec(t , NULL);
 	pTrc->doTrace =  ON;
@@ -1562,19 +1575,19 @@ static PNOXSQL buildMetaStmt (PUCHAR table, PNOXNODE pRow)
 	SQLRETURN rc;
 	PNOXSQL    pSQLmeta = nox_sqlNewStatement (NULL, false, false);
 
-	stmt += sprintf (stmt , "select ");
+	stmt += asprintf (stmt , "select ");
 
 	comma = "";
 	pNode    =  nox_GetNodeChild (pRow);
 	while (pNode) {
 		name  = nox_GetNodeNamePtr   (pNode);
 		str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
-		stmt += sprintf (stmt , "%s%s" , comma , temp);
+		stmt += asprintf (stmt , "%s%s" , comma , temp);
 		comma = ",";
 		pNode = nox_GetNodeNext(pNode);
 	}
 
-	stmt += sprintf (stmt , " from %s where 1=0 with ur" , table);
+	stmt += asprintf (stmt , " from %s where 1=0 with ur" , table);
 
 	// prepare the statement that provides the columns
 	rc = SQLPrepare(pSQLmeta->pstmt->hstmt , sqlTempStmt, SQL_NTS);
@@ -1647,7 +1660,7 @@ LGL nox_sqlUpdate (PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlP
 	str2upper(table , table);
 	for(; *where == ' ' ; where++); // skip leading blanks
 	if (*where > ' ' && ! memBeginsWith(where, "where")) {
-		sprintf (whereStr , "where %s" , where);
+		asprintf (whereStr , "where %s" , where);
 		where = whereStr;
 	}
 	return nox_sqlUpdateOrInsert  (true , table  , pRow , where, pSqlParms);
@@ -1776,4 +1789,6 @@ PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 
 	return pc;
 }
+
+#pragma convert(0)
 

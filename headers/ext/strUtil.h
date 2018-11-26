@@ -1,8 +1,8 @@
 ﻿#ifndef STRUTIL_H
 #define STRUTIL_H
 
-int     strIcmp (PUCHAR s1, PUCHAR s2);
-int     memIcmp (PUCHAR s1, PUCHAR s2 , int len);
+int    strIcmp (PUCHAR s1, PUCHAR s2);
+int    memIcmp (PUCHAR s1, PUCHAR s2 , int len);
 SHORT  memicmpascii(PUCHAR m1  , PUCHAR m2 , LONG len );
 UCHAR  toLower(UCHAR c);
 UCHAR  toUpper(UCHAR c);
@@ -10,6 +10,10 @@ UCHAR  toupperascii(UCHAR c);
 UCHAR  tolowerascii(UCHAR c);
 LONG   strTrimLen(PUCHAR str);
 LONG   strtrim(PUCHAR str);
+LONG   astrTrimLen(PUCHAR str);
+LONG   astrtrim(PUCHAR str);
+LONG   asprintf (PUCHAR res, PUCHAR ctrlstr , ... );
+
 PUCHAR strchrreplace(PUCHAR out , PUCHAR in , PUCHAR from , PUCHAR to );
 LONG   memstrreplace(PUCHAR buf , LONG len , PUCHAR from , PUCHAR to );
 PUCHAR fmtPacked(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint);

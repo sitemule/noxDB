@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <ctype.h>
 #include <decimal.h>
 #include <mih/milckcom.h>     /* Lock types           */
@@ -20,6 +21,8 @@
 
 #include "ostypes.h"
 #include "strUtil.h"
+#include "e2aa2e.h"
+
 
 /* ------------------------------------------------------------- *\
    copy a string and return number of bytes copied
@@ -774,25 +777,57 @@ PUCHAR blob2str  (PBLOB pb)
     return  pb->String;
 }
 /* ---------------------------------------------------------------------------------------- */
-LONG strTrimLen(PUCHAR str)
+static LONG _trimlen(PUCHAR str, UCHAR c)
 {
     PUCHAR end = str;
     LONG l=0,len=0;
     while (*end) {
        l++;
-       if (*end > ' ') {
+       if (*end > c) {
          len = l ;
        }
        end++;
     }
     return len;
 }
+LONG strTrimLen(PUCHAR str)
+{
+   return _trimlen(str, 0x40);
+}
+LONG astrTrimLen(PUCHAR str)
+{
+   return _trimlen( str, 0x20);
+}
 /* ------------------------------------------------------------- */
-PUCHAR strTrim(PUCHAR s)
+static PUCHAR _trim(PUCHAR s, UCHAR c)
 {
 	PUCHAR e;
-	for(e = s + strlen(s); e > s && *e <= ' '; e--);
+	for(e = s + strlen(s); e > s && *e <= c; e--);
 	*(e+1) = '\0';
 	return (s);
 }
-
+/* ------------------------------------------------------------- */
+PUCHAR strTrim(PUCHAR s)
+{
+   return _trim ( s , 0x40);
+}
+/* ------------------------------------------------------------- */
+PUCHAR astrTrim(PUCHAR s)
+{
+   return _trim ( s , 0x20);
+}
+// --------------------------------------------------------------------------- 
+LONG asprintf (PUCHAR res, PUCHAR ctrlstr , ... )
+{
+	UCHAR eCtrlstr [32766];
+   LONG len;
+   va_list arg_ptr;
+	
+   stra2e (eCtrlstr , ctrlstr);
+	// Build a temp string with the formated data  */
+	va_start(arg_ptr, eCtrlstr);
+	len = vsprintf(res, eCtrlstr, arg_ptr);
+	va_end(arg_ptr);
+   stre2a (res  , res );
+   return len;
+}
