@@ -54,7 +54,7 @@ compile:
 	system "CRTCMOD MODULE($(BIN_LIB)/CSV) SRCSTMF('src/csv.c') $(CCFLAGS)"
 	system "CRTCMOD MODULE($(BIN_LIB)/GENERIC) SRCSTMF('src/generic.c') $(CCFLAGS)"
 
-	system "CRTSRCPF FILE($(BIN_LIB)/QCLLESRC) RCDLEN(112)"
+	system "CRTSRCPF FILE($(BIN_LIB)/QCLLESRC) RCDLEN(132)"
 	system "CPYFRMSTMF FROMSTMF('src/runqsh.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/RUNQSH.mbr') MBROPT(*ADD)"
 	system "CPYFRMSTMF FROMSTMF('src/trace.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/TRACE.mbr') MBROPT(*ADD)"
 	system -s "CRTCLMOD MODULE($(BIN_LIB)/RUNQSH) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
@@ -75,7 +75,7 @@ ext:
 	#system "CRTCMOD MODULE($(BIN_LIB)/RTVSYSVAL) SRCSTMF('src/ext/rtvsysval.c') $(CCFLAGS)"
 
 bind:
-	-system -q "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
+	-system -q "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(132)"
 	system "CPYFRMSTMF FROMSTMF('headers/NOXDB.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/NOXDB.mbr') MBROPT(*replace)"
 	system -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/NOXDB) MODULE($(MODS) $(DEPS_LIST)) SRCFILE($(BIN_LIB)/QSRVSRC) OPTION(*GEN) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
 
@@ -83,12 +83,12 @@ hdr:
 	sed "s/ nox_/ json_/g; s/ NOX_/ json_/g" headers/NOXDB.rpgle > headers/JSONPARSER.rpgle
 	sed "s/ nox_/ xml_/g; s/ NOX_/ xml_/g" headers/NOXDB.rpgle > headers/XMLPARSER.rpgle
 
-	system "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(112)"
-	system "CRTSRCPF FILE($(BIN_LIB)/QCREF) RCDLEN(112)"
+	system "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(132)"
+	system "CRTSRCPF FILE($(BIN_LIB)/QCREF) RCDLEN(132)"
   
 	system "CPYFRMSTMF FROMSTMF('headers/JSONPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONPARSER.mbr') MBROPT(*ADD)"
 	system "CPYFRMSTMF FROMSTMF('headers/XMLPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/XMLPARSER.mbr') MBROPT(*ADD)"
-	system "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCREF.file/NOXDB.mbr') MBROPT(*ADD)"
+	system "CPYFRMSTMF FROMSTMF('headers/noxdb.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCREF.file/NOXDB.mbr') MBROPT(*ADD)"
 
 clean:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/QCLLESRC) OBJTYPE(*FILE)"
@@ -102,6 +102,6 @@ current:
 
 
 example: 
-	system "CRTBNDRPG PGM($(BIN_LIB)/$(SRC)) SRCSTMF('examples/$(SRC).rpgle') DBGVIEW(*ALL)" > error.txt
+	system "CRTBNDRPG PGM($(BIN_LIB)/$(MOD)) SRCSTMF('$(SRC)') DBGVIEW(*ALL)" 
 
 	

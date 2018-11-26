@@ -53,13 +53,28 @@
         },
         {
             "label": "Compile current example file",
-            "command": "ssh -t DKSRV133 'cd /prj/noxdbutf8/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
+            "command": "ssh -t DKSRV133 'cd /prj/noxdbutf8/;echo ${relativeFile} ; gmake example MOD=${fileBasenameNoExtension} SRC=${relativeFile} > error.txt'",
+            "_command": "ssh -t DKSRV133 'cd /prj/noxdbutf8/;echo ${relativeFile} ; gmake example MOD=${fileBasenameNoExtension} SRC=${relativeFile}' | grep '*RNF' | grep -v '*RNF7031' | sed  "s!*!$@: &!"",
             "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": []
+            "problemMatcher": {
+                "owner": "c",
+                "fileLocation": ["relative", "${workspaceRoot}"],
+                "pattern": {
+                    //"regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    // src/ileastic.c, 241.2: CZM0045(30) Undeclared identifier a.
+                    
+                    "regexp": "^(.*), (\\d+)\\.(\\d+):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    // "severity": 4,
+                    "message": 4
+                }
+            }
         }
     ]
 }

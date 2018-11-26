@@ -92,22 +92,22 @@ void nox_DecodeJson (  PUCHAR v )
 //---------------------------------------------------------------------------
 BOOL isTermChar(UCHAR c)
 {
-	if (c == COMMA
-	||  c == COLON
-	||  c == BRAEND
-	||  c == CUREND
-	||  c == BRABEG
-	||  c == CURBEG) {
-		return TRUE;
-	} else {
-		return FALSE;
+	switch (c) {
+		case COMMA :
+		case COLON :
+		case BRAEND:
+		case CUREND:
+		case BRABEG:
+		case CURBEG:
+			return TRUE;
+		default:
+			return FALSE;
 	}
 }
 //---------------------------------------------------------------------------
 TOK getTok(PNOXCOM pJxCom) 
 {
 
-	#pragma convert(1252)
 
 	PUCHAR start;
 	PUCHAR p;
@@ -131,7 +131,7 @@ TOK getTok(PNOXCOM pJxCom)
 			tok.isEof = TRUE;
 			return tok;
 		}
-		if (*start > ' ') break; // FOUND!!
+		if (*start > BLANK) break; // FOUND!!
 	}
 
 	if (*start == QUOT  || *start == APOS ) {
@@ -158,14 +158,13 @@ TOK getTok(PNOXCOM pJxCom)
 		tok.len   = 1;
 		skip      = 0;
 	} else {
-		for  ( p = start; *p > ' ' && ! isTermChar(*p) ; p++);    // Find length
+		for  ( p = start; *p > BLANK && ! isTermChar(*p) ; p++);    // Find length
 		tok.len = p - start;
 		tok.data  = (PUCHAR) memAlloc ( tok.len  + 1);        // Copy to heap and keep space for terminating zero
 		substr (tok.data, start , tok.len);
 		skip = tok.len - 1;
 		tok.isLiteral = TRUE;
 	}
-
 
 	/* DEBUG!!
 	printf("\n%d <%s>",  dbgStep , out);
@@ -181,7 +180,6 @@ TOK getTok(PNOXCOM pJxCom)
 	// for  (;  *p <= ' ' && *p ; p++);                // Skip until next token
 	// *s = p;
 	return tok;
-	#pragma convert(0)
 
 }
 //---------------------------------------------------------------------------
@@ -272,7 +270,7 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 					return TRUE;
 				}
 				if (sep.token != COLON)  {
-					nox_SetMessage( "Invalid token at (%d:%d) token number: %d. Was expecting an ':' but got a %s near %s"
+					nox_SetMessage( "Invalid token at (%d:%d) token number: %d. Was expecting an :' but got a %s near %s"
 												, pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo , c2s(sep.token), sep.data );
 					pJxCom->State = XML_EXIT_ERROR;
 					memFree (&key.data);

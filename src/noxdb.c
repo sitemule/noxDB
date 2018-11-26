@@ -19,7 +19,7 @@
 #include <leod.h>
 #include <decimal.h>
 #include <wchar.h>
-// #include <errno.h>
+#include <errno.h>
 
 #include <sys/stat.h>
 #include "ostypes.h"
@@ -47,6 +47,10 @@ __thread UCHAR  nox_DecPoint = '.';
 // iconv_t xlate1208toE;
 static INT64 LVARCHARNULL =0;
 static PLVARCHAR PLVARCHARNULL = (PLVARCHAR) &LVARCHARNULL;
+
+#pragma convert(1252)
+static const PUCHAR delimiters = DELIMITERS;
+#pragma convert(0)
 
 
 // --------------------------------------------------------------------------- 
@@ -735,7 +739,7 @@ void  nox_MergeList (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, PUCHAR n
 		pSource = pSource->pNodeSibling;
 	}
 }
-#pragma convert(1252)
+#pragma convert(0)
 /* --------------------------------------------------------------------------- */
 PNOXNODE  nox_InsertByName (PNOXNODE pDest , PUCHAR name , PNOXNODE pSource )
 {
@@ -901,7 +905,7 @@ void  detectEncoding(PNOXCOM pJxCom)
 	// skip blanks 
 	for (; *p <= BLANK && *p != '\0'; p++);
 
-	pJxCom->isJson != (*p == LT);
+	pJxCom->isJson = (*p != LT);
 	pJxCom->StreamBuf = p;	
 }
 // ---------------------------------------------------------------------------
@@ -1573,10 +1577,10 @@ PNOXNODE nox_ParseFile(PUCHAR FileName)
 
 	f  = fopen(strTrim(FileName), "rb");
 	if (f  == NULL) {
-	nox_SetMessage( "File %s not open", FileName);
-	jxError = true;
-	return NULL;
-}
+		nox_SetMessage( "File %s not open: %s", FileName, strerror(errno));
+		jxError = true;
+		return NULL;
+	}
 
 	// Get the default input ccsid from the file system ( It might be wrong because it is set to default)
 	fstat(fileno(f), &statbuf);
@@ -1971,7 +1975,7 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
 		if (*pEnd == BRABEG) {
 			pEnd = strchr ( pName , BRAEND);
 		} else {
-			pEnd = findchr(pName , DELIMITERS , sizeof(DELIMITERS)-1); // Not the zerotermination included
+			pEnd = findchr(pName , delimiters , sizeof(DELIMITERS)-1); // Not the zerotermination included
 		}
 
 		// No Bytes remaining => End of name = rest of string
@@ -2587,7 +2591,7 @@ PNOXNODE nox_CreateSubNodes  (PNOXNODE pNodeRoot , PUCHAR Path )
 	} else if  (*pName == BRABEG) {
 		pName ++ ;
 		pParentNode = pNodeRoot;
-	} else if (findchr(pName , DELIMITERS , sizeof(DELIMITERS)-1) == pName) {
+	} else if (findchr(pName , delimiters , sizeof(DELIMITERS)-1) == pName) {
 		pName ++ ;
 		pParentNode = nox_GetRoot(pNodeRoot);
 	} else {
@@ -2598,7 +2602,7 @@ PNOXNODE nox_CreateSubNodes  (PNOXNODE pNodeRoot , PUCHAR Path )
 	do {
 		NODETYPE nodeType = VALUE;
 		UCHAR arrix [64];
-		pEnd = findchr(pName , DELIMITERS , sizeof(DELIMITERS)-1);
+		pEnd = findchr(pName , delimiters , sizeof(DELIMITERS)-1);
 		if (pEnd) {
 			if      (*pEnd == BRABEG && pEnd[1] == BRAEND) isNewArray = true;
 			else if (isNextDelimiter(*pEnd))               nodeType = OBJECT;
@@ -2834,16 +2838,16 @@ PNOXNODE  nox_SetPtrByNameVC (PNOXNODE pNode, PLVARCHAR pName, PUCHAR Value, LGL
 void nox_GetValueVC(PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR NameP, PLVARCHAR DefaultP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PLVARCHAR  Name    = (pParms->OpDescList->NbrOfParms >= 2) ? NameP    : PLVARCHARNULL;
-	PLVARCHAR  Default = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultP : PLVARCHARNULL;
+	PLVARCHAR  Name    = (pParms->OpDescList->NbrOfParms >= 3) ? NameP    : PLVARCHARNULL;
+	PLVARCHAR  Default = (pParms->OpDescList->NbrOfParms >= 4) ? DefaultP : PLVARCHARNULL;
 	nox_CopyValueByNameVC ( pRes , pNodeRoot, Name , Default , false) ;
 }
 // -------------------------------------------------------------
 void nox_GetStrJoinVC(PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR NameP, PLVARCHAR DefaultP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PLVARCHAR  Name    = (pParms->OpDescList->NbrOfParms >= 2) ? NameP    : PLVARCHARNULL;
-	PLVARCHAR  Default = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultP : PLVARCHARNULL;
+	PLVARCHAR  Name    = (pParms->OpDescList->NbrOfParms >= 3) ? NameP    : PLVARCHARNULL;
+	PLVARCHAR  Default = (pParms->OpDescList->NbrOfParms >= 4) ? DefaultP : PLVARCHARNULL;
 	nox_CopyValueByNameVC ( pRes , pNodeRoot, Name , Default , true ) ;
 }
 // -------------------------------------------------------------
@@ -2879,7 +2883,7 @@ INT64 nox_GetValueIntVC (PNOXNODE pNode , PLVARCHAR NameP  , INT64 dftParm)
 void nox_GetNodeValueVC (PLVARCHAR pRes, PNOXNODE pNode , PLVARCHAR pDefaultValue)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PLVARCHAR dft = (pParms->OpDescList->NbrOfParms >= 2) ? pDefaultValue : PLVARCHARNULL;
+	PLVARCHAR dft = (pParms->OpDescList->NbrOfParms >= 3) ? pDefaultValue : PLVARCHARNULL;
 	PUCHAR value;
 
 	value =  nox_GetNodeValuePtr  (pNode , plvc2str(dft));
@@ -2916,7 +2920,7 @@ void nox_GetNodeNameVC (PLVARCHAR pRes, PNOXNODE pNode)
 void nox_GetNodeAttrValueVC (PLVARCHAR pRes, PNOXNODE pNode ,PLVARCHAR pAttrName, PLVARCHAR  pDefaultValue)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PLVARCHAR dft = (pParms->OpDescList->NbrOfParms >= 3) ? pDefaultValue : PLVARCHARNULL;
+	PLVARCHAR dft = (pParms->OpDescList->NbrOfParms >= 4) ? pDefaultValue : PLVARCHARNULL;
 	PUCHAR value =  nox_GetNodeAttrValuePtr  ( pNode , plvc2str(pAttrName),  plvc2str(dft)) ;
 	pRes->Length = memSize(value);
 	memcpy(pRes->String , value , pRes->Length);
@@ -2925,7 +2929,7 @@ void nox_GetNodeAttrValueVC (PLVARCHAR pRes, PNOXNODE pNode ,PLVARCHAR pAttrName
 FIXEDDEC nox_GetNodeAttrValueNumVC (PNOXNODE pNode , PLVARCHAR pAttrName, FIXEDDEC DefaultValue)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	FIXEDDEC dft = (pParms->OpDescList->NbrOfParms >= 2) ? DefaultValue : 0;
+	FIXEDDEC dft = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultValue : 0;
 	PNOXATTR pAttr = nox_AttributeLookup   (pNode, plvc2str(pAttrName));
 
 	if (pAttr == NULL
@@ -3013,7 +3017,7 @@ FIXEDDEC nox_GetAttrValueNum  (PNOXATTR pAttr, FIXEDDEC dftParm)
 void nox_GetAttrValueVC (PLVARCHAR pRes, PNOXATTR pAttr, PLVARCHAR pDefaultValue)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PLVARCHAR  dft = (pParms->OpDescList->NbrOfParms >= 2) ? pDefaultValue :  PLVARCHARNULL;;
+	PLVARCHAR  dft = (pParms->OpDescList->NbrOfParms >= 3) ? pDefaultValue :  PLVARCHARNULL;;
 
 	pRes->Length = 0;
 	if (pAttr &&  pAttr->Value ) {
@@ -3036,9 +3040,11 @@ PUCHAR nox_ErrStr (PNOXNODE pJxNode)
 	return jxMessage;
 }
 // -------------------------------------------------------------
-void nox_MessageVC  (PLVARCHAR pRes,PNOXNODE pJxNode)
+VARCHAR1024 nox_MessageVC  (PNOXNODE pJxNode)
 {
-	 str2plvc (pRes ,  jxMessage);
+	VARCHAR1024 res;
+	str2vc (&res ,  jxMessage);
+	return res;
 }
 // -------------------------------------------------------------
 VOID nox_SetApiErr (PNOXNODE pJxNode, PAPIERR pApiErr)

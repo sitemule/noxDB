@@ -42,30 +42,29 @@ a \
 #define  BRABRAGT  "]]>"
 #define  CDATA     "<![CDATA["
 
-#define  APOS         '\''
-#define  QUOT         '\"'
-#define  QUESTION     '?' 
-#define  EQ           '=' 
-#define  GT           '>' 
-#define  LT           '<' 
-#define  UNDERSCORE   '_' 
-#define  COLON        ':' 
-#define  DOT          '.' 
-#define  SLASH        '/' 
-#define  EXCLMARK     '!' 
-#define  BACKSLASH    '\\'
-#define  MASTERSPACE  '@' 
-#define  BRABEG       '[' 
-#define  BRAEND       ']' 
-#define  CURBEG       '{' 
-#define  CUREND       '}' 
-#define  MINUS        '-' 
-#define  BLANK        ' ' 
-#define  AMP          '&' 
-#define  HASH         '#' 
-#define  CR           '\n'
-#define  BLANK        ' '
-#define  COMMA        ','
+#define  APOS         0x27
+#define  QUOT         0x22
+#define  QUESTION     0x3f 
+#define  EQ           0x3d 
+#define  GT           0x3e 
+#define  LT           0x3c
+#define  UNDERSCORE   0x5f 
+#define  COLON        0x3a 
+#define  DOT          0x2e 
+#define  SLASH        0x2f 
+#define  EXCLMARK     0x21 
+#define  BACKSLASH    0x5c
+#define  MASTERSPACE  0x40 
+#define  BRABEG       0x5b 
+#define  BRAEND       0x5d 
+#define  CURBEG       0x7b 
+#define  CUREND       0x7d 
+#define  MINUS        0x2d 
+#define  BLANK        0x20 
+#define  AMP          0x26 
+#define  HASH         0x23 
+#define  CR           0x0d
+#define  COMMA        0x2c
 #define  DELIMITERS   "/\\@[] .{}'\""
 #pragma convert(0)
 
@@ -364,7 +363,7 @@ BOOL     nox_Parse (PNOXCOM pJxCom);
 LGL      nox_Error (PNOXNODE pJxNode);
 VOID     nox_SetApiErr  (PNOXNODE pJxNode , PAPIERR pApiErr );
 PUCHAR   nox_ErrStr(PNOXNODE pJxNode);
-void     nox_MessageVC  (PLVARCHAR pRes,PNOXNODE pJxNode);
+VARCHAR1024  nox_MessageVC  (PNOXNODE pJxNode);
 void     nox_Dump  (PNOXNODE pJxNode);
 void     nox_Free  (PNOXNODE pJxNode);
 PNOXNODE  nox_GetNode  (PNOXNODE pNode, PUCHAR Name) ;
