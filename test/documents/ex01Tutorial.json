@@ -1,0 +1,28 @@
+﻿[
+	{
+		"id":397267,
+		"name":"Tyron",
+		"street":"13 Myrtle Dr",
+		"creditLimit":1000
+	},{
+		"id":593029,
+		"name":"Williams",
+		"street":"485 SE 2 Ave",
+		"creditLimit":200
+	},{
+		"id":839283,
+		"name":"Jones",
+		"street":"21B NW 135 St",
+		"creditLimit":400
+	},{
+		"id":389572,
+		"name":"Stevens",
+		"street":"208 Snow Pass",
+		"creditLimit":400
+	},{
+		"id":846283,
+		"name":"Alison",
+		"street":"787 Lake Dr",
+		"creditLimit":5000
+	}
+]

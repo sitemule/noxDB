@@ -341,6 +341,7 @@ LGL nox_IsLiteral (PNOXNODE node)
 // ---------------------------------------------------------------------------
 // use simple bouble-sort to sort an array by keyvalues
 // ---------------------------------------------------------------------------
+#pragma convert(1252) 
 PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
 {
 	PNOXNODE pNodeNext, pNode1, pNode2, pCompNode1, pCompNode2 ;
@@ -350,7 +351,8 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
 	int     kix, kx, comp ;
 
 	// Set function pointers for callback
-	double (* getnumberval)(PUCHAR s)  =  useLocale ? num2float   : atof;
+	//double (* getnumberval)(PUCHAR s)  =  useLocale ? num2float   : num2floatLocale;
+	double (* getnumberval)(PUCHAR s)  =  num2float ;
 	BOOL   (* isNumberNode)(PNOXNODE n) =  useLocale ? isNumberNodeLoose : isNumberNodeStrict;
 
 	// if (pNode == NULL || pNode->type != ARRAY) return;
@@ -416,6 +418,8 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
 
 	return pNode;
 }
+#pragma convert(0) 
+
 PNOXNODE nox_ArraySortVC(PNOXNODE pNode, PLVARCHAR fieldsP, USHORT optionsP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -1428,12 +1432,18 @@ PNOXNODE nox_NodeAdd (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value,
 // ---------------------------------------------------------------------------
 PNOXNODE nox_NewObject ()
 {
-	return NewNode  (NULL , NULL,  OBJECT);
-}
+	PNOXNODE  pNode = (PNOXNODE) memAllocClear (sizeof(NOXNODE));
+	pNode->signature  = NODESIG;
+	pNode->type       = OBJECT;
+	return pNode;
+} 
 // ---------------------------------------------------------------------------
 PNOXNODE nox_NewArray ()
 {
-	return NewNode  (NULL , NULL,  ARRAY);
+	PNOXNODE  pNode = (PNOXNODE) memAllocClear (sizeof(NOXNODE));
+	pNode->signature  = NODESIG;
+	pNode->type       = ARRAY;
+	return pNode;
 }
 // ---------------------------------------------------------------------------
 void nox_NodeSet (PNOXNODE pNode , PUCHAR Value)

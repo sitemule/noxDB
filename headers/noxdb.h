@@ -11,7 +11,7 @@
 #define XMLPARSE_H
 
 #ifndef OCCURENS_TYPE
-#define OCCURENS_TYPE
+#define OCCURENS_TYPE  
 typedef enum {
 	OC_NONE = 0,
 	OC_NEXT_FOLLOWS = 1,
@@ -466,8 +466,14 @@ PNOXNODE  nox_SetIntByName (PNOXNODE pNode, PUCHAR Name, LONG Value);
 PNOXNODE  nox_NodeMoveInto (PNOXNODE  pDest, PUCHAR Name , PNOXNODE pSource);
 void nox_NodeCloneAndReplace (PNOXNODE pDest , PNOXNODE pSource);
 void nox_Debug(PUCHAR text, PNOXNODE pNode);
+void nox_SwapNodes (PNOXNODE * pNode1, PNOXNODE *  pNode2);
+
+PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, BOOL useLocale);
+#pragma descriptor ( void nox_ArraySort     (void))
+
 
 // SQL functions
+// -------------
 #ifndef NOXSQLSTMT_MAX
 #define NOXSQLSTMT_MAX  32
 #endif
@@ -522,11 +528,27 @@ typedef _Packed struct  {
 #define  DATA_SIZE 65535
 #define  INVALIDCHAR 0x3f
 #define  LOOK_AHEAD_SIZE (65535-512)
+
+typedef _Packed struct  {
+	 SQLHENV       henv;
+	 SQLHDBC       hdbc;
+	 PNOXNODE      pOptions;
+	 BOOL          pOptionsCleanup;
+	 SQLOPTIONS    options;
+	 PXLATEDESC    pCd;
+	 UCHAR         sqlState[5];
+	 LONG          sqlCode;
+	 UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
+	 NOXSQLSTMT    stmts[NOXSQLSTMT_MAX];
+	 SHORT         stmtIx;
+	 NOXTRACE      sqlTrace;
+} NOXSQLCONNECT , * PNOXSQLCONNECT;
+
 typedef _Packed struct  {
 // SQLHENV       henv;
 // SQLHDBC       hdbc;
 // SQLHSTMT      hstmt;
-	 PNOXSQLSTMT    pstmt;
+	 PNOXSQLSTMT   pstmt;
 	 PUCHAR        sqlstmt;
 	 SQLSMALLINT   nresultcols;
 	 SQLINTEGER    rowcount;
@@ -536,22 +558,10 @@ typedef _Packed struct  {
 // PNOXNODE       pOptions;
 // BOOL          deleteOptions;
 	 PNOXCOL        cols;
+	 PNOXSQLCONNECT pCon;
+
 } NOXSQL, * PNOXSQL;
 
-typedef _Packed struct  {
-	 SQLHENV       henv;
-	 SQLHDBC       hdbc;
-	 PNOXNODE       pOptions;
-	 BOOL          pOptionsCleanup;
-	 SQLOPTIONS    options;
-	 PXLATEDESC    pCd;
-	 UCHAR         sqlState[5];
-	 LONG          sqlCode;
-	 UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
-	 NOXSQLSTMT     stmts[NOXSQLSTMT_MAX];
-	 SHORT         stmtIx;
-	 NOXTRACE       sqlTrace;
-} NOXSQLCONNECT , * PNOXSQLCONNECT;
 
 typedef enum _NOX_RESULTSET {
 	 NOX_META       = 1,
@@ -561,47 +571,75 @@ typedef enum _NOX_RESULTSET {
 	 NOX_APROXIMATE_TOTALROWS = 16
 } NOX_RESULTSET, *PNOX_RESULTSET;
 
+typedef _Packed struct _SQLCHUNK {
+   SQLINTEGER actLen;
+   SQLINTEGER chunkLen;
+   SQLINTEGER offset;
+   PUCHAR value;
+} SQLCHUNK, *PSQLCHUNK;
+
+
 VOID TRACE ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);
 
-PNOXNODE nox_sqlResultRow ( PUCHAR sqlstmt, PNOXNODE pSqlParmsP ) ;
+PNOXNODE nox_sqlResultRow ( PNOXSQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParmsP, LONG startAt) ;
 #pragma descriptor ( void nox_sqlResultRow   (void))
+PNOXNODE nox_sqlResultRowVC ( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt,  PNOXNODE pSqlParmsP , LONG startP);
+#pragma descriptor ( void nox_sqlResultRowVC   (void))
 
-PNOXNODE nox_sqlResultRowAt ( PUCHAR sqlstmt, LONG startAt , PNOXNODE pSqlParmsP ) ;
-#pragma descriptor ( void nox_sqlResultRowAt   (void))
 
-PNOXNODE nox_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PNOXNODE pSqlParmsP );
+PNOXNODE nox_sqlResultSet( PNOXSQLCONNECT pCon, PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlResultSet   (void))
+PNOXNODE nox_sqlResultSetVC( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PNOXNODE pSqlParmsP);
+#pragma descriptor ( void nox_sqlResultSetVC   (void))
 
-PNOXSQL nox_sqlOpen(PUCHAR sqlstmt , PNOXNODE pSqlParms, BOOL scroll);
+
+PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParms, BOOL scroll);
 #pragma descriptor ( void nox_sqlOpen        (void))
+PNOXSQL nox_sqlOpenVC(PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scrollP);
+#pragma descriptor ( void nox_sqlOpenVC       (void))
 
-LGL nox_sqlUpdate (PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP  );
+
+LGL nox_sqlUpdate (PNOXSQLCONNECT pCon, PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlUpdate      (void))
+LGL nox_sqlUpdateVC (PNOXSQLCONNECT pCon, PLVARCHAR table  , PNOXNODE pRow , PLVARCHAR whereP, PNOXNODE pSqlParmsP);
+#pragma descriptor ( void nox_sqlUpdateVC      (void))
 
-LGL nox_sqlInsert (PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP  );
+
+LGL nox_sqlInsert (PNOXSQLCONNECT pCon,PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlInsert      (void))
+LGL nox_sqlInsertVC (PNOXSQLCONNECT pCon,PLVARCHAR table  , PNOXNODE pRow , PLVARCHAR whereP, PNOXNODE pSqlParmsP);
+#pragma descriptor ( void nox_sqlInsertVC      (void))
 
-LGL nox_sqlUpsert (PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP  );
+
+LGL nox_sqlUpsert (PNOXSQLCONNECT pCon, PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlUpsert      (void))
+LGL nox_sqlUpsertVC (PNOXSQLCONNECT pCon, PLVARCHAR table  , PNOXNODE pRow , PLVARCHAR whereP, PNOXNODE pSqlParmsP);
+#pragma descriptor ( void nox_sqlUpsertVC    (void))
 
-LONG nox_sqlNumberOfRows(PUCHAR sqlstmt);
+
+LONG nox_sqlNumberOfRows(PNOXSQLCONNECT pCon,PUCHAR sqlstmt);
+#pragma descriptor ( void nox_sqlNumberOfRows    (void))
+LONG nox_sqlNumberOfRowsVC(PNOXSQLCONNECT pCon ,PLVARCHAR sqlstmt);
+#pragma descriptor ( void nox_sqlNumberOfRowsVC  (void))
+
 PNOXNODE nox_sqlFetchRelative (PNOXSQL pSQL, LONG fromRow);
 PNOXNODE nox_sqlFetchNext (PNOXSQL pSQL);
 
 void nox_sqlClose (PNOXSQL * ppSQL);
-void nox_sqlKeepConnection (BOOL keep);
-PNOXNODE nox_sqlGetMeta (PUCHAR sqlstmt);
+PNOXNODE nox_sqlGetMeta (PNOXSQLCONNECT pCon, PUCHAR sqlstmt);
 
 
-LGL    nox_sqlExec (PUCHAR sqlstmt , PNOXNODE pSqlParms  );
+LGL  nox_sqlExec (PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParms);
 #pragma descriptor ( void nox_sqlExec        (void))
+LGL nox_sqlExecVC(PNOXSQLCONNECT pCon,PLVARCHAR sqlstmt , PNOXNODE pSqlParmsP);
+#pragma descriptor ( void nox_sqlExecVC      (void))
+
 
 PNOXSQLCONNECT  nox_sqlConnect(PNOXNODE pSqlParms  );
 #pragma descriptor ( void nox_sqlConnect    (void))
 
-void nox_SwapNodes (PNOXNODE * pNode1, PNOXNODE *  pNode2);
-
-PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, BOOL useLocale);
-#pragma descriptor ( void nox_ArraySort     (void))
+void nox_sqlDisconnect (PNOXSQLCONNECT * ppCon);
+void nox_traceOpen (PNOXSQLCONNECT pCon);
+void nox_traceInsert (PNOXSQL pSQL, PUCHAR stmt , PUCHAR sqlState);
 
 #endif

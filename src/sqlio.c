@@ -37,36 +37,14 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 __thread extern UCHAR jxMessage[512];
 __thread extern BOOL  jxError;
 
-// Unit Globals:
-static PNOXSQLCONNECT pConnection = NULL;
-static BOOL keepConnection = false;
-__thread static SQLINTEGER sqlCode = 0;
-
-static enum  {
-   UNCONNECTED,
-   AUTOCONNECTED,
-   HOSTED
-} connectionMode;
-
-typedef _Packed struct _SQLCHUNK {
-   SQLINTEGER actLen;
-   SQLINTEGER chunkLen;
-   SQLINTEGER offset;
-   PUCHAR value;
-} SQLCHUNK, *PSQLCHUNK;
-
-void          nox_sqlDisconnect (void);
-PNOXSQLCONNECT nox_sqlNewConnection(void);
-void nox_traceOpen (PNOXSQLCONNECT pCon);
-void nox_traceInsert (PNOXSQL pSQL, PUCHAR stmt , PUCHAR sqlState);
 
 // !!!!! NOTE every constant in this module is in ASCII
 #pragma convert(1252)
 
 /* ------------------------------------------------------------- */
-SQLINTEGER nox_sqlCode(void)
+SQLINTEGER nox_sqlCode(PNOXSQLCONNECT pCon)
 {
-	return sqlCode;
+	return pCon->sqlCode;
 }
 /* ------------------------------------------------------------- */
 static SQLINTEGER getSqlCode(SQLHSTMT hStmt)
@@ -74,6 +52,7 @@ static SQLINTEGER getSqlCode(SQLHSTMT hStmt)
 	SQLCHAR        buffer[SQL_MAX_MESSAGE_LENGTH + 1];
 	SQLCHAR        sqlstate[SQL_SQLSTATE_SIZE + 1];
 	SQLSMALLINT    length;
+	SQLINTEGER     sqlCode;
 
 	SQLError(SQL_NULL_HENV, SQL_NULL_HDBC, hStmt,
 		sqlstate,
@@ -85,7 +64,7 @@ static SQLINTEGER getSqlCode(SQLHSTMT hStmt)
 	return sqlCode;
 }
 /* ------------------------------------------------------------- */
-static int check_error (PNOXSQL pSQL)
+static int check_error (PNOXSQLCONNECT pCon, PNOXSQL pSQL)
 {
 	SQLSMALLINT length;
 	ULONG l;
@@ -100,23 +79,23 @@ static int check_error (PNOXSQL pSQL)
 	UCHAR         sqlState[5];
 	UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
 	PUCHAR        psqlState  = sqlState;
-	PLONG         psqlCode   = &sqlCode;
+	SQLINTEGER*   psqlCode   = &pCon->sqlCode;
 	PUCHAR        psqlMsgDta = sqlMsgDta;
 
 	if (pSQL && pSQL->pstmt) {
 		hType  =  SQL_HANDLE_STMT;
 		handle =  pSQL->pstmt->hstmt;
-	} else if ( pConnection) {
-		if (pConnection->hdbc) {
+	} else if ( pCon) {
+		if (pCon->hdbc) {
 			hType  =  SQL_HANDLE_DBC;
-			handle =  pConnection->hdbc;
+			handle =  pCon->hdbc;
 		} else {
 			hType  =  SQL_HANDLE_ENV;
-			handle =  pConnection->henv;
+			handle =  pCon->henv;
 		}
-		psqlState  = pConnection->sqlState;
-		psqlCode   = &pConnection->sqlCode;
-		psqlMsgDta = pConnection->sqlMsgDta;
+		psqlState  = pCon->sqlState;
+		psqlCode   = &pCon->sqlCode;
+		psqlMsgDta = pCon->sqlMsgDta;
 	}
 
 	length = 0;
@@ -126,110 +105,6 @@ static int check_error (PNOXSQL pSQL)
 	jxError = true;
 
 	return;
-}
-/* ------------------------------------------------------------- */
-static PNOXSQLCONNECT nox_sqlNewConnection(void )
-{
-	// static SQLHSTMT      hstmt = 0 ;
-	// SQLINTEGEREGER    len;
-	// UCHAR Label [256];
-	// LGL  err = ON;
-	// LONG rows =0;
-
-	// PNOXSQLCONNECT pConnection;  I hate this - bu need to go global for now !!
-	LONG          attrParm;
-	
-	PUCHAR        server = "*LOCAL";
-
-	int rc;
-	PSQLOPTIONS po;
-
-	pConnection = memAllocClear(sizeof(NOXSQLCONNECT));
-	pConnection->sqlTrace.handle = -1;
-	pConnection->pCd = XlateXdOpen (13488, 0);
-	po = &pConnection->options;
-	po->upperCaseColName = OFF;
-	po->autoParseContent = ON;
-	po->DecimalPoint     = '.';
-	po->hexSort          = OFF;
-	po->sqlNaming        = OFF;
-	po->DateSep          = '-';
-	po->DateFmt          = 'y';
-	po->TimeSep          = ':';
-	po->TimeFmt          = 'H';
-
-	// allocate an environment handle
-	rc = SQLAllocEnv (&pConnection->henv);
-	if (rc != SQL_SUCCESS ) {
-		check_error (NULL);
-		nox_sqlDisconnect ();
-		return NULL; // we have an error
-	}
-
-	// Note - this is invers: Default to IBMi naming
-	attrParm = pConnection->options.sqlNaming == ON ? SQL_FALSE : SQL_TRUE;
-	rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_SYS_NAMING, &attrParm  , 0);
-	/* Dont test since the activations groupe might be reclaimed, and a new "session" is on..
-	if (rc != SQL_SUCCESS ) {
-		check_error (NULL);
-		nox_sqlDisconnect ();
-		return NULL; // we have an error
-	}
-	... */
-
-	/* TODO !!! always use UTF-8 */
-	attrParm = SQL_TRUE;
-	rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_UTF8 , &attrParm  , 0);
-	if (rc != SQL_SUCCESS ) {
-		nox_sqlDisconnect ();
-		return NULL; // we have an error
-	}
-
-
-	attrParm = SQL_TRUE;
-	rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
-	if (rc != SQL_SUCCESS ) {
-		nox_sqlDisconnect ();
-		return NULL; // we have an error
-	}
-
-	rc = SQLAllocConnect (pConnection->henv, &pConnection->hdbc);  // allocate a connection handle
-	if (rc != SQL_SUCCESS ) {
-		check_error (NULL);
-		nox_sqlDisconnect ();
-		return NULL; // we have an error
-	}
-
-	attrParm = SQL_TXN_NO_COMMIT; // does not work with BLOBS
-	// attrParm = SQL_TXN_READ_UNCOMMITTED; // does not work for updates !!! can noet bes pr- statemnet
-	rc = SQLSetConnectAttr (pConnection->hdbc, SQL_ATTR_COMMIT , &attrParm  , 0);
-	if (rc != SQL_SUCCESS ) {
-		check_error (NULL);
-		nox_sqlDisconnect ();
-		return NULL; // we have an error
-	}
-
-	rc = SQLConnect (pConnection->hdbc, server , SQL_NTS, NULL, SQL_NTS, NULL, SQL_NTS);
-	if (rc != SQL_SUCCESS ) {
-		check_error (NULL);
-		nox_sqlDisconnect ();
-		return NULL; // we have an error
-	}
-
-	// If required, open the trace table
-	nox_traceOpen (pConnection);
-
-	return pConnection; // we are ok
-
-}
-/* ------------------------------------------------------------- */
-static PNOXSQLCONNECT nox_getCurrentConnection(void)
-{
-
-	if (pConnection == NULL) {
-		pConnection = nox_sqlNewConnection ();
-	}
-	return pConnection;
 }
 /* ------------------------------------------------------------- */
 static int sqlEscape (PUCHAR out  , PUCHAR in)
@@ -270,27 +145,27 @@ static int insertMarkerValue (PUCHAR buf , PUCHAR marker, PNOXNODE parms)
 	return len;
 }
 /* ------------------------------------------------------------- */
-int nox_sqlExecDirectTrace(PNOXSQL pSQL , int hstmt, PUCHAR sqlstmt)
+int nox_sqlExecDirectTrace(PNOXSQLCONNECT pCon, PNOXSQL pSQL , int hstmt, PUCHAR sqlstmt)
 {
 
 	int rc, rc2;
 	SQLSMALLINT   length   = 0;
 	LONG          lrc;
 	PUCHAR        psqlState  = "";
-	PNOXTRACE      pTrc = &pConnection->sqlTrace;
+	PNOXTRACE     pTrc = &pCon->sqlTrace;
 
-	sqlCode = 0; // TODO re-entrant !!
-	memset ( pConnection->sqlState , ' ' , 5);
+	pCon->sqlCode = 0; // TODO re-entrant !!
+	memset ( pCon->sqlState , ' ' , 5);
 	ts_nowstr(pTrc->tsStart); // TODO !!! not form global
 	rc = SQLExecDirect( hstmt, sqlstmt, SQL_NTS);
 	if (rc != SQL_SUCCESS) {
-		rc2= SQLGetDiagRec(SQL_HANDLE_STMT,hstmt,1,pConnection->sqlState,&sqlCode, pTrc->text,sizeof(pTrc->text), &length);
-		asprintf( jxMessage , "%-5.5s %0.*s" , pConnection->sqlState , length, pTrc->text);
+		rc2= SQLGetDiagRec(SQL_HANDLE_STMT,hstmt,1,pCon->sqlState,&pCon->sqlCode, pTrc->text,sizeof(pTrc->text), &length);
+		asprintf( jxMessage , "%-5.5s %0.*s" , pCon->sqlState , length, pTrc->text);
 		nox_sqlClose (&pSQL); // Free the data
 	}
 	pTrc->text [length] = '\0';
 	ts_nowstr(pTrc->tsEnd); // TODO !!! not form global
-	nox_traceInsert ( pSQL , sqlstmt , pConnection->sqlState);
+	nox_traceInsert ( pSQL , sqlstmt , pCon->sqlState);
 	return rc; // we have an error
 }
 /* ------------------------------------------------------------- */
@@ -334,31 +209,28 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PNOXNODE parms)
 	return res;
 }
 /* ------------------------------------------------------------- */
-static PNOXSQL nox_sqlNewStatement(PNOXNODE pSqlParms, BOOL exec, BOOL scroll)
+static PNOXSQL nox_sqlNewStatement(PNOXSQLCONNECT pCon, PNOXNODE pSqlParms, BOOL exec, BOOL scroll)
 {
 	PNOXSQL pSQL;
-	PNOXSQLCONNECT pc;
 	PNOXSQLSTMT pStmt;
 	SHORT i;
 	int rc;
 	LONG   attrParm;
+	
+	if (pCon == NULL) return NULL;
+	pCon->sqlCode = 0;
 
-	sqlCode  = 0;
 	pSQL = memAllocClear(sizeof(NOXSQL));
+	pSQL->pCon = pCon;
 	pSQL->rowcount = -1;
-
-	// build or get the connection
-	pc = nox_getCurrentConnection();
-	if (pc == NULL) return NULL;
-
 	pSQL->pstmt        = memAlloc(sizeof(NOXSQLSTMT));
 	pSQL->pstmt->hstmt = 0;
 	pSQL->pstmt->exec  = exec;
 
 	// allocate  and initialize with defaults
-	rc = SQLAllocStmt(pConnection->hdbc, &pSQL->pstmt->hstmt);
+	rc = SQLAllocStmt(pCon->hdbc, &pSQL->pstmt->hstmt);
 	if (rc != SQL_SUCCESS ) {
-		check_error (pSQL);
+		check_error (pCon, pSQL);
 		return NULL; // we have an error
 	}
 
@@ -367,7 +239,7 @@ static PNOXSQL nox_sqlNewStatement(PNOXNODE pSqlParms, BOOL exec, BOOL scroll)
 		attrParm = SQL_INSENSITIVE;
 		rc = SQLSetStmtAttr  (pSQL->pstmt->hstmt, SQL_ATTR_CURSOR_SENSITIVITY , &attrParm  , 0);
 		if (rc != SQL_SUCCESS ) {
-			check_error (pSQL);
+			check_error (pCon, pSQL);
 			return NULL; // we have an error
 		}
 
@@ -376,7 +248,7 @@ static PNOXSQL nox_sqlNewStatement(PNOXNODE pSqlParms, BOOL exec, BOOL scroll)
 			attrParm = SQL_TRUE;
 			rc = SQLSetStmtAttr  (pSQL->pstmt->hstmt, SQL_ATTR_CURSOR_SCROLLABLE , &attrParm  , 0);
 			if (rc != SQL_SUCCESS ) {
-				check_error (pSQL);
+				check_error (pCon, pSQL);
 				return NULL; // we have an error
 			}
 		}
@@ -384,7 +256,7 @@ static PNOXSQL nox_sqlNewStatement(PNOXNODE pSqlParms, BOOL exec, BOOL scroll)
 		attrParm = SQL_TRUE;
 		rc = SQLSetStmtAttr  (pSQL->pstmt->hstmt, SQL_ATTR_EXTENDED_COL_INFO , &attrParm  , 0);
 		if (rc != SQL_SUCCESS ) {
-			check_error (pSQL);
+			check_error (pCon, pSQL);
 			return NULL; // we have an error
 		}
 
@@ -392,7 +264,7 @@ static PNOXSQL nox_sqlNewStatement(PNOXNODE pSqlParms, BOOL exec, BOOL scroll)
 		attrParm = SQL_CONCUR_READ_ONLY;
 		rc = SQLSetStmtAttr  (pSQL->pstmt->hstmt, SQL_ATTR_CONCURRENCY , &attrParm  , 0);
 		if (rc != SQL_SUCCESS ) {
-			check_error (pSQL);
+			check_error (pCon, pSQL);
 			return NULL; // we have an error
 		}
 	}
@@ -400,12 +272,12 @@ static PNOXSQL nox_sqlNewStatement(PNOXNODE pSqlParms, BOOL exec, BOOL scroll)
 }
 /* ------------------------------------------------------------- */
 /* ------------------------------------------------------------- */
-PNOXSQL nox_sqlOpen(PUCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scroll)
+PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scroll)
 {
 
 	UCHAR sqlTempStmt[32766];
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PNOXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 2 ) ? pSqlParmsP : NULL;
+	PNOXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 3 ) ? pSqlParmsP : NULL;
 	LONG   attrParm;
 	LONG   i;
 	//   PNOXSQL pSQL = nox_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
@@ -413,15 +285,15 @@ PNOXSQL nox_sqlOpen(PUCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scroll)
 	SQLINTEGER len, descLen, isTrue;
 	int rc;
 
-	if (pParms->OpDescList->NbrOfParms <= 2 ) scroll = true;
+	if (pParms->OpDescList->NbrOfParms <= 3 ) scroll = true;
 	jxError = false; // Assume OK
 
-	pSQL = nox_sqlNewStatement (NULL, false, scroll);
+	pSQL = nox_sqlNewStatement (pCon, NULL, false, scroll);
 	if  ( pSQL == NULL) return NULL;
 
-	if ( pConnection->options.hexSort == ON ) {
+	if ( pCon->options.hexSort == ON ) {
 		LONG attrParm = SQL_FALSE ;
-		rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
+		rc = SQLSetEnvAttr  (pCon->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
 	}
 
 	// build the final sql statement
@@ -433,7 +305,7 @@ PNOXSQL nox_sqlOpen(PUCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scroll)
 	strcat ( sqlTempStmt , " with ur");
 	pSQL->sqlstmt = strdup(sqlTempStmt);
 
-	rc = nox_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, pSQL->sqlstmt);
+	rc = nox_sqlExecDirectTrace(pCon, pSQL , pSQL->pstmt->hstmt, pSQL->sqlstmt);
 	if (rc != SQL_SUCCESS ) {
 		// is checked in abowe    check_error (pSQL);
 		return NULL; // we have an error
@@ -455,7 +327,7 @@ PNOXSQL nox_sqlOpen(PUCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scroll)
 
 	rc = SQLNumResultCols (pSQL->pstmt->hstmt, &pSQL->nresultcols);
 	if (rc != SQL_SUCCESS ) {
-		check_error (pSQL);
+		check_error (pCon, pSQL);
 		return NULL; // we have an error
 	}
 	pSQL->cols = memAlloc (pSQL->nresultcols * sizeof(NOXCOL));
@@ -470,11 +342,11 @@ PNOXSQL nox_sqlOpen(PUCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scroll)
 		pCol->colname[pCol->colnamelen] = '\0';
 
 		// If all uppsercase ( not given name by .. AS "newName") the lowercase
-		if (OFF == nox_IsTrue (pConnection->pOptions ,"uppercasecolname")) {
+		if (OFF == nox_IsTrue (pCon->pOptions ,"uppercasecolname")) {
 			UCHAR temp [256];
-			str2upper  (temp , pCol->colname);
+			astr2upper  (temp , pCol->colname);
 			if (strcmp (temp , pCol->colname) == 0) {
-				str2lower  (pCol->colname , pCol->colname);
+				astr2lower  (pCol->colname , pCol->colname);
 			}
 		}
 
@@ -559,13 +431,13 @@ PNOXSQL nox_sqlOpen(PUCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scroll)
 
 }
 /* ------------------------------------------------------------- */
-PNOXSQL nox_sqlOpenVC(PLVARCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scrollP)
+PNOXSQL nox_sqlOpenVC(PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scrollP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PNOXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 2 ) ? pSqlParmsP : NULL;
-	BOOL     scroll     =  (pParms->OpDescList->NbrOfParms >= 3 ) ? scroll = scrollP : true;
+	PNOXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 3 ) ? pSqlParmsP : NULL;
+	BOOL     scroll     =  (pParms->OpDescList->NbrOfParms >= 4 ) ? scroll = scrollP : true;
 
-	return nox_sqlOpen (plvc2str(sqlstmt) , pSqlParms, scroll);
+	return nox_sqlOpen (pCon, plvc2str(sqlstmt) , pSqlParms, scroll);
 }
 /* ------------------------------------------------------------- */
 PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
@@ -629,7 +501,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 							if ( * (PSHORT) (pInBuf + inbytesleft - 2) > 0x0020) break;
 							}
 						}
-						OutLen = XlateXdBuf  (pConnection->pCd, temp , pInBuf, inbytesleft);
+						OutLen = XlateXdBuf  (pSQL->pCon->pCd, temp , pInBuf, inbytesleft);
 						temp[OutLen] = '\0';
 
 						nox_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , temp,  pCol->nodeType );
@@ -677,7 +549,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 
 						// trigger new parsing of JSON-objects in columns:
 						// Predicts json data i columns
-						if (pConnection->options.autoParseContent == ON) {
+						if (pSQL->pCon->options.autoParseContent == ON) {
 							if (*p == BRABEG || *p == CURBEG) {
 							PNOXNODE pNode = nox_ParseString(p);
 							if (pNode) {
@@ -697,9 +569,9 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 		return pRow; // Found
 
 	} else {
-		sqlCode = getSqlCode(pSQL->pstmt->hstmt);
+		pSQL->pCon->sqlCode = getSqlCode(pSQL->pstmt->hstmt);
 		if (pSQL->rc != SQL_NO_DATA_FOUND ) {
-			check_error (pSQL);
+			check_error (pSQL->pCon, pSQL);
 		}
 	}
 
@@ -744,10 +616,10 @@ void nox_sqlClose (PNOXSQL * ppSQL)
 	int rc;
 	PNOXSQL pSQL = * ppSQL;
 
-	if (pConnection->options.hexSort == ON ) {
+	if (pSQL->pCon->options.hexSort == ON ) {
 		LONG attrParm = SQL_TRUE ;
-		rc = SQLSetEnvAttr (pConnection->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
-		pConnection->options.hexSort = OFF;
+		rc = SQLSetEnvAttr (pSQL->pCon->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
+		pSQL->pCon->options.hexSort = OFF;
 	}
 
 	// Do we have an active statement ...
@@ -775,42 +647,38 @@ void nox_sqlClose (PNOXSQL * ppSQL)
 
 }
 /* ------------------------------------------------------------- */
-void nox_sqlKeepConnection (BOOL keep)
-{
-   keepConnection = keep;
-}
+
 /* ------------------------------------------------------------- */
-void nox_sqlDisconnect (void)
+void nox_sqlDisconnect (PNOXSQLCONNECT * ppCon)
 {
 
+	PNOXSQLCONNECT pCon = *ppCon;
 	int rc;
 
-	// if (keepConnection )  return;
+	if (pCon == NULL) return;
 
-	if (pConnection == NULL) return;
+	XlateXdClose(pCon->pCd) ;
 
-	XlateXdClose(pConnection->pCd) ;
-
-	if (pConnection->sqlTrace.handle != -1) {
-		rc = SQLFreeHandle (SQL_HANDLE_STMT, pConnection->sqlTrace.handle);
-		pConnection->sqlTrace.handle = -1;
+	if (pCon->sqlTrace.handle != -1) {
+		rc = SQLFreeHandle (SQL_HANDLE_STMT, pCon->sqlTrace.handle);
+		pCon->sqlTrace.handle = -1;
 	}
 
 	// disconnect from database
-	if (pConnection->hdbc != -1) {
-		SQLDisconnect  (pConnection->hdbc);
-		SQLFreeConnect (pConnection->hdbc);
-		pConnection->hdbc = -1;
+	if (pCon->hdbc != -1) {
+		SQLDisconnect  (pCon->hdbc);
+		SQLFreeConnect (pCon->hdbc);
+		pCon->hdbc = -1;
 	}
 
 	// free environment handle
-	if (pConnection->henv != -1) {
-		SQLFreeEnv (pConnection->henv);
-		pConnection->henv = -1;
+	if (pCon->henv != -1) {
+		SQLFreeEnv (pCon->henv);
+		pCon->henv = -1;
 	}
 
-	nox_Close(&pConnection->pOptions);
-	memFree (&pConnection);
+	nox_Close(&pCon->pOptions);
+	memFree (ppCon);
 
 }
 /* ------------------------------------------------------------- */
@@ -900,7 +768,7 @@ PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
 
 }
 /* ------------------------------------------------------------- */
-LONG nox_sqlNumberOfRows(PUCHAR sqlstmt)
+LONG nox_sqlNumberOfRows(PNOXSQLCONNECT pCon ,PUCHAR sqlstmt)
 {
 
 	LONG    rowCount, para = 0;
@@ -964,13 +832,18 @@ LONG nox_sqlNumberOfRows(PUCHAR sqlstmt)
 	strcat (str2 , from );
 
 	// Get that only row
-	pRow = nox_sqlResultRow(str2, NULL);
+	pRow = nox_sqlResultRow(pCon, str2, NULL,1);
 
-	rowCount = atoi(nox_GetValuePtr(pRow, "counter", NULL));
+
+	rowCount = a2i(nox_GetValuePtr(pRow, "counter", NULL));
 
 	nox_NodeDelete (pRow);
 
 	return rowCount;
+}
+LONG nox_sqlNumberOfRowsVC(PNOXSQLCONNECT pCon ,PLVARCHAR sqlstmt)
+{
+	return nox_sqlNumberOfRows(pCon ,plvc2str(sqlstmt));
 }
 /* ------------------------------------------------------------- */
 
@@ -1001,7 +874,7 @@ void nox_sqlUpperCaseNames(PNOXSQL pSQL)
 	int i;
 	for (i = 0; i < pSQL->nresultcols; i++) {
 		PNOXCOL pCol = &pSQL->cols[i];
-		str2upper (pCol->colname , pCol->colname);
+		astr2upper (pCol->colname , pCol->colname);
 	}
 }
 /* ------------------------------------------------------------- */
@@ -1015,19 +888,14 @@ LONG nox_sqlRows (PNOXSQL pSQL)
 {
 	if (pSQL == NULL) return -1;
 	if (pSQL->rowcount == -1) {
-		pSQL->rowcount = nox_sqlNumberOfRows(pSQL->sqlstmt);
+		pSQL->rowcount = nox_sqlNumberOfRows(pSQL->pCon , pSQL->sqlstmt);
 	}
 
 	return (pSQL->rowcount);
 }
 /* ------------------------------------------------------------- */
-PNOXNODE nox_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PNOXNODE pSqlParmsP  )
+PNOXNODE nox_sqlResultSet( PNOXSQLCONNECT pCon ,PUCHAR sqlstmt, LONG start, LONG limit, LONG format , PNOXNODE pSqlParms  )
 {
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	LONG    start     = (pParms->OpDescList->NbrOfParms >= 2) ? startP     : 1;  // From first row
-	LONG    limit     = (pParms->OpDescList->NbrOfParms >= 3) ? limitP     : -1; // All row
-	LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;  // Arrray only
-	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 5) ? pSqlParmsP : NULL;
 	PNOXNODE pRows     = nox_NewArray();
 	PNOXNODE pRow      ;
 	PNOXNODE pResult;
@@ -1038,7 +906,7 @@ PNOXNODE nox_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG format
 
 	start = start < 1 ? 1 : start;
 
-	pSQL = nox_sqlOpen(sqlstmt , pSqlParms, start > 1);
+	pSQL = nox_sqlOpen(pCon, sqlstmt , pSqlParms, start > 1);
 	if ( pSQL == NULL) {
 		return NULL;
 	}
@@ -1074,7 +942,7 @@ PNOXNODE nox_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG format
 					pSQL->rowcount = start + rowCount - 2; // "start" and "rowCount" count has both 1 as option base)
 				}
 			} else {
-				pSQL->rowcount = nox_sqlNumberOfRows(sqlstmt);
+				pSQL->rowcount = nox_sqlNumberOfRows(pCon,sqlstmt);
 			}
 			nox_SetIntByName(pResult , "totalRows" , pSQL->rowcount );
 
@@ -1102,67 +970,76 @@ PNOXNODE nox_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG format
 	return pResult;
 
 }
-/* ------------------------------------------------------------- */
-PNOXNODE nox_sqlResultRowAt ( PUCHAR sqlstmt, LONG startP, PNOXNODE pSqlParmsP )
+// RPG wrapper:
+PNOXNODE nox_sqlResultSetVC( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PNOXNODE pSqlParmsP  )
 {
-
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	LONG    start     = (pParms->OpDescList->NbrOfParms >= 2) ? startP     : 1;  // From first row
-	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
+	LONG    limit     = (pParms->OpDescList->NbrOfParms >= 3) ? limitP     : -1; // All row
+	LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;  // Arrray only
+	PNOXNODE pSqlParms= (pParms->OpDescList->NbrOfParms >= 5) ? pSqlParmsP : NULL;
+	return nox_sqlResultSet( pCon, plvc2str(sqlstmt) , start, limit, format , pSqlParms);
+}
+/* ------------------------------------------------------------- */
+PNOXNODE nox_sqlResultRow ( PNOXSQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms, LONG start )
+{
 	PNOXNODE pRow;
 	PNOXSQL  pSQL;
 
-	pSQL = nox_sqlOpen(sqlstmt , pSqlParms, start > 1);
+	pSQL = nox_sqlOpen(pCon , sqlstmt , pSqlParms, start > 1);
 	pRow  = nox_sqlFetchFirst (pSQL, start);
 	nox_sqlClose (&pSQL);
 	return pRow;
 
 }
+// RPG wrapper
+PNOXNODE nox_sqlResultRowVC ( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt,  PNOXNODE pSqlParmsP , LONG startP )
+{
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
+	LONG     start     = (pParms->OpDescList->NbrOfParms >= 4) ? startP     : 1;  // From first row
+	return nox_sqlResultRow ( pCon, plvc2str(sqlstmt), pSqlParms, start);
+}
 /* ------------------------------------------------------------- */
-PNOXNODE nox_sqlGetMeta (PUCHAR sqlstmt)
+PNOXNODE nox_sqlGetMeta (PNOXSQLCONNECT pCon, PUCHAR sqlstmt)
 {
 	int i;
-	PNOXSQL  pSQL  = nox_sqlOpen(sqlstmt , NULL, false);
+	PNOXSQL  pSQL  = nox_sqlOpen(pCon, sqlstmt , NULL, false);
 	PNOXNODE pMeta = nox_buildMetaFields ( pSQL );
 	nox_sqlClose (&pSQL);
 	return pMeta;
 }
-/* ------------------------------------------------------------- */
-PNOXNODE nox_sqlResultRow ( PUCHAR sqlstmt, PNOXNODE pSqlParmsP )
+PNOXNODE nox_sqlGetMetaVC (PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt) 
 {
-
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 2) ? pSqlParmsP : NULL;
-	PNOXNODE pRow;
-	PNOXSQL  pSQL;
-
-	pSQL = nox_sqlOpen(sqlstmt , pSqlParms, false);
-	pRow  = nox_sqlFetchNext (pSQL);
-	nox_sqlClose (&pSQL);
-	return pRow;
-
+	return nox_sqlGetMeta (pCon, plvc2str(sqlstmt));
 }
 /* ------------------------------------------------------------- */
-LGL nox_sqlExec(PUCHAR sqlstmt , PNOXNODE pSqlParms)
+LGL nox_sqlExec(PNOXSQLCONNECT pCon,PUCHAR sqlstmt , PNOXNODE pSqlParms)
 {
 
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	LONG   attrParm;
 	LONG   i;
 	int rc;
 	//   PNOXSQL pSQL = nox_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
-	PNOXSQL pSQL = nox_sqlNewStatement (NULL, true, false);
+	PNOXSQL pSQL = nox_sqlNewStatement (pCon, NULL, true, false);
 
 	// run  the  statement in "sqlstr"
-	if (pParms->OpDescList->NbrOfParms >= 2) {
+	if (pSqlParms) {
 		UCHAR sqlTempStmt[32766];
 		strFormat(sqlTempStmt , sqlstmt , pSqlParms);
-		rc = nox_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, sqlTempStmt);
+		rc = nox_sqlExecDirectTrace(pCon, pSQL , pSQL->pstmt->hstmt, sqlTempStmt);
 	} else {
-		rc = nox_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, sqlstmt);
+		rc = nox_sqlExecDirectTrace(pCon, pSQL , pSQL->pstmt->hstmt, sqlstmt);
 	}
 	nox_sqlClose (&pSQL);
 	return rc == SQL_SUCCESS ? OFF: ON;
+}
+// RPG wrapper
+LGL nox_sqlExecVC(PNOXSQLCONNECT pCon,PLVARCHAR sqlstmt , PNOXNODE pSqlParmsP)
+{
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
+	return nox_sqlExec(pCon, plvc2str(sqlstmt) , pSqlParms);
 }
 /* ------------------------------------------------------------- */
 /* .........
@@ -1273,7 +1150,7 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
 	for ( colno=1; pNode; colno++) {
 		if (! isIdColumn(hMetastmt, colno)) {
 			name  = nox_GetNodeNamePtr   (pNode);
-			str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+			astr2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
 			if  (nodeisnull(pNode)) {
 				stmt += asprintf (stmt , "%s%s=NULL" , comma , temp);
 			} else if  (nodeisblank(pNode)) {
@@ -1309,7 +1186,7 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
 		if (! isIdColumn(hMetaStmt, colno)) {
 			if (!nodeisnull(pNode)) {
 				name     = nox_GetNodeNamePtr   (pNode);
-				str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+				astr2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
 				stmt    += asprintf (stmt , "%s%s" , comma , temp);
 				if  (nodeisblank(pNode)) {
 					pMarker+= asprintf (pMarker , "%sdefault" , comma);    // because timesstamp / date can be set as ''
@@ -1341,7 +1218,7 @@ void createTracetable(PNOXSQLCONNECT pCon)
 		"   STSQLSTMT VARCHAR ( 8192) NOT NULL WITH DEFAULT)  ";
 	asprintf(t , s , pTrc->lib);
 	pTrc->doTrace =  OFF; // So we don't end up in a recusive death spiral
-	nox_sqlExec(t , NULL);
+	nox_sqlExec(pCon, t , NULL);
 	pTrc->doTrace =  ON;
 }
 /* ------------------------------------------------------------- */
@@ -1367,17 +1244,16 @@ void nox_traceOpen (PNOXSQLCONNECT pCon)
 	// rc = SQLBindParameter(pTrc->handle,7,SQL_PARAM_INPUT,SQL_C_CHAR,SQL_VARCHAR ,8192,0,pTrc->sqlstmt,0,NULL);
 }
 /* ------------------------------------------------------------- */
-void nox_traceSetId (INT64 trid)
+void nox_traceSetId (PNOXSQLCONNECT pCon, INT64 trid)
 {
-	PNOXSQLCONNECT pc = nox_getCurrentConnection();
-	PNOXTRACE pTrc = &pc->sqlTrace;
+	PNOXTRACE pTrc = &pCon->sqlTrace;
 	pTrc->trid = trid;
 }
 /* ------------------------------------------------------------- */
 void nox_traceInsert (PNOXSQL pSQL, PUCHAR stmt , PUCHAR sqlState)
 {
 	int rc;
-	PNOXTRACE pTrc = &pConnection->sqlTrace; // !!! TODO not from global !!!
+	PNOXTRACE pTrc = &pSQL->pCon->sqlTrace; // !!! TODO not from global !!!
 	if (pTrc->doTrace == OFF) return;
 	rc = SQLBindParameter(pTrc->handle,3,SQL_PARAM_INPUT,SQL_C_CHAR,SQL_CHAR    ,   5,0,sqlState,0,NULL);
 	rc = SQLBindParameter(pTrc->handle,7,SQL_PARAM_INPUT,SQL_C_CHAR,SQL_VARCHAR ,8192,0,stmt,0,NULL);
@@ -1415,6 +1291,8 @@ SHORT  doInsertOrUpdate(
 
 	if (pSQL == NULL || pSQL->pstmt == NULL) return -1;
 
+	astr2upper(table , table);
+
 	// Now we have the colume definitions - now build the update statement:
 	if (update) {
 		buildUpdate (pSQL->pstmt->hstmt, pSQLmeta->pstmt->hstmt, sqlTempStmt , table, pRow , where);
@@ -1428,7 +1306,7 @@ SHORT  doInsertOrUpdate(
 		if (-109 == getSqlCode(pSQL->pstmt->hstmt)) {
 			return rc; // we  have an error - so try with next...
 		}
-		check_error (pSQL);
+		check_error (pSQL->pCon, pSQL);
 		return rc; // we have an error, and die
 	}
 
@@ -1459,7 +1337,7 @@ SHORT  doInsertOrUpdate(
 			);
 
 			if (rc != SQL_SUCCESS ) {
-				check_error (pSQL);
+				check_error (pSQL->pCon, pSQL);
 				return rc; // we have an error
 			}
 
@@ -1493,7 +1371,7 @@ SHORT  doInsertOrUpdate(
 					&cbTextSize       // pcbValue
 				);
 				if ( rc  != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO && rc != SQL_NEED_DATA ) {
-					check_error (pSQL);
+					check_error (pSQL->pCon, pSQL);
 					return rc; // we have an error
 				}
 
@@ -1518,7 +1396,7 @@ SHORT  doInsertOrUpdate(
 			}
 
 			if (rc != SQL_SUCCESS ) {
-				check_error (pSQL);
+				check_error (pSQL->pCon, pSQL);
 				return rc; // we have an error
 			}
 		}
@@ -1555,7 +1433,7 @@ SHORT  doInsertOrUpdate(
 	}
 
 	if (rc != SQL_SUCCESS && rc != SQL_NO_DATA_FOUND) {
-		check_error (pSQL);
+		check_error (pSQL->pCon, pSQL);
 		return rc; // we have an error
 	}
 
@@ -1564,7 +1442,7 @@ SHORT  doInsertOrUpdate(
 }
 
 /* ------------------------------------------------------------- */
-static PNOXSQL buildMetaStmt (PUCHAR table, PNOXNODE pRow)
+static PNOXSQL buildMetaStmt (PNOXSQLCONNECT pCon, PUCHAR table, PNOXNODE pRow)
 {
 	UCHAR     sqlTempStmt[32766];
 	PUCHAR    stmt = sqlTempStmt;
@@ -1573,7 +1451,7 @@ static PNOXSQL buildMetaStmt (PUCHAR table, PNOXNODE pRow)
 	PNOXNODE   pNode;
 	PUCHAR    comma = "";
 	SQLRETURN rc;
-	PNOXSQL    pSQLmeta = nox_sqlNewStatement (NULL, false, false);
+	PNOXSQL    pSQLmeta = nox_sqlNewStatement (pCon, NULL, false, false);
 
 	stmt += asprintf (stmt , "select ");
 
@@ -1581,7 +1459,7 @@ static PNOXSQL buildMetaStmt (PUCHAR table, PNOXNODE pRow)
 	pNode    =  nox_GetNodeChild (pRow);
 	while (pNode) {
 		name  = nox_GetNodeNamePtr   (pNode);
-		str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+		astr2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
 		stmt += asprintf (stmt , "%s%s" , comma , temp);
 		comma = ",";
 		pNode = nox_GetNodeNext(pNode);
@@ -1592,14 +1470,14 @@ static PNOXSQL buildMetaStmt (PUCHAR table, PNOXNODE pRow)
 	// prepare the statement that provides the columns
 	rc = SQLPrepare(pSQLmeta->pstmt->hstmt , sqlTempStmt, SQL_NTS);
 	if (rc != SQL_SUCCESS ) {
-		check_error (pSQLmeta);
+		check_error (pCon, pSQLmeta);
 		nox_sqlClose (&pSQLmeta); // Free the data
 		return NULL;
 	}
 	return  pSQLmeta;
 }
 /* ------------------------------------------------------------- */
-LGL nox_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PNOXNODE pRowP , PUCHAR whereP, PNOXNODE pSqlParms)
+LGL nox_sqlUpdateOrInsert (PNOXSQLCONNECT pCon, BOOL update, PUCHAR table  , PNOXNODE pRowP , PUCHAR whereP, PNOXNODE pSqlParms)
 {
 	LONG   attrParm;
 	LONG   i;
@@ -1616,7 +1494,7 @@ LGL nox_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PNOXNODE pRowP , PUCHAR 
 
 	SQLSMALLINT   length;
 	SQLRETURN     rc;
-	PNOXSQL       pSQL     = nox_sqlNewStatement (NULL, true, false);
+	PNOXSQL       pSQL     = nox_sqlNewStatement (pCon, NULL, true, false);
 	PNOXSQL       pSQLmeta;
 	SQLCHUNK      sqlChunk[32];
 	SHORT         sqlChunkIx =0;
@@ -1626,7 +1504,7 @@ LGL nox_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PNOXNODE pRowP , PUCHAR 
 
 
 	// First get the columen types - by now we use a select to mimic that
-	pSQLmeta = buildMetaStmt ( table, pRow);
+	pSQLmeta = buildMetaStmt ( pCon, table, pRow);
 	if (pSQLmeta == NULL) {
 		goto cleanup;
 	}
@@ -1638,9 +1516,9 @@ LGL nox_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PNOXNODE pRowP , PUCHAR 
 	err = (rc == SQL_SUCCESS) ? OFF:ON;
 
 	if (err == OFF) {
-		sqlCode =0;
+		pCon->sqlCode =0;
 	} else if ( pSQL && pSQL->pstmt) {
-		getSqlCode (pSQL->pstmt->hstmt);
+		pCon->sqlCode = getSqlCode (pSQL->pstmt->hstmt);
 	}
 
 	// Now we are done with the select statement:
@@ -1651,47 +1529,60 @@ cleanup:
 	return err;
 }
 /* ------------------------------------------------------------- */
-LGL nox_sqlUpdate (PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP  )
+LGL nox_sqlUpdate (PNOXSQLCONNECT pCon, PUCHAR table  , PNOXNODE pRow , PUCHAR where, PNOXNODE pSqlParms  )
 {
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 3) ? whereP : "";
-	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
 	UCHAR  whereStr [1024];
-	str2upper(table , table);
 	for(; *where == ' ' ; where++); // skip leading blanks
 	if (*where > ' ' && ! memBeginsWith(where, "where")) {
 		asprintf (whereStr , "where %s" , where);
 		where = whereStr;
 	}
-	return nox_sqlUpdateOrInsert  (true , table  , pRow , where, pSqlParms);
+	return nox_sqlUpdateOrInsert  (pCon, true , table  , pRow , where, pSqlParms);
 }
 /* ------------------------------------------------------------- */
-LGL nox_sqlInsert (PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP  )
+LGL nox_sqlUpdateVC (PNOXSQLCONNECT pCon, PLVARCHAR table  , PNOXNODE pRow , PLVARCHAR whereP, PNOXNODE pSqlParmsP  )
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PUCHAR  where    =  (pParms->OpDescList->NbrOfParms >= 3) ? whereP : "";
+	PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 3) ? plvc2str(whereP) : "";
 	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
-	str2upper(table , table);
-	return nox_sqlUpdateOrInsert  (false , table  , pRow , where , pSqlParms);
+	return nox_sqlUpdate (pCon, plvc2str (table)   , pRow , where, pSqlParms);
 }
 /* ------------------------------------------------------------- */
-LGL nox_sqlUpsert (PUCHAR table  , PNOXNODE pRow , PUCHAR whereP, PNOXNODE pSqlParmsP  )
+LGL nox_sqlInsert (PNOXSQLCONNECT pCon, PUCHAR table  , PNOXNODE pRow , PUCHAR where, PNOXNODE pSqlParms  )
+{
+	return nox_sqlUpdateOrInsert  (pCon, false , table  , pRow , where , pSqlParms);
+}
+LGL nox_sqlInsertVC (PNOXSQLCONNECT pCon,PLVARCHAR table  , PNOXNODE pRow , PLVARCHAR whereP, PNOXNODE pSqlParmsP  )
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 3) ? whereP : "";
+	PUCHAR  where    =  (pParms->OpDescList->NbrOfParms >= 3) ? plvc2str(whereP) : "";
 	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
+	return nox_sqlUpdateOrInsert  (pCon, false , plvc2str(table)  , pRow , where , pSqlParms);
+}
+/* ------------------------------------------------------------- */
+LGL nox_sqlUpsert (PNOXSQLCONNECT pCon, PUCHAR table  , PNOXNODE pRow , PUCHAR where, PNOXNODE pSqlParms  )
+{
 	LGL err;
 	// First update - if not found the insert
-	err = nox_sqlUpdate  ( table  , pRow , where, pSqlParms);
-	if (err == ON && nox_sqlCode() == 100) {
-		err = nox_sqlInsert (table  , pRow , where, pSqlParms);
+	err = nox_sqlUpdate  ( pCon, table  , pRow , where, pSqlParms);
+	if (err == ON && nox_sqlCode(pCon) == 100) {
+		err = nox_sqlInsert (pCon, table  , pRow , where, pSqlParms);
 	}
 	return err;
+}
+/* ------------------------------------------------------------- */
+LGL nox_sqlUpsertVC (PNOXSQLCONNECT pCon, PLVARCHAR table  , PNOXNODE pRow , PLVARCHAR whereP, PNOXNODE pSqlParmsP  )
+{
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 3) ? plvc2str(whereP) : "";
+	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
+	return nox_sqlUpsert (pCon, plvc2str(table)  , pRow , where, pSqlParms);
+	
 }
 /* -------------------------------------------------------------------
  * Provide options to a pSQL environment - If NULL then use the default
  * ------------------------------------------------------------------- */
-LONG nox_sqlGetInsertId (void)
+LONG nox_sqlGetInsertId (PNOXSQLCONNECT pCon)
 {
 	LONG    id;
 	PNOXNODE pRow;
@@ -1700,9 +1591,9 @@ LONG nox_sqlGetInsertId (void)
 	PUCHAR  sqlStmt = "Select IDENTITY_VAL_LOCAL() as id from sysibm/sysdummy1";
 
 	// Get that only row
-	pRow = nox_sqlResultRow(sqlStmt, NULL);
+	pRow = nox_sqlResultRow(pCon, sqlStmt, NULL,1);
 
-	id = atoi(nox_GetValuePtr(pRow, "id", NULL));
+	id = a2i(nox_GetValuePtr(pRow, "id", NULL));
 
 	nox_NodeDelete (pRow);
 
@@ -1711,28 +1602,27 @@ LONG nox_sqlGetInsertId (void)
 /* -------------------------------------------------------------------
  * Provide options to a pSQL environment - If NULL the use the default
  * ------------------------------------------------------------------- */
-void nox_sqlSetOptions (PNOXNODE pOptionsP)
+void nox_sqlSetOptions (PNOXSQLCONNECT pCon, PNOXNODE pOptionsP)
 {
 
-	PNOXSQLCONNECT pc = nox_getCurrentConnection();
-	PSQLOPTIONS po = &pConnection->options;
+	PSQLOPTIONS po = &pCon->options;
 	PNOXNODE pNode;
 
 	// Delete previous settings, if we did that parsing
-	if (pConnection->pOptionsCleanup) {
-		nox_Close(&pConnection->pOptions);
+	if (pCon->pOptionsCleanup) {
+		nox_Close(&pCon->pOptions);
 	}
 
 	// .. and set the new setting
-	pConnection->pOptionsCleanup = false;
+	pCon->pOptionsCleanup = false;
 	if (ON == nox_isNode(pOptionsP)) {
-		pConnection->pOptions = pOptionsP;
+		pCon->pOptions = pOptionsP;
 	} else if (pOptionsP != NULL) {
-		pConnection->pOptions = nox_ParseString ((PUCHAR) pOptionsP);
-		pConnection->pOptionsCleanup = true;
+		pCon->pOptions = nox_ParseString ((PUCHAR) pOptionsP);
+		pCon->pOptionsCleanup = true;
 	}
 
-	pNode    =  nox_GetNodeChild (pConnection->pOptions);
+	pNode    =  nox_GetNodeChild (pCon->pOptions);
 	while (pNode) {
 		int rc = SQL_SUCCESS;
 		PUCHAR name, value;
@@ -1747,20 +1637,20 @@ void nox_sqlSetOptions (PNOXNODE pOptionsP)
 		else if (memBeginsWith(name , "autoParseContent")) {
 			po->autoParseContent = *value == 't' ? ON:OFF; // for true
 		}
-		else if (memBeginsWith(name , "DecimalPoint")) {
+		else if (memBeginsWith(name , "decimalPoint")) {
 			po->DecimalPoint = *value;
 		}
 		else if (memBeginsWith(name , "sqlNaming")) {
 			po->sqlNaming = *value == 't' ? ON:OFF; // for true
 			attrParm = po->sqlNaming == OFF; // sysname is invers of SQL naming :(
-			rc = SQLSetConnectAttr     (pConnection->hdbc , SQL_ATTR_DBC_SYS_NAMING, &attrParm  , 0);
+			rc = SQLSetConnectAttr     (pCon->hdbc , SQL_ATTR_DBC_SYS_NAMING, &attrParm  , 0);
 		}
 		// NOTE !! hexSort can only be set at environlevel - befor connect time !!!
 		// else if (memBeginsWith(name , "hexSort")) {
 		//   po->hexSort = *value == 't' ? ON:OFF; // for true
 		//}
 		if (rc  != SQL_SUCCESS ) {
-			check_error (NULL);
+			check_error (pCon, NULL);
 			return ; // we have an error
 		}
 
@@ -1779,15 +1669,88 @@ PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PNOXNODE  pOptions = pParms->OpDescList->NbrOfParms >= 1 ? pOptionsP : NULL;
-	NOXSQL tempSQL;
-	PNOXSQLCONNECT pc;
+	PNOXSQLCONNECT pCon;  
+	LONG          attrParm;
+	PUCHAR        server = "*LOCAL";
+	int rc;
+	PSQLOPTIONS po;
 
-	connectionMode = HOSTED;
-	// memset(&tempSQL , 0 , sizeof(tempSQL));
-	// nox_BuildEnv(&tempSQL);
-	pc = nox_getCurrentConnection ();
+	pCon = memAllocClear(sizeof(NOXSQLCONNECT));
+	pCon->sqlTrace.handle = -1;
+	pCon->pCd = XlateXdOpen (13488, 0);
+	po = &pCon->options;
+	po->upperCaseColName = OFF;
+	po->autoParseContent = ON;
+	po->DecimalPoint     = '.';
+	po->hexSort          = OFF;
+	po->sqlNaming        = OFF;
+	po->DateSep          = '-';
+	po->DateFmt          = 'y';
+	po->TimeSep          = ':';
+	po->TimeFmt          = 'H';
 
-	return pc;
+	// allocate an environment handle
+	rc = SQLAllocEnv (&pCon->henv);
+	if (rc != SQL_SUCCESS ) {
+		check_error (pCon, NULL);
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
+	// Note - this is invers: Default to IBMi naming
+	attrParm = pCon->options.sqlNaming == ON ? SQL_FALSE : SQL_TRUE;
+	rc = SQLSetEnvAttr  (pCon->henv, SQL_ATTR_SYS_NAMING, &attrParm  , 0);
+	/* Dont test since the activations groupe might be reclaimed, and a new "session" is on..
+	if (rc != SQL_SUCCESS ) {
+		check_error (NULL);
+		nox_sqlDisconnect ();
+		return NULL; // we have an error
+	}
+	... */
+
+	/* TODO !!! always use UTF-8 */
+	attrParm = SQL_TRUE;
+	rc = SQLSetEnvAttr  (pCon->henv, SQL_ATTR_UTF8 , &attrParm  , 0);
+	if (rc != SQL_SUCCESS ) {
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
+
+	attrParm = SQL_TRUE;
+	rc = SQLSetEnvAttr  (pCon->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
+	if (rc != SQL_SUCCESS ) {
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
+	rc = SQLAllocConnect (pCon->henv, &pCon->hdbc);  // allocate a connection handle
+	if (rc != SQL_SUCCESS ) {
+		check_error (pCon, NULL);
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
+	attrParm = SQL_TXN_NO_COMMIT; // does not work with BLOBS
+	// attrParm = SQL_TXN_READ_UNCOMMITTED; // does not work for updates !!! can not bes pr- statement
+	rc = SQLSetConnectAttr (pCon->hdbc, SQL_ATTR_COMMIT , &attrParm  , 0);
+	if (rc != SQL_SUCCESS ) {
+		check_error (pCon, NULL);
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
+	rc = SQLConnect (pCon->hdbc, server , SQL_NTS, NULL, SQL_NTS, NULL, SQL_NTS);
+	if (rc != SQL_SUCCESS ) {
+		check_error (pCon, NULL);
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
+	// If required, open the trace table
+	nox_traceOpen (pCon);
+
+	return pCon; // we are ok
 }
 
 #pragma convert(0)

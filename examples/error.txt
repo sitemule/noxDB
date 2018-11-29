@@ -1,0 +1,1805 @@
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page      1
+   Command  . . . . . . . . . . . . :   CRTBNDRPG
+     Issued by  . . . . . . . . . . :     NLI
+   Program  . . . . . . . . . . . . :   EX01DEMO
+     Library  . . . . . . . . . . . :     NOXDB2
+   Text 'description' . . . . . . . :   *SRCMBRTXT
+   Source stream file   . . . . . . :   examples/ex01Demo.rpgle
+     CCSID  . . . . . . . . . . . . :     500
+   Text 'description' . . . . . . . :
+   Last Change  . . . . . . . . . . :   29-11-18  01:02:29
+   Generation severity level  . . . :   10
+   Default activation group . . . . :   *YES
+   Compiler options . . . . . . . . :   *XREF      *GEN       *NOSECLVL  *SHOWCPY
+                                        *EXPDDS    *EXT       *NOSHOWSKP *NOSRCSTMT
+                                        *DEBUGIO   *UNREF     *NOEVENTF
+   Debugging views  . . . . . . . . :   *LIST
+   Debug encryption key . . . . . . :   *NONE
+   Output . . . . . . . . . . . . . :   *PRINT
+   Optimization level . . . . . . . :   *NONE
+   Source listing indentation . . . :   *NONE
+   Type conversion options  . . . . :   *NONE
+   Sort sequence  . . . . . . . . . :   *HEX
+   Language identifier  . . . . . . :   *JOBRUN
+   Replace program  . . . . . . . . :   *YES
+   User profile . . . . . . . . . . :   *USER
+   Authority  . . . . . . . . . . . :   *LIBCRTAUT
+   Truncate numeric . . . . . . . . :   *YES
+   Fix numeric  . . . . . . . . . . :   *NONE
+   Target release . . . . . . . . . :   *CURRENT
+   Allow null values  . . . . . . . :   *NO
+   Define condition names . . . . . :   *NONE
+   Enable performance collection  . :   *PEP
+   Profiling data . . . . . . . . . :   *NOCOL
+   Licensed Internal Code options . :
+   Generate program interface . . . :   *NO
+   Include directory  . . . . . . . :   ./..
+                                    :   /prj/noxdb
+   Preprocessor options . . . . . . :   *NONE
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page      2
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+                           S o u r c e   L i s t i n g
+      1 **FREE                                                                                                               000001
+      2         // -------------------------------------------------------------                                             000002
+      3         // noxDB - Not Only Xml - Its JSON, XML, SQL and more                                                        000003
+      4         //                                                                                                           000004
+      5         // This tutorial will show all the features, from a JSON                                                     000005
+      6         // and SQL perspective                                                                                       000006
+      7         //                                                                                                           000007
+      8         // Design:  Niels Liisberg                                                                                   000008
+      9         // Project: Sitemule.com                                                                                     000009
+     10         //                                                                                                           000010
+     11         // try/build:                                                                                                000011
+     12         // cd '/prj/noxdbutf8'                                                                                       000012
+     13         // addlible noxdb2                                                                                           000013
+     14         // call                                                                                                      000014
+     15         // -------------------------------------------------------------                                             000015
+     16                                                                                                                      000016
+     17         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE'); // CCSID(*EXACT); // CCSID(*CHAR:*UTF                 000017
+  ...   8);
+     18                                                                                                                      000018
+     19                                                                                                                      000019
+     20         //------------------------------------------------------------- *                                            000020
+     21                                                                                                                      000021
+     22         /include 'headers/noxdbJSON.rpgle'                                                                           000022
+ Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+ Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+         *--------------------------------------------------------------------------------------------*
+         * RPG member name  . . . . . :  noxdbJSON+                                                   *                     1
+         * External name  . . . . . . :  ./headers/noxdbJSON.rpgle                                    *                     1
+         * Last change  . . . . . . . :  28-11-18  22:48:51                                           *                     1
+         *--------------------------------------------------------------------------------------------*
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+     23+**FREE                                                                                                              1000001
+     24+        // ---------------------------------------------------------------------- *                                 1000002
+     25+        // This is the prototype for noxDB - JSON, XML and SQL made easy                                            1000003
+     26+        // Use the NOXDB binddir when creating your program and include this                                        1000004
+     27+        // prototypes like:                                                                                         1000005
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page      3
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+     28+                                                                                                                    1000006
+     29+        //     Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');                                               1000007
+     30+        //     /include 'headers/JSONPARSER.rpgle'                                                                  1000008
+     31+                                                                                                                    1000009
+     32+        // Note: Both XMLPARSER and JSONPARSER headers are autogenerated from                                       1000010
+     33+        // the NOXDB header. so please do not make any changes the there headerfile                                 1000011
+     34+                                                                                                                    1000012
+     35+        // ---------------------------------------------------------------------- *                                 1000013
+     36+      /if defined( json_DEF)                                                                                        1000014
+             LINES EXCLUDED: 1
+     37+      /endif                                                                                                        1000016
+     38+      /define  json_DEF                                                                                             1000017
+     39+                                                                                                                    1000018
+     40+        // 1M minus length of 4 bytes                                                                               1000019
+         *--------------------------------------------------------------------*
+         * Compiler Options in Effect:                                        *
+         *--------------------------------------------------------------------*
+         *  Text 'description' . . . . . . . :                                *
+         *  Generation severity level  . . . :   10                           *
+         *  Default activation group . . . . :   *NO                          *
+         *  Compiler options . . . . . . . . :   *XREF      *GEN              *
+         *                                       *NOSECLVL  *SHOWCPY          *
+         *                                       *EXPDDS    *EXT              *
+         *                                       *NOSHOWSKP *NOSRCSTMT        *
+         *                                       *DEBUGIO   *UNREF            *
+         *                                       *NOEVENTF                    *
+         *  Optimization level . . . . . . . :   *NONE                        *
+         *  Source listing indentation . . . :   *NONE                        *
+         *  Type conversion options  . . . . :   *NONE                        *
+         *  Sort sequence  . . . . . . . . . :   *HEX                         *
+         *  Language identifier  . . . . . . :   *JOBRUN                      *
+         *  User profile . . . . . . . . . . :   *USER                        *
+         *  Authority  . . . . . . . . . . . :   *LIBCRTAUT                   *
+         *  Truncate numeric . . . . . . . . :   *YES                         *
+         *  Fix numeric  . . . . . . . . . . :   *NONE                        *
+         *  Allow null values  . . . . . . . :   *NO                          *
+         *  Storage model . . .  . . . . . . :   *SNGLVL                      *
+         *  Binding directory from Command . :   *NONE                        *
+         *  Binding directory from Source  . :   NOXDB                        *
+         *    Library  . . . . . . . . . . . :     *LIBL                      *
+         *  Activation group . . . . . . . . :   QILE                         *
+         *  Enable performance collection  . :   *PEP                         *
+         *  Profiling data . . . . . . . . . :   *NOCOL                       *
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page      4
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+         *  Generate program interface . . . :   *NO                          *
+         *--------------------------------------------------------------------*
+     41+        Dcl-S UTF8 varchar(1048572) CCSID(*UTF8) Template;                                                          1000020
+     42+                                                                                                                    1000021
+     43+        // ---------------------------------------------------------------------- *                                 1000022
+     44+        // Type of a node:                                                                                          1000023
+     45+        // ---------------------------------------------------------------------- *                                 1000024
+     46+        Dcl-C json_UNKNOWN const(0);                                                                                1000025
+     47+        Dcl-C json_OBJECT  const(1);                                                                                1000026
+     48+        Dcl-C json_ARRAY   const(2);                                                                                1000027
+     49+        Dcl-C json_EVAL    const(3);                                                                                1000028
+     50+        Dcl-C json_POINTER_VALUE const(4);                                                                          1000029
+     51+        Dcl-C json_VALUE   const(5);                                                                                1000030
+     52+        Dcl-C json_ROOT    const(6);                                                                                1000031
+     53+        Dcl-C json_LITERAL const(16);                                                                               1000032
+     54+        Dcl-C json_OBJLINK const(17);                                                                               1000033
+     55+        Dcl-C json_OBJREPLACE const(18);                                                                            1000034
+     56+        Dcl-C json_OBJCOPY const(18);                                                                               1000035
+     57+        Dcl-C json_BY_CONTEXT const(19);                                                                            1000036
+     58+        Dcl-C json_OBJMOVE const(2048);                                                                             1000037
+     59+                                                                                                                    1000038
+     60+        // * Modifiers to "add" / "or" into "parseString" and "evaluate"                                            1000039
+     61+        // !! Type - have to be backwards compat.                                                                   1000040
+     62+        // Unlink the source and move it to dest.                                                                   1000041
+     63+        Dcl-C json_MOVE_NODES const(2048);                                                                          1000042
+     64+        // Allow strings ints and other values to                                                                   1000043
+     65+        Dcl-C json_ALLOW_PRIMITIVES const(4096);                                                                    1000044
+     66+                                                                                                                    1000045
+     67+        // * Combinations:                                                                                          1000046
+     68+        // json_PARSE  = json_EVAL + json_MOVE_NODES                                                                1000047
+     69+        Dcl-C json_PARSE   const(2051);                                                                             1000048
+     70+                                                                                                                    1000049
+     71+        // Merge options:                                                                                           1000050
+     72+        // Modifiers to "add" / "or" into "JSON_EVAL"                                                               1000051
+     73+      /if not defined(MO_MERGE)                                                                                     1000052
+     74+      /define  MO_MERGE                                                                                             1000053
+     75+        // Only new elements are merged - existing                                                                  1000054
+     76+        // are left untouched                                                                                       1000055
+     77+        Dcl-C MO_MERGE_NEW const(256);                                                                              1000056
+     78+        // Merge and replace only existing nodes.                                                                   1000057
+     79+        Dcl-C MO_MERGE_MATCH const(512);                                                                            1000058
+     80+        // Merge all: replace if it exists and                                                                      1000059
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page      5
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+     81+        // append new nodes if not exists                                                                           1000060
+     82+        Dcl-C MO_MERGE_REPLACE const(1024 );                                                                        1000061
+     83+      /endif                                                                                                        1000062
+     84+                                                                                                                    1000063
+     85+        Dcl-C json_CHILD_LIST const('#0¤');                                                                         1000064
+     86+                                                                                                                    1000065
+     87+        // ----------------------------------------------------------------------                                   1000066
+     88+        // Returns node to the json_object tree                                                                     1000067
+     89+        Dcl-PR json_ParseFile Pointer extproc(*CWIDEN:'nox_ParseFile');                                             1000068
+     90+          // File to parse                                                                                          1000069
+     91+          FileName       pointer value  options(*string);                                                           1000070
+     92+        End-PR;                                                                                                     1000071
+     93+                                                                                                                    1000072
+     94+        // Returns node json_object tree                                                                            1000073
+     95+        Dcl-PR json_ParseStringVC Pointer extproc(*CWIDEN:'nox_ParseStringVC');                                     1000074
+     96+          // String to parse                                                                                        1000075
+     97+          String         Like(UTF8) const options(*varsize);                                                        1000076
+     98+        End-PR;                                                                                                     1000077
+     99+                                                                                                                    1000078
+    100+        // Set , or . for numeri decimal point                                                                      1000079
+    101+        Dcl-PR json_setDecPoint  extproc(*CWIDEN : 'nox_SetDecPoint');                                              1000080
+    102+          // decimal point char                                                                                     1000081
+    103+          decPoint       char(1) const ccsid(*utf8);                                                                1000082
+    104+        End-PR;                                                                                                     1000083
+    105+                                                                                                                    1000084
+    106+        // Bool true if errors occures                                                                              1000085
+    107+        Dcl-PR json_Error Ind extproc(*CWIDEN:'nox_Error');                                                         1000086
+    108+          // json_Object  node                                                                                      1000087
+    109+          pNode          Pointer    value;                                                                          1000088
+    110+        End-PR;                                                                                                     1000089
+    111+                                                                                                                    1000090
+    112+        // Return error description                                                                                 1000091
+    113+        // NL-OK                                                                                                    1000092
+    114+        Dcl-PR json_Message varchar(1024) extproc(*CWIDEN:'nox_MessageVC');                                         1000093
+    115+          // json_Object                                                                                            1000094
+    116+          pNode          Pointer    value;                                                                          1000095
+    117+        End-PR;                                                                                                     1000096
+    118+                                                                                                                    1000097
+    119+        // Without parameters you will get the last internal error                                                  1000098
+    120+        // Otherwise it will format an error object                                                                 1000099
+    121+        // NL-OK                                                                                                    1000100
+    122+        Dcl-PR json_GetMessageObject Pointer // Return error description                                            1000101
+    123+                                   extproc(*CWIDEN:'nox_GetMessageObject');                                         1000102
+    124+          MessageId      Like(UTF8) const options(*nopass:*varsize);                                                1000103
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page      6
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    125+          MessageData    Like(UTF8) const options(*nopass:*varsize);                                                1000104
+    126+        End-PR;                                                                                                     1000105
+    127+                                                                                                                    1000106
+    128+        // simple courtesy function to return a æ"success":trueå object                                             1000107
+    129+        // Return success:true object                                                                               1000108
+    130+        Dcl-PR json_SuccessTrue Pointer extproc(*CWIDEN:'nox_SuccessTrue');                                         1000109
+    131+          MessageId      Like(UTF8) const options(*nopass:*varsize);                                                1000110
+    132+          MessageData    Like(UTF8) const options(*nopass:*varsize);                                                1000111
+    133+        End-PR;                                                                                                     1000112
+    134+                                                                                                                    1000113
+    135+        // Returns pointer to node                                                                                  1000114
+    136+        // NL-OK                                                                                                    1000115
+    137+        Dcl-PR json_Locate Pointer extproc(*CWIDEN : 'nox_GetNodeVC');                                              1000116
+    138+          // Pointer to tree or node                                                                                1000117
+    139+          pNode          Pointer    value;                                                                          1000118
+    140+          // location expression                                                                                    1000119
+    141+          Expression     Like(UTF8) const options(*varsize);                                                        1000120
+    142+        End-PR;                                                                                                     1000121
+    143+                                                                                                                    1000122
+    144+        // Returns pointer to node                                                                                  1000123
+    145+        Dcl-PR json_LocateOrCreate Pointer extproc(*CWIDEN : 'nox_GetOrCreateNodeVC');                              1000124
+    146+          // Pointer to tree or node                                                                                1000125
+    147+          pNode          Pointer    value;                                                                          1000126
+    148+          // location expression                                                                                    1000127
+    149+          Expression     Like(UTF8) const options(*varsize);                                                        1000128
+    150+        End-PR;                                                                                                     1000129
+    151+                                                                                                                    1000130
+    152+        // Returns 'ON' if node exists                                                                              1000131
+    153+        Dcl-PR json_Has Ind extproc(*CWIDEN : 'nox_HasVC');                                                         1000132
+    154+          // Pointer to tree or node                                                                                1000133
+    155+          pNode          Pointer    value;                                                                          1000134
+    156+          // Path to node                                                                                           1000135
+    157+          NodeName       Like(UTF8) const options(*varsize);                                                        1000136
+    158+        End-PR;                                                                                                     1000137
+    159+                                                                                                                    1000138
+    160+        // Returns 'ON' if node exists and has <> 0                                                                 1000139
+    161+        Dcl-PR json_isTrue Ind extproc(*CWIDEN : 'nox_IsTrueVC');                                                   1000140
+    162+          // Pointer to tree or node                                                                                1000141
+    163+          pNode          Pointer    value;                                                                          1000142
+    164+          // Path to node                                                                                           1000143
+    165+          NodeName       Like(UTF8) const options(*varsize);                                                        1000144
+    166+        End-PR;                                                                                                     1000145
+    167+                                                                                                                    1000146
+    168+        // Returns 'ON' if node exists and has <> 0                                                                 1000147
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page      7
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    169+        Dcl-PR json_isNull Ind extproc(*CWIDEN : 'nox_IsNullVC');                                                   1000148
+    170+          // Pointer to tree or node                                                                                1000149
+    171+          pNode          Pointer    value;                                                                          1000150
+    172+          // Path to node                                                                                           1000151
+    173+          NodeName       Like(UTF8) const options(*varsize);                                                        1000152
+    174+        End-PR;                                                                                                     1000153
+    175+                                                                                                                    1000154
+    176+        // Returns 'ON' if it is a valid node                                                                       1000155
+    177+        Dcl-PR json_isNode Ind extproc(*CWIDEN : 'nox_isNode');                                                     1000156
+    178+          // a.k.a. false for strings                                                                               1000157
+    179+          pNode          Pointer    value;                                                                          1000158
+    180+        End-PR;                                                                                                     1000159
+    181+                                                                                                                    1000160
+    182+        // renames the node name                                                                                    1000161
+    183+        Dcl-PR json_NodeRename Ind extproc(*CWIDEN : 'nox_NodeRenameVC');                                           1000162
+    184+          // Pointer to tree or node                                                                                1000163
+    185+          pNode          Pointer    value;                                                                          1000164
+    186+          // Path to node                                                                                           1000165
+    187+          NodeName       Like(UTF8) const options(*varsize);                                                        1000166
+    188+        End-PR;                                                                                                     1000167
+    189+                                                                                                                    1000168
+    190+        // Returns pointer to next sibling (elem)                                                                   1000169
+    191+        Dcl-PR json_GetNext Pointer extproc(*CWIDEN : 'nox_GetNodeNext');                                           1000170
+    192+          // Pointer to current node (elem)                                                                         1000171
+    193+          pNode          Pointer    value;                                                                          1000172
+    194+        End-PR;                                                                                                     1000173
+    195+                                                                                                                    1000174
+    196+        // Returns pointer to first child (elem)                                                                    1000175
+    197+        Dcl-PR json_GetChild Pointer extproc(*CWIDEN : 'nox_GetNodeChild');                                         1000176
+    198+          // Pointer to current node (elem)                                                                         1000177
+    199+          pNode          Pointer    value;                                                                          1000178
+    200+        End-PR;                                                                                                     1000179
+    201+                                                                                                                    1000180
+    202+        // Returns pointer to parent node                                                                           1000181
+    203+        Dcl-PR json_GetParent Pointer extproc(*CWIDEN : 'nox_GetNodeParent');                                       1000182
+    204+          // Pointer to current node (elem)                                                                         1000183
+    205+          pNode          Pointer    value;                                                                          1000184
+    206+        End-PR;                                                                                                     1000185
+    207+                                                                                                                    1000186
+    208+        Dcl-PR json_SetEval pointer extproc(*CWIDEN:'nox_SetEvalByNameVC');                                         1000187
+    209+          pNode          Pointer    value;                                                                          1000188
+    210+          Expresion      Like(UTF8) const options(*varsize);                                                        1000189
+    211+          Value          Like(UTF8) const options(*varsize);                                                        1000190
+    212+        End-PR;                                                                                                     1000191
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page      8
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    213+                                                                                                                    1000192
+    214+        Dcl-PR json_SetStr Pointer extproc(*CWIDEN: 'nox_SetStrByNameVC');                                          1000193
+    215+          // Pointer to json_ tree                                                                                  1000194
+    216+          pNode          Pointer    value;                                                                          1000195
+    217+          // X-path locations to node or attributes                                                                 1000196
+    218+          Expresion      Like(UTF8) const options(*varsize);                                                        1000197
+    219+          // New value to set / pointer to object                                                                   1000198
+    220+          Value          Like(UTF8) const options(*varsize);                                                        1000199
+    221+        End-PR;                                                                                                     1000200
+    222+                                                                                                                    1000201
+    223+        Dcl-PR json_SetInt Pointer extproc(*CWIDEN: 'nox_SetIntByNameVC');                                          1000202
+    224+          // Pointer to json_ tree                                                                                  1000203
+    225+          pNode          Pointer    value;                                                                          1000204
+    226+          // X-path locations to node or attributes                                                                 1000205
+    227+          Expresion      Like(UTF8) const options(*varsize);                                                        1000206
+    228+          // New value to set / pointer to object                                                                   1000207
+    229+          Value          Int(10)    value;                                                                          1000208
+    230+        End-PR;                                                                                                     1000209
+    231+                                                                                                                    1000210
+    232+        Dcl-PR json_SetDate Pointer extproc(*CWIDEN: 'nox_SetDateByNameVC');                                        1000211
+    233+          // Pointer to json_ tree                                                                                  1000212
+    234+          pNode          Pointer    value;                                                                          1000213
+    235+          // X-path locations to node or attributes                                                                 1000214
+    236+          Expresion      Like(UTF8) const options(*varsize);                                                        1000215
+    237+          // New value to set / pointer to object                                                                   1000216
+    238+          Value          date    value;                                                                             1000217
+    239+        End-PR;                                                                                                     1000218
+    240+                                                                                                                    1000219
+    241+                                                                                                                    1000220
+    242+        Dcl-PR json_SetNum Pointer extproc(*CWIDEN: 'nox_SetDecByNameVC');                                          1000221
+    243+          // Pointer to json_ tree                                                                                  1000222
+    244+          pNode          Pointer    value;                                                                          1000223
+    245+          // X-path locations to node or attributes                                                                 1000224
+    246+          Expresion      Like(UTF8) const options(*varsize);                                                        1000225
+    247+          // New value to set / pointer to object                                                                   1000226
+    248+          Value          Packed(30:15) value;                                                                       1000227
+    249+        End-PR;                                                                                                     1000228
+    250+                                                                                                                    1000229
+    251+        Dcl-PR json_SetBool Pointer extproc(*CWIDEN: 'nox_SetBoolByNameVC');                                        1000230
+    252+          // Pointer to json_ tree                                                                                  1000231
+    253+          pNode          Pointer    value;                                                                          1000232
+    254+          // X-path locations to node or attributes                                                                 1000233
+    255+          Expresion      Like(UTF8) const options(*varsize);                                                        1000234
+    256+          // New value to set / pointer to object                                                                   1000235
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page      9
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    257+          Value          Ind        value;                                                                          1000236
+    258+        End-PR;                                                                                                     1000237
+    259+                                                                                                                    1000238
+    260+        Dcl-PR json_SetPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByNameVC');                                          1000239
+    261+          // Pointer to json_ tree                                                                                  1000240
+    262+          pNode          Pointer    value;                                                                          1000241
+    263+          // X-path locations to node or attributes                                                                 1000242
+    264+          Expresion      Like(UTF8) const options(*varsize);                                                        1000243
+    265+          // Pointer to anything - You do the cleanup                                                               1000244
+    266+          Value          Pointer    value;                                                                          1000245
+    267+          // *ON=String escape, *OFF=If literals                                                                    1000246
+    268+          isString       Ind        value options(*nopass);                                                         1000247
+    269+        End-PR;                                                                                                     1000248
+    270+                                                                                                                    1000249
+    271+        Dcl-PR json_SetProcPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByNameVC');                                      1000250
+    272+          pNode          Pointer    value; // Pointer to json_ tree                                                 1000251
+    273+          // X-path locations to node or attributes                                                                 1000252
+    274+          Expresion      Like(UTF8) const options(*varsize);                                                        1000253
+    275+          Proc           Pointer(*Proc); // Pointer to a procedure                                                  1000254
+    276+        End-PR;                                                                                                     1000255
+    277+                                                                                                                    1000256
+    278+        Dcl-PR json_GetValueStr Like(UTF8)                                                                          1000257
+    279+                              extproc(*CWIDEN : 'nox_GetNodeValueVC');                                              1000258
+    280+          // Pointer to node                                                                                        1000259
+    281+          pNode          Pointer    value;                                                                          1000260
+    282+          // If not found - default value                                                                           1000261
+    283+          Defaultvalue   Like(UTF8) const options(*nopass:*varsize);                                                1000262
+    284+        End-PR;                                                                                                     1000263
+    285+                                                                                                                    1000264
+    286+        Dcl-PR json_GetValueNum Packed(30:15)                                                                       1000265
+    287+                              extproc(*CWIDEN : 'nox_GetNodeValueNum');                                             1000266
+    288+          // Pointer to node                                                                                        1000267
+    289+          pNode          Pointer    value;                                                                          1000268
+    290+          // If not found - default value                                                                           1000269
+    291+          Defaultvalue   Packed(30:15) value options(*NOPASS);                                                      1000270
+    292+        End-PR;                                                                                                     1000271
+    293+                                                                                                                    1000272
+    294+        Dcl-PR json_GetValueInt Int(20) extproc(*CWIDEN : 'nox_GetNodeValueInt');                                   1000273
+    295+          pNode          Pointer    value; // Pointer to node                                                       1000274
+    296+          // If not found - default value                                                                           1000275
+    297+          Defaultvalue   Int(20)    value options(*NOPASS);                                                         1000276
+    298+        End-PR;                                                                                                     1000277
+    299+                                                                                                                    1000278
+    300+        Dcl-PR json_GetValuePtr Pointer extproc(*CWIDEN : 'nox_GetNodeValuePtr');                                   1000279
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     10
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    301+          // Pointer to node                                                                                        1000280
+    302+          pNode          Pointer    value;                                                                          1000281
+    303+          // If not found - default value                                                                           1000282
+    304+          Defaultvalue   Like(UTF8) const options(*nopass:*varsize);                                                1000283
+    305+        End-PR;                                                                                                     1000284
+    306+                                                                                                                    1000285
+    307+        Dcl-PR json_GetName Like(UTF8)                                                                              1000286
+    308+                          extproc(*CWIDEN : 'nox_GetNodeNameVC');                                                   1000287
+    309+          // Pointer to node                                                                                        1000288
+    310+          pNode          Pointer    value;                                                                          1000289
+    311+        End-PR;                                                                                                     1000290
+    312+                                                                                                                    1000291
+    313+        Dcl-PR json_GetNameAsPath Like(UTF8)                                                                        1000292
+    314+                                extproc(*CWIDEN : 'nox_GetNodeNameAsPath');                                         1000293
+    315+          // Pointer to node                                                                                        1000294
+    316+          pNode          Pointer    value;                                                                          1000295
+    317+          // Delimiter like - or . or / or \                                                                        1000296
+    318+          Delimiter      Char(1)    value CCSID(*UTF8);                                                             1000297
+    319+        End-PR;                                                                                                     1000298
+    320+                                                                                                                    1000299
+    321+        // * Refer to node type above                                                                               1000300
+    322+        Dcl-PR json_NodeType Int(5) extproc(*CWIDEN : 'nox_GetNodeType');                                           1000301
+    323+          // Pointer to json_ tree to receive format                                                                1000302
+    324+          pNode          Pointer    value;                                                                          1000303
+    325+        End-PR;                                                                                                     1000304
+    326+                                                                                                                    1000305
+    327+      // Get string by expresion                                                                                    1000306
+    328+      //  /object/array#123¤/name                                                                                   1000307
+    329+      //  .object.array#123¤.name                                                                                   1000308
+    330+      // NL-OK                                                                                                      1000309
+    331+        Dcl-PR json_GetStr Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_GetValueVC');                                  1000310
+    332+          // Pointer to relative node                                                                               1000311
+    333+          pNode          Pointer    value;                                                                          1000312
+    334+          // Locations expression to node                                                                           1000313
+    335+          Expression     Like(UTF8) const options(*nopass:*varsize);                                                1000314
+    336+          // If not found - default value                                                                           1000315
+    337+          Defaultvalue   Like(UTF8) const options(*nopass:*varsize);                                                1000316
+    338+        End-PR;                                                                                                     1000317
+    339+                                                                                                                    1000318
+    340+      //  will join all subsequent array nodes into one resulting string                                            1000319
+    341+        Dcl-PR json_GetStrJoin Like(UTF8)                                                                           1000320
+    342+                             extproc(*CWIDEN : 'nox_GetStrJoinVC');                                                 1000321
+    343+          // Pointer to relative node                                                                               1000322
+    344+          pNode          Pointer    value;                                                                          1000323
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     11
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    345+          // Locations expression to node                                                                           1000324
+    346+          Expression     Like(UTF8) const options(*nopass:*varsize);                                                1000325
+    347+          // If not found - default value                                                                           1000326
+    348+          Defaultvalue   Like(UTF8) const options(*nopass:*varsize);                                                1000327
+    349+        End-PR;                                                                                                     1000328
+    350+                                                                                                                    1000329
+    351+      // Get number by expresion like:                                                                              1000330
+    352+      //  /object/array#123¤/name                                                                                   1000331
+    353+      //  .object.array#123¤.name                                                                                   1000332
+    354+      // NL-OK                                                                                                      1000333
+    355+        Dcl-PR json_GetNum Packed(30:15) extproc(*CWIDEN : 'nox_GetValueNumVC');                                    1000334
+    356+          // Pointer to relative node                                                                               1000335
+    357+          pNode          Pointer    value;                                                                          1000336
+    358+          // Locations expression to node                                                                           1000337
+    359+          Expression     Like(UTF8) const  options(*nopass:*varsize);                                               1000338
+    360+          // If not found - default value                                                                           1000339
+    361+          Defaultvalue   Packed(30:15) value options(*nopass);                                                      1000340
+    362+        End-PR;                                                                                                     1000341
+    363+                                                                                                                    1000342
+    364+        Dcl-PR json_GetInt Int(20) extproc(*CWIDEN : 'nox_GetValueIntVC');                                          1000343
+    365+          // Pointer to relative node                                                                               1000344
+    366+          pNode          Pointer    value;                                                                          1000345
+    367+          // Locations expression to node                                                                           1000346
+    368+          Expression     Like(UTF8) const options(*nopass:*varsize);                                                1000347
+    369+          // If not found - default value                                                                           1000348
+    370+          Defaultvalue   Int(20)    value options(*nopass);                                                         1000349
+    371+        End-PR;                                                                                                     1000350
+    372+                                                                                                                    1000351
+    373+        Dcl-PR json_GetDate date  extproc(*CWIDEN : 'nox_GetValueDateVC');                                          1000352
+    374+          // Pointer to relative node                                                                               1000353
+    375+          pNode          Pointer    value;                                                                          1000354
+    376+          // Locations expression to node                                                                           1000355
+    377+          Expression     Like(UTF8) const options(*nopass:*varsize);                                                1000356
+    378+          // If not found - default value                                                                           1000357
+    379+          Defaultvalue   date   value options(*nopass);                                                             1000358
+    380+        End-PR;                                                                                                     1000359
+    381+                                                                                                                    1000360
+    382+        Dcl-PR json_CopyValue Pointer extproc(*CWIDEN : 'nox_CopyValueVC');                                         1000361
+    383+          // destination node                                                                                       1000362
+    384+          pDest          Pointer    value;                                                                          1000363
+    385+          // destiantion name (or *NULL or '')                                                                      1000364
+    386+          destName       Like(UTF8) const options(*varsize);                                                        1000365
+    387+          // source node                                                                                            1000366
+    388+          pSource        Pointer    value;                                                                          1000367
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     12
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    389+          // source name (or *NULL or '')                                                                           1000368
+    390+          sourceName     Like(UTF8) const options(*varsize);                                                        1000369
+    391+        End-PR;                                                                                                     1000370
+    392+                                                                                                                    1000371
+    393+        Dcl-PR json_NodeClone Pointer extproc(*CWIDEN : 'nox_NodeClone');                                           1000372
+    394+          // node. Retrive from Locate()                                                                            1000373
+    395+          pSource        Pointer    value;                                                                          1000374
+    396+        End-PR;                                                                                                     1000375
+    397+                                                                                                                    1000376
+    398+        // Delete and set ref pointer to zero:                                                                      1000377
+    399+        Dcl-PR json_Delete extproc(*CWIDEN : 'nox_Delete');                                                         1000378
+    400+          // element. Retrive from Locate()                                                                         1000379
+    401+          pRootNode      Pointer;                                                                                   1000380
+    402+        End-PR;                                                                                                     1000381
+    403+                                                                                                                    1000382
+    404+                                                                                                                    1000383
+    405+        // Unlink the note from its previous and promote it as a new root node                                      1000384
+    406+        Dcl-PR json_NodeUnlink Pointer extproc(*CWIDEN : 'nox_NodeUnlink');                                         1000385
+    407+          // Targenode. Retrive from Locate(                                                                        1000386
+    408+          pNode          Pointer    value;                                                                          1000387
+    409+        End-PR;                                                                                                     1000388
+    410+                                                                                                                    1000389
+    411+        Dcl-PR json_NodeSanitize extproc(*CWIDEN : 'nox_NodeSanitize');                                             1000390
+    412+          // node. Retrive from Locate()                                                                            1000391
+    413+          pRootNode      Pointer    value;                                                                          1000392
+    414+        End-PR;                                                                                                     1000393
+    415+                                                                                                                    1000394
+    416+        // CheckSum of all names and values                                                                         1000395
+    417+        // Delete all nodes which value are null                                                                    1000396
+    418+        Dcl-PR json_NodeCheckSum Uns(10) extproc(*CWIDEN : 'nox_NodeCheckSum');                                     1000397
+    419+          pRootNode      Pointer    value; // node. Retrive from Locate()                                           1000398
+    420+        End-PR;                                                                                                     1000399
+    421+                                                                                                                    1000400
+    422+        // returns the new node                                                                                     1000401
+    423+        Dcl-PR json_NewObject Pointer extproc(*CWIDEN : 'nox_NewObject');                                           1000402
+    424+        End-PR;                                                                                                     1000403
+    425+                                                                                                                    1000404
+    426+      // Array functions                                                                                            1000405
+    427+        // returns the new node                                                                                     1000406
+    428+        Dcl-PR json_NewArray Pointer extproc(*CWIDEN : 'nox_NewArray');                                             1000407
+    429+        End-PR;                                                                                                     1000408
+    430+                                                                                                                    1000409
+    431+        // returns the new node added to the end of                                                                 1000410
+    432+        Dcl-PR json_ArrayPush Pointer extproc(*CWIDEN : 'nox_ArrayPush');                                           1000411
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     13
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    433+          // Destination. Retrive from Locate()                                                                     1000412
+    434+          pDestArray     Pointer    value;                                                                          1000413
+    435+          // source node to append                                                                                  1000414
+    436+          pSourceNode    Pointer   value;                                                                           1000415
+    437+          // 0=(Dft) Unlink and move, 1=copy a clone                                                                1000416
+    438+          copy           Uns(5)     value options(*nopass);                                                         1000417
+    439+        End-PR;                                                                                                     1000418
+    440+                                                                                                                    1000419
+    441+        // Following constants used by json_ArrayPush:copy                                                          1000420
+    442+        Dcl-C json_MOVE_UNLINK const(0);                                                                            1000421
+    443+        Dcl-C json_COPY_CLONE const(1);                                                                             1000422
+    444+                                                                                                                    1000423
+    445+        // returns the new node added to the end of                                                                 1000424
+    446+        Dcl-PR json_ArrayAppend Pointer extproc(*CWIDEN :'nox_ArrayAppend');                                        1000425
+    447+          // Destination. Retrive from Locate()                                                                     1000426
+    448+          pDestArray     Pointer    value;                                                                          1000427
+    449+          // source node to append                                                                                  1000428
+    450+          pSourceNode    Pointer    value;                                                                          1000429
+    451+          // 0=(Dft) Unlink and move, 1=copy a clone                                                                1000430
+    452+          copy           Uns(5)     value options(*nopass);                                                         1000431
+    453+        End-PR;                                                                                                     1000432
+    454+                                                                                                                    1000433
+    455+        // returns the new array fro source array                                                                   1000434
+    456+        Dcl-PR json_ArraySlice Pointer extproc(*CWIDEN : 'nox_ArraySlice' );                                        1000435
+    457+          // source node                                                                                            1000436
+    458+          pSourceNode    Pointer    value;                                                                          1000437
+    459+          // From entry ( 1=First)                                                                                  1000438
+    460+          from           Int(10)    value;                                                                          1000439
+    461+          // To and includ   (-1 = Until end)                                                                       1000440
+    462+          to             Int(10)    value;                                                                          1000441
+    463+          // 0=(Dft) Unlink and move, 1=copy a clone                                                                1000442
+    464+          copy           Uns(5)     value options(*nopass);                                                         1000443
+    465+        End-PR;                                                                                                     1000444
+    466+                                                                                                                    1000445
+    467+        // returns the new node added to the end of                                                                 1000446
+    468+        Dcl-PR json_ArraySort Pointer extproc(*CWIDEN : 'nox_ArraySortVC');                                         1000447
+    469+          // Destination. Retrive from Locate()                                                                     1000448
+    470+          pArray         Pointer    value;                                                                          1000449
+    471+          // nodenames if any in subobject to comapre                                                               1000450
+    472+          pkeyNames      Like(UTF8) const ;                                                                         1000451
+    473+          // 0=(Dft) use json numerics, 1=Use locale                                                                1000452
+    474+          options        uns(5)     value options(*nopass);                                                         1000453
+    475+        End-PR;                                                                                                     1000454
+    476+                                                                                                                    1000455
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     14
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    477+        Dcl-C json_USE_LOCALE const(1);                                                                             1000456
+    478+                                                                                                                    1000457
+    479+        // returns the first node with expr value                                                                   1000458
+    480+        Dcl-PR json_LookupValue Pointer extproc(*CWIDEN : 'nox_lookupValueVC');                                     1000459
+    481+          // Array/ obj to search                                                                                   1000460
+    482+          pArray         Pointer    value;                                                                          1000461
+    483+          // What to search for                                                                                     1000462
+    484+          expr           Like(UTF8) const options(*varsize);                                                        1000463
+    485+          // 0=(Dft) Same case, 1=ignore case                                                                       1000464
+    486+          ignoreCase     Uns(5)     value options(*nopass);                                                         1000465
+    487+        End-PR;                                                                                                     1000466
+    488+                                                                                                                    1000467
+    489+        // Following constants used by json_LookupValue:ignoreCase                                                  1000468
+    490+        Dcl-C json_SAME_CASE const(0);                                                                              1000469
+    491+        Dcl-C json_IGNORE_CASE const(1);                                                                            1000470
+    492+                                                                                                                    1000471
+    493+        // returns numer of element in array or obj                                                                 1000472
+    494+        Dcl-PR json_GetLength Int(10) extproc(*CWIDEN : 'nox_getLength'  );                                         1000473
+    495+          // Array to count length                                                                                  1000474
+    496+          pArray         Pointer    value;                                                                          1000475
+    497+        End-PR;                                                                                                     1000476
+    498+                                                                                                                    1000477
+    499+        // Following constants used by json_Merge:Type                                                              1000478
+    500+        Dcl-C json_DONTREPLACE const(0);                                                                            1000479
+    501+        Dcl-C json_REPLACE const(1);                                                                                1000480
+    502+                                                                                                                    1000481
+    503+        // returns the new node                                                                                     1000482
+    504+        Dcl-PR json_MergeObjects Pointer extproc(*CWIDEN : 'nox_MergeObjects');                                     1000483
+    505+          // Destination. Retrive from Locate()                                                                     1000484
+    506+          pDestObj       Pointer    value;                                                                          1000485
+    507+          // Source tree  Retrive from Locate()                                                                     1000486
+    508+          pSourceObj     Pointer    value;                                                                          1000487
+    509+          // json_DONTREPLACE or json_OBJREPLACE                                                                    1000488
+    510+          Type           Uns(5)     value;                                                                          1000489
+    511+        End-PR;                                                                                                     1000490
+    512+                                                                                                                    1000491
+    513+        // returns the source node                                                                                  1000492
+    514+        Dcl-PR json_MoveObjectInto Pointer extproc(*CWIDEN : 'nox_NodeMoveIntoVC');                                 1000493
+    515+          // Destination. Retrive from Locate()                                                                     1000494
+    516+          pDestObj       Pointer    value;                                                                          1000495
+    517+          Name           Like(UTF8) const options(*varsize);                                                        1000496
+    518+          // Source tree  Retrive from Locate()                                                                     1000497
+    519+          pSourceObj     Pointer    value;                                                                          1000498
+    520+        End-PR;                                                                                                     1000499
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     15
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    521+                                                                                                                    1000500
+    522+        Dcl-PR json_Dump  extproc(*CWIDEN : 'nox_Dump');                                                            1000501
+    523+          // Pointer to tree                                                                                        1000502
+    524+          pNode          Pointer    value;                                                                          1000503
+    525+        End-PR;                                                                                                     1000504
+    526+                                                                                                                    1000505
+    527+                                                                                                                    1000506
+    528+        // **  JSON renderes ***                                                                                    1000507
+    529+        Dcl-PR json_WriteJsonStmf  extproc(*CWIDEN : 'nox_WriteJsonStmf');                                          1000508
+    530+          // node. Retrive from Locate()                                                                            1000509
+    531+          pNode          Pointer    value;                                                                          1000510
+    532+          // Name of output stream file                                                                             1000511
+    533+          FileName       Pointer    value  options(*string);                                                        1000512
+    534+          // Ccsid of output file                                                                                   1000513
+    535+          Ccsid          Int(10)    value;                                                                          1000514
+    536+          Trim           Ind        value;                                                                          1000515
+    537+          // Extra options                                                                                          1000516
+    538+          Options        Pointer    value  options(*nopass:*string);                                                1000517
+    539+        End-PR;                                                                                                     1000518
+    540+                                                                                                                    1000519
+    541+        Dcl-PR json_AsJsonText Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_AsJsonText');                              1000520
+    542+          // node. Retrive from Locate()                                                                            1000521
+    543+          pNode          Pointer    value;                                                                          1000522
+    544+        End-PR;                                                                                                     1000523
+    545+                                                                                                                    1000524
+    546+        Dcl-PR json_AsJsonTextMem Uns(10) extproc(*CWIDEN : 'nox_AsJsonTextMem');                                   1000525
+    547+          // node. Retrive from Locate()                                                                            1000526
+    548+          pNode          Pointer    value;                                                                          1000527
+    549+          // pointer to any memory buffer                                                                           1000528
+    550+          pBuffer        Pointer    value;                                                                          1000529
+    551+          // Max number of bytes in buffer %size()                                                                  1000530
+    552+          maxSize        Uns(10)    value options(*nopass);                                                         1000531
+    553+        End-PR;                                                                                                     1000532
+    554+                                                                                                                    1000533
+    555+        // **  XML  renderes ***                                                                                    1000534
+    556+        Dcl-PR json_WriteXmlStmf  extproc(*CWIDEN : 'nox_WriteXmlStmf');                                            1000535
+    557+          // node. Retrive from Locate()                                                                            1000536
+    558+          pNode          Pointer    value;                                                                          1000537
+    559+          // Name of output stream file                                                                             1000538
+    560+          FileName       Pointer    value  options(*string);                                                        1000539
+    561+          // Ccsid of output file                                                                                   1000540
+    562+          Ccsid          Int(10)    value;                                                                          1000541
+    563+          Trim           Ind        value;                                                                          1000542
+    564+          // Extra options                                                                                          1000543
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     16
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    565+          Options        Pointer    value  options(*nopass:*string);                                                1000544
+    566+        End-PR;                                                                                                     1000545
+    567+                                                                                                                    1000546
+    568+        Dcl-PR json_AsXmlText Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_AsXmlText');                                1000547
+    569+          // node. Retrive from Locate()                                                                            1000548
+    570+          pNode          Pointer    value;                                                                          1000549
+    571+        End-PR;                                                                                                     1000550
+    572+                                                                                                                    1000551
+    573+        Dcl-PR json_AsXmlTextMem Uns(10) extproc(*CWIDEN : 'nox_AsXmlTextMem');                                     1000552
+    574+          // node. Retrive from Locate()                                                                            1000553
+    575+          pNode          Pointer    value;                                                                          1000554
+    576+          // pointer to any memory buffer                                                                           1000555
+    577+          pBuffer        Pointer    value;                                                                          1000556
+    578+        End-PR;                                                                                                     1000557
+    579+                                                                                                                    1000558
+    580+        // Return a streamer object to be used in own serialisers                                                   1000559
+    581+        Dcl-PR json_Stream pointer extproc(*CWIDEN : 'nox_Stream');                                                 1000560
+    582+          // node. Retrive from Locate()                                                                            1000561
+    583+          pNode          Pointer    value;                                                                          1000562
+    584+        End-PR;                                                                                                     1000563
+    585+                                                                                                                    1000564
+    586+        // **  CSV  renderes ***                                                                                    1000565
+    587+        Dcl-PR json_WriteCsvStmf  extproc(*CWIDEN : 'nox_WriteCsvStmf');                                            1000566
+    588+          // node. Retrive from Locate()                                                                            1000567
+    589+          pNode          Pointer    value;                                                                          1000568
+    590+          // Name of output stream file                                                                             1000569
+    591+          FileName       Pointer    value  options(*string);                                                        1000570
+    592+          // Ccsid of output file                                                                                   1000571
+    593+          Ccsid          Int(10)    value;                                                                          1000572
+    594+          // *ON=Remove inter blanks                                                                                1000573
+    595+          Trim           Ind        value;                                                                          1000574
+    596+          // Options: ';.' for separator and dec                                                                    1000575
+    597+          Options        Pointer    value  options(*nopass:*string);                                                1000576
+    598+        End-PR;                                                                                                     1000577
+    599+                                                                                                                    1000578
+    600+        // Iterators: First use the set the use forEach                                                             1000579
+    601+        Dcl-DS json_Iterator  based(prototype_only) qualified;                                                      1000580
+    602+          root           Pointer;                                                                                   1000581
+    603+          this           Pointer;                                                                                   1000582
+    604+          isList         Ind;                                                                                       1000583
+    605+          isFirst        Ind;                                                                                       1000584
+    606+          isLast         Ind;                                                                                       1000585
+    607+          isRecursive    Ind;                                                                                       1000586
+    608+          comma          Varchar(1);                                                                                1000587
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     17
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    609+          count          Int(10);                                                                                   1000588
+    610+          length         Int(10);                                                                                   1000589
+    611+          size           Int(10);                                                                                   1000590
+    612+          // Pointer to temp array of elms                                                                          1000591
+    613+          listArr        Pointer;                                                                                   1000592
+    614+          // Set  this to *ON to teminate loop                                                                      1000593
+    615+          break          Ind;                                                                                       1000594
+    616+          filler         Char(64);                                                                                  1000595
+    617+        End-DS;                                                                                                     1000596
+    618+                                                                                                                    1000597
+    619+        Dcl-PR json_setIterator  likeds( json_Iterator) extproc(*CWIDEN : 'nox_SetIteratorVC');                     1000598
+    620+          // node. Retrive from Locate()                                                                            1000599
+    621+          pNode          Pointer    value;                                                                          1000600
+    622+          // Optional - path to node                                                                                1000601
+    623+          path           Like(UTF8) const options(*nopass:*varsize);                                                1000602
+    624+        End-PR;                                                                                                     1000603
+    625+                                                                                                                    1000604
+    626+        Dcl-PR json_setRecursiveIterator  likeds( json_Iterator)                                                    1000605
+    627+                                        extproc(*CWIDEN :                                                           1000606
+    628+                                        'nox_SetRecursiveIteratorVC');                                              1000607
+    629+          // node. Retrive from Locate()                                                                            1000608
+    630+          pNode          Pointer    value;                                                                          1000609
+    631+          // Optional - path to node                                                                                1000610
+    632+          path           Like(UTF8) const options(*nopass:*varsize);                                                1000611
+    633+        End-PR;                                                                                                     1000612
+    634+                                                                                                                    1000613
+    635+        // Iterator Structure                                                                                       1000614
+    636+        Dcl-PR json_forEach Ind extproc(*CWIDEN : 'nox_ForEach');                                                   1000615
+    637+          iterator                  likeds( json_Iterator);                                                         1000616
+    638+        End-PR;                                                                                                     1000617
+    639+                                                                                                                    1000618
+    640+        // For attributes ( Used mostly in XML )                                                                    1000619
+    641+        Dcl-PR json_GetNodeAttrValue Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_GetNodeAttrValueVC');                1000620
+    642+          // Pointer to exsiting element                                                                            1000621
+    643+          pNode          Pointer    value;                                                                          1000622
+    644+          // Attribute Name                                                                                         1000623
+    645+          AttrName       Like(UTF8) const options(*varsize);                                                        1000624
+    646+          // If not found - default value                                                                           1000625
+    647+          Defaultvalue   Like(UTF8) const options(*nopass:*varsize);                                                1000626
+    648+        End-PR;                                                                                                     1000627
+    649+                                                                                                                    1000628
+    650+        Dcl-PR json_SetNodeAttrValue extproc(*CWIDEN : 'nox_SetNodeAttrValueVC');                                   1000629
+    651+          // Pointer to exsiting element                                                                            1000630
+    652+          pNode          Pointer    value;                                                                          1000631
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     18
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    653+          // Attribute name                                                                                         1000632
+    654+          AttrName       Like(UTF8) const options(*varsize);                                                        1000633
+    655+          // New value                                                                                              1000634
+    656+          Value          Like(UTF8) const options(*varsize);                                                        1000635
+    657+        End-PR;                                                                                                     1000636
+    658+                                                                                                                    1000637
+    659+        Dcl-PR json_GetAttrValue Like(UTF8) rtnparm                                                                 1000638
+    660+                               extproc(*CWIDEN : 'nox_GetAttrValueVC');                                             1000639
+    661+          // Pointer Attribute                                                                                      1000640
+    662+          pAttr          Pointer    value;                                                                          1000641
+    663+          // If not found - default value                                                                           1000642
+    664+          Defaultvalue   Like(UTF8) const options(*nopass:*varsize);                                                1000643
+    665+        End-PR;                                                                                                     1000644
+    666+                                                                                                                    1000645
+    667+        Dcl-PR json_SetAttrValue extproc(*CWIDEN : 'nox_SetAttrValue');                                             1000646
+    668+          // Pointer Attribute                                                                                      1000647
+    669+          pAttr          Pointer    value;                                                                          1000648
+    670+          // New value                                                                                              1000649
+    671+          AttrName       Like(UTF8) const options(*varsize);                                                        1000650
+    672+          // Default value                                                                                          1000651
+    673+          Value          Like(UTF8) const options(*varsize);                                                        1000652
+    674+        End-PR;                                                                                                     1000653
+    675+                                                                                                                    1000654
+    676+        // Returns pointer to attribute list                                                                        1000655
+    677+        Dcl-PR json_GetAttrFirst Pointer extproc(*CWIDEN : 'nox_GetAttrFirst');                                     1000656
+    678+          // Pointer to element                                                                                     1000657
+    679+          pElem          Pointer    value;                                                                          1000658
+    680+        End-PR;                                                                                                     1000659
+    681+                                                                                                                    1000660
+    682+        // Returns pointer to attribute list                                                                        1000661
+    683+        Dcl-PR json_GetAttrNext Pointer extproc(*CWIDEN : 'nox_GetAttrNext');                                       1000662
+    684+          // Pointer to attribute list                                                                              1000663
+    685+          pAttr          Pointer    value;                                                                          1000664
+    686+        End-PR;                                                                                                     1000665
+    687+                                                                                                                    1000666
+    688+        Dcl-PR json_GetAttrName Like(UTF8) rtnparm                                                                  1000667
+    689+                              extproc(*CWIDEN : 'nox_GetAttrNameVC');                                               1000668
+    690+          // Pointer to attribute list                                                                              1000669
+    691+          pAttr          Pointer    value;                                                                          1000670
+    692+        End-PR;                                                                                                     1000671
+    693+                                                                                                                    1000672
+    694+      // Clear the contents of an array or object / delete all children                                             1000673
+    695+        Dcl-PR json_Clear  extproc(*CWIDEN : 'nox_Clear');                                                          1000674
+    696+          pNode          Pointer    value; // Pointer to tree node                                                  1000675
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     19
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    697+        End-PR;                                                                                                     1000676
+    698+                                                                                                                    1000677
+    699+      // Close all nodes in this tree - also parent and siblings                                                    1000678
+    700+        Dcl-PR json_Close  extproc(*CWIDEN : 'nox_Close');                                                          1000679
+    701+          // Pointer to tree node                                                                                   1000680
+    702+          pNode          Pointer  ;                                                                                 1000681
+    703+        End-PR;                                                                                                     1000682
+    704+      // Detect if you have a memry leak: call this when you have closed everything at i will return                1000683
+  ...    false
+    705+        Dcl-PR json_MemLeak Ind extproc(*CWIDEN : 'nox_MemLeak');                                                   1000684
+    706+        End-PR;                                                                                                     1000685
+    707+                                                                                                                    1000686
+    708+      // Print memory report                                                                                        1000687
+    709+        Dcl-PR json_MemStat  extproc(*CWIDEN : 'nox_MemStat');                                                      1000688
+    710+        End-PR;                                                                                                     1000689
+    711+                                                                                                                    1000690
+    712+      // retune number of bytest used                                                                               1000691
+    713+        Dcl-PR json_MemUse Uns(20) extproc(*CWIDEN : 'nox_MemUse');                                                 1000692
+    714+        End-PR;                                                                                                     1000693
+    715+                                                                                                                    1000694
+    716+      // Maintain at list of index numbers to database CLOB/BLOB fields since pointers can not be sh                1000695
+  ...   ared in SQL
+    717+        // Returns *ON if found                                                                                     1000696
+    718+        Dcl-PR json_mapIx Ind extproc(*CWIDEN:'nox_MapIx' );                                                        1000697
+    719+          // pointer to node pointer                                                                                1000698
+    720+          ppNode         Pointer;                                                                                   1000699
+    721+          // index of pointer                                                                                       1000700
+    722+          Index          Uns(10)    value;                                                                          1000701
+    723+        End-PR;                                                                                                     1000702
+    724+                                                                                                                    1000703
+    725+                                                                                                                    1000704
+    726+      // Returns a JSON object from a REST call                                                                     1000705
+    727+        Dcl-PR json_httpRequest Pointer extproc(*CWIDEN:'nox_httpRequest');                                         1000706
+    728+          // Full URL to the resource                                                                               1000707
+    729+          url            Like(UTF8) const options(*varsize);                                                        1000708
+    730+          // json object or string                                                                                  1000709
+    731+          pReqNode       pointer value;                                                                             1000710
+    732+          // extra CURL options                                                                                     1000711
+    733+          options        Like(UTF8) const options(*nopass:*varsize);                                                1000712
+    734+        End-PR;                                                                                                     1000713
+    735+                                                                                                                    1000714
+    736+                                                                                                                    1000715
+    737+      // ------------------------------------------------------------------------                                   1000716
+    738+      // SQL interface:                                                                                             1000717
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     20
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    739+      // Note: When SQL functions returns *NULL, then use  the json_Message()                                       1000718
+    740+      // to retrive the messages text. also the getSqlCode() can be usefull                                         1000719
+    741+      // ------------------------------------------------------------------------                                   1000720
+    742+                                                                                                                    1000721
+    743+      // If options need - then it has to be first call made.                                                       1000722
+    744+      // NOTE: If a pConnection pointer is provided, it will be updated with the conection                          1000723
+    745+        Dcl-PR json_sqlSetOptions  extproc(*CWIDEN: 'nox_sqlSetOptions');                                           1000724
+    746+          // Pointer to database connection provided by json_sqlConnect()                                           1000725
+    747+          pConnection    pointer value;                                                                             1000726
+    748+          // json object with options ( see sample)                                                                 1000727
+    749+          parms          Like(UTF8) const options(*nopass:*varsize);                                                1000728
+    750+        End-PR;                                                                                                     1000729
+    751+                                                                                                                    1000730
+    752+      // returns a object node with one resulting row for the SQL statment                                          1000731
+    753+        // Returns one SQL row as jx Obejct                                                                         1000732
+    754+        Dcl-PR json_sqlResultRow Pointer extproc(*CWIDEN: 'nox_sqlResultRowVC');                                    1000733
+    755+          // Pointer to database connection provided by json_sqlConnect()                                           1000734
+    756+          pConnection    pointer value;                                                                             1000735
+    757+          // SQL statement to run                                                                                   1000736
+    758+          sqlStmt        Like(UTF8) const options(*varsize);                                                        1000737
+    759+          // json object template                                                                                   1000738
+    760+          parms          Like(UTF8) const options(*nopass:*varsize);                                                1000739
+    761+          // Starttin row                                                                                           1000740
+    762+          start          int(10)    value options(*nopass);                                                         1000741
+    763+        End-PR;                                                                                                     1000742
+    764+                                                                                                                    1000743
+    765+      // returns an array (or object with array) of resulting rows for the SQL statment                             1000744
+    766+        // Returns SQL rows as jx Obejct                                                                            1000745
+    767+        Dcl-PR json_sqlResultSet Pointer extproc(*CWIDEN: 'nox_sqlResultSetVC');                                    1000746
+    768+          // Pointer to database connection provided by json_sqlConnect()                                           1000747
+    769+          pConnection    pointer value;                                                                             1000748
+    770+          // SQL statement to run                                                                                   1000749
+    771+          sqlStmt        Like(UTF8) const options(*varsize);                                                        1000750
+    772+          // From row; 1=First                                                                                      1000751
+    773+          start          Int(10)    value options(*nopass);                                                         1000752
+    774+          // max number of rows; json_ALLROWS=all                                                                   1000753
+    775+          limit          Int(10)    value options(*nopass);                                                         1000754
+    776+          // resultset format:                                                                                      1000755
+    777+          format         Int(10)    value options(*nopass);                                                         1000756
+    778+          // json object template                                                                                   1000757
+    779+          parms          Like(UTF8) const options(*nopass:*varsize);                                                1000758
+    780+        End-PR;                                                                                                     1000759
+    781+                                                                                                                    1000760
+    782+                                                                                                                    1000761
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     21
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    783+        Dcl-C json_ALLROWS const(-1);                                                                               1000762
+    784+                                                                                                                    1000763
+    785+        // Following constants used by json_sqlResultSet:format                                                     1000764
+    786+        // + An array with each row as an object                                                                    1000765
+    787+        Dcl-C json_ROWARRAY const(0);                                                                               1000766
+    788+        // + Metaobject: rows, fields                                                                               1000767
+    789+        Dcl-C json_META    const(1);                                                                                1000768
+    790+        // + Columns info                                                                                           1000769
+    791+        Dcl-C json_FIELDS  const(2);                                                                                1000770
+    792+        // + Count all rows in the resultset                                                                        1000771
+    793+        // ( Pricy so awoid it !! )                                                                                 1000772
+    794+        Dcl-C json_TOTALROWS const(4);                                                                              1000773
+    795+        // + Uppercase column names                                                                                 1000774
+    796+        Dcl-C json_UPPERCASE const(8);                                                                              1000775
+    797+                                                                                                                    1000776
+    798+        // + Appoximate number of rows..                                                                            1000777
+    799+        //  ( unpresise but cheap !! prefered  )                                                                    1000778
+    800+        Dcl-C json_APPROXIMATE_TOTALROWS const(16);                                                                 1000779
+    801+                                                                                                                    1000780
+    802+                                                                                                                    1000781
+    803+                                                                                                                    1000782
+    804+      // SQL cursor processing                                                                                      1000783
+    805+        // Returns handle to sql statement                                                                          1000784
+    806+        Dcl-PR json_sqlOpen Pointer extproc(*CWIDEN:'nox_sqlOpenVC'  );                                             1000785
+    807+          // Pointer to database connection provided by json_sqlConnect()                                           1000786
+    808+          pConnection    pointer value;                                                                             1000787
+    809+          // SQL statement to run                                                                                   1000788
+    810+          sqlStmt        Like(UTF8) const options(*varsize);                                                        1000789
+    811+          // json object template                                                                                   1000790
+    812+          parms          pointer value options(*nopass:*string);                                                    1000791
+    813+        End-PR;                                                                                                     1000792
+    814+                                                                                                                    1000793
+    815+      // Fetch next from from that open sql handle, starting from rowNumer. 1=First row                             1000794
+    816+        // Returns a row object (or *NULL if EOF)                                                                   1000795
+    817+        Dcl-PR json_sqlFetchRelative Pointer                                                                        1000796
+    818+                                   extproc(*CWIDEN: 'nox_sqlFetchRelative');                                        1000797
+    819+          // sql statement handle ( from sqlOpen)                                                                   1000798
+    820+          pSqlHndl       Pointer    value;                                                                          1000799
+    821+          // row from where to start 1=First                                                                        1000800
+    822+          fromRow        Int(10)    value;                                                                          1000801
+    823+        End-PR;                                                                                                     1000802
+    824+                                                                                                                    1000803
+    825+      // Fetch next from from that open sql handle                                                                  1000804
+    826+        // Returns a row object (or *NULL if EOF)                                                                   1000805
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     22
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    827+        Dcl-PR json_sqlFetchNext Pointer extproc(*CWIDEN:'nox_sqlFetchNext');                                       1000806
+    828+          // sql statement handle ( from sqlOpen)                                                                   1000807
+    829+          pSqlHndl       Pointer    value;                                                                          1000808
+    830+        End-PR;                                                                                                     1000809
+    831+                                                                                                                    1000810
+    832+      // Number of columns in result set ( -1 if error)                                                             1000811
+    833+        // Returns number of columns                                                                                1000812
+    834+        Dcl-PR json_sqlColumns Int(10) extproc(*CWIDEN:'nox_sqlColumns');                                           1000813
+    835+          // sql statement handle ( from sqlOpen)                                                                   1000814
+    836+          pSqlHndl       Pointer    value;                                                                          1000815
+    837+        End-PR;                                                                                                     1000816
+    838+                                                                                                                    1000817
+    839+      // Number of rows  in result set ( -1 if error)                                                               1000818
+    840+      // Note: This will run a hidden "select count(*)" which might be a little pricy                               1000819
+    841+        // Returns number of rows                                                                                   1000820
+    842+        Dcl-PR json_sqlRows Int(10) extproc(*CWIDEN:'nox_sqlRows');                                                 1000821
+    843+          // sql statement handle ( from sqlOpen)                                                                   1000822
+    844+          pSqlHndl       Pointer    value;                                                                          1000823
+    845+        End-PR;                                                                                                     1000824
+    846+                                                                                                                    1000825
+    847+      // Always colse the cursor after use, to release resources                                                    1000826
+    848+        Dcl-PR json_sqlClose  extproc(*CWIDEN:'nox_sqlClose');                                                      1000827
+    849+          // sql statement handle ( from sqlOpen)                                                                   1000828
+    850+          pSqlHndl       Pointer;                                                                                   1000829
+    851+        End-PR;                                                                                                     1000830
+    852+                                                                                                                    1000831
+    853+      // Execute any SQL statement not involving a cursor                                                           1000832
+    854+        // Returns *ON if error                                                                                     1000833
+    855+        Dcl-PR json_sqlExec Ind extproc(*CWIDEN:'nox_sqlExecVC'  );                                                 1000834
+    856+          // Pointer to database connection provided by json_sqlConnect()                                           1000835
+    857+          pConnection   pointer value;                                                                              1000836
+    858+          // SQL statement to run (template)                                                                        1000837
+    859+          sqlStmt        Like(UTF8) const options(*varsize);                                                        1000838
+    860+          // json object template data                                                                              1000839
+    861+          parms          Like(UTF8) const options(*nopass:*varsize);                                                1000840
+    862+        End-PR;                                                                                                     1000841
+    863+                                                                                                                    1000842
+    864+      // Execute an update table where the row is defined as a json object                                          1000843
+    865+        // Returns *ON if error                                                                                     1000844
+    866+        Dcl-PR json_sqlUpdate Ind extproc(*CWIDEN:'nox_sqlUpdateVC');                                               1000845
+    867+          // Pointer to database connection provided by json_sqlConnect()                                           1000846
+    868+          pConnection    pointer value;                                                                             1000847
+    869+          // table name                                                                                             1000848
+    870+          table          Like(UTF8) const options(*varsize);                                                        1000849
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     23
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    871+          // json object: æa:123,b:"value"å                                                                         1000850
+    872+          row            pointer value;                                                                             1000851
+    873+          // where clause : 'where myKey=Åkey'                                                                      1000852
+    874+          where          Like(UTF8) const options(*nopass:*varsize);                                                1000853
+    875+          // where parameters: æ key:777å                                                                           1000854
+    876+          whereParms     pointer value options(*nopass);                                                            1000855
+    877+        End-PR;                                                                                                     1000856
+    878+                                                                                                                    1000857
+    879+        // Returns *ON if error                                                                                     1000858
+    880+        Dcl-PR json_sqlInsert Ind extproc(*CWIDEN:'nox_sqlInsertVC');                                               1000859
+    881+          // Pointer to database connection provided by json_sqlConnect()                                           1000860
+    882+          pConnection    pointer value;                                                                             1000861
+    883+          // table name                                                                                             1000862
+    884+          table          Like(UTF8) const options(*varsize);                                                        1000863
+    885+          // json object: æa:123,b:"value"å                                                                         1000864
+    886+          row            pointer value;                                                                             1000865
+    887+          // extra parms                                                                                            1000866
+    888+          parms          Like(UTF8) const options(*nopass:*varsize);                                                1000867
+    889+        End-PR;                                                                                                     1000868
+    890+                                                                                                                    1000869
+    891+        // Returns *ON if error                                                                                     1000870
+    892+        Dcl-PR json_sqlUpsert Ind extproc(*CWIDEN:'nox_sqlUpsertVC');                                               1000871
+    893+          // Pointer to database connection provided by json_sqlConnect()                                           1000872
+    894+          pConnection    pointer value;                                                                             1000873
+    895+          // table name                                                                                             1000874
+    896+          table          Like(UTF8) const options(*varsize);                                                        1000875
+    897+          // json object: æa:123,b:"value"å                                                                         1000876
+    898+          row            pointer value;                                                                             1000877
+    899+          // where clause : 'where myKey=Åkey'                                                                      1000878
+    900+          where          Like(UTF8) const options(*varsize);                                                        1000879
+    901+          // where parameters: æ key:777å                                                                           1000880
+    902+          whereParms     pointer value options(*nopass);                                                            1000881
+    903+        End-PR;                                                                                                     1000882
+    904+                                                                                                                    1000883
+    905+        // Returns id of last insert                                                                                1000884
+    906+        Dcl-PR json_sqlGetInsertId Int(10) extproc(*CWIDEN:'nox_sqlGetInsertId');                                   1000885
+    907+          // Pointer to database connection provided by json_sqlConnect()                                           1000886
+    908+          pConnection    pointer value;                                                                             1000887
+    909+        End-PR;                                                                                                     1000888
+    910+                                                                                                                    1000889
+    911+        // Returns array of column info                                                                             1000890
+    912+        Dcl-PR json_sqlGetMeta Pointer extproc(*CWIDEN:'nox_sqlGetMetaVC');                                         1000891
+    913+          // Pointer to database connection provided by json_sqlConnect()                                           1000892
+    914+          pConnection    pointer value;                                                                             1000893
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     24
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    915+          sqlstmt        Like(UTF8) const options(*varsize);                                                        1000894
+    916+        End-PR;                                                                                                     1000895
+    917+                                                                                                                    1000896
+    918+      // Return pointer to database connection. No options => will be default local database                        1000897
+    919+        Dcl-PR json_sqlConnect Pointer extproc(*CWIDEN: 'nox_sqlConnect');                                          1000898
+    920+          // json object or string with options                                                                     1000899
+    921+          parms          Like(UTF8) const options(*nopass:*varsize);                                                1000900
+    922+        End-PR;                                                                                                     1000901
+    923+                                                                                                                    1000902
+    924+      // Return pointer to database connection. No options => will be default local database                        1000903
+    925+        Dcl-PR json_sqlDisconnect  extproc(*CWIDEN: 'nox_sqlDisconnect');                                           1000904
+    926+           pConnection   pointer;                                                                                   1000905
+    927+        End-PR;                                                                                                     1000906
+    928+                                                                                                                    1000907
+    929+      // Return sql code for previous statement                                                                     1000908
+    930+        Dcl-PR json_sqlCode Int(10) extproc(*CWIDEN: 'nox_sqlCode');                                                1000909
+    931+           pConnection   pointer value;                                                                             1000910
+    932+        End-PR;                                                                                                     1000911
+    933+                                                                                                                    1000912
+    934+      // when the dataarea SQLTRACE is set, your SQL statements                                                     1000913
+    935+      // are logged into SQLTRACE table.                                                                            1000914
+    936+      // you can supply an exta eye-catch wariable :trcid                                                           1000915
+    937+        Dcl-PR json_traceSetId  extproc(*CWIDEN : 'nox_traceSetId');                                                1000916
+    938+          traceId        Int(20)    value; // Ccsid of inpur file                                                   1000917
+    939+        End-PR;                                                                                                     1000918
+    940+                                                                                                                    1000919
+    941+                                                                                                                    1000920
+    942+                                                                                                                    1000921
+    943+                                                                                                                    1000922
+    944+                                                                                                                    1000923
+    945+                                                                                                                    1000924
+    946+                                                                                                                    1000925
+    947                                                                                                                      000023
+    948         dcl-s id           int(10);                                                                                  000024
+    949         dcl-s name         varchar(256);                                                                             000025
+    950         dcl-s street       varchar(256);                                                                             000026
+    951         dcl-s city         varchar(256);                                                                             000027
+    952         dcl-s creditLimit  packed(15:2);                                                                             000028
+    953         dcl-s created      date;                                                                                     000029
+    954                                                                                                                      000030
+    955         dcl-s debug        varchar(32766:4);                                                                         000031
+    956         dcl-s msg          varchar(256);                                                                             000032
+    957         dcl-s len          int(10);                                                                                  000033
+    958         dcl-s checksum     int(10);                                                                                  000034
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     25
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+    959         dcl-s memuse       int(10);                                                                                  000035
+    960         dcl-s pCustObject  pointer;                                                                                  000036
+    961         dcl-s pCon         pointer;                                                                                  000037
+    962         dcl-s pCustomer    pointer;                                                                                  000038
+    963         dcl-s pCustList    pointer;                                                                                  000039
+    964         dcl-s pMoreCust    pointer;                                                                                  000040
+    965         dcl-s pTopFive     pointer;                                                                                  000041
+    966         dcl-s pRes         pointer;                                                                                  000042
+    967         dcl-s key          varchar(256) CCSID(*UTF8) inz('topFive#id=397267¤');                                      000043
+    968                                                                                                                      000044
+    969         dcl-ds itList      likeds(json_iterator);                                                                    000045
+    970                                                                                                                      000046
+    971         //------------------------------------------------------------- *                                            000047
+    972                                                                                                                      000048
+    973         *inlr = *on;                                                                                                 000049
+    974         memuse = json_memUse();                                                                                      000050
+    975                                                                                                                      000051
+    976         // Step 1: Lets build a JSON object from scratch                                                             000052
+    977         // and let set some attirbutes on the object.                                                                000053
+    978         // we use integers, string , fixed float numbers and date                                                    000054
+    979         pCustomer = json_newObject();                                                                                000055
+    980         json_setInt (pCustomer:'id'         : 1234);                                                                 000056
+    981         json_setStr (pCustomer:'name'       : 'System & Metod A/S');                                                 000057
+    982         json_setStr (pCustomer:'street'     : 'H}ndv{rkersvinget 8');                                                000058
+    983         json_setStr (pCustomer:'city'       : 'H¦rsholm');                                                           000059
+    984         json_setStr (pCustomer:'greeting'   : u'4f605978'); // Hi hau                                                000060
+    985         json_setNum (pCustomer:'creditLimit': 76543.21);                                                             000061
+    986         json_setDate(pCustomer:'created'    : %date());                                                              000062
+    987                                                                                                                      000063
+    988         // Just to see the progress:                                                                                 000064
+    989         json_WriteJsonStmf(pCustomer : './test/documents/ex01Tutorial-Customer.json' : 1208 : *OFF);                 000065
+    990         debug = json_asJsonText(pCustomer);                                                                          000066
+    991                                                                                                                      000067
+    992                                                                                                                      000068
+    993         // Step 2: Build an array with customers                                                                     000069
+    994         // note the arrayPush can push it to either head or tail                                                     000070
+    995         pCustList = json_newArray();                                                                                 000071
+    996         json_arrayPush ( pCustList : pCustomer);                                                                     000072
+    997                                                                                                                      000073
+    998         // Just to see the progress:                                                                                 000074
+    999         debug = json_asJsonText(pCustList);                                                                          000075
+   1000                                                                                                                      000076
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     26
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+   1001         // step3: now we get the rest of customers from the database;                                                000077
+   1002         pCon = json_sqlConnect();                                                                                    000078
+   1003         pMoreCust = json_sqlResultset(pCon:                                                                          000079
+   1004             'select                       -                                                                          000080
+   1005                 cusnum  as "id",          -                                                                          000081
+   1006                 lstnam  as "name",        -                                                                          000082
+   1007                 street  as "street",      -                                                                          000083
+   1008                 cdtlmt  as "creditLimit"  -                                                                          000084
+   1009             from qiws.QCUSTCDT            -                                                                          000085
+   1010         ');                                                                                                          000086
+   1011         json_sqlDisconnect(pCon);                                                                                    000087
+   1012                                                                                                                      000088
+   1013         // Just to see the progress:                                                                                 000089
+   1014         debug = json_asJsonText(pMoreCust);                                                                          000090
+   1015                                                                                                                      000091
+   1016         // now we have the list                                                                                      000092
+   1017         // Not the MOVE_UNLINK can be used if the array was already                                                  000093
+   1018         // a sub-node in an other object/array. here it just an example and have no effect                           000094
+   1019         // Also you can omit the result - but returns the receiving array sou you can "chain" this f                 000095
+  ...   unction
+   1020         // ie "moveObjectInto"                                                                                       000096
+   1021         pRes  = json_arrayAppend(pCustList : pMoreCust: JSON_MOVE_UNLINK);                                           000097
+   1022                                                                                                                      000098
+   1023         // How many are there in the array?                                                                          000099
+   1024         len  = json_getLength(pCustList);                                                                            000100
+   1025                                                                                                                      000101
+   1026         // Just to see the progress:                                                                                 000102
+   1027         debug = json_asJsonText(pCustList);                                                                          000103
+   1028                                                                                                                      000104
+   1029         // Lets sort the array on highest "creditLimit" and then "name"                                              000105
+   1030         json_arraySort(pCustList : 'creditLimit:DESC,name:ASC' );                                                    000106
+   1031                                                                                                                      000107
+   1032         // Just to see the progress:                                                                                 000108
+   1033         debug = json_asJsonText(pCustList);                                                                          000109
+   1034                                                                                                                      000110
+   1035         // I only want the first 5                                                                                   000111
+   1036         // Note the first element is = 0                                                                             000112
+   1037         // You can also use JSON_MOVE_UNLINK, to extract the result out of the source                                000113
+   1038         // however, here we copy the elements to a new array                                                         000114
+   1039         pTopFive = json_arraySlice(pCustList : 0:5 : JSON_COPY_CLONE);                                               000115
+   1040                                                                                                                      000116
+   1041         // Just to see the progress:                                                                                 000117
+   1042         debug = json_asJsonText(pTopFive);                                                                           000118
+   1043                                                                                                                      000119
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     27
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+   1044         // we can caluculate the checksum, to see later if anyone have touched the object graph                      000120
+   1045         checksum = json_NodeCheckSum(pTopFive);                                                                      000121
+   1046                                                                                                                      000122
+   1047         // and save it to disk:                                                                                      000123
+   1048         json_WriteJsonStmf(pTopFive : './test/documents/ex01Tutorial.json' : 1208 : *OFF);                           000124
+   1049                                                                                                                      000125
+   1050         // Now what do we need to clean up:                                                                          000126
+   1051         // pCustList? yes                                                                                            000127
+   1052         // pCustomer? no - it is already removed when deleting the pCustList                                         000128
+   1053         // pTopFive? Yes - it is a clone                                                                             000129
+   1054         json_delete(pCustList);                                                                                      000130
+   1055         json_delete(pTopFive);                                                                                       000131
+   1056                                                                                                                      000132
+   1057         // We could stop the program here - But let's have som more fun:                                             000133
+   1058         // Load the top five array                                                                                   000134
+   1059         pTopFive = json_ParseFile ('./test/documents/ex01Tutorial.json');                                            000135
+   1060                                                                                                                      000136
+   1061         // Just to see the progress:                                                                                 000137
+   1062         debug = json_asJsonText(pTopFive);                                                                           000138
+   1063                                                                                                                      000139
+   1064         // Was there som issues?                                                                                     000140
+   1065         if Json_Error(pTopFive) ;                                                                    B01             000141
+   1066             msg = Json_Message(pTopFive);                                                             01             000142
+   1067             Json_dump(pTopFive);                                                                      01             000143
+   1068             Json_delete(pTopFive);                                                                    01             000144
+   1069             return;                                                                                   01             000145
+   1070         endif;                                                                                       E01             000146
+   1071                                                                                                                      000147
+   1072         // Is the checksum the same?                                                                                 000148
+   1073         if checksum <> json_NodeCheckSum(pTopFive);                                                  B01             000149
+   1074             dsply 'Invlaid checksum';                                                                 01             000150
+   1075         endif;                                                                                       E01             000151
+   1076                                                                                                                      000152
+   1077         // now create a object with that array and call it "topFive":                                                000153
+   1078         pCustObject = json_newObject();                                                                              000154
+   1079         json_moveObjectInto (pCustObject: 'topFive': pTopFive );                                                     000155
+   1080                                                                                                                      000156
+   1081         // Just to see the progress:                                                                                 000157
+   1082         debug = json_asJsonText(pCustObject);                                                                        000158
+   1083                                                                                                                      000159
+   1084         // let's loop through all items and get them back to RPG variables:                                          000160
+   1085         // note: we could have used pTopFive - but for fun we locate from the top                                    000161
+   1086         itList = json_setIterator(pCustObject : 'topFive');                                                          000162
+   1087         dow json_ForEach(itList);                                                                    B01             000163
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     28
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+   1088             id          = json_getInt ( itList.this : 'id');                                          01             000164
+   1089             name        = json_getStr ( itList.this : 'name');                                        01             000165
+   1090             street      = json_getStr ( itList.this : 'street');                                      01             000166
+   1091             city        = json_getStr ( itList.this : 'city');                                        01             000167
+   1092             creditLimit = json_getNum ( itList.this : 'creditLimit');                                 01             000168
+   1093             created     = json_getDate( itList.this : 'created');                                     01             000169
+   1094         enddo;                                                                                       E01             000170
+   1095                                                                                                                      000171
+   1096                                                                                                                      000172
+   1097         // Locate the first node with id = 397267.                                                                   000173
+   1098         // the indexfor the array can be the indexnumber OR a simple element test (=,>,<,<=,>= are s                 000174
+  ...   upported)
+   1099         pCustomer   = Json_Locate(pCustObject: 'topFive#id=397267¤');                                                000175
+   1100         pCustomer   = Json_Locate(pCustObject: key);                                                                 000176
+   1101         id          = json_getInt ( pCustomer : 'id');                                                               000177
+   1102         name        = json_getStr ( pCustomer : 'name');                                                             000178
+   1103         street      = json_getStr ( pCustomer : 'street');                                                           000179
+   1104         city        = json_getStr ( pCustomer : 'city');                                                             000180
+   1105         creditLimit = json_getNum ( pCustomer : 'creditLimit');                                                      000181
+   1106         created     = json_getDate( pCustomer : 'created');                                                          000182
+   1107                                                                                                                      000183
+   1108         // Just to see the progress:                                                                                 000184
+   1109         debug = json_asJsonText(pCustomer);                                                                          000185
+   1110                                                                                                                      000186
+   1111         // That's it - time to cleanup:                                                                              000187
+   1112         json_delete(pCustomer);                                                                                      000188
+   1113                                                                                                                      000189
+   1114         if memuse <> json_memuse();                                                                  B01             000190
+   1115             dsply 'Ups - forgot to clean something up';                                               01             000191
+   1116         endif;                                                                                       E01             000192
+   1117                                                                                                                      000193
+   1118         Return;                                                                                                      000194
+        * * * * *   E N D   O F   S O U R C E   * * * * *
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     29
+           A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s
+  Msg id  Sv Number Seq     Message text
+ *RNF5409 00    980 000056  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00    981 000057  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00    982 000058  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00    983 000059  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00    984 000060  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00    985 000061  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00    986 000062  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00    996 000072  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   1030 000106  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   1079 000155  The prototyped call returns a value which is lost when
+                            CALLP is used.
+  * * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C   M E S S A G E S   * * * * *
+                             / C o p y   M e m b e r s
+ Line   Src  RPG name   <-------- External name -------> CCSID  <- Last change ->
+ Number Id              Library    File       Member            Date     Time
+     22    1 noxdbJSON+ ./headers/noxdbJSON.rpgle          819  28-11-18 22:48:51
+          * * * * *   E N D   O F   / C O P Y   M E M B E R S   * * * * *
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     30
+                           C r o s s   R e f e r e n c e
+       File and Record References:
+          File              Device             References (D=Defined)
+            Record
+          No references in the source.
+       Global Field References:
+          Field             Attributes         References (D=Defined M=Modified)
+          *INLR             N(1)                  973M
+          CHECKSUM          I(10,0)               958D   1045M   1073
+          CITY              A(256)                951D   1091M   1104M
+                            VARYING(2)
+          CREATED           D(10*ISO-)            953D   1093M   1106M
+          CREDITLIMIT       P(15,2)               952D   1092M   1105M
+          DEBUG             A(32766)              955D    990M    999M   1014M
+                            VARYING(4)           1027M   1033M   1042M   1062M
+                                                 1082M   1109M
+          ID                I(10,0)               948D   1088M   1101M
+          ITLIST            DS(145)               969D   1086M   1087    1088
+                                                 1089    1090    1091    1092
+                                                 1093
+            THIS            *(16)                1088    1089    1090    1091
+                                                 1092    1093
+ *RNF7031 JSON_ALLOW_PRIMITIVES...
+                            CONST                  65D
+ *RNF7031 JSON_ALLROWS      CONST                 783D
+ *RNF7031 JSON_APPROXIMATE_TOTALROWS...
+                            CONST                 800D
+ *RNF7031 JSON_ARRAY        CONST                  48D
+          JSON_ARRAYAPPEND  *(16)                 446D   1021
+                            PROTOTYPE
+          JSON_ARRAYPUSH    *(16)                 432D    996M
+                            PROTOTYPE
+          JSON_ARRAYSLICE   *(16)                 456D   1039
+                            PROTOTYPE
+          JSON_ARRAYSORT    *(16)                 468D   1030M
+                            PROTOTYPE
+          JSON_ASJSONTEXT   A(1048572)            541D    990     999    1014
+                            VARYING(4)           1027    1033    1042    1062
+                            CCSID(1208)          1082    1109
+                            PROTOTYPE
+ *RNF7031 JSON_ASJSONTEXTMEM...
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     31
+                            U(10,0)               546D
+                            PROTOTYPE
+ *RNF7031 JSON_ASXMLTEXT    A(1048572)            568D
+                            VARYING(4)
+                            CCSID(1208)
+                            PROTOTYPE
+ *RNF7031 JSON_ASXMLTEXTMEM U(10,0)               573D
+                            PROTOTYPE
+ *RNF7031 JSON_BY_CONTEXT   CONST                  57D
+ *RNF7031 JSON_CHILD_LIST   CONST                  85D
+ *RNF7031 JSON_CLEAR        PROTOTYPE             695D
+ *RNF7031 JSON_CLOSE        PROTOTYPE             700D
+          JSON_COPY_CLONE   CONST                 443D   1039
+ *RNF7031 JSON_COPYVALUE    *(16)                 382D
+                            PROTOTYPE
+          JSON_DELETE       PROTOTYPE             399D   1054M   1055M   1068M
+                                                 1112M
+ *RNF7031 JSON_DONTREPLACE  CONST                 500D
+          JSON_DUMP         PROTOTYPE             522D   1067M
+          JSON_ERROR        N(1)                  107D   1065
+                            PROTOTYPE
+ *RNF7031 JSON_EVAL         CONST                  49D
+ *RNF7031 JSON_FIELDS       CONST                 791D
+          JSON_FOREACH      N(1)                  636D   1087
+                            PROTOTYPE
+ *RNF7031 JSON_GETATTRFIRST *(16)                 677D
+                            PROTOTYPE
+ *RNF7031 JSON_GETATTRNAME  A(1048572)            688D
+                            VARYING(4)
+                            CCSID(1208)
+                            PROTOTYPE
+ *RNF7031 JSON_GETATTRNEXT  *(16)                 683D
+                            PROTOTYPE
+ *RNF7031 JSON_GETATTRVALUE A(1048572)            659D
+                            VARYING(4)
+                            CCSID(1208)
+                            PROTOTYPE
+ *RNF7031 JSON_GETCHILD     *(16)                 197D
+                            PROTOTYPE
+          JSON_GETDATE      D(10*ISO-)            373D   1093    1106
+                            PROTOTYPE
+          JSON_GETINT       I(20,0)               364D   1088    1101
+                            PROTOTYPE
+          JSON_GETLENGTH    I(10,0)               494D   1024
+                            PROTOTYPE
+ *RNF7031 JSON_GETMESSAGEOBJECT...
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     32
+                            *(16)                 122D
+                            PROTOTYPE
+ *RNF7031 JSON_GETNAME      A(1048572)            307D
+                            VARYING(4)
+                            CCSID(1208)
+                            PROTOTYPE
+ *RNF7031 JSON_GETNAMEASPATH...
+                            A(1048572)            313D
+                            VARYING(4)
+                            CCSID(1208)
+                            PROTOTYPE
+ *RNF7031 JSON_GETNEXT      *(16)                 191D
+                            PROTOTYPE
+ *RNF7031 JSON_GETNODEATTRVALUE...
+                            A(1048572)            641D
+                            VARYING(4)
+                            CCSID(1208)
+                            PROTOTYPE
+          JSON_GETNUM       P(30,15)              355D   1092    1105
+                            PROTOTYPE
+ *RNF7031 JSON_GETPARENT    *(16)                 203D
+                            PROTOTYPE
+          JSON_GETSTR       A(1048572)            331D   1089    1090    1091
+                            VARYING(4)           1102    1103    1104
+                            CCSID(1208)
+                            PROTOTYPE
+ *RNF7031 JSON_GETSTRJOIN   A(1048572)            341D
+                            VARYING(4)
+                            CCSID(1208)
+                            PROTOTYPE
+ *RNF7031 JSON_GETVALUEINT  I(20,0)               294D
+                            PROTOTYPE
+ *RNF7031 JSON_GETVALUENUM  P(30,15)              286D
+                            PROTOTYPE
+ *RNF7031 JSON_GETVALUEPTR  *(16)                 300D
+                            PROTOTYPE
+ *RNF7031 JSON_GETVALUESTR  A(1048572)            278D
+                            VARYING(4)
+                            CCSID(1208)
+                            PROTOTYPE
+ *RNF7031 JSON_HAS          N(1)                  153D
+                            PROTOTYPE
+ *RNF7031 JSON_HTTPREQUEST  *(16)                 727D
+                            PROTOTYPE
+ *RNF7031 JSON_IGNORE_CASE  CONST                 491D
+ *RNF7031 JSON_ISNODE       N(1)                  177D
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     33
+                            PROTOTYPE
+ *RNF7031 JSON_ISNULL       N(1)                  169D
+                            PROTOTYPE
+ *RNF7031 JSON_ISTRUE       N(1)                  161D
+                            PROTOTYPE
+          JSON_ITERATOR     DS(145)               601D    619     626     637
+                            BASED(PROTOTYPE+)     969
+ *RNF7031   BREAK           N(1)                  615D
+ *RNF7031   COMMA           A(1)                  608D
+                            VARYING(2)
+ *RNF7031   COUNT           I(10,0)               609D
+ *RNF7031   FILLER          A(64)                 616D
+ *RNF7031   ISFIRST         N(1)                  605D
+ *RNF7031   ISLAST          N(1)                  606D
+ *RNF7031   ISLIST          N(1)                  604D
+ *RNF7031   ISRECURSIVE     N(1)                  607D
+ *RNF7031   LENGTH          I(10,0)               610D
+ *RNF7031   LISTARR         *(16)                 613D
+ *RNF7031   ROOT            *(16)                 602D
+ *RNF7031   SIZE            I(10,0)               611D
+ *RNF7031   THIS            *(16)                 603D
+ *RNF7031 JSON_LITERAL      CONST                  53D
+          JSON_LOCATE       *(16)                 137D   1099    1100
+                            PROTOTYPE
+ *RNF7031 JSON_LOCATEORCREATE...
+                            *(16)                 145D
+                            PROTOTYPE
+ *RNF7031 JSON_LOOKUPVALUE  *(16)                 480D
+                            PROTOTYPE
+ *RNF7031 JSON_MAPIX        N(1)                  718D
+                            PROTOTYPE
+ *RNF7031 JSON_MEMLEAK      N(1)                  705D
+                            PROTOTYPE
+ *RNF7031 JSON_MEMSTAT      PROTOTYPE             709D
+          JSON_MEMUSE       U(20,0)               713D    974    1114
+                            PROTOTYPE
+ *RNF7031 JSON_MERGEOBJECTS *(16)                 504D
+                            PROTOTYPE
+          JSON_MESSAGE      A(1024)               114D   1066
+                            VARYING(2)
+                            PROTOTYPE
+ *RNF7031 JSON_META         CONST                 789D
+ *RNF7031 JSON_MOVE_NODES   CONST                  63D
+          JSON_MOVE_UNLINK  CONST                 442D   1021
+          JSON_MOVEOBJECTINTO...
+                            *(16)                 514D   1079M
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     34
+                            PROTOTYPE
+          JSON_NEWARRAY     *(16)                 428D    995
+                            PROTOTYPE
+          JSON_NEWOBJECT    *(16)                 423D    979    1078
+                            PROTOTYPE
+          JSON_NODECHECKSUM U(10,0)               418D   1045    1073
+                            PROTOTYPE
+ *RNF7031 JSON_NODECLONE    *(16)                 393D
+                            PROTOTYPE
+ *RNF7031 JSON_NODERENAME   N(1)                  183D
+                            PROTOTYPE
+ *RNF7031 JSON_NODESANITIZE PROTOTYPE             411D
+ *RNF7031 JSON_NODETYPE     I(5,0)                322D
+                            PROTOTYPE
+ *RNF7031 JSON_NODEUNLINK   *(16)                 406D
+                            PROTOTYPE
+ *RNF7031 JSON_OBJCOPY      CONST                  56D
+ *RNF7031 JSON_OBJECT       CONST                  47D
+ *RNF7031 JSON_OBJLINK      CONST                  54D
+ *RNF7031 JSON_OBJMOVE      CONST                  58D
+ *RNF7031 JSON_OBJREPLACE   CONST                  55D
+ *RNF7031 JSON_PARSE        CONST                  69D
+          JSON_PARSEFILE    *(16)                  89D   1059
+                            PROTOTYPE
+ *RNF7031 JSON_PARSESTRINGVC...
+                            *(16)                  95D
+                            PROTOTYPE
+ *RNF7031 JSON_POINTER_VALUE...
+                            CONST                  50D
+ *RNF7031 JSON_REPLACE      CONST                 501D
+ *RNF7031 JSON_ROOT         CONST                  52D
+ *RNF7031 JSON_ROWARRAY     CONST                 787D
+ *RNF7031 JSON_SAME_CASE    CONST                 490D
+ *RNF7031 JSON_SETATTRVALUE PROTOTYPE             667D
+ *RNF7031 JSON_SETBOOL      *(16)                 251D
+                            PROTOTYPE
+          JSON_SETDATE      *(16)                 232D    986M
+                            PROTOTYPE
+ *RNF7031 JSON_SETDECPOINT  PROTOTYPE             101D
+ *RNF7031 JSON_SETEVAL      *(16)                 208D
+                            PROTOTYPE
+          JSON_SETINT       *(16)                 223D    980M
+                            PROTOTYPE
+          JSON_SETITERATOR  DS(145)               619D   1086
+                            PROTOTYPE
+ *RNF7031 JSON_SETNODEATTRVALUE...
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     35
+                            PROTOTYPE             650D
+          JSON_SETNUM       *(16)                 242D    985M
+                            PROTOTYPE
+ *RNF7031 JSON_SETPROCPTR   *(16)                 271D
+                            PROTOTYPE
+ *RNF7031 JSON_SETPTR       *(16)                 260D
+                            PROTOTYPE
+ *RNF7031 JSON_SETRECURSIVEITERATOR...
+                            DS(145)               626D
+                            PROTOTYPE
+          JSON_SETSTR       *(16)                 214D    981M    982M    983M
+                            PROTOTYPE             984M
+ *RNF7031 JSON_SQLCLOSE     PROTOTYPE             848D
+ *RNF7031 JSON_SQLCODE      I(10,0)               930D
+                            PROTOTYPE
+ *RNF7031 JSON_SQLCOLUMNS   I(10,0)               834D
+                            PROTOTYPE
+          JSON_SQLCONNECT   *(16)                 919D   1002
+                            PROTOTYPE
+          JSON_SQLDISCONNECT...
+                            PROTOTYPE             925D   1011M
+ *RNF7031 JSON_SQLEXEC      N(1)                  855D
+                            PROTOTYPE
+ *RNF7031 JSON_SQLFETCHNEXT *(16)                 827D
+                            PROTOTYPE
+ *RNF7031 JSON_SQLFETCHRELATIVE...
+                            *(16)                 817D
+                            PROTOTYPE
+ *RNF7031 JSON_SQLGETINSERTID...
+                            I(10,0)               906D
+                            PROTOTYPE
+ *RNF7031 JSON_SQLGETMETA   *(16)                 912D
+                            PROTOTYPE
+ *RNF7031 JSON_SQLINSERT    N(1)                  880D
+                            PROTOTYPE
+ *RNF7031 JSON_SQLOPEN      *(16)                 806D
+                            PROTOTYPE
+ *RNF7031 JSON_SQLRESULTROW *(16)                 754D
+                            PROTOTYPE
+          JSON_SQLRESULTSET *(16)                 767D   1003
+                            PROTOTYPE
+ *RNF7031 JSON_SQLROWS      I(10,0)               842D
+                            PROTOTYPE
+ *RNF7031 JSON_SQLSETOPTIONS...
+                            PROTOTYPE             745D
+ *RNF7031 JSON_SQLUPDATE    N(1)                  866D
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     36
+                            PROTOTYPE
+ *RNF7031 JSON_SQLUPSERT    N(1)                  892D
+                            PROTOTYPE
+ *RNF7031 JSON_STREAM       *(16)                 581D
+                            PROTOTYPE
+ *RNF7031 JSON_SUCCESSTRUE  *(16)                 130D
+                            PROTOTYPE
+ *RNF7031 JSON_TOTALROWS    CONST                 794D
+ *RNF7031 JSON_TRACESETID   PROTOTYPE             937D
+ *RNF7031 JSON_UNKNOWN      CONST                  46D
+ *RNF7031 JSON_UPPERCASE    CONST                 796D
+ *RNF7031 JSON_USE_LOCALE   CONST                 477D
+ *RNF7031 JSON_VALUE        CONST                  51D
+ *RNF7031 JSON_WRITECSVSTMF PROTOTYPE             587D
+          JSON_WRITEJSONSTMF...
+                            PROTOTYPE             529D    989M   1048M
+ *RNF7031 JSON_WRITEXMLSTMF PROTOTYPE             556D
+          KEY               A(256)                967D   1100
+                            VARYING(2)
+                            CCSID(1208)
+          LEN               I(10,0)               957D   1024M
+          MEMUSE            I(10,0)               959D    974M   1114
+ *RNF7031 MO_MERGE_MATCH    CONST                  79D
+ *RNF7031 MO_MERGE_NEW      CONST                  77D
+ *RNF7031 MO_MERGE_REPLACE  CONST                  82D
+          MSG               A(256)                956D   1066M
+                            VARYING(2)
+          NAME              A(256)                949D   1089M   1102M
+                            VARYING(2)
+          PCON              *(16)                 961D   1002M   1003    1011
+          PCUSTLIST         *(16)                 963D    995M    996     999
+                                                 1021    1024    1027    1030
+                                                 1033    1039    1054
+          PCUSTOBJECT       *(16)                 960D   1078M   1079    1082
+                                                 1086    1099    1100
+          PCUSTOMER         *(16)                 962D    979M    980     981
+                                                  982     983     984     985
+                                                  986     989     990     996
+                                                 1099M   1100M   1101    1102
+                                                 1103    1104    1105    1106
+                                                 1109    1112
+          PMORECUST         *(16)                 964D   1003M   1014    1021
+          PRES              *(16)                 966D   1021M
+          PROTOTYPE_ONLY    *(16)                 601
+          PTOPFIVE          *(16)                 965D   1039M   1042    1045
+                                                 1048    1055    1059M   1062
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     37
+                                                 1065    1066    1067    1068
+                                                 1073    1079
+          STREET            A(256)                950D   1090M   1103M
+                            VARYING(2)
+          UTF8              A(1048572)             41D     97     124     125
+                            VARYING(4)            131     132     141     149
+                            CCSID(1208)           157     165     173     187
+                            TEMPLATE              210     211     218     220
+                                                  227     236     246     255
+                                                  264     274     278     283
+                                                  304     307     313     331
+                                                  335     337     341     346
+                                                  348     359     368     377
+                                                  386     390     472     484
+                                                  517     541     568     623
+                                                  632     641     645     647
+                                                  654     656     659     664
+                                                  671     673     688     729
+                                                  733     749     758     760
+                                                  771     779     810     859
+                                                  861     870     874     884
+                                                  888     896     900     915
+                                                  921
+       Indicator References:
+          Indicator                            References (D=Defined M=Modified)
+          LR                                      973M
+        * * * * *   E N D   O F   C R O S S   R E F E R E N C E   * * * * *
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     38
+                       E x t e r n a l   R e f e r e n c e s
+       Statically bound procedures:
+          Procedure                            References
+          nox_Dump                                522    1067
+          nox_Error                               107    1065
+          nox_HasVC                               153
+          nox_Clear                               695
+          nox_Close                               700
+          nox_MapIx                               718
+          nox_isNode                              177
+          nox_Delete                              399    1054    1055    1068
+                                                 1112
+          nox_Stream                              581
+          nox_MemUse                              713     974    1114
+          nox_ForEach                             636    1087
+          nox_MemLeak                             705
+          nox_MemStat                             709
+          nox_sqlRows                             842
+          nox_sqlCode                             930
+          nox_IsTrueVC                            161
+          nox_IsNullVC                            169
+          nox_NewArray                            428     995
+          nox_sqlClose                            848
+          nox_ParseFile                            89    1059
+          nox_MessageVC                           114    1066
+          nox_GetNodeVC                           137    1099    1100
+          nox_NodeClone                           393
+          nox_NewObject                           423     979    1078
+          nox_ArrayPush                           432     996
+          nox_getLength                           494    1024
+          nox_AsXmlText                           568
+          nox_sqlOpenVC                           806
+          nox_sqlExecVC                           855
+          nox_GetValueVC                          331    1089    1090    1091
+                                                 1102    1103    1104
+          nox_NodeUnlink                          406
+          nox_ArraySlice                          456    1039
+          nox_AsJsonText                          541     990     999    1014
+                                                 1027    1033    1042    1062
+                                                 1082    1109
+          nox_sqlColumns                          834
+          nox_sqlConnect                          919    1002
+          nox_traceSetId                          937
+          nox_SetDecPoint                         101
+          nox_SuccessTrue                         130
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     39
+          nox_GetNodeNext                         191
+          nox_GetNodeType                         322
+          nox_CopyValueVC                         382
+          nox_ArrayAppend                         446    1021
+          nox_ArraySortVC                         468    1030
+          nox_GetAttrNext                         683
+          nox_httpRequest                         727
+          nox_sqlUpdateVC                         866
+          nox_sqlInsertVC                         880
+          nox_sqlUpsertVC                         892
+          nox_NodeRenameVC                        183
+          nox_GetNodeChild                        197
+          nox_GetStrJoinVC                        342
+          nox_NodeSanitize                        411
+          nox_NodeCheckSum                        418    1045    1073
+          nox_MergeObjects                        504
+          nox_WriteXmlStmf                        556
+          nox_AsXmlTextMem                        573
+          nox_WriteCsvStmf                        587
+          nox_SetAttrValue                        667
+          nox_GetAttrFirst                        677
+          nox_sqlFetchNext                        827
+          nox_sqlGetMetaVC                        912
+          nox_ParseStringVC                        95
+          nox_GetNodeParent                       203
+          nox_GetNodeNameVC                       308
+          nox_GetValueNumVC                       355    1092    1105
+          nox_GetValueIntVC                       364    1088    1101
+          nox_lookupValueVC                       480
+          nox_WriteJsonStmf                       529     989    1048
+          nox_AsJsonTextMem                       546
+          nox_SetIteratorVC                       619    1086
+          nox_GetAttrNameVC                       689
+          nox_sqlSetOptions                       745
+          nox_sqlDisconnect                       925    1011
+          nox_SetStrByNameVC                      214     981     982     983
+                                                  984
+          nox_SetIntByNameVC                      223     980
+          nox_SetDecByNameVC                      242     985
+          nox_SetPtrByNameVC                      260     271
+          nox_GetNodeValueVC                      279
+          nox_GetValueDateVC                      373    1093    1106
+          nox_NodeMoveIntoVC                      514    1079
+          nox_GetAttrValueVC                      660
+          nox_sqlResultRowVC                      754
+          nox_sqlResultSetVC                      767    1010
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     40
+          nox_sqlGetInsertId                      906
+          nox_SetEvalByNameVC                     208
+          nox_SetDateByNameVC                     232     986
+          nox_SetBoolByNameVC                     251
+          nox_GetNodeValueNum                     287
+          nox_GetNodeValueInt                     294
+          nox_GetNodeValuePtr                     300
+          nox_GetMessageObject                    123
+          nox_sqlFetchRelative                    818
+          nox_GetOrCreateNodeVC                   145
+          nox_GetNodeNameAsPath                   314
+          nox_GetNodeAttrValueVC                  641
+          nox_SetNodeAttrValueVC                  650
+          nox_SetRecursiveIteratorVC              628
+       Imported fields:
+          Field             Attributes         Defined
+          No references in the source.
+       Exported fields:
+          Field             Attributes         Defined
+          No references in the source.
+    * * * * *   E N D   O F   E X T E R N A L   R E F E R E N C E S   * * * * *
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     41
+                           M e s s a g e   S u m m a r y
+  Msg id  Sv Number Message text
+ *RNF5409 00     10 The prototyped call returns a value which is lost when CALLP
+                    is used.
+ *RNF7031 00    124 The name or indicator is not referenced.
+        * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   29-11-18 01:02:34        Page     42
+                             F i n a l   S u m m a r y
+   Message Totals:
+     Information  (00) . . . . . . . :      134
+     Warning      (10) . . . . . . . :        0
+     Error        (20) . . . . . . . :        0
+     Severe Error (30+)  . . . . . . :        0
+     ---------------------------------  -------
+     Total . . . . . . . . . . . . . :      134
+   Source Totals:
+     Records . . . . . . . . . . . . :     1118
+     Specifications  . . . . . . . . :      556
+     Data records  . . . . . . . . . :        0
+     Comments  . . . . . . . . . . . :      553
+          * * * * *   E N D   O F   F I N A L   S U M M A R Y   * * * * *
+ Program EX01DEMO placed in library NOXDB2. 00 highest severity. Created on 29-11-18 at 01:02:35.
+           * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *

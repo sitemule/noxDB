@@ -53,8 +53,7 @@
         },
         {
             "label": "Compile current example file",
-            "command": "ssh -t DKSRV133 'cd /prj/noxdbutf8/;echo ${relativeFile} ; gmake example MOD=${fileBasenameNoExtension} SRC=${relativeFile} > error.txt'",
-            "_command": "ssh -t DKSRV133 'cd /prj/noxdbutf8/;echo ${relativeFile} ; gmake example MOD=${fileBasenameNoExtension} SRC=${relativeFile}' | grep '*RNF' | grep -v '*RNF7031' | sed  "s!*!$@: &!"",
+            "command": "ssh -t DKSRV133 'cd /prj/noxdbutf8;echo ${relativeFile} ; gmake -f examples/makefile MOD=${fileBasenameNoExtension} SRC=${relativeFile}' ",
             "type": "shell",
             "group": {
                 "kind": "build",

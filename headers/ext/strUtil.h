@@ -6,13 +6,14 @@ int    memIcmp (PUCHAR s1, PUCHAR s2 , int len);
 SHORT  memicmpascii(PUCHAR m1  , PUCHAR m2 , LONG len );
 UCHAR  toLower(UCHAR c);
 UCHAR  toUpper(UCHAR c);
-UCHAR  toupperascii(UCHAR c);
-UCHAR  tolowerascii(UCHAR c);
+UCHAR  atoUpper(UCHAR c);
+UCHAR  atoLower(UCHAR c);
 LONG   strTrimLen(PUCHAR str);
-LONG   strtrim(PUCHAR str);
 LONG   astrTrimLen(PUCHAR str);
+LONG   strtrim(PUCHAR str);
 LONG   astrtrim(PUCHAR str);
 LONG   asprintf (PUCHAR res, PUCHAR ctrlstr , ... );
+LONG   a2i (PUCHAR str);
 
 PUCHAR strchrreplace(PUCHAR out , PUCHAR in , PUCHAR from , PUCHAR to );
 LONG   memstrreplace(PUCHAR buf , LONG len , PUCHAR from , PUCHAR to );
@@ -20,7 +21,9 @@ PUCHAR fmtPacked(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint
 PUCHAR fmtZoned(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint);
 PUCHAR stripLeadingZeros(PUCHAR out, PUCHAR input);
 PUCHAR str2lower(PUCHAR out , PUCHAR in);
+PUCHAR astr2lower(PUCHAR out , PUCHAR in);
 PUCHAR str2upper(PUCHAR out , PUCHAR in);
+PUCHAR astr2upper(PUCHAR out , PUCHAR in);
 PUCHAR subword (PUCHAR out , PUCHAR in , LONG ix, PUCHAR delimiters);
 LONG   subwords (PUCHAR in , PUCHAR  delimiters);
 // LONG   subwords (PVARCHAR inputStr, PUCHAR  delimiters);

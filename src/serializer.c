@@ -124,6 +124,7 @@ static void  jsonStreamPrintObject  (PNOXNODE pParent, PSTREAM pStream, SHORT le
 		stream_putc(pStream, QUOT);
 		stream_puts(pStream, pNode->Name);
 		stream_putc(pStream, QUOT);
+		stream_putc(pStream, COLON);
 		checkParentRelation(pNode , pParent);
 		jsonStreamPrintNode (pNode , pStream, nextLevel);
 		if (pNode->pNodeSibling) stream_putc  (pStream, COMMA );

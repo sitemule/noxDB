@@ -96,7 +96,7 @@ UCHAR toLower(UCHAR c)
    }
 }
 /* ------------------------------------------------------------- */
-UCHAR toupperascii (UCHAR c)
+UCHAR atoUpper (UCHAR c)
 {
 #pragma convert(1252)
    if (c >= 'a' && c <= 'z') return c - ( 'a' - 'A');
@@ -105,7 +105,7 @@ UCHAR toupperascii (UCHAR c)
 }
 /* ------------------------------------------------------------- *\
 \* ------------------------------------------------------------- */
-UCHAR tolowerascii (UCHAR c)
+UCHAR atoLower (UCHAR c)
 {
 #pragma convert(1252)
    if (c >= 'A' && c <= 'Z') return c + ( 'a' - 'A');
@@ -220,8 +220,8 @@ PUCHAR memIstr(PUCHAR base, PUCHAR key, LONG len )
 SHORT memicmpascii (PUCHAR m1 , PUCHAR m2 , LONG len)
 {
    while (len) {
-     UCHAR c1 = toupperascii(*m1);
-     UCHAR c2 = toupperascii(*m2);
+     UCHAR c1 = atoUpper(*m1);
+     UCHAR c2 = atoUpper(*m2);
      if (c1 > c2) return 1;
      if (c1 < c2) return -1;
      len --;
@@ -232,10 +232,10 @@ SHORT memicmpascii (PUCHAR m1 , PUCHAR m2 , LONG len)
 PUCHAR memistrascii(PUCHAR base, PUCHAR key, LONG len )
 {
    SHORT keylen = strlen (key);
-   UCHAR k = toupperascii(key[0]);
+   UCHAR k = atoUpper(key[0]);
 
    while (len>0) {
-     if  (toupperascii(*base) == k) {
+     if  (atoUpper(*base) == k) {
        if (memicmpascii (base , key , keylen) == 0) {  /* Found !! */
           return base;
        }
@@ -531,18 +531,6 @@ PUCHAR strrighttrimncpy(PUCHAR dst, PUCHAR src, LONG len)
 }
 /* -----------------------------------------------------------------
    ----------------------------------------------------------------- */
-PUCHAR UpperString(PUCHAR str)
-{
-   PUCHAR r = str;
-   if (str == NULL) return NULL;
-   while (*str) {
-      *str = toUpper(*str);
-      str++;
-   }
-   return r;
-}
-/* -----------------------------------------------------------------
-   ----------------------------------------------------------------- */
 PUCHAR str2upper (PUCHAR out, PUCHAR in )
 {
    PUCHAR r = out;
@@ -556,12 +544,38 @@ PUCHAR str2upper (PUCHAR out, PUCHAR in )
 }
 /* -----------------------------------------------------------------
    ----------------------------------------------------------------- */
+PUCHAR astr2upper (PUCHAR out, PUCHAR in )
+{
+   PUCHAR r = out;
+   if (in) {
+     while (*in ) {
+        *(r++)   = atoUpper(*(in++));
+     }
+   }
+   *r= '\0';
+   return out;
+}
+/* -----------------------------------------------------------------
+   ----------------------------------------------------------------- */
 PUCHAR str2lower (PUCHAR out, PUCHAR in )
 {
    PUCHAR r = out;
    if (in) {
      while (*in ) {
         *(r++)   = toLower(*(in++));
+     }
+   }
+   *r= '\0';
+   return out;
+}
+/* -----------------------------------------------------------------
+   ----------------------------------------------------------------- */
+PUCHAR astr2lower (PUCHAR out, PUCHAR in )
+{
+   PUCHAR r = out;
+   if (in) {
+     while (*in ) {
+        *(r++)   = atoLower(*(in++));
      }
    }
    *r= '\0';
@@ -830,4 +844,18 @@ LONG asprintf (PUCHAR res, PUCHAR ctrlstr , ... )
 	va_end(arg_ptr);
    stre2a (res  , res );
    return len;
+}
+// --------------------------------------------------------------------------- 
+// real ascii version of atoi
+// --------------------------------------------------------------------------- 
+LONG a2i (PUCHAR s)
+{
+   LONG res = 0;
+   BOOL sign = TRUE;
+   for (;*s;s++) {
+      if (*s == '-') sign = FALSE;
+      if (*s >= '0' && *s <= '9') res = 10 * res + (*s - '0');;
+   }
+   
+   return (sign? res : -res); 
 }

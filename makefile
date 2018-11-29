@@ -65,14 +65,14 @@ noxdb.bnddir: noxdb.entry
 	system -i -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
 
 hdr:
-	sed "s/ nox_/ json_/g; s/ NOX_/ json_/g" headers/noxDB.rpgle > headers/JSONPARSER.rpgle
-	sed "s/ nox_/ xml_/g; s/ NOX_/ xml_/g" headers/noxDB.rpgle > headers/XMLPARSER.rpgle
+	sed "s/ nox_/ json_/g; s/ NOX_/ json_/g" headers/noxDB.rpgle > headers/noxdbJSON.rpgle
+	sed "s/ nox_/ xml_/g; s/ NOX_/ xml_/g" headers/noxDB.rpgle > headers/noxdbXML.rpgle
 
 	system -i "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(132)"
 	system -i "CRTSRCPF FILE($(BIN_LIB)/QCREF) RCDLEN(132)"
   
-	system "CPYFRMSTMF FROMSTMF('headers/JSONPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONPARSER.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/XMLPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/XMLPARSER.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/noxdbJSON.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/NOXDBJSON.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/noxdbXML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/NOXDBXML.mbr') MBROPT(*REPLACE)"
 	system "CPYFRMSTMF FROMSTMF('headers/noxdb.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCREF.file/NOXDB.mbr') MBROPT(*REPLACE)"
 
 all:
