@@ -84,7 +84,7 @@ clean:
 	-system -qi "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
-current: env
+current: 
 	system -i "CRTCMOD MODULE($(BIN_LIB)/$(SRC)) SRCSTMF('src/$(SRC).c') $(CCFLAGS2) "
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
