@@ -82,6 +82,24 @@ all:
 clean:
 	-system -qi "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*FILE)"
 	-system -qi "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
+	
+release: clean
+	@echo " -- Creating noxdb release. --"
+	@echo " -- Creating save file. --"
+	system "CRTSAVF FILE($(BIN_LIB)/RELEASE)"
+	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) OMITOBJ((RELEASE *FILE))"
+	-rm -r release
+	-mkdir release
+	system "CPY OBJ('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TODIR('./release/')"
+	@echo " -- Cleaning up... --"
+	system "DLTOBJ OBJ($(BIN_LIB)/RELEASE) OBJTYPE(*FILE)"
+	@echo " -- Release created! --"
+	@echo ""
+	@echo "To install the release, run:"
+	@echo "  > CRTLIB $(BIN_LIB)"
+	@echo "  > CPY OBJ('./release/RELEASE.file') TOOBJ('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE')"
+	@echo "  > RSTLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE)"
+	@echo ""
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
 current: 
