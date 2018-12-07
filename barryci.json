@@ -6,7 +6,7 @@
 	"release": {
 		"post_commands": [{
 			"command": "gmake",
-			"args": ["release", "BIN_LIB=NOXDB"]
+			"args": ["release", "BIN_LIB=NOXDB_BLD"]
 		}],
 		"upload_file": "./release/release.savf"
 	}
