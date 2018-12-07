@@ -183,8 +183,6 @@ typedef _Packed struct _BLOB {
 #endif
 /***********/
 
-#define beginsWith(a,b) (memicmp(a, b, sizeof(b)-1) == 0)
-
 #ifndef GETVARPUCHARPARM
  #define GETVARPUCHARPARM(a,b,c) \
  { int posn = c ,desctype  , datatype  , descinf1  , descinf2 , Len;  \

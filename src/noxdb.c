@@ -1,15 +1,23 @@
 /* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL) */
-/* ------------------------------------------------------------- *
- * Company . . . : System & Method A/S                           *
- * Design  . . . : Niels Liisberg                                *
- * Function  . . : NOX - main service program API exports        *
- *                                                               *
- * By     Date     Task    Description                           *
- * NL     02.06.03 0000000 New program                           *
- * NL     27.02.08 0000510 Allow also no namespace for *:tag     *
- * NL     27.02.08 0000510 nox_NodeCopy                           *
- * NL     13.05.08 0000577 nox_NodeAdd / WriteNote                *
- * NL     13.05.08 0000577 Support for refference location       *
+/* -------------------------------------------------------------
+ * Company . . . : System & Method A/S                          
+ * Design  . . . : Niels Liisberg                               
+ * Function  . . : NOX - main service program API exports       
+ *                                                              
+ * By     Date     Task    Description                          
+ * ------ -------- ------- -------------------------------------
+ * NL     02.06.03 0000000 New program                          
+ * NL     27.02.08 0000510 Allow also no namespace for *:tag    
+ * NL     27.02.08 0000510 nox_NodeCopy                         
+ * NL     13.05.08 0000577 nox_NodeAdd / WriteNote              
+ * NL     13.05.08 0000577 Support for refference location      
+ * NL     01.06.18 0001000 noxdb2 version 2 implementation
+ * 
+ * 
+ * Note differences from noxDB version 1
+ * 1: The obect graph is all UTF-8
+ * 2: Output is by default witout BOM codes
+ * 3: Input and output values are default 1M in size 
  * ------------------------------------------------------------- */
 #include <stdio.h>
 #include <string.h>
@@ -199,11 +207,11 @@ static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 		c = *(in);
 		if (c == AMP) {
 			PUCHAR kwd = in+1;
-			if       (memBeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
-			else if  (memBeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
-			else if  (memBeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
-			else if  (memBeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
-			else if  (memBeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
+			if       (amemiBeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
+			else if  (amemiBeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
+			else if  (amemiBeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
+			else if  (amemiBeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
+			else if  (amemiBeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
 			else if  (in[1] == HASH) {
 				int n = 0;
 				in += 2; // Skip the '&#'
@@ -300,6 +308,7 @@ double num2float(PUCHAR s)
 	return nox_aNum(s);
 }
 // ---------------------------------------------------------------------------
+#pragma convert(1252)
 BOOL isNumberNodeStrict (PNOXNODE node)
 {
 	UCHAR c;
@@ -313,7 +322,9 @@ BOOL isNumberNodeStrict (PNOXNODE node)
 	c = *node->Value;
 	return ((c >= '0' && c <= '9') || c == '-');
 }
+#pragma convert(0)
 // ---------------------------------------------------------------------------
+#pragma convert(1252)
 BOOL isNumberNodeLoose  (PNOXNODE node)
 {
 	UCHAR c;
@@ -328,6 +339,7 @@ BOOL isNumberNodeLoose  (PNOXNODE node)
 	c = *p;
 	return ((c >= '0' && c <= '9') || c == '-');
 }
+#pragma convert(0)
 // ---------------------------------------------------------------------------
 LGL nox_IsLiteral (PNOXNODE node)
 {
@@ -369,7 +381,7 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
 		if (*subword(key, fields, kix , ",") == '\0') break;
 		subword(keys[kix], key, 0 , ":");
 		subword(descStr  , key, 1 , ":");
-		descending[kix] = memBeginsWith(descStr , "desc");
+		descending[kix] = amemiBeginsWith(descStr , "desc");
 	}
 
 	do {

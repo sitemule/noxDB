@@ -317,8 +317,8 @@ void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut,
 	UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
 	UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
 
-	// Hack for quick fix no bom , just set ccsid negative
-	BOOL   makeBomCode  = Ccsid > 0;
+	// Negative values trigger bom codes
+	BOOL   makeBomCode  = Ccsid < 0;
 	Ccsid = Ccsid < 0  ? - Ccsid : Ccsid;
 
 	memset(pjWrite , 0 , sizeof(jWrite));

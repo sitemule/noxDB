@@ -1,19 +1,21 @@
-﻿BIN_LIB=NOXDB2
+﻿.ONESHELL:
+
+BIN_LIB=NOXDB2
 # NOTE - UTF is not allowed for ILE source (yet) - so convert to WIN-1252
-SHELL=/QOpenSys/usr/bin/sh
-RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb')
-FILTER1=| grep '*RNF' | grep -v '*RNF7031' | grep -v '*RNF5409' | sed  "s!*!$(SRC): &!"
-FILTER=> /prj/noxdbutf8/examples/error.txt  
+RPG_OPT=DBGVIEW(*LIST) INCDIR(''./..'' ''/prj/noxdb'')
+FILTER2=| grep '*RNF' | grep -v '*RNF7031' | grep -v '*RNF5409' | sed  "s!*!$(SRC): &!"
+FILTER1=> /prj/noxdbutf8/examples/error.txt  
+SYSCMD=execlist cmd(\
+	'chgjob ccsid(500)' \
+	'chgatr obj(''$(SRC)'') atr(*ccsid) value(1252)' \
+	'crtbndrpg  pgm($(BIN_LIB)/$(MOD)) srcstmf(''$(SRC)'') $(RPG_OPT)' \
+)
     
 all: compile
-.ONESHELL:
 compile: 
-	qsh <<EOF 
-	export QIBM_CCSID=500
+	qsh << EOF 
 	liblist -a $(BIN_LIB)
-	system "CHGATR OBJ('$(SRC)') ATR(*CCSID) VALUE(1252)"
-	system "CHGJOB ccsid(500)"
-	system -i "CRTBNDRPG  PGM($(BIN_LIB)/$(MOD)) SRCSTMF('$(SRC)') $(RPG_OPT)" $(FILTER) 
+	system -i "$(SYSCMD)" $(FILTER1)
 	EOF
        
 .PHONY: compile

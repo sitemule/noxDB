@@ -14,7 +14,7 @@
         // call 
         // ------------------------------------------------------------- 
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE'); // CCSID(*EXACT); // CCSID(*CHAR:*UTF8);
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE'); //  CCSID(*EXACT) ; // CCSID(*CHAR:*JOBRUN) ; // CCSID(*CHAR:*UTF8);
 
 
         //------------------------------------------------------------- *
@@ -40,7 +40,7 @@
         dcl-s pMoreCust    pointer;
         dcl-s pTopFive     pointer;
         dcl-s pRes         pointer;
-        dcl-s key          varchar(256) CCSID(*UTF8) inz('topFive[id=397267]');
+        dcl-s key          varchar(256) CCSID(*UTF8) inz('topFive[id=12345]');
         
         dcl-ds itList      likeds(json_iterator);
  
@@ -53,11 +53,11 @@
         // and let set some attirbutes on the object. 
         // we use integers, string , fixed float numbers and date 
         pCustomer = json_newObject();
-        json_setInt (pCustomer:'id'         : 1234);
+        json_setInt (pCustomer:'id'         : 12345);
         json_setStr (pCustomer:'name'       : 'System & Metod A/S');
         json_setStr (pCustomer:'street'     : 'Håndværkersvinget 8');
         json_setStr (pCustomer:'city'       : 'Hørsholm');
-        json_setStr (pCustomer:'greeting'   : u'4f605978'); // Hi hau
+        json_setStr (pCustomer:'greeting'   : u'4f605978'); // "Ni hau" in unicode
         json_setNum (pCustomer:'creditLimit': 76543.21);
         json_setDate(pCustomer:'created'    : %date());
 
@@ -90,9 +90,9 @@
         debug = json_asJsonText(pMoreCust);
 
         // now we have the list
-        // Not the MOVE_UNLINK can be used if the array was already 
+        // Note: the MOVE_UNLINK can be used if the array was already 
         // a sub-node in an other object/array. here it just an example and have no effect
-        // Also you can omit the result - but returns the receiving array sou you can "chain" this function
+        // Also you can omit the result - but returns the receiving array so you can "chain" this function
         // ie "moveObjectInto" 
         pRes  = json_arrayAppend(pCustList : pMoreCust: JSON_MOVE_UNLINK);  
 
@@ -110,9 +110,9 @@
 
         // I only want the first 5
         // Note the first element is = 0
-        // You can also use JSON_MOVE_UNLINK, to extract the result out of the source
+        // You can also use JSON_MOVE_UNLINK, to carve the result out of the source
         // however, here we copy the elements to a new array  
-        pTopFive = json_arraySlice(pCustList : 0:5 : JSON_COPY_CLONE);         
+        pTopFive = json_arraySlice(pCustList : 0: 5 : JSON_COPY_CLONE);         
 
         // Just to see the progress:
         debug = json_asJsonText(pTopFive);
@@ -121,6 +121,7 @@
         checksum = json_NodeCheckSum(pTopFive);   
 
         // and save it to disk:
+        // You can use UTF8_BOM it you need the BOM-siganture
         json_WriteJsonStmf(pTopFive : './test/documents/ex01Tutorial.json' : 1208 : *OFF);    
 
         // Now what do we need to clean up:
@@ -170,10 +171,17 @@
         enddo;    
 
 
-        // Locate the first node with id = 397267. 
+        // Locate the first node with id = 593029. 
         // the indexfor the array can be the indexnumber OR a simple element test (=,>,<,<=,>= are supported)
-        pCustomer   = Json_Locate(pCustObject: 'topFive[id=397267]');
+        pCustomer   = Json_Locate(pCustObject: 'topFive[id=12345]');
+
+
+        // Note: You have to be carefull with the source is in the right CCSID for ROG to convert the
+        // strings ( if they contains national charaters and/or brackets like{}[] )
+        // if you run into issues, you can define them as const as in the 
+        // example below: it is suppose to do the same as abowe
         pCustomer   = Json_Locate(pCustObject: key);
+
         id          = json_getInt ( pCustomer : 'id');
         name        = json_getStr ( pCustomer : 'name');
         street      = json_getStr ( pCustomer : 'street');

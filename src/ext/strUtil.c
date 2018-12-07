@@ -46,7 +46,19 @@ int strIcmp (PUCHAR s1, PUCHAR s2)
     return c;
 }
 /* ------------------------------------------------------------- *\
-   memIcmp  is memicmp in ccsid 277
+   strIcmp  is stricmp in ascii
+\* ------------------------------------------------------------- */
+int astrIcmp (PUCHAR s1, PUCHAR s2)
+{
+    int c =0;
+    do {
+      c = atoUpper(*(s1++)) - atoUpper(*(s2++));
+    } while (c == 0 && *s1 && *s2);
+
+    return c;
+}
+/* ------------------------------------------------------------- *\
+   memIcmp  is memIcmp in ccsid 277
 \* ------------------------------------------------------------- */
 int memIcmp (PUCHAR s1, PUCHAR s2 , int len)
 {
@@ -56,7 +68,6 @@ int memIcmp (PUCHAR s1, PUCHAR s2 , int len)
     }
     return c;
 }
-#include "ostypes.h"
 /* ------------------------------------------------------------- *\
    memmem 
 \* ------------------------------------------------------------- */
@@ -74,6 +85,7 @@ PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen,
     }
     return NULL;
 }
+
 /* ------------------------------------------------------------- *\
    toUpper and toLower in ccsid 277
 \* ------------------------------------------------------------- */
@@ -113,10 +125,10 @@ UCHAR atoLower (UCHAR c)
 #pragma convert(0)
 }
 /* ------------------------------------------------------------- *\
-   stristr is strstr that ignores the case
+   strIstr is strstr that ignores the case
    is trturns the pointer to "key" with in base
 \* ------------------------------------------------------------- */
-PUCHAR stristr(PUCHAR base, PUCHAR key )
+PUCHAR strIstr(PUCHAR base, PUCHAR key )
 {
    UCHAR k = toUpper(key[0]) ;
    SHORT keylen = strlen (key);
@@ -131,6 +143,26 @@ PUCHAR stristr(PUCHAR base, PUCHAR key )
    }
    return NULL;
 }
+/* ------------------------------------------------------------- *\
+   astrIstr is strstr that ignores the case in ascii
+   is trturns the pointer to "key" with in base
+\* ------------------------------------------------------------- */
+PUCHAR astrIstr(PUCHAR base, PUCHAR key )
+{
+   UCHAR k = atoUpper(key[0]) ;
+   SHORT keylen = strlen (key);
+
+   while (*base) {
+     if  (atoUpper(*base) == k) {
+        if (amemIcmp (base , key , keylen) == 0) {  /* Found !! */
+           return base;
+        }
+     }
+     base ++;
+   }
+   return NULL;
+}
+
 /* ------------------------------------------------------------- *\
    strchrreplace returns a string, where chars are replaced one by one if byte match
 \* ------------------------------------------------------------- */
@@ -217,7 +249,7 @@ PUCHAR memIstr(PUCHAR base, PUCHAR key, LONG len )
    }
    return NULL;
 }
-SHORT memicmpascii (PUCHAR m1 , PUCHAR m2 , LONG len)
+SHORT amemIcmp (PUCHAR m1 , PUCHAR m2 , LONG len)
 {
    while (len) {
      UCHAR c1 = atoUpper(*m1);
@@ -229,14 +261,14 @@ SHORT memicmpascii (PUCHAR m1 , PUCHAR m2 , LONG len)
    }
    return 0;
 }
-PUCHAR memistrascii(PUCHAR base, PUCHAR key, LONG len )
+PUCHAR amemIstr(PUCHAR base, PUCHAR key, LONG len )
 {
    SHORT keylen = strlen (key);
    UCHAR k = atoUpper(key[0]);
 
    while (len>0) {
      if  (atoUpper(*base) == k) {
-       if (memicmpascii (base , key , keylen) == 0) {  /* Found !! */
+       if (amemIcmp (base , key , keylen) == 0) {  /* Found !! */
           return base;
        }
      }
@@ -245,6 +277,22 @@ PUCHAR memistrascii(PUCHAR base, PUCHAR key, LONG len )
    }
    return NULL;
 }
+BOOL   memBeginsWith(PUCHAR base  ,PUCHAR key)
+{
+   int l = strlen ( key);
+   return memcmp (base , key , l) == 0;
+}
+BOOL   memiBeginsWith(PUCHAR base  ,PUCHAR key)
+{
+   int l = strlen ( key);
+   return memIcmp (base , key , l) == 0;
+}
+BOOL   amemiBeginsWith(PUCHAR base  ,PUCHAR key)
+{
+   int l = strlen ( key);
+   return amemIcmp (base , key , l) == 0;
+}
+
 /* ------------------------------------------------------------- *\
    firstnonblank returns pointer to the string > ' '
 \* ------------------------------------------------------------- */

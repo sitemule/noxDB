@@ -50,11 +50,11 @@ static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 		c = *(in);
 		if (c == AMP) {
 			PUCHAR kwd = in+1;
-			if       (memBeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
-			else if  (memBeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
-			else if  (memBeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
-			else if  (memBeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
-			else if  (memBeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
+			if       (amemiBeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
+			else if  (amemiBeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
+			else if  (amemiBeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
+			else if  (amemiBeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
+			else if  (amemiBeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
 			else if  (in[1] == HASH) {
 				int n = 0;
 				in += 2; // Skip the '&#'
@@ -211,7 +211,7 @@ void nox_CopyCdata (PNOXCOM pJxCom)
 
 	nox_SkipChars(pJxCom , sizeof("<![CDATA[") -2) ; // omit the zero terminator
 	p = nox_GetChar(pJxCom);
-	while (! memBeginsWith(p , BRABRAGT  ) &&  pJxCom->State != XML_EXIT) {  // the "]]>"
+	while (! amemiBeginsWith(p , BRABRAGT  ) &&  pJxCom->State != XML_EXIT) {  // the "]]>"
 		CheckBufSize(pJxCom);
 		pJxCom->Data[pJxCom->DataIx++] = *p;
 		p = nox_GetChar(pJxCom);
@@ -228,7 +228,7 @@ void nox_AppendData (PNOXCOM pJxCom)
 /* Still a valid name � */
 	if (c == LT ) {
 	// Check for CDATA stream ... copy until ]]>
-		if (memBeginsWith(pJxCom->pFileBuf , CDATA )) {   // the "<![CDATA["
+		if (amemiBeginsWith(pJxCom->pFileBuf , CDATA )) {   // the "<![CDATA["
 			nox_CopyCdata (pJxCom);
 			return;
 		}
@@ -325,17 +325,17 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 
 			case XML_DETERMIN_TAG_TYPE:
 
-				if (memBeginsWith(p , REMARK  )) {  // the "!--"
+				if (amemiBeginsWith(p , REMARK  )) {  // the "!--"
 					int commentIx =0;
 					do {
 						p = nox_GetChar(pJxCom);
 						if (commentIx < COMMENT_SIZE -1) {
 							pJxCom->Comment[commentIx++] = *p;
 						}
-					} while (! memBeginsWith (p , ENDREMARK ) && pJxCom->State != XML_EXIT);  // EndRemark "-->"
+					} while (! amemiBeginsWith (p , ENDREMARK ) && pJxCom->State != XML_EXIT);  // EndRemark "-->"
 					pJxCom->Comment[commentIx-1] = '\0';
 					pJxCom->State = XML_FIND_END_TOKEN;
-				} else if (memBeginsWith(p , DOCTYPE  )) {  // the "!DOCTYPE"
+				} else if (amemiBeginsWith(p , DOCTYPE  )) {  // the "!DOCTYPE"
 					pJxCom->State = XML_FIND_END_TOKEN;
 				} else if (c == QUESTION) {  // the ?
 					pJxCom->State = XML_FIND_END_TOKEN;

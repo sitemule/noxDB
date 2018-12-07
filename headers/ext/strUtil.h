@@ -1,9 +1,6 @@
 ﻿#ifndef STRUTIL_H
 #define STRUTIL_H
 
-int    strIcmp (PUCHAR s1, PUCHAR s2);
-int    memIcmp (PUCHAR s1, PUCHAR s2 , int len);
-SHORT  memicmpascii(PUCHAR m1  , PUCHAR m2 , LONG len );
 UCHAR  toLower(UCHAR c);
 UCHAR  toUpper(UCHAR c);
 UCHAR  atoUpper(UCHAR c);
@@ -27,10 +24,16 @@ PUCHAR astr2upper(PUCHAR out , PUCHAR in);
 PUCHAR subword (PUCHAR out , PUCHAR in , LONG ix, PUCHAR delimiters);
 LONG   subwords (PUCHAR in , PUCHAR  delimiters);
 // LONG   subwords (PVARCHAR inputStr, PUCHAR  delimiters);
-PUCHAR stristr(PUCHAR base, PUCHAR key );
-PUCHAR strlastchr(PUCHAR base, UCHAR c );
+int    strIcmp (PUCHAR s1, PUCHAR s2);
+int    astrIcmp (PUCHAR s1, PUCHAR s2);
+int    memIcmp (PUCHAR s1, PUCHAR s2 , int len);
+SHORT  amemIcmp(PUCHAR m1  , PUCHAR m2 , LONG len );
+PUCHAR strIstr(PUCHAR base, PUCHAR key );
+PUCHAR astrIstr(PUCHAR base, PUCHAR key );
 PUCHAR memstr(PUCHAR base, PUCHAR key , LONG len);
-PUCHAR memistr(PUCHAR base, PUCHAR key , LONG len);
+PUCHAR memIstr(PUCHAR base, PUCHAR key , LONG len);
+PUCHAR amemIstr(PUCHAR base, PUCHAR key, LONG len );
+PUCHAR strlastchr(PUCHAR base, UCHAR c );
 PUCHAR strtrimncpy(PUCHAR out , PUCHAR in , LONG maxlen);
 PUCHAR strtrimcpy(PUCHAR out , PUCHAR in);
 PUCHAR strrighttrimcpy(PUCHAR dst, PUCHAR src);
@@ -45,7 +48,6 @@ PUCHAR righttrimlen(PUCHAR in , LONG size);
 LONG   lenrighttrimlen(PUCHAR in , LONG size);
 PUCHAR substr(PUCHAR out , PUCHAR in , LONG len);
 PUCHAR padncpy(PUCHAR dst, PUCHAR src, SHORT dstlen);
-#define padcpy(a,b) padncpy(a,b,sizeof(a))
 PUCHAR pad(PUCHAR s , LONG l);
 PUCHAR blob2str   (PBLOB blob);
 ULONG hexstr2int (PUCHAR s);
@@ -56,7 +58,9 @@ FIXEDDEC str2dec(PUCHAR str, UCHAR decPoint);
 LONG packedMem2Int(PUCHAR buf, SHORT bytes);
 PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen, 
                 PUCHAR needle , ULONG needleLen);
-#define memBeginsWith(a,b) (memicmp(a, b, strlen(b)) == 0)                
+BOOL   memBeginsWith(PUCHAR heystack ,PUCHAR needle);
+BOOL   memiBeginsWith(PUCHAR heystack ,PUCHAR needle);
+BOOL   amemiBeginsWith(PUCHAR heystack ,PUCHAR needle);
 
 
 

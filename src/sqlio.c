@@ -781,8 +781,8 @@ LONG nox_sqlNumberOfRows(PNOXSQLCONNECT pCon ,PUCHAR sqlstmt)
 	// Find the last select ( there can be more when using "with")
 
 	p = sqlstmt;
-	w = stristr(p, "with ");
-	p = stristr(p , "select ");
+	w = astrIstr(p, "with ");
+	p = astrIstr(p , "select ");
 
 	if (w == NULL || w > p) {
 		lastSelect = p;
@@ -798,7 +798,7 @@ LONG nox_sqlNumberOfRows(PNOXSQLCONNECT pCon ,PUCHAR sqlstmt)
 					if (para == 0) {
 						for (w++; *w == ' '; w++);
 						if ( *w != ',') {
-						lastSelect = stristr(w , "select ");
+						lastSelect = astrIstr(w , "select ");
 						goto outer;
 						}
 					}
@@ -811,17 +811,17 @@ LONG nox_sqlNumberOfRows(PNOXSQLCONNECT pCon ,PUCHAR sqlstmt)
 	if (lastSelect == NULL) return 0;
 
 	// We need to replace all columns between "select" and  "from"  with the count(*)
-	from  = stristr(lastSelect , " from ");
+	from  = astrIstr(lastSelect , " from ");
 	if (from == NULL) return 0;
 
 	// remove order by - if any
-	orderby = stristr(from  , " order ");
+	orderby = astrIstr(from  , " order ");
 	if (orderby) {
 		*orderby = '\0';
 	}
 
 	// remove "with ur" - if any
-	withur = stristr(from  , " with ur");
+	withur = astrIstr(from  , " with ur");
 	if (withur) {
 		*withur = '\0';
 	}
@@ -833,7 +833,6 @@ LONG nox_sqlNumberOfRows(PNOXSQLCONNECT pCon ,PUCHAR sqlstmt)
 
 	// Get that only row
 	pRow = nox_sqlResultRow(pCon, str2, NULL,1);
-
 
 	rowCount = a2i(nox_GetValuePtr(pRow, "counter", NULL));
 
@@ -1533,7 +1532,7 @@ LGL nox_sqlUpdate (PNOXSQLCONNECT pCon, PUCHAR table  , PNOXNODE pRow , PUCHAR w
 {
 	UCHAR  whereStr [1024];
 	for(; *where == ' ' ; where++); // skip leading blanks
-	if (*where > ' ' && ! memBeginsWith(where, "where")) {
+	if (*where > ' ' && ! amemiBeginsWith(where, "where")) {
 		asprintf (whereStr , "where %s" , where);
 		where = whereStr;
 	}
@@ -1631,22 +1630,22 @@ void nox_sqlSetOptions (PNOXSQLCONNECT pCon, PNOXNODE pOptionsP)
 		value = nox_GetNodeValuePtr  (pNode , NULL);
 
 		// Is header overriden by userprogram ?
-		if (memBeginsWith(name , "upperCaseColName")) {
+		if (amemiBeginsWith(name , "upperCaseColName")) {
 			po->upperCaseColName = *value == 't'? ON:OFF; // for true
 		}
-		else if (memBeginsWith(name , "autoParseContent")) {
+		else if (amemiBeginsWith(name , "autoParseContent")) {
 			po->autoParseContent = *value == 't' ? ON:OFF; // for true
 		}
-		else if (memBeginsWith(name , "decimalPoint")) {
+		else if (amemiBeginsWith(name , "decimalPoint")) {
 			po->DecimalPoint = *value;
 		}
-		else if (memBeginsWith(name , "sqlNaming")) {
+		else if (amemiBeginsWith(name , "sqlNaming")) {
 			po->sqlNaming = *value == 't' ? ON:OFF; // for true
 			attrParm = po->sqlNaming == OFF; // sysname is invers of SQL naming :(
 			rc = SQLSetConnectAttr     (pCon->hdbc , SQL_ATTR_DBC_SYS_NAMING, &attrParm  , 0);
 		}
 		// NOTE !! hexSort can only be set at environlevel - befor connect time !!!
-		// else if (memBeginsWith(name , "hexSort")) {
+		// else if (amemiBeginsWith(name , "hexSort")) {
 		//   po->hexSort = *value == 't' ? ON:OFF; // for true
 		//}
 		if (rc  != SQL_SUCCESS ) {
