@@ -103,8 +103,6 @@
           decPoint       Pointer    value options(*string);
         End-PR;
 
-
-
         //Bool true if errors occures
         Dcl-PR json_Error Ind extproc(*CWIDEN:'jx_Error');
           //jx_Object  node
@@ -115,6 +113,21 @@
         Dcl-PR json_Message Varchar(1024) extproc(*CWIDEN:'jx_Message');
           //jx_Object
           pNode          Pointer    value;
+        End-PR;
+
+        // Without parameters you will get the last internal error
+        // Otherwise it will format an error object
+I       Dcl-PR json_GetMessageObject Pointer //Return error description
+                                   extproc(*CWIDEN:'jx_GetMessageObject');
+I         MessageId      Pointer    value options(*string:*nopass);
+I         MessageData    Pointer    value options(*string:*nopass);
+        End-PR;
+
+        // simple courtesy function to return a {"success":true} object
+        //Return success:true object
+I       Dcl-PR json_SuccessTrue Pointer extproc(*CWIDEN:'jx_SuccessTrue');
+I         MessageId      Pointer    value options(*string:*nopass);
+I         MessageData    Pointer    value options(*string:*nopass);
         End-PR;
 
         //Returns pointer to node
@@ -241,6 +254,15 @@
           Value          Pointer    value;
         End-PR;
 
+        Dcl-PR json_SetProcPtr Pointer extproc(*CWIDEN: 'jx_SetPtrByName');
+          pNode          Pointer    value; //Pointer to json_ tree
+          //X-path locations to node or attributes
+          Expresion      Pointer    value options(*string);
+          Proc           Pointer(*Proc); //Pointer to a procedure
+          //*ON=String escape, *OFF=If literals
+          isString       Ind        value options(*nopass);
+        End-PR;
+
         Dcl-PR json_SetValue Pointer extproc(*CWIDEN: 'jx_SetValueByName');
           //Pointer to json_ tree
           pNode          Pointer    value;
@@ -266,6 +288,12 @@
           pNode          Pointer    value;
           //If not found - default value
           Defaultvalue   Packed(30:15) value options(*NOPASS);
+        End-PR;
+
+I       Dcl-PR json_GetValueInt Int(20) extproc(*CWIDEN : 'jx_GetNodeValueInt');
+I         pNode          Pointer    value; //Pointer to node
+          //If not found - default value
+I         Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         Dcl-PR json_GetValuePtr Pointer extproc(*CWIDEN : 'jx_GetNodeValuePtr');

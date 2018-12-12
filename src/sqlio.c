@@ -1357,7 +1357,7 @@ void jx_traceOpen (PJXSQLCONNECT pCon)
    PUCHAR insertStmt = "insert into sqltrace (STSTART,STEND,STSQLSTATE,STTEXT,STJOB,STTRID,STSQLSTMT) "
                        "values (?,?,?,?,?,?,?)";
 
-   JXM902 ( pTrc->lib , &pTrc->doTrace , pTrc->job);
+   TRACE ( pTrc->lib , &pTrc->doTrace , pTrc->job);
    if (pTrc->doTrace == OFF) return;
    createTracetable(pCon);
    rc = SQLAllocStmt(pCon->hdbc, &pTrc->handle);
@@ -1403,12 +1403,17 @@ SHORT  doInsertOrUpdate(
 )
 {
 
-
+   typedef struct _COLDATA {
+      BOOL    freeme;
+      PUCHAR  data;
+      ULONG   length;
+   } COLDATA, *PCOLDATA;
+      
+   COLDATA colData[4096];
+   PCOLDATA pColData;
    LONG   attrParm;
    LONG   colno;
    LONG   i;
-   PUCHAR valArr[64];
-   SHORT  valArrIx= 0;
    SQLINTEGER sql_nts;
    SQLINTEGER bindColNo;
 
@@ -1445,7 +1450,7 @@ SHORT  doInsertOrUpdate(
    pNode    =  jx_GetNodeChild (pRow);
    bindColNo =0;
    for(colno =1; pNode ; colno ++) {
-      int realLength;
+      PCOLDATA pColData = &colData[colno-1];
       JXCOL Col;
       BOOL isId = isIdColumn(pSQLmeta->pstmt->hstmt, colno);
 
@@ -1471,20 +1476,21 @@ SHORT  doInsertOrUpdate(
             return rc; // we have an error
          }
 
-
          if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
-            value = valArr[valArrIx++] = memAlloc(Col.collen);
-            realLength = jx_AsJsonTextMem (pNode , value,  Col.collen );
-            value [realLength] = '\0';
+            pColData->freeme = true;
+            pColData->data    = memAlloc(Col.collen);
+            pColData->length  = jx_AsJsonTextMem (pNode , pColData->data,  Col.collen );
+            pColData->data [pColData->length] = '\0';
          } else {
-            value = jx_GetNodeValuePtr  (pNode , NULL);
-            realLength = strlen(value);
+            pColData->freeme = false;
+            pColData->data  = jx_GetNodeValuePtr  (pNode , NULL);
+            pColData->length = pColData->data ? strlen(pColData->data):0;
          }
 
          // Long data > 32K will be chopped into chunks for update.
-         if (realLength > 32000) {
+         if (pColData->length > 32000) {
             // Set parameters based on total data to send.
-            SQLINTEGER lbytes = realLength;
+            SQLINTEGER lbytes = pColData->length;
             SQLINTEGER cbTextSize = SQL_DATA_AT_EXEC;
 
             // Bind the parameter marker.
@@ -1496,7 +1502,7 @@ SHORT  doInsertOrUpdate(
                Col.coltype,      // FSqlType
                lbytes,           // cbColDef
                0,                // ibScale
-               pNode,            // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
+               pColData,         // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
                0,                // cbValueMax
                &cbTextSize       // pcbValue
             );
@@ -1508,7 +1514,7 @@ SHORT  doInsertOrUpdate(
          } else {
 
             // length  !!! 1234,56 gives 6 digits                                              //GIT
-            SQLINTEGER colLen = Col.coltype  == SQL_TIMESTAMP ? Col.collen : realLength + Col.scale;  //GIT
+            SQLINTEGER colLen = Col.coltype  == SQL_TIMESTAMP ? Col.collen : pColData->length + Col.scale;  //GIT
             sql_nts = SQL_NTS;
 
             rc = SQLBindParameter(
@@ -1519,7 +1525,7 @@ SHORT  doInsertOrUpdate(
                Col.coltype,
                colLen,       // column len - Take care: timestamp need real length of colum. Numbers need string le//GIT
                Col.scale,    // presition
-               value,
+               pColData->data,
                0,
                &sql_nts // NULL terminated string -(pointer to length variable)
             );
@@ -1539,11 +1545,11 @@ SHORT  doInsertOrUpdate(
 
    if (rc == SQL_NEED_DATA) {
       // Check to see if NEED_DATA; if yes, use SQLPutData.
-      rc  = SQLParamData(pSQL->pstmt->hstmt, &pNode);
+      rc  = SQLParamData(pSQL->pstmt->hstmt, &pColData);
       while (rc == SQL_NEED_DATA) {
          LONG    cbBatch = 32000; // Dont use real 32K it will be to large a buffer
-         PUCHAR  value = jx_GetNodeValuePtr (pNode , NULL);
-         LONG    lbytes = strlen(value);
+         PUCHAR  value  = pColData->data;
+         ULONG   lbytes = pColData->length;;
 
          while (lbytes > cbBatch) {
             rc = SQLPutData(pSQL->pstmt->hstmt, value , cbBatch);
@@ -1554,14 +1560,16 @@ SHORT  doInsertOrUpdate(
          // Put final batch.
          rc = SQLPutData(pSQL->pstmt->hstmt, value, lbytes);
 
+         // Local serialized work string
+         if (pColData->freeme) {
+            memFree(&pColData->data);
+         }
          // Setup next column
-         rc = SQLParamData(pSQL->pstmt->hstmt, &pNode  );
+         rc = SQLParamData(pSQL->pstmt->hstmt, &pColData );
+
       }
    }
 
-   for(i=0;i<valArrIx; i++) {
-      memFree(&valArr[i]);
-   }
 
    if (rc != SQL_SUCCESS && rc != SQL_NO_DATA_FOUND) {
       check_error (pSQL);
@@ -1622,7 +1630,7 @@ SHORT  doInsertOrUpdate(
    pNode    =  jx_GetNodeChild (pRow);
    colno =1;
    for(i=1; pNode ; i++) {
-      int realLength;
+      int pColData->length;
       JXCOL Col;
       memset (&Col , 0 , sizeof(JXCOL));
 

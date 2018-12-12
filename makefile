@@ -5,7 +5,6 @@
 
 # NOTE - UTF is not allowed for ILE source (yet) - so convert to WIN-1252
 
-
 # BIN_LIB is the destination library for the service program.
 # the rpg modules and the binder source file are also created in BIN_LIB.
 # binder source file and rpg module can be remove with the clean step (make clean)
@@ -15,7 +14,6 @@ TARGET_CCSID=*JOB
 
 # Do not touch below
 INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'
-DEPS_LIST=$(BIN_LIB)/RTVSYSVAL $(BIN_LIB)/UTL100 $(BIN_LIB)/VARCHAR $(BIN_LIB)/MEM001 $(BIN_LIB)/XLATE $(BIN_LIB)/STREAM $(BIN_LIB)/TIMESTAMP $(BIN_LIB)/SNDPGMMSG $(BIN_LIB)/TRYCATCH
 
 CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) INCDIR($(INCLUDE)) DBGVIEW($(DBGVIEW)) TGTCCSID($(TARGET_CCSID))
 
@@ -26,78 +24,87 @@ CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*NONE) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES
 # User-defined part end
 #-----------------------------------------------------------
 
-all: clean env compile ext bind hdr
+# Dependency list
 
-env:
-	-system -q "CRTLIB $(BIN_LIB) TYPE(*TEST) TEXT('Nox.DB build library')"
-	-system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/JSONXML)"
-	-system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/JSONXML) OBJ((JSONXML))"
-	-system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/NOXDB)"
-	-system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/NOXDB) OBJ((JSONXML))"
+all: clean $(BIN_LIB).lib jsonxml.srvpgm hdr
 
+jsonxml.srvpgm: noxdb.c sqlio.c xmlparser.c jsonparser.c serializer.c reader.c segments.c iterator.c http.c generic.c runqsh.clle trace.clle ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
 
-compile:
-	system "CHGATR OBJ('src/*') ATR(*CCSID) VALUE(1252)"
-	system "CHGATR OBJ('headers/*') ATR(*CCSID) VALUE(1252)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM001) SRCSTMF('src/noxdb.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM002) SRCSTMF('src/sqlio.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM003) SRCSTMF('src/xmlparser.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM004) SRCSTMF('src/jsonparser.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM005) SRCSTMF('src/serializer.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM006) SRCSTMF('src/reader.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM007) SRCSTMF('src/segments.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM008) SRCSTMF('src/iterator.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM010) SRCSTMF('src/http.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/JXM900) SRCSTMF('src/generic.c') $(CCFLAGS)"
+jsonxml.bnddir: jsonxml.entry
+noxdb.bnddir: jsonxml.entry
 
-	system "CRTSRCPF FILE($(BIN_LIB)/QCLLESRC) RCDLEN(112)"
-	system "CPYFRMSTMF FROMSTMF('src/runqsh.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/JXM901.mbr') MBROPT(*ADD)"
-	system "CPYFRMSTMF FROMSTMF('src/trace.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/JXM902.mbr') MBROPT(*ADD)"
-	system -s "CRTCLMOD MODULE($(BIN_LIB)/JXM901) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
-	system -s "CRTCLMOD MODULE($(BIN_LIB)/JXM902) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
+#-----------------------------------------------------------
+
+%.lib:
+	-system -qi "CRTLIB $* TYPE(*TEST)"
+
+%.bnddir:
+	-system -qi "CRTBNDDIR BNDDIR($(BIN_LIB)/$*)"
+	-system -qi "ADDBNDDIRE BNDDIR($(BIN_LIB)/$*) OBJ($(patsubst %.entry,($(BIN_LIB)/% *SRVPGM *IMMED),$^))"
+
+%.entry:
+	# Basically do nothing..
+	@echo "Adding binding entry $*"
+
+%.c:
+	system -i "CHGATR OBJ('src/$*.c') ATR(*CCSID) VALUE(1252)"
+	system "CRTCMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCSTMF('src/$*.c') $(CCFLAGS)"
+
+%.clle:
+	system -i "CHGATR OBJ('src/$*.clle') ATR(*CCSID) VALUE(1252)"
+	-system -qi "CRTSRCPF FILE($(BIN_LIB)/QCLLESRC) RCDLEN(112)"
+	system "CPYFRMSTMF FROMSTMF('src/$*.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/$(notdir $*).mbr') MBROPT(*ADD)"
+	system "CRTCLMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
+
+%.srvpgm:
+	-system -qi "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
+	system "CPYFRMSTMF FROMSTMF('headers/$*.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/$*.mbr') MBROPT(*replace)"
 	
-
-ext:
-	system "CRTCMOD MODULE($(BIN_LIB)/MEM001) SRCSTMF('src/ext/mem001.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/PARMS) SRCSTMF('src/ext/parms.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/SNDPGMMSG) SRCSTMF('src/ext/sndpgmmsg.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/STREAM) SRCSTMF('src/ext/stream.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/TIMESTAMP) SRCSTMF('src/ext/timestamp.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/TRYCATCH) SRCSTMF('src/ext/trycatch.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/UTL100) SRCSTMF('src/ext/utl100.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/VARCHAR) SRCSTMF('src/ext/varchar.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/XLATE) SRCSTMF('src/ext/xlate.c') $(CCFLAGS)"
-	system "CRTCMOD MODULE($(BIN_LIB)/RTVSYSVAL) SRCSTMF('src/ext/rtvsysval.c') $(CCFLAGS)"
-
-bind:
-	-system -q "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
-	system "CPYFRMSTMF FROMSTMF('headers/JSONXML.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/JSONXML.mbr') MBROPT(*replace)"
-	system -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/JXM* $(DEPS_LIST)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
+	# You may be wondering what this ugly string is. It's a list of objects created from the dep list that end with .c or .clle.
+	$(eval modules := $(patsubst %,$(BIN_LIB)/%,$(basename $(filter %.c %.clle,$(notdir $^)))))
+	
+	system -i -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
 
 hdr:
 	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
 	sed "s/ jx_/ xml_/g; s/ JX_/ xml_/g" headers/JSONXML.rpgle > headers/XMLPARSER.rpgle
 
-	system "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(112)"
-	system "CRTSRCPF FILE($(BIN_LIB)/QCREF) RCDLEN(112)"
+	system -i "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(112)"
+	system -i "CRTSRCPF FILE($(BIN_LIB)/QCREF) RCDLEN(112)"
   
-	system "CPYFRMSTMF FROMSTMF('headers/JSONPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONPARSER.mbr') MBROPT(*ADD)"
-	system "CPYFRMSTMF FROMSTMF('headers/XMLPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/XMLPARSER.mbr') MBROPT(*ADD)"
-	system "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCREF.file/JSONXML.mbr') MBROPT(*ADD)"
+	system "CPYFRMSTMF FROMSTMF('headers/JSONPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONPARSER.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/XMLPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/XMLPARSER.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCREF.file/JSONXML.mbr') MBROPT(*REPLACE)"
+
+all:
+	@echo Build success!
 
 clean:
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/QCLLESRC) OBJTYPE(*FILE)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/QSRVSRC) OBJTYPE(*FILE)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/QRPGLEREF) OBJTYPE(*FILE)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/QCREF) OBJTYPE(*FILE)"
+	-system -qi "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*FILE)"
+	-system -qi "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
+	
+release: clean
+	@echo " -- Creating noxdb release. --"
+	@echo " -- Creating save file. --"
+	system "CRTSAVF FILE($(BIN_LIB)/RELEASE)"
+	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) OMITOBJ((RELEASE *FILE))"
+	-rm -r release
+	-mkdir release
+	system "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release.savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"
+	@echo " -- Cleaning up... --"
+	system "DLTOBJ OBJ($(BIN_LIB)/RELEASE) OBJTYPE(*FILE)"
+	@echo " -- Release created! --"
+	@echo ""
+	@echo "To install the release, run:"
+	@echo "  > CRTLIB $(BIN_LIB)"
+	@echo "  > CPYFRMSTMF FROMSTMF('./release/release.savf') TOMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') MBROPT(*REPLACE) CVTDTA(*NONE)"
+	@echo "  > RSTLIB SAVLIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE)"
+	@echo ""
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
-current: env
-
-	system "CRTCMOD MODULE($(BIN_LIB)/$(SRC)) SRCSTMF('src/$(SRC).c') $(CCFLAGS2) "
+current: 
+	system -i "CRTCMOD MODULE($(BIN_LIB)/$(SRC)) SRCSTMF('src/$(SRC).c') $(CCFLAGS2) "
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
 example: 
-	system "CRTBNDRPG PGM($(BIN_LIB)/$(SRC)) SRCSTMF('examples/$(SRC).rpgle') DBGVIEW(*ALL)" > error.txt
-
-	
+	system -i "CRTBNDRPG PGM($(BIN_LIB)/$(SRC)) SRCSTMF('examples/$(SRC).rpgle') DBGVIEW(*ALL)" > error.txt

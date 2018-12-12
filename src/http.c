@@ -42,8 +42,8 @@ PUCHAR loadText (PUCHAR file)
 // ---------------------------------------------------------------------------
 void qsh (PUCHAR cmd)
 {
-   VOID JXM901  (PUCHAR cmd);
-   JXM901  (cmd);
+   VOID RUNQSH  (PUCHAR cmd);
+   RUNQSH  (cmd);
 }
 /* ---------------------------------------------------------------------------
    get a resource on the net
