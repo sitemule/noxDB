@@ -11,7 +11,7 @@ Installation of noxDB should be done with `git` and `gmake` (GNU Make), which ar
 noxDB is a two step process. noxDB requires you to build from source, but this step has been totally automated for you. To install noxDB, you need to use the pase environment (with `ssh` for example) and with a couple of seconds you can have the project built. No need to download save files, upload them or restore them.
 
 ```
-git clone git@github.com:sitemule/noxDB.git
+git -c http.sslVerify=false clone https://github.com/sitemule/noxDB.git
 cd noxDB
 gmake
 ```
