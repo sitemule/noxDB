@@ -65,9 +65,8 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options)
    tmpnam(temp2);
    tmpnam(error);
 
-   p += sprintf( p , "touch -C 1208 %s;" , temp2);
    p += sprintf( p , "curl -s -k -o %s", temp2);
-
+   
    if (pNode) {
        // The negative causes it not to produce BOM code
        jx_WriteJsonStmf (pNode , temp1 , -1208, ON ,NULL);
@@ -80,7 +79,8 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options)
    if (options) {
        p += sprintf( p , " %s "  , options);
    }
-   p += sprintf( p ,  " %s 2>%s",  url , error);
+   p += sprintf( p ,  " %s 2>%s;",  url , error);
+   p += sprintf( p , "setccsid 1208 %s" , temp2);
    qsh (cmd);
 
    p =  loadText(error);

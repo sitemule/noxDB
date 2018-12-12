@@ -12,7 +12,9 @@ compile:
 	qsh <<EOF 
 	export QIBM_CCSID=277
 	liblist -a $(BIN_LIB)
-	system "CHGATR OBJ('$(SRC)') ATR(*CCSID) VALUE(1252)"
+	touch error.txt
+	setccsid 1252 error.txt
+	setccsid 1252 $(SRC)
 	system -i "CRTBNDRPG  PGM($(BIN_LIB)/$(OBJ)) SRCSTMF('$(SRC)') $(RPG_OPT)" > error.txt
 	EOF
        
