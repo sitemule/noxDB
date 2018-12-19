@@ -1,12 +1,12 @@
 {
 	"build": [{
 		"command": "gmake",
-		"args": ["BIN_LIB=NOXDB_BLD"]
+		"args": ["BIN_LIB=NOXDB"]
 	}],
 	"release": {
 		"post_commands": [{
 			"command": "gmake",
-			"args": ["release", "BIN_LIB=NOXDB_BLD"]
+			"args": ["release", "BIN_LIB=NOXDB"]
 		}],
 		"upload_file": "./release/release.savf"
 	}
