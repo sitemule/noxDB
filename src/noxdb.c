@@ -2688,7 +2688,7 @@ PUCHAR jx_splitAtrFromName (PUCHAR name)
          return (pEnd +1);  // atribute name is the next. Return that
       }
       else if (*pEnd == BraBeg) {
-         balance ++;
+         balance --;
       }
       else if (*pEnd == BraEnd) {
          balance ++;
