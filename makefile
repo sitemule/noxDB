@@ -8,9 +8,12 @@
 # BIN_LIB is the destination library for the service program.
 # the rpg modules and the binder source file are also created in BIN_LIB.
 # binder source file and rpg module can be remove with the clean step (make clean)
-BIN_LIB=NOXDB2
+BIN_LIB=noxDB2
 DBGVIEW=*ALL
 TARGET_CCSID=*JOB
+
+# The shell we use
+SHELL=/QOpenSys/usr/bin/qsh
 
 # Do not touch below
 INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'
@@ -26,11 +29,11 @@ CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*NONE) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES
 
 # Dependency list
 
-all: clean $(BIN_LIB).lib noxdb.srvpgm hdr
+all: clean $(BIN_LIB).lib noxDB2.srvpgm hdr
 
-noxdb.srvpgm: noxdb.c sqlio.c csv.c xmlparser.c jsonparser.c serializer.c reader.c iterator.c http.c generic.c runqsh.clle trace.clle ext/memUtil.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/strUtil.c ext/varchar.c ext/xlate.c ext/e2aa2e.c noxdb.bnddir
+noxDB2.srvpgm: noxDB2.c sqlio.c csv.c xmlparser.c jsonparser.c serializer.c reader.c iterator.c http.c generic.c runqsh.clle trace.clle ext/memUtil.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/strUtil.c ext/varchar.c ext/xlate.c ext/e2aa2e.c noxDB2.bnddir
 
-noxdb.bnddir: noxdb.entry
+noxDB2.bnddir: noxDB2.entry
 
 #-----------------------------------------------------------
 
@@ -65,15 +68,15 @@ noxdb.bnddir: noxdb.entry
 	system -i -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
 
 hdr:
-	sed "s/ nox_/ json_/g; s/ NOX_/ json_/g" headers/noxDB.rpgle > headers/noxdbJSON.rpgle
-	sed "s/ nox_/ xml_/g; s/ NOX_/ xml_/g" headers/noxDB.rpgle > headers/noxdbXML.rpgle
+	sed "s/ nox_/ json_/g; s/ NOX_/ JSON_/g" headers/noxDB2.rpgle > headers/noxDB2JSON.rpgle
+	sed "s/ nox_/ xml_/g; s/ NOX_/ XML_/g" headers/noxDB2.rpgle > headers/noxDB2XML.rpgle
 
-	system -i "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(132)"
-	system -i "CRTSRCPF FILE($(BIN_LIB)/QCREF) RCDLEN(132)"
+	system -i "CRTSRCPF FILE($(BIN_LIB)/QRPGLESRC) RCDLEN(132)"
+	system -i "CRTSRCPF FILE($(BIN_LIB)/H) RCDLEN(132)"
   
-	system "CPYFRMSTMF FROMSTMF('headers/noxdbJSON.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/NOXDBJSON.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/noxdbXML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/NOXDBXML.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/noxdb.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCREF.file/NOXDB.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/noxDB2JSON.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLESRC.file/noxDB2JSON.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/noxDB2XML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLESRC.file/noxDB2XML.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/noxDB2.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/noxDB2.mbr') MBROPT(*REPLACE)"
 
 all:
 	@echo Build success!

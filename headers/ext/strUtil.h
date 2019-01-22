@@ -1,4 +1,4 @@
-﻿#ifndef STRUTIL_H
+#ifndef STRUTIL_H
 #define STRUTIL_H
 
 UCHAR  toLower(UCHAR c);

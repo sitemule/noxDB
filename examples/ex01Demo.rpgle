@@ -19,7 +19,7 @@
 
         //------------------------------------------------------------- *
 
-        /include 'headers/noxdbJSON.rpgle'
+        /include 'headers/noxDB2JSON.rpgle'
 
         dcl-s id           int(10);
         dcl-s name         varchar(256);

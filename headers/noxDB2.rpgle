@@ -37,6 +37,12 @@
         Dcl-C NOX_BY_CONTEXT const(19);
         Dcl-C NOX_OBJMOVE const(2048);
 
+        // Node reference location for nodeCopy / nodeAdd etc.
+        Dcl-C NOX_FIRST_CHILD const(1);
+        Dcl-C NOX_LAST_CHILD const(2);
+        Dcl-C NOX_BEFORE_SIBLING const(3);
+        Dcl-C NOX_AFTER_SIBLING const(4);
+
         // * Modifiers to "add" / "or" into "parseString" and "evaluate"
         // !! Type - have to be backwards compat.
         // Unlink the source and move it to dest.
@@ -72,7 +78,7 @@
         End-PR;
 
         // Returns node nox_object tree
-        Dcl-PR nox_ParseStringVC Pointer extproc(*CWIDEN:'nox_ParseStringVC');
+        Dcl-PR nox_ParseString Pointer extproc(*CWIDEN:'nox_ParseStringVC');
           // String to parse
           String         Like(UTF8) const options(*varsize);
         End-PR;
@@ -370,6 +376,31 @@
           sourceName     Like(UTF8) const options(*varsize);
         End-PR;
 
+
+        // returns the new node
+        Dcl-PR nox_NodeAdd Pointer extproc(*CWIDEN : 'nox_NodeAddVC');
+          // node. Retrive from Locate()
+          pRootNode      Pointer    value;
+          //Reference location to where it arrive
+          RefLocation    Int(10)    value;
+          //Name of node
+          Name           Like(UTF8) const options(*varsize);
+          //Value or expression
+          Value          Like(UTF8) const options(*varsize);
+          //New type (Refer "node type"
+          Type           Uns(5)     value options(*nopass);
+        End-PR;
+        
+        // Clone a node and insert 
+        Dcl-PR nox_NodeCopy extproc(*CWIDEN : 'nox_NodeCopy');
+          //node. Retrive from Locate()
+          pRootNode      Pointer    value;
+          //node. Retrive from Locate()
+          pNewChild      Pointer    value;
+          //Reference location to where it arrive
+          RefLocation    Int(10)    value;
+        End-PR;
+
         Dcl-PR nox_NodeClone Pointer extproc(*CWIDEN : 'nox_NodeClone');
           // node. Retrive from Locate()
           pSource        Pointer    value;
@@ -394,7 +425,6 @@
         End-PR;
 
         // CheckSum of all names and values
-        // Delete all nodes which value are null
         Dcl-PR nox_NodeCheckSum Uns(10) extproc(*CWIDEN : 'nox_NodeCheckSum');
           pRootNode      Pointer    value; // node. Retrive from Locate()
         End-PR;
@@ -539,8 +569,8 @@
           // Name of output stream file
           FileName       Pointer    value  options(*string);
           // Ccsid of output file
-          Ccsid          Int(10)    value;
-          Trim           Ind        value;
+          Ccsid          Int(10)    value options(*nopass);
+          Trim           Ind        value options(*nopass);
           // Extra options
           Options        Pointer    value  options(*nopass:*string);
         End-PR;

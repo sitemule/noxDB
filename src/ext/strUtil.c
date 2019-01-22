@@ -1,4 +1,4 @@
-﻿/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*INHERIT) */
+/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*INHERIT) */
 /* ------------------------------------------------------------- */
 /* Date  . . . . : 14.12.3005                                    */
 /* Design  . . . : Niels Liisberg                                */

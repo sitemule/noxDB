@@ -25,7 +25,7 @@
 #include "ostypes.h"
 #include "varchar.h"
 #include "xlate.h"
-#include "noxdb.h"
+#include "noxdb2.h"
 #include "parms.h"
 // #include "rtvsysval.h"
 #include "memUtil.h"
@@ -91,6 +91,8 @@ static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 		}
 	}
 }
+#pragma convert(0)
+
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
 void nox_AppendName (PNOXCOM pJxCom)
@@ -399,7 +401,7 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 	}
 }
 // ---------------------------------------------------------------------------
-void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , PNOXNODE options)
+void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int CcsidP, LGL trimOutP , PNOXNODE optionsP)
 {
 	FILE * f;
 	iconv_t Iconv;
@@ -413,7 +415,10 @@ void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut ,
 	PUCHAR  dft;
 	VARCHAR res;
 
-	// doTrim = (pParms->OpDescList &&  pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
+	int      Ccsid   = pParms->OpDescList->NbrOfParms >= 3 ? CcsidP : 1208; 
+	LGL      trimOut = pParms->OpDescList->NbrOfParms >= 4 ? trimOutP: ON; 
+	PNOXNODE options = pParms->OpDescList->NbrOfParms >= 5 ? optionsP : NULL;
+	
 
 	if (pNode == NULL) return;
 

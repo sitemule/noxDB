@@ -29,7 +29,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #include "strutil.h"
 #include "minmax.h"
 #include "parms.h"
-#include "noxdb.h"
+#include "noxdb2.h"
 #include "memUtil.h"
 #include "timestamp.h"
 

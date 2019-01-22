@@ -38,7 +38,7 @@
 #include "strUtil.h"
 #include "memUtil.h"
 #include "streamer.h"
-#include "noxdb.h"
+#include "noxdb2.h"
 #include "e2aa2e.h"
 
 // Global thread vars
@@ -696,7 +696,7 @@ VARCHAR nox_GetNodeNameAsPath (PNOXNODE pNode, UCHAR Delimiter)
 				*pBuf = Delimiter;
 			}
 
-			len = memSize(p->Name);
+			len = memSize(p->Name)  -1; // with out the zero term ;
 			pBuf -= len ;
 			memcpy(pBuf,p->Name, len);
 		}
@@ -1437,9 +1437,15 @@ PNOXNODE NewNode  (PUCHAR Name , PUCHAR Value, NODETYPE type)
 // ---------------------------------------------------------------------------
 PNOXNODE nox_NodeAdd (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type)
 {
-	PNOXNODE  pNewNode  = NewNode  (Name , Value, type);
+    PNOXNODE  pNewNode  = NewNode  (Name , Value, type);
 	AddNode(pDest, pNewNode, refloc);
 	return pNewNode;
+}
+PNOXNODE nox_NodeAddVC (PNOXNODE pDest, REFLOC refloc, PLVARCHAR Name , PLVARCHAR Value, NODETYPE typeP)
+{
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	NODETYPE type =  pParms->OpDescList->NbrOfParms >= 5 ? typeP : VALUE;
+	return  nox_NodeAdd  (pDest, refloc , plvc2str(Name) , plvc2str(Value), type);
 }
 // ---------------------------------------------------------------------------
 PNOXNODE nox_NewObject ()
@@ -2265,6 +2271,10 @@ VOID nox_SetNodeAttrValue  (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Value)
 		return;
 	}
 }
+VOID nox_SetNodeAttrValueVC  (PNOXNODE pNode , PLVARCHAR AttrName, PLVARCHAR Value)
+{
+	nox_SetNodeAttrValue  (pNode , plvc2str(AttrName) , plvc2str(Value));
+}
 /* ---------------------------------------------------------------------------
 	 Find node by path, by parsing a name string and traverse the tree
 	 It can be relative by diging a Nodeent. 
@@ -2389,8 +2399,8 @@ void nox_CopyValueByNameVC (PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR pName,
 		nox_AsJsonText (pRes, pNode );
 
 	} else if (pNode->Value) {
-		pRes->Length = memSize(pNode->Value);
-		memcpy(pRes->String, pNode->Value, pRes->Length);
+		pRes->Length = memSize(pNode->Value) -1 ; // With out the zero termination
+ 		memcpy(pRes->String, pNode->Value, pRes->Length);
 	}
 }
 #pragma convert(0)
@@ -2955,7 +2965,7 @@ void nox_GetNodeValueVC (PLVARCHAR pRes, PNOXNODE pNode , PLVARCHAR pDefaultValu
 	PUCHAR value;
 
 	value =  nox_GetNodeValuePtr  (pNode , plvc2str(dft));
-	pRes->Length = memSize(value); //!! memSize()?
+	pRes->Length = memSize(value) -1 ; // without the zero term char
 	memcpy(pRes->String , value , pRes->Length);
 }
 // -------------------------------------------------------------
@@ -2980,7 +2990,7 @@ void nox_GetNodeNameVC (PLVARCHAR pRes, PNOXNODE pNode)
 {
 	pRes->Length = 0;
 	if (pNode && pNode->Name) {
-		pRes->Length = memSize(pNode->Name);
+		pRes->Length = memSize(pNode->Name) -1; // with out the zero term 
 		memcpy(pRes->String , pNode->Name , pRes->Length);
 	}
 }
@@ -2990,7 +3000,7 @@ void nox_GetNodeAttrValueVC (PLVARCHAR pRes, PNOXNODE pNode ,PLVARCHAR pAttrName
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PLVARCHAR dft = (pParms->OpDescList->NbrOfParms >= 4) ? pDefaultValue : PLVARCHARNULL;
 	PUCHAR value =  nox_GetNodeAttrValuePtr  ( pNode , plvc2str(pAttrName),  plvc2str(dft)) ;
-	pRes->Length = memSize(value);
+	pRes->Length = memSize(value) -1; // with out the zero term 
 	memcpy(pRes->String , value , pRes->Length);
 }
 // -------------------------------------------------------------
@@ -3059,7 +3069,7 @@ void nox_GetAttrNameVC (PLVARCHAR pRes, PNOXATTR pAttr)
 {
 	pRes->Length = 0;
 	if (pAttr) {
-		pRes->Length = memSize(pAttr->Name);
+		pRes->Length = memSize(pAttr->Name)  -1; // with out the zero term ;
 		memcpy(pRes->String , pAttr->Name , pRes->Length);
 	}
 }
@@ -3089,7 +3099,7 @@ void nox_GetAttrValueVC (PLVARCHAR pRes, PNOXATTR pAttr, PLVARCHAR pDefaultValue
 
 	pRes->Length = 0;
 	if (pAttr &&  pAttr->Value ) {
-		pRes->Length = memSize(pAttr->Value);
+		pRes->Length = memSize(pAttr->Value) -1; // with out the zero term 
 		memcpy(pRes->String , pAttr->Value, pRes->Length);
 	}
 

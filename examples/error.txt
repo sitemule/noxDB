@@ -62,12 +62,12 @@
      19                                                                                                                      000019
      20         //------------------------------------------------------------- *                                            000020
      21                                                                                                                      000021
-     22         /include 'headers/noxdbJSON.rpgle'                                                                           000022
+     22         /include 'headers/noxDB2JSON.rpgle'                                                                           000022
  Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
  Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
          *--------------------------------------------------------------------------------------------*
          * RPG member name  . . . . . :  noxdbJSON+                                                   *                     1
-         * External name  . . . . . . :  ./headers/noxdbJSON.rpgle                                    *                     1
+         * External name  . . . . . . :  ./headers/noxDB2JSON.rpgle                                    *                     1
          * Last change  . . . . . . . :  06-12-18  23:40:39                                           *                     1
          *--------------------------------------------------------------------------------------------*
  Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
@@ -1135,8 +1135,8 @@
     980         pCustomer = json_newObject();                                                                                000055
     981         json_setInt (pCustomer:'id'         : 12345);                                                                000056
     982         json_setStr (pCustomer:'name'       : 'System & Metod A/S');                                                 000057
-    983         json_setStr (pCustomer:'street'     : 'Håndværkersvinget 8');                                                000058
-    984         json_setStr (pCustomer:'city'       : 'Hørsholm');                                                           000059
+    983         json_setStr (pCustomer:'street'     : 'Hï¿½ndvï¿½rkersvinget 8');                                                000058
+    984         json_setStr (pCustomer:'city'       : 'Hï¿½rsholm');                                                           000059
     985         json_setStr (pCustomer:'greeting'   : u'4f605978'); // "Ni hau" in unicode                                   000060
     986         json_setNum (pCustomer:'creditLimit': 76543.21);                                                             000061
     987         json_setDate(pCustomer:'created'    : %date());                                                              000062
@@ -1323,7 +1323,7 @@
                              / C o p y   M e m b e r s
  Line   Src  RPG name   <-------- External name -------> CCSID  <- Last change ->
  Number Id              Library    File       Member            Date     Time
-     22    1 noxdbJSON+ ./headers/noxdbJSON.rpgle          819  06-12-18 23:40:39
+     22    1 noxdbJSON+ ./headers/noxDB2JSON.rpgle          819  06-12-18 23:40:39
           * * * * *   E N D   O F   / C O P Y   M E M B E R S   * * * * *
   5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   07-12-18 02:29:12        Page     31
                            C r o s s   R e f e r e n c e

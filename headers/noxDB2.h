@@ -1,4 +1,4 @@
-﻿#ifndef NOXDB
+#ifndef NOXDB
 #define NOXDB
 #include <stdio.h>
 #include <iconv.h>
@@ -86,10 +86,10 @@ typedef enum {
 	PARSE_STRING        = 3,
 	POINTER_VALUE       = 4,
 	VALUE               = 5,
-	NOX_VALUE            = 5,
+	NOX_VALUE           = 5,
 	ROOT                = 6,
 	LITERAL             = 16,
-	NOX_LITERAL          = 16,
+	NOX_LITERAL         = 16,
 	CLONE_OLD           = 17,  // Was OBJLNK - Obsolete yes but maps to CLONE in appplication
 	CLONE               = 18,  // Obsolete ... NO
 	EVALUATE            = 19,  // Obsolete ??

@@ -20,7 +20,7 @@
 #include "xlate.h"
 #include "parms.h"
 #include "memUtil.h"
-#include "noxdb.h"
+#include "noxdb2.h"
 
 // ---------------------------------------------------------------------------
 PUCHAR loadText (PUCHAR file)
