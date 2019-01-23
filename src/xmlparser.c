@@ -207,6 +207,7 @@ static void nox_AttrAppendName  (PNOXCOM pJxCom)
 // When hitting that point we have to get rid of the <![CDATA[
 // and the copy data until we find the ]]>
 // ---------------------------------------------------------------------------
+#pragma convert(1252)
 void nox_CopyCdata (PNOXCOM pJxCom)
 {
 	PUCHAR p;
@@ -221,7 +222,9 @@ void nox_CopyCdata (PNOXCOM pJxCom)
 	nox_SkipChars(pJxCom , sizeof(BRABRAGT) -2) ; // omit the zero terminator
 	pJxCom->Data[pJxCom->DataIx]   = '\0';
 }
+#pragma convert(0)
 // ---------------------------------------------------------------------------
+#pragma convert(1252)
 void nox_AppendData (PNOXCOM pJxCom)
 {
 	UCHAR lookahead;
@@ -264,6 +267,7 @@ void nox_AppendData (PNOXCOM pJxCom)
 	pJxCom->Data[pJxCom->DataIx++] = c;
 	pJxCom->Data[pJxCom->DataIx]   = '\0';
 }
+#pragma convert(0)
 // ---------------------------------------------------------------------------
 static void nox_AttrAppendValue  (PNOXCOM pJxCom)
 {
@@ -327,6 +331,7 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 
 			case XML_DETERMIN_TAG_TYPE:
 
+	            #pragma convert(1252)
 				if (amemiBeginsWith(p , REMARK  )) {  // the "!--"
 					int commentIx =0;
 					do {
@@ -335,6 +340,7 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 							pJxCom->Comment[commentIx++] = *p;
 						}
 					} while (! amemiBeginsWith (p , ENDREMARK ) && pJxCom->State != XML_EXIT);  // EndRemark "-->"
+		            #pragma convert(0)
 					pJxCom->Comment[commentIx-1] = '\0';
 					pJxCom->State = XML_FIND_END_TOKEN;
 				} else if (amemiBeginsWith(p , DOCTYPE  )) {  // the "!DOCTYPE"

@@ -32,8 +32,12 @@
 #include "strUtil.h"
 
 // Just for debugging
+
 static LONG  dbgStep=0;
 static BOOL  skipBlanks = TRUE;
+
+// Note !! The complete file is in ASCII
+#pragma convert(1252)
 
 /* ---------------------------------------------------------------------------
 	--------------------------------------------------------------------------- */

@@ -197,6 +197,7 @@ PNOXNODE nox_AppendType (PNOXCOM pJxCom , PNOXNODE pCurNode , JSTATE type , PUCH
 	return pNewNode;
 }
 //---------------------------------------------------------------------------
+#pragma convert(1252)
 void nox_setRootNode( PNOXNODE pNode, TOK t)
 {
 
@@ -204,6 +205,7 @@ void nox_setRootNode( PNOXNODE pNode, TOK t)
 	nox_NodeSet (pNode , value);
 	pNode->isLiteral = t.isLiteral;
 }
+#pragma convert(0)
 //---------------------------------------------------------------------------
 BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCurNode )
 {

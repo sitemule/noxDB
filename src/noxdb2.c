@@ -1816,13 +1816,12 @@ static BOOL isNextDelimiter(UCHAR c)
 /* ---------------------------------------------------------------------------
 	 name contains [UBOUND]
 	 --------------------------------------------------------------------------- */
+#pragma convert(1252)
 BOOL nox_isUbound (PUCHAR name)
 {
-	if (name[0] != BRABEG)  return false;
-	if (memicmp(name+1  , "UBOUND" , 6) != 0) return false;
-	if (name[7] != BRAEND)  return false;
-	return true;
+	return (memicmp(name  , "[UBOUND]" , 8) == 0);
 }
+#pragma convert(1252)
 /* ---------------------------------------------------------------------------
 	 Set the counter
 	 --------------------------------------------------------------------------- */
@@ -2048,10 +2047,11 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
 			BOOL   SkipNameSpace;
 			nox_GetKeyFromName (tempKey , &SkipNameSpace , refName);
 
-			
+			#pragma convert(1252)
 			if (memicmp (pName , UBOUND , 6) == 0) {
 				return nox_CalculateUbound(refNode, tempKey, SkipNameSpace);
 			}
+			#pragma convert(0)
 
 			// .. If the name is numeric, it is a subscription
 			index = nox_getNumericKey (pName , pEnd);
@@ -2456,7 +2456,7 @@ void  nox_SetByParseString (PNOXNODE pDest , PUCHAR pSourceStr , MERGEOPTION mer
 		nox_NodeSet (pDest  , pSourceStr);
 		pDest->type      = VALUE;
 		pDest->isLiteral =  // isdigit (*pSourceStr)  !! No !! the "123 - John" is not a number
-				strcmp(pSourceStr ,TRUESTR) == 0
+			   strcmp(pSourceStr ,TRUESTR) == 0
 			|| strcmp(pSourceStr ,FALSESTR) == 0
 			|| strcmp(pSourceStr ,NULLSTR) == 0;
 	}
@@ -2465,6 +2465,8 @@ void  nox_SetByParseString (PNOXNODE pDest , PUCHAR pSourceStr , MERGEOPTION mer
 /* ---------------------------------------------------------------------------
 	 Insert a node as tail in an array - as copy or move it into
 	 --------------------------------------------------------------------------- */
+#pragma convert(1252)
+
 PNOXNODE  nox_ArrayPush (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
 {
 	PNOXNODE  pNewNode;
@@ -2491,9 +2493,11 @@ PNOXNODE  nox_ArrayPush (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
 	nox_NodeAddChildTail (pDest, pNewNode);
 
 }
+#pragma convert(0)
 /* ---------------------------------------------------------------------------
 	 Appends an array to the end of another array
 	 --------------------------------------------------------------------------- */
+#pragma convert(1252)
 PNOXNODE  nox_ArrayAppend  (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
 {
 	PNOXNODE  pNewNode, pNode, pNext;
@@ -2527,6 +2531,7 @@ PNOXNODE  nox_ArrayAppend  (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
 
 	return pDest;
 }
+#pragma convert(0)
 /* ---------------------------------------------------------------------------
 	 Slice from element to element in an array
 	 --------------------------------------------------------------------------- */
@@ -2856,6 +2861,7 @@ PNOXNODE  nox_SetDecByNameVC (PNOXNODE pNode, PLVARCHAR Name, FIXEDDEC Value)
 /* -------------------------------------------------------------
 	 Set BOOL by name
 	 ------------------------------------------------------------- */
+#pragma convert(1252)
 PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR pName, BOOL Value)
 {
 	return nox_SetValueByName(pNode , pName , Value ? FALSESTR:TRUESTR, LITERAL );
@@ -2864,6 +2870,7 @@ PNOXNODE  nox_SetBoolByNameVC (PNOXNODE pNode, PLVARCHAR pName, LGL Value)
 {
 	return nox_SetValueByName(pNode , plvc2str(pName) , Value == OFF ? FALSESTR:TRUESTR, LITERAL );
 }
+#pragma convert(0)
 /* -------------------------------------------------------------
 	 Set string value by name
 	 ------------------------------------------------------------- */
@@ -3110,7 +3117,7 @@ void nox_GetAttrValueVC (PLVARCHAR pRes, PNOXATTR pAttr, PLVARCHAR pDefaultValue
 // -------------------------------------------------------------
 LGL  nox_Error (PNOXNODE  pNode)
 {
-	return ( jxError || pNode == NULL) ? ON : OFF;
+    return ( jxError || pNode == NULL) ? ON : OFF;
 }
 // -------------------------------------------------------------
 PUCHAR nox_ErrStr (PNOXNODE pJxNode)

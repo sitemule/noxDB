@@ -151,6 +151,7 @@ static void  jsonStreamPrintArray (PNOXNODE pParent, PSTREAM pStream, SHORT leve
 	 stream_putc (pStream, BRAEND);
 }
 /* --------------------------------------------------------------------------- */
+#pragma convert(1252)
 static void jsonStreamPrintValue   (PNOXNODE pNode, PSTREAM pStream)
 {
 	// Has value?
@@ -172,6 +173,7 @@ static void jsonStreamPrintValue   (PNOXNODE pNode, PSTREAM pStream)
 		}
 	}
 }
+#pragma convert(0)
 /* --------------------------------------------------------------------------- */
 /* Invalid node types a just jeft out                                          */
 /* --------------------------------------------------------------------------- */
@@ -193,6 +195,7 @@ static void  jsonStreamPrintNode (PNOXNODE pNode, PSTREAM pStream, SHORT level)
 	 }
 }
 /* --------------------------------------------------------------------------- */
+#pragma convert(1252)
 void  nox_AsJsonStream (PNOXNODE pNode, PSTREAM pStream)
 {
 	if (pNode == NULL) {
@@ -201,6 +204,7 @@ void  nox_AsJsonStream (PNOXNODE pNode, PSTREAM pStream)
 		jsonStreamPrintNode (pNode, pStream, 0);
 	}
 }
+#pragma convert(0)
 // ----------------------------------------------------------------------------
 static LONG nox_memWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 {
