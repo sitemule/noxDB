@@ -33,6 +33,9 @@ jsonxml.srvpgm: noxdb.c sqlio.c xmlparser.c jsonparser.c serializer.c reader.c s
 jsonxml.bnddir: jsonxml.entry
 noxdb.bnddir: jsonxml.entry
 
+tests: json1.test json2.test
+	@echo "Tests build!"
+
 #-----------------------------------------------------------
 
 %.lib:
@@ -64,6 +67,10 @@ noxdb.bnddir: jsonxml.entry
 	$(eval modules := $(patsubst %,$(BIN_LIB)/%,$(basename $(filter %.c %.clle,$(notdir $^)))))
 	
 	system -i -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
+	
+%.test:
+	system "CRTRPGMOD MODULE($(BIN_LIB)/$*) SRCSTMF('test/$*.rpgle') DBGVIEW(*SOURCE)"
+	system "CRTPGM PGM($(BIN_LIB)/$*) BNDDIR($(BIN_LIB)/NOXDB)"
 
 hdr:
 	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
