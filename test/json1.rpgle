@@ -1,4 +1,4 @@
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDB');
 
         /include 'headers/JSONPARSER.rpgle'
 
