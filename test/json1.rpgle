@@ -9,14 +9,12 @@
         //------------------------------------------------------------- *
 
         Dcl-Pi JSON1;
-          pResult Char(50);
         End-Pi;
 
         *inlr = *on;
         pJson = Json_ParseFile ('./test/documents/simple.json');
 
         If Json_Error(pJson) ;
-           pResult = Json_Message(pJson);
            Json_dump(pJson);
            Json_Close(pJson);
            return;
@@ -24,8 +22,8 @@
 
         pNode = Json_Locate(pJson: '/price');
         price = Json_GetNum(pNode);
-
-        pResult = %Char(price);
+        
+        dsply %Char(price);
 
         Json_Close(pJson);
 
