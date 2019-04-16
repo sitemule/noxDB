@@ -1391,7 +1391,10 @@ void jx_traceInsert (PJXSQL pSQL, PUCHAR stmt , PUCHAR sqlState)
    rc = SQLExecute(pTrc->handle);
 
 }
-/* ------------------------------------------------------------- */
+// ------------------------------------------------------------- 
+//  supports this:
+//   curl 'http://myibmi:15020/.1/ip2-services/ip2dmdProxy.aspx' -H 'Pragma: no-cache' -H 'Origin: http://localhost:3000' -H 'Accept-Encoding: gzip, deflate, br' -H 'Accept-Language: da,en-US;q=0.9,en;q=0.8,sv;q=0.7,fr;q=0.6' -H 'x-profile: 2019-04-16-09.57.15.263576/PNO/148/3' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36' -H 'Content-Type: application/json' -H 'Accept: */*' -H 'Cache-Control: no-cache' -H 'X-Requested-With: XMLHttpRequest' -H 'Cookie: sys_sesid="2019-04-16-09.57.15.263576"; ' -H 'Connection: keep-alive' -H 'Referer: http://localhost:3000/' --data-binary '{"batch":[{"type":"upsert","dmd":"dmd/pnoTest.dmd","entity":"PROPTST","transactiontype":"PROPTST","key":{"ID":1},"row":{"ID":1,"PROP":{"field_1":"123t","field_2":"123","field_3":"123","Tester_test":"123"},"PROPS":{"test":"test","tester":"test"}}}]}' --compressed
+// ------------------------------------------------------------- 
 SHORT  doInsertOrUpdate(
    PJXSQL pSQL,
    PJXSQL pSQLmeta,
@@ -1488,7 +1491,8 @@ SHORT  doInsertOrUpdate(
          }
 
          // Long data > 32K will be chopped into chunks for update.
-         if (pColData->length > 32000) {
+         if (pColData->freeme 
+         ||  pColData->length > 32000) {
             // Set parameters based on total data to send.
             SQLINTEGER lbytes = pColData->length;
             SQLINTEGER cbTextSize = SQL_DATA_AT_EXEC;
@@ -1506,6 +1510,7 @@ SHORT  doInsertOrUpdate(
                0,                // cbValueMax
                &cbTextSize       // pcbValue
             );
+
             if ( rc  != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO && rc != SQL_NEED_DATA ) {
                check_error (pSQL);
                return rc; // we have an error
