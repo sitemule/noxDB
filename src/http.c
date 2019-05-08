@@ -43,6 +43,8 @@ PUCHAR loadText (PUCHAR file)
 void qsh (PUCHAR cmd)
 {
    VOID RUNQSH  (PUCHAR cmd);
+   UCHAR cmdP [4097];
+   padncpy ( cmdP , cmd , 4096);
    RUNQSH  (cmd);
 }
 /* ---------------------------------------------------------------------------
