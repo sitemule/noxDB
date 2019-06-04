@@ -5,7 +5,9 @@
 
         //------------------------------------------------------------- *
 
-        /include xmlParser
+        // /include xmlParser
+        /include 'headers/xmlParser.rpgle'
+
         Dcl-S pXml         Pointer;
         Dcl-S pA           Pointer;
         Dcl-S lCount       Int(10);

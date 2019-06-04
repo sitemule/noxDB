@@ -1219,6 +1219,8 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
     if (isAscii && InputCcsid < 900) {
        InputCcsid = 1208;
     }
+  } else if (p && isXml && ! isAscii) {
+      InputCcsid = 0;  // Is EBCDIC
   } else if (p && isXml && isAscii) {
     if ( InputCcsid == 0) {
       // InputCcsid = 1252;  // Default to basic windows ascii
