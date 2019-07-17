@@ -283,7 +283,7 @@ int jx_sqlExecDirectTrace(PJXSQL pSQL , int hstmt, PUCHAR sqlstmt)
    memset ( pConnection->sqlState , ' ' , 5);
    ts_nowstr(pTrc->tsStart); // TODO !!! not form global
    rc = SQLExecDirect( hstmt, sqlstmt, SQL_NTS);
-   if (rc != SQL_SUCCESS) {
+   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
      rc2= SQLGetDiagRec(SQL_HANDLE_STMT,hstmt,1,pConnection->sqlState,&sqlCode, pTrc->text,sizeof(pTrc->text), &length);
      sprintf( jxMessage , "%-5.5s %0.*s" , pConnection->sqlState , length, pTrc->text);
      jx_sqlClose (&pSQL); // Free the data
@@ -423,6 +423,9 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll)
 
    int rc;
 
+   // quick trim - advance the pointer until data:
+   for  (;*sqlstmt > '\0' && *sqlstmt <= ' '; sqlstmt++);
+
    if (pParms->OpDescList->NbrOfParms <= 2 ) scroll = true;
    jxError = false; // Assume OK
 
@@ -440,12 +443,14 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll)
    //// huxi !! need uncomitted read for blob fields
    // and IBMi does not support statement attribute to set the pr statement. :/
    // so we simply append the "ur" uncommited read options
-   strcat ( sqlTempStmt , " with ur");
+   if (0 != memicmp ( sqlTempStmt , "call", 4)) {
+      strcat ( sqlTempStmt , " with ur");
+   }
    pSQL->sqlstmt = strdup(sqlTempStmt);
 
 
    rc = jx_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, pSQL->sqlstmt);
-   if (rc != SQL_SUCCESS ) {
+   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
      // is checked in abowe    check_error (pSQL);
      return NULL; // we have an error
    }
@@ -1168,7 +1173,7 @@ LGL jx_sqlExec(PUCHAR sqlstmt , PJXNODE pSqlParms)
       rc = jx_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, sqlstmt);
    }
    jx_sqlClose (&pSQL);
-   return rc == SQL_SUCCESS ? OFF: ON;
+   return (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) ? OFF: ON;
 }
 /* ------------------------------------------------------------- */
 /* .........
@@ -1440,7 +1445,7 @@ SHORT  doInsertOrUpdate(
 
    // prepare the statement that will do the update
    rc = SQLPrepare(pSQL->pstmt->hstmt , sqlTempStmt, SQL_NTS);
-   if (rc  != SQL_SUCCESS ) {
+   if (rc  != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
       if (-109 == getSqlCode(pSQL->pstmt->hstmt)) {
          return rc; // we  have an error - so try with next...
       }
