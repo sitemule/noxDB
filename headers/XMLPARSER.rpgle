@@ -203,6 +203,14 @@ I         MessageData    Pointer    value options(*string:*nopass);
           pNode          Pointer    value;
         End-PR;
 
+        // Create or replace a node with no value ( null value)
+        Dcl-PR xml_SetNull Pointer extproc(*CWIDEN: 'jx_SetNullByNAme');
+          //Pointer to xml_ tree
+          pNode          Pointer    value;
+          //Location expression to node or attributes
+          Expresion      Pointer    value options(*string);
+        End-PR;
+
         Dcl-PR xml_SetEval pointer extproc(*CWIDEN:'jx_SetEvalByName');
           pNode          Pointer    value;
           Expresion      Pointer    value options(*string);
@@ -212,7 +220,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
         Dcl-PR xml_SetStr Pointer extproc(*CWIDEN: 'jx_SetStrByName');
           //Pointer to xml_ tree
           pNode          Pointer    value;
-          //X-path locations to node or attributes
+          //Location expression to node or attributes
           Expresion      Pointer    value options(*string);
           //New value to set / pointer to object
           Value          Pointer    value options(*string);
@@ -221,7 +229,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
         Dcl-PR xml_SetInt Pointer extproc(*CWIDEN: 'jx_SetIntByName');
           //Pointer to xml_ tree
           pNode          Pointer    value;
-          //X-path locations to node or attributes
+          //Location expression to node or attributes
           Expresion      Pointer    value options(*string);
           //New value to set / pointer to object
           Value          Int(10)    value;
@@ -230,7 +238,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
         Dcl-PR xml_SetNum Pointer extproc(*CWIDEN: 'jx_SetDecByName');
           //Pointer to xml_ tree
           pNode          Pointer    value;
-          //X-path locations to node or attributes
+          //Location expression to node or attributes
           Expresion      Pointer    value options(*string);
           //New value to set / pointer to object
           Value          Packed(30:15) value;
@@ -239,7 +247,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
         Dcl-PR xml_SetBool Pointer extproc(*CWIDEN: 'jx_SetBoolByName');
           //Pointer to xml_ tree
           pNode          Pointer    value;
-          //X-path locations to node or attributes
+          //Location expression to node or attributes
           Expresion      Pointer    value options(*string);
           //New value to set / pointer to object
           Value          Ind        value;
@@ -248,7 +256,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
         Dcl-PR xml_SetPtr Pointer extproc(*CWIDEN: 'jx_SetPtrByName');
           //Pointer to xml_ tree
           pNode          Pointer    value;
-          //X-path locations to node or attributes
+          //Location expression to node or attributes
           Expresion      Pointer    value options(*string);
           //Pointer to anything - You do the cleanup
           Value          Pointer    value;
@@ -256,7 +264,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
 
         Dcl-PR xml_SetProcPtr Pointer extproc(*CWIDEN: 'jx_SetPtrByName');
           pNode          Pointer    value; //Pointer to xml_ tree
-          //X-path locations to node or attributes
+          //Location expression to node or attributes
           Expresion      Pointer    value options(*string);
           Proc           Pointer(*Proc); //Pointer to a procedure
           //*ON=String escape, *OFF=If literals
@@ -266,7 +274,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
         Dcl-PR xml_SetValue Pointer extproc(*CWIDEN: 'jx_SetValueByName');
           //Pointer to xml_ tree
           pNode          Pointer    value;
-          //X-path locations to node or attributes
+          //Location expression to node or attributes
           Expresion      Pointer    value options(*string);
           //New value to set / pointer to object
           Value          Pointer    value options(*string:*nopass);
@@ -374,7 +382,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           pIlob          Pointer    value;
           //Pointer to tree
           pNode          Pointer    value;
-          //X-path locations to node or attributes
+          //Location expression to node or attributes
           Expression     Pointer    value options(*string);
         End-PR;
 
@@ -1055,7 +1063,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
                                 extproc(*CWIDEN : 'jx_GetValueNum');
           //Pointer to tree
           pJsonCom       Pointer    value;
-          //X-path locations to node or attributes
+          //Location expression to node or attributes
           Node           Pointer    value options(*string);
           //If not found - default value
           Defaultvalue   Packed(30:15) value options(*nopass);
@@ -1135,7 +1143,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
         Dcl-PR xml_SetDec Pointer extproc(*CWIDEN: 'jx_SetDecByName');
           //Pointer to xml_ tree
           pNode          Pointer    value;
-          //X-path locations to node or attributes
+          //Location expression to node or attributes
           Expresion      Pointer    value options(*string);
           //New value to set / pointer to object
           Value          Packed(30:15) value;

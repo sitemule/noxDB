@@ -136,4 +136,5 @@ STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('JSONXML01')
   EXPORT SYMBOL("jx_GetMessageObject"     )
   EXPORT SYMBOL("jx_SuccessTrue"           )
   EXPORT SYMBOL("jx_Stream"           )
+  EXPORT SYMBOL("jx_SetNullByName"           )
 ENDPGMEXP

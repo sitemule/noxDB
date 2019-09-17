@@ -24,6 +24,8 @@
         json_SetDec    (pJson : 'pi' : 22/7); // 3.147.... infinit
         json_SetBool   (pJson : 'ok' : 2>1);  // true
         json_SetStr    (pJson : 's'  : 'Hello world');  // String
+        json_SetNull   (pJson : 'n'  );  // Null 
+        
 
         // Write it out:
         Json_WriteStmf (pJson  :

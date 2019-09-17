@@ -3148,6 +3148,13 @@ PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value)
    return jx_SetValueByName(pNode , Name , s, LITERAL );
 }
 /* -------------------------------------------------------------
+   Set Null by name
+   ------------------------------------------------------------- */
+PJXNODE  jx_SetNullByName (PJXNODE pNode, PUCHAR Name)
+{
+   return jx_SetValueByName(pNode , Name , NULL , VALUE );
+}
+/* -------------------------------------------------------------
    Set BOOL by name
    ------------------------------------------------------------- */
 PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value)
@@ -3155,14 +3162,14 @@ PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value)
    return jx_SetValueByName(pNode , Name , Value == OFF ? "false":"true", LITERAL );
 }
 /* -------------------------------------------------------------
-   Set BOOL by name
+   Set String by name
    ------------------------------------------------------------- */
 PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
 {
    return jx_SetValueByName(pNode , Name , Value , VALUE );
 }
 /* -------------------------------------------------------------
-   Set BOOL by name
+   Set Parse and evaluate  by name
    ------------------------------------------------------------- */
 PJXNODE  jx_SetEvalByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
 {
