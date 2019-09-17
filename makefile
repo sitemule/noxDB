@@ -40,7 +40,7 @@ noxdb.bnddir: jsonxml.entry
 
 %.bnddir:
 	-system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/$*)"
-	-system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/$*) OBJ($(patsubst %.entry,($(BIN_LIB)/% *SRVPGM *IMMED),$^))"
+	-system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/$*) OBJ($(patsubst %.entry,(*LIBL/% *SRVPGM *IMMED),$^))"
 
 %.entry:
 	# Basically do nothing..
