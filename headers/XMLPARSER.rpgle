@@ -204,7 +204,7 @@ I         MessageData    Pointer    value options(*string:*nopass);
         End-PR;
 
         // Create or replace a node with no value ( null value)
-        Dcl-PR xml_SetNull Pointer extproc(*CWIDEN: 'jx_SetNullByNAme');
+        Dcl-PR xml_SetNull Pointer extproc(*CWIDEN: 'jx_SetNullByName');
           //Pointer to xml_ tree
           pNode          Pointer    value;
           //Location expression to node or attributes

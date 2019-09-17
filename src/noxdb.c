@@ -3152,7 +3152,7 @@ PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value)
    ------------------------------------------------------------- */
 PJXNODE  jx_SetNullByName (PJXNODE pNode, PUCHAR Name)
 {
-   return jx_SetValueByName(pNode , Name , NULL , VALUE );
+   return jx_SetValueByName(pNode , Name , NULL , LITERAL );
 }
 /* -------------------------------------------------------------
    Set BOOL by name
