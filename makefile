@@ -39,6 +39,7 @@ noxdb.bnddir: jsonxml.entry
 	-system -q "CRTLIB $* TYPE(*TEST)"
 
 %.bnddir:
+	-system -q "DLTBNDDIR BNDDIR($(BIN_LIB)/$*)"
 	-system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/$*)"
 	-system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/$*) OBJ($(patsubst %.entry,(*LIBL/% *SRVPGM *IMMED),$^))"
 
