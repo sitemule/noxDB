@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <iconv.h>
+
 
 #include <sys/stat.h>
 #include "ostypes.h"
@@ -41,10 +43,12 @@ extern int   OutputCcsid;
 	--------------------------------------------------------------------------- */
 static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
 {
+	PJWRITE pJw = p->handle;
+
 	while (*in) {
 		UCHAR c =  *in;
 		if (c == '\n' ||  c == '\r' || c == '\t' || c == '\"' ) {
-			stream_putc(p,BackSlash);
+			stream_putc(p,pJw->backSlash);
 			switch (c) {
 				case '\n': c = 'n' ; break ;
 				case '\r': c = 'r' ; break ;
@@ -52,9 +56,9 @@ static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
 				case '\"': c = '"' ; break ;
 			}
 		}
-		else if  (c  == BackSlash) {
+		else if  (c  == pJw->backSlash) {
 			if (in[1] != 'u') {  // Dont double escape unicode escape sequence
-				stream_putc(p,BackSlash);
+				stream_putc(p,pJw->backSlash);
 			}
 		}
 		else if  (c  < ' ') {
@@ -64,28 +68,31 @@ static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
 		in++;
 	}
 }
-static PUCHAR jx_EncodeJson (PUCHAR out , PUCHAR in)
-{
-	PUCHAR ret = out;
-	while (*in) {
-		UCHAR c =  *in;
-		if (c == '\n' ||  c == '\r' || c == '\t' || c == '\"' ) {
-			*(out++) = BackSlash;
-		}
-		else if  (c  == BackSlash) {
-			if (in[1] != 'u') {  // Dont double escape unicode escape sequence
-				*(out++) = BackSlash;
+/* In the stream - only  ... 
+	static PUCHAR jx_EncodeJson (PUCHAR out , PUCHAR in)
+	{
+		PUCHAR ret = out;
+		while (*in) {
+			UCHAR c =  *in;
+			if (c == '\n' ||  c == '\r' || c == '\t' || c == '\"' ) {
+				*(out++) = p->(PJWRITE)handle->backSlash;
 			}
+			else if  (c  == p->(PJWRITE)handle->backSlash) {
+				if (in[1] != 'u') {  // Dont double escape unicode escape sequence
+					*(out++) = p->(PJWRITE)handle->backSlash;
+				}
+			}
+			else if  (c  < ' ') {
+				c = ' ';
+			}
+			*(out++) = c;
+			in++;
 		}
-		else if  (c  < ' ') {
-			c = ' ';
-		}
-		*(out++) = c;
-		in++;
+		*(out++) = '\0';
+		return ret;
 	}
-	*(out++) = '\0';
-	return ret;
-}
+....
+*/
 static void indent (PSTREAM pStream , int indent)
 {
 	int i;
@@ -119,10 +126,11 @@ void checkParentRelation(PJXNODE pNode , PJXNODE pParent)
 static void  jsonStreamPrintObject  (PJXNODE pParent, PSTREAM pStream, SHORT level)
 {
 	PJXNODE pNode;
+	PJWRITE pJw = pStream->handle;
 	SHORT nextLevel = level +1;
 
 	// indent (pStream ,level);
-	stream_putc (pStream, CurBeg);
+	stream_putc (pStream, pJw->curBeg);
 	for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
 		indent (pStream ,nextLevel);
 		stream_printf (pStream, "%c%s%c:",Quot, pNode->Name, Quot);
@@ -131,46 +139,48 @@ static void  jsonStreamPrintObject  (PJXNODE pParent, PSTREAM pStream, SHORT lev
 		if (pNode->pNodeSibling) stream_putc  (pStream, ',' );
 	}
 	indent (pStream , level);
-	stream_putc (pStream, CurEnd);
+	stream_putc (pStream, pJw->curEnd);
 }
 /* --------------------------------------------------------------------------- */
 static void  jsonStreamPrintArray (PJXNODE pParent, PSTREAM pStream, SHORT level)
 {
-	 PJXNODE pNode;
-	 SHORT nextLevel = level +1;
+	PJXNODE pNode;
+	PJWRITE pJw = pStream->handle;
+	SHORT nextLevel = level +1;
 
-	 // indent (pStream ,level);
-	 stream_putc (pStream, BraBeg);
-	 indent (pStream ,nextLevel);
-	 for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
-			// indent (pStream ,nextLevel);
-			checkParentRelation(pNode , pParent);
-			jsonStreamPrintNode (pNode , pStream, nextLevel);
-			if (pNode->pNodeSibling) stream_putc  (pStream, ',' );
-	 }
-	 indent (pStream , level);
-	 stream_putc (pStream, BraEnd);
+	// indent (pStream ,level);
+	stream_putc (pStream, pJw->braBeg); 
+
+	indent (pStream ,nextLevel);
+	for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
+		// indent (pStream ,nextLevel);
+		checkParentRelation(pNode , pParent);
+		jsonStreamPrintNode (pNode , pStream, nextLevel);
+		if (pNode->pNodeSibling) stream_putc  (pStream, ',' );
+	}
+	indent (pStream , level);
+	stream_putc (pStream, pJw->braBeg);
 }
 /* --------------------------------------------------------------------------- */
 static void jsonStreamPrintValue   (PJXNODE pNode, PSTREAM pStream)
 {
-	 // Has value?
-	 if (pNode->Value && pNode->Value[0] > '\0') {
-			if (pNode->isLiteral) {
-				 stream_puts (pStream, pNode->Value);
-			} else {
-				 stream_putc(pStream , Quot);
-				 jx_EncodeJsonStream(pStream ,pNode->Value);
-				 stream_putc(pStream , Quot);
-			}
-	 // Else it is some kind of null: Strings are "". Literals will return "null"
-	 } else {
-			if (pNode->isLiteral) {
-				 stream_puts (pStream, "null");
-			} else {
-				 stream_printf (pStream, "%c%c", Quot, Quot);
-			}
-	 }
+	// Has value?
+	if (pNode->Value && pNode->Value[0] > '\0') {
+		if (pNode->isLiteral) {
+			stream_puts (pStream, pNode->Value);
+		} else {
+			stream_putc(pStream , Quot);
+			jx_EncodeJsonStream(pStream ,pNode->Value);
+			stream_putc(pStream , Quot);
+		}
+	// Else it is some kind of null: Strings are "". Literals will return "null"
+	} else {
+		if (pNode->isLiteral) {
+			stream_puts (pStream, "null");
+		} else {
+			stream_printf (pStream, "%c%c", Quot, Quot);
+		}
+	}
 }
 /* --------------------------------------------------------------------------- */
 /* Invalid node types a just jeft out                                          */
@@ -260,6 +270,11 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 	pStream->handle = pjWrite;
 	pjWrite->buf = buf;
 	pjWrite->doTrim = true;
+	pjWrite->braBeg  = BraBeg;
+	pjWrite->braEnd  = BraEnd;
+	pjWrite->curBeg  = CurBeg;
+	pjWrite->curEnd  = CurEnd;
+	pjWrite->backSlash = BackSlash;
 	pjWrite->maxSize =   pParms->OpDescList == NULL
 									|| (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3) ? maxLenP : MEMMAX;
 
@@ -304,6 +319,14 @@ VARCHAR jx_AsJsonText (PJXNODE pNode)
 	 res.Length = jx_AsJsonTextMem ( pNode ,  res.String, sizeof(res.String));
 	 return res;
 }
+static LONG jx_iconvMem (PUCHAR out , PUCHAR in  , LONG len , ULONG fromCcsid , ULONG toCcsid )
+{
+	LONG  res; 
+	iconv_t iconv = OpenXlate(fromCcsid , toCcsid); 
+	res = xlateMem  (iconv, out , in, len);
+	iconv_close(iconv);
+	return res;
+}
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
 void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJXNODE options)
@@ -346,6 +369,22 @@ void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, P
 					break;
 			}
 	 }
+
+	// Any ascii will use basic ascii chars for building the document
+	if (Ccsid = 1208 || Ccsid== 1252) {
+		#pragma convert(1252)
+		jx_iconvMem (&pjWrite->braBeg , "[]{}\\" , 5, 1252 ,OutputCcsid ); ;
+		#pragma convert(0)
+
+
+	} else {
+		pjWrite->braBeg  = BraBeg;
+		pjWrite->braEnd  = BraEnd;
+		pjWrite->curBeg  = CurBeg;
+		pjWrite->curEnd  = CurEnd;
+		pjWrite->backSlash = BackSlash;
+	}
+
 
 	 jx_AsJsonStream (pNode , pStream);
 

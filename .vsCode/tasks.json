@@ -5,7 +5,7 @@
     "tasks": [
         {
             "label": "Compile current file",
-            "command": "ssh -t dksrv206 'cd /prj/noxDB/;gmake current SRC=${fileBasenameNoExtension}'",
+            "command": "ssh -t dksrv206 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake current SRC=${fileBasenameNoExtension}'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -18,18 +18,17 @@
                     "${workspaceRoot}"
                 ],
                 "pattern": {
-                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "regexp": "^(.*),\\s+(\\d+).(\\d+):\\s+(.*)$",
                     "file": 1,
                     "line": 2,
                     "column": 3,
-                    "severity": 4,
-                    "message": 5
+                    "message": 4
                 }
             }
         },
         {
             "label": "Compile Service program noxDB",
-            "command": "ssh dksrv206 'cd /prj/noxDB/;gmake all'",
+            "command": "ssh dksrv206 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake all'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -41,7 +40,7 @@
         },
         {
             "label": "Compile Test modules for noxDB",
-            "command": "ssh dksrv206 'cd /prj/noxDB/test/;gmake'",
+            "command": "ssh dksrv206 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/test/;gmake'",
             "type": "shell",
             "group": {
                 "kind": "build",

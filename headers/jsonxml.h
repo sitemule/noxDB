@@ -173,6 +173,11 @@ typedef _Packed struct  _JWRITE      {
 	ULONG   bufLen;
 	ULONG   maxSize;
 	BOOL    wasHere;
+	UCHAR 	braBeg;
+	UCHAR 	braEnd;
+	UCHAR 	curBeg;
+	UCHAR 	curEnd;
+	UCHAR 	backSlash;
 } JWRITE, * PJWRITE;
 
 typedef _Packed struct  _JXITERATOR {
