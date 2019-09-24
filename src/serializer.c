@@ -159,7 +159,7 @@ static void  jsonStreamPrintArray (PJXNODE pParent, PSTREAM pStream, SHORT level
 		if (pNode->pNodeSibling) stream_putc  (pStream, ',' );
 	}
 	indent (pStream , level);
-	stream_putc (pStream, pJw->braBeg);
+	stream_putc (pStream, pJw->braEnd);
 }
 /* --------------------------------------------------------------------------- */
 static void jsonStreamPrintValue   (PJXNODE pNode, PSTREAM pStream)
