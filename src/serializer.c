@@ -255,10 +255,9 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PSTREAM  pStream;
 	LONG     len;
-	JWRITE   jWrite;
-	PJWRITE  pjWrite = &jWrite;
-	memset(pjWrite , 0 , sizeof(jWrite));
-
+	PJWRITE  pjWrite;
+	
+	
 	if (pNode == NULL) return 0;
 	if (pNode->signature != NODESIG) {
 		strcpy (buf, (PUCHAR) pNode);
@@ -267,21 +266,17 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 
 	pStream = stream_new (4096);
 	pStream->writer  = jx_memWriter;
-	pStream->handle = pjWrite;
+	pStream->handle = pjWrite = jx_newWriter();
 	pjWrite->buf = buf;
 	pjWrite->doTrim = true;
-	pjWrite->braBeg  = BraBeg;
-	pjWrite->braEnd  = BraEnd;
-	pjWrite->curBeg  = CurBeg;
-	pjWrite->curEnd  = CurEnd;
-	pjWrite->backSlash = BackSlash;
 	pjWrite->maxSize =   pParms->OpDescList == NULL
-									|| (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3) ? maxLenP : MEMMAX;
+					|| (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3) ? maxLenP : MEMMAX;
 
 	jx_AsJsonStream (pNode , pStream);
 	len = pStream->totalSize;
 	stream_putc   (pStream,'\0');
 	stream_delete (pStream);
+	jx_deleteWriter(pjWrite);
 	return  len;
 
 }
@@ -319,6 +314,8 @@ VARCHAR jx_AsJsonText (PJXNODE pNode)
 	 res.Length = jx_AsJsonTextMem ( pNode ,  res.String, sizeof(res.String));
 	 return res;
 }
+/* ---------------------------------------------------------------------------
+	 --------------------------------------------------------------------------- */
 static LONG jx_iconvMem (PUCHAR out , PUCHAR in  , LONG len , ULONG fromCcsid , ULONG toCcsid )
 {
 	LONG  res; 
@@ -329,12 +326,31 @@ static LONG jx_iconvMem (PUCHAR out , PUCHAR in  , LONG len , ULONG fromCcsid , 
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
+
+PJWRITE jx_newWriter ()
+{
+	PJWRITE pjWrite = malloc (sizeof(JWRITE)); 
+	memset(pjWrite , 0 , sizeof(JWRITE));
+	pjWrite->braBeg  = BraBeg;
+	pjWrite->braEnd  = BraEnd;
+	pjWrite->curBeg  = CurBeg;
+	pjWrite->curEnd  = CurEnd;
+	pjWrite->backSlash = BackSlash;
+	return pjWrite; 
+}
+/* ---------------------------------------------------------------------------
+	 --------------------------------------------------------------------------- */
+void jx_deleteWriter (PJWRITE  pjWrite)
+{
+	free(pjWrite);
+}
+/* ---------------------------------------------------------------------------
+	 --------------------------------------------------------------------------- */
 void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJXNODE options)
 {
 	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	 PSTREAM pStream;
-	 JWRITE  jWrite;
-	 PJWRITE pjWrite= &jWrite;
+	 PJWRITE pjWrite;
 	 UCHAR   mode[32];
 	 UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
 	 UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
@@ -343,18 +359,20 @@ void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, P
 	 BOOL   makeBomCode  = Ccsid > 0;
 	 Ccsid = Ccsid < 0  ? - Ccsid : Ccsid;
 
-	 memset(pjWrite , 0 , sizeof(jWrite));
 
+	
 	 if (pNode == NULL) return;
 
 	 pStream = stream_new (4096);
-	 pStream->handle = pjWrite;
 	 pStream->writer = jx_fileWriter;
 
 	 sprintf(mode , "wb,o_ccsid=%d", Ccsid);
 	 unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
 	 pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
 	 if (pjWrite->outFile == NULL) return;
+
+	 pjWrite = jx_newWriter();
+	 pStream->handle = pjWrite;
 
 	 pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
 	 pjWrite->iconv  = OpenXlate(OutputCcsid , Ccsid );
@@ -375,20 +393,12 @@ void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, P
 		#pragma convert(1252)
 		jx_iconvMem (&pjWrite->braBeg , "[]{}\\" , 5, 1252 ,OutputCcsid ); ;
 		#pragma convert(0)
-
-
-	} else {
-		pjWrite->braBeg  = BraBeg;
-		pjWrite->braEnd  = BraEnd;
-		pjWrite->curBeg  = CurBeg;
-		pjWrite->curEnd  = CurEnd;
-		pjWrite->backSlash = BackSlash;
 	}
-
 
 	 jx_AsJsonStream (pNode , pStream);
 
 	 stream_delete (pStream);
 	 fclose(pjWrite->outFile);
 	 iconv_close(pjWrite->iconv);
+	 jx_deleteWriter(pjWrite);
 }

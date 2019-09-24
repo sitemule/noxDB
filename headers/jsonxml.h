@@ -588,4 +588,10 @@ void jx_SwapNodes (PJXNODE * pNode1, PJXNODE *  pNode2);
 PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT options);
 #pragma descriptor ( void jx_ArraySort     (void))
 
+void jx_deleteWriter (PJWRITE  pjWrite);
+PJWRITE jx_newWriter (void);
+
+
+
+
 #endif
