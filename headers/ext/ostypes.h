@@ -14,10 +14,12 @@ typedef enum {
 #pragma enum     (pop)
 
 /* Logical boleans states */
+#pragma enum     (1)
 typedef enum {
    FALSE = 0,
    TRUE = 1
 } BOOL, *PBOOL;
+#pragma enum     (pop)
 
 /* Logical boleans states */
 #pragma enum     (2)
