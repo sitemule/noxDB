@@ -178,6 +178,8 @@ typedef _Packed struct  _JWRITE      {
 	UCHAR 	curBeg;
 	UCHAR 	curEnd;
 	UCHAR 	backSlash;
+	UCHAR 	quote;
+	UCHAR   filler[256];
 } JWRITE, * PJWRITE;
 
 typedef _Packed struct  _JXITERATOR {

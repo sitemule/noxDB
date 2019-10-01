@@ -27,15 +27,7 @@
 #include "streamer.h"
 #include "jsonxml.h"
 
-// Globals
-extern UCHAR Quot  ;
 
-
-extern UCHAR BraBeg;
-extern UCHAR BraEnd;
-extern UCHAR CurBeg;
-extern UCHAR CurEnd;
-extern UCHAR BackSlash;
 extern int   OutputCcsid;
 
 
@@ -133,7 +125,7 @@ static void  jsonStreamPrintObject  (PJXNODE pParent, PSTREAM pStream, SHORT lev
 	stream_putc (pStream, pJw->curBeg);
 	for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
 		indent (pStream ,nextLevel);
-		stream_printf (pStream, "%c%s%c:",Quot, pNode->Name, Quot);
+		stream_printf (pStream, "%c%s%c:",pJw->quote, pNode->Name, pJw->quote);
 		checkParentRelation(pNode , pParent);
 		jsonStreamPrintNode (pNode , pStream, nextLevel);
 		if (pNode->pNodeSibling) stream_putc  (pStream, ',' );
@@ -164,21 +156,22 @@ static void  jsonStreamPrintArray (PJXNODE pParent, PSTREAM pStream, SHORT level
 /* --------------------------------------------------------------------------- */
 static void jsonStreamPrintValue   (PJXNODE pNode, PSTREAM pStream)
 {
+	PJWRITE pJw = pStream->handle;
 	// Has value?
 	if (pNode->Value && pNode->Value[0] > '\0') {
 		if (pNode->isLiteral) {
 			stream_puts (pStream, pNode->Value);
 		} else {
-			stream_putc(pStream , Quot);
+			stream_putc(pStream , pJw->quote);
 			jx_EncodeJsonStream(pStream ,pNode->Value);
-			stream_putc(pStream , Quot);
+			stream_putc(pStream , pJw->quote);
 		}
 	// Else it is some kind of null: Strings are "". Literals will return "null"
 	} else {
 		if (pNode->isLiteral) {
 			stream_puts (pStream, "null");
 		} else {
-			stream_printf (pStream, "%c%c", Quot, Quot);
+			stream_printf (pStream, "%c%c", pJw->quote, pJw->quote);
 		}
 	}
 }
@@ -316,26 +309,14 @@ VARCHAR jx_AsJsonText (PJXNODE pNode)
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
-static LONG jx_iconvMem (PUCHAR out , PUCHAR in  , LONG len , ULONG fromCcsid , ULONG toCcsid )
-{
-	LONG  res; 
-	iconv_t iconv = OpenXlate(fromCcsid , toCcsid); 
-	res = xlateMem  (iconv, out , in, len);
-	iconv_close(iconv);
-	return res;
-}
-/* ---------------------------------------------------------------------------
-	 --------------------------------------------------------------------------- */
 
 PJWRITE jx_newWriter ()
 {
 	PJWRITE pjWrite = malloc (sizeof(JWRITE)); 
-	memset(pjWrite , 0 , sizeof(JWRITE));
-	pjWrite->braBeg  = BraBeg;
-	pjWrite->braEnd  = BraEnd;
-	pjWrite->curBeg  = CurBeg;
-	pjWrite->curEnd  = CurEnd;
-	pjWrite->backSlash = BackSlash;
+	memset(pjWrite , 0 , sizeof(JWRITE) - sizeof(pjWrite->filler));
+	#pragma convert(1252)
+	XlateBuf(&pjWrite->braBeg , "[]{}\\\"" , 6, 1252 ,0 ); ;
+	#pragma convert(0)
 	return pjWrite; 
 }
 /* ---------------------------------------------------------------------------
@@ -348,57 +329,61 @@ void jx_deleteWriter (PJWRITE  pjWrite)
 	 --------------------------------------------------------------------------- */
 void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJXNODE options)
 {
-	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	 PSTREAM pStream;
-	 PJWRITE pjWrite;
-	 UCHAR   mode[32];
-	 UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
-	 UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PSTREAM pStream;
+	PJWRITE pjWrite;
+	UCHAR   mode[32];
+	UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
+	UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
 
-	 // Hack for quick fix no bom , just set ccsid negative
-	 BOOL   makeBomCode  = Ccsid > 0;
-	 Ccsid = Ccsid < 0  ? - Ccsid : Ccsid;
+	// Hack for quick fix no bom , just set ccsid negative
+	BOOL   makeBomCode  = Ccsid > 0;
+	Ccsid = Ccsid < 0  ? - Ccsid : Ccsid;
 
 
-	
-	 if (pNode == NULL) return;
 
-	 pStream = stream_new (4096);
-	 pStream->writer = jx_fileWriter;
+	if (pNode == NULL) return;
 
-	 sprintf(mode , "wb,o_ccsid=%d", Ccsid);
-	 unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
-	 pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
-	 if (pjWrite->outFile == NULL) return;
+	pjWrite = jx_newWriter();
 
-	 pjWrite = jx_newWriter();
-	 pStream->handle = pjWrite;
+	pStream = stream_new (4096);
+	pStream->writer = jx_fileWriter;
 
-	 pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
-	 pjWrite->iconv  = OpenXlate(OutputCcsid , Ccsid );
+	sprintf(mode , "wb,o_ccsid=%d", Ccsid);
+	unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
+	pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
+	if (pjWrite->outFile == NULL) {
+		jx_deleteWriter(pjWrite);
+		return;
+	}
 
-	 if (makeBomCode) {
-			switch(Ccsid) {
-				case 1208 :
-					fputs (sigUtf8, pjWrite->outFile );
-					break;
-				case 1200 :
-					fputs (sigUtf16, pjWrite->outFile );
-					break;
-			}
-	 }
+	pStream->handle = pjWrite;
+
+	pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
+	pjWrite->iconv  = OpenXlate(OutputCcsid , Ccsid );
+
+	if (makeBomCode) {
+		switch(Ccsid) {
+			case 1208 :
+				fputs (sigUtf8, pjWrite->outFile );
+				break;
+			case 1200 :
+				fputs (sigUtf16, pjWrite->outFile );
+				break;
+		}
+	}
 
 	// Any ascii will use basic ascii chars for building the document
 	if (Ccsid = 1208 || Ccsid== 1252) {
 		#pragma convert(1252)
-		jx_iconvMem (&pjWrite->braBeg , "[]{}\\" , 5, 1252 ,OutputCcsid ); ;
+		XlateBuf(&pjWrite->braBeg , "[]{}\\\"" , 6, 1252 ,0 ); ;
 		#pragma convert(0)
 	}
 
-	 jx_AsJsonStream (pNode , pStream);
+	jx_AsJsonStream (pNode , pStream);
 
-	 stream_delete (pStream);
-	 fclose(pjWrite->outFile);
-	 iconv_close(pjWrite->iconv);
-	 jx_deleteWriter(pjWrite);
+	stream_delete (pStream);
+	fclose(pjWrite->outFile);
+	iconv_close(pjWrite->iconv);
+	jx_deleteWriter(pjWrite);
 }

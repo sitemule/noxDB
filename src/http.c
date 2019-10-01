@@ -58,7 +58,14 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options)
    UCHAR   temp1[256];
    UCHAR   temp2[256];
    UCHAR   error[256];
-   PJXNODE  pRes;
+   PJXNODE pRes;
+   UCHAR   at;
+
+   // Need a runtime version of the @ char
+   #pragma convert(1252)
+	XlateBuf(&at  , "@" , 1, 1252 ,0 ); ;
+	#pragma convert(0)
+
 
    if ( pParms->OpDescList->NbrOfParms < 2 )  pNode = NULL;
    if ( pParms->OpDescList->NbrOfParms < 3 )  options = NULL;
@@ -72,7 +79,7 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options)
    if (pNode) {
        // The negative causes it not to produce BOM code
        jx_WriteJsonStmf (pNode , temp1 , -1208, ON ,NULL);
-       p += sprintf( p , " -X POST --data @%s " , temp1);
+       p += sprintf( p , " -X POST --data %c%s " , at , temp1);
    }
    p += sprintf( p ,  " %s ",
       "-H 'Content-Type: application/json' "
