@@ -288,9 +288,8 @@ PSTREAM jx_Stream  (PJXNODE pNode)
 	 LONG     len;
 	 PJWRITE  pjWrite;
 	 
-	 pStream->handle = pjWrite = jx_newWriter();
-
 	 pStream = stream_new (4096);
+	 pStream->handle = pjWrite = jx_newWriter();
 	 pjWrite->doTrim  = true;
 	 pjWrite->maxSize = MEMMAX;
 	 pStream->runner  = jx_AsJsonStreamRunner;
