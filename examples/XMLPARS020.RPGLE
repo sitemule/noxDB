@@ -5,7 +5,7 @@
 
         //------------------------------------------------------------- *
 
-        /include 'headers/JSONPARSER.rpgle'
+        /include 'headers/XMLPARSER.rpgle'
         Dcl-S pXml         Pointer;
         Dcl-S pElem        Pointer;
         Dcl-S MyString     Varchar(50);
