@@ -122,6 +122,23 @@ PUCHAR memStrDup(PUCHAR s)
     return p;
 }
 // -------------------------------------------------------------
+PUCHAR memStrTrimDup(PUCHAR s)
+{
+    PUCHAR p;
+    PUCHAR t;
+    LONG len = 0;
+
+    if (s == NULL) return NULL;
+
+    for (t=s; *t ; t++) {
+       if (*t > ' ') len = (t - s) + 1;
+    }
+    p = memAlloc (len+1);
+    memcpy (p , s , len); // Copy the string including the zerotermination
+    *(p+len) = 0;
+    return p;
+}
+// -------------------------------------------------------------
 PVOID memRealloc (PVOID * p, ULONG len)
 {
     PUCHAR oldMem = *p;

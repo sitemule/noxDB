@@ -4,6 +4,7 @@
 PVOID  memAlloc  (ULONG len);
 void   memFree   (PVOID * p);
 PUCHAR memStrDup (PUCHAR s);
+PUCHAR memStrTrimDup(PUCHAR s);
 PVOID  memRealloc(PVOID * p, ULONG len);
 PVOID  memShare (PUCHAR path, ULONG len);
 ULONG  memSize   (PVOID p);

@@ -1706,7 +1706,7 @@ void jx_NodeSet (PJXNODE pNode , PUCHAR Value)
    freeNodeValue(pNode);
 
    if (Value) {
-     pNode->Value = memStrDup(Value);
+     pNode->Value = memStrTrimDup(Value);
    }
 }
 // ---------------------------------------------------------------------------
