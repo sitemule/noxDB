@@ -74,6 +74,18 @@
                     "message": 4
                 }
             }
+        },
+        {
+            "label": "Build deploy (zip-file in bin)",
+            "command": "ssh DKSRV133 'cd /prj/noxdbutf8/;gmake deploy'",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
         }
     ]
 }

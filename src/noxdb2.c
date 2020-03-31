@@ -790,8 +790,11 @@ PNOXNODE  nox_InsertByNameVC (PNOXNODE pDest , PLVARCHAR name , PNOXNODE pSource
 PNOXNODE  nox_CopyValue (PNOXNODE pDest , PUCHAR destName , PNOXNODE pSource , PUCHAR sourceName)
 {
 	PNOXNODE pRes;
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PUCHAR pSourceName = pParms->OpDescList->NbrOfParms >= 3 ? sourceName : "";
 
-	pSource = nox_GetNode  (pSource  , sourceName );
+
+	pSource = nox_GetNode  (pSource  , pSourceName );
 	if (pSource == NULL) return NULL;
 
 	pDest = nox_GetOrCreateNode (pDest, destName);
@@ -1821,7 +1824,7 @@ BOOL nox_isUbound (PUCHAR name)
 {
 	return (memicmp(name  , "[UBOUND]" , 8) == 0);
 }
-#pragma convert(1252)
+#pragma convert(0)
 /* ---------------------------------------------------------------------------
 	 Set the counter
 	 --------------------------------------------------------------------------- */

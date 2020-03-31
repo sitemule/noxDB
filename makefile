@@ -31,7 +31,7 @@ CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*NONE) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES
 
 all: clean $(BIN_LIB).lib noxDB2.srvpgm hdr
 
-noxDB2.srvpgm: noxDB2.c sqlio.c csv.c xmlparser.c jsonparser.c serializer.c reader.c iterator.c http.c generic.c runqsh.clle trace.clle ext/memUtil.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/strUtil.c ext/varchar.c ext/xlate.c ext/e2aa2e.c noxDB2.bnddir
+noxDB2.srvpgm: noxDB2.c sqlio.c csv.c xmlparser.c jsonparser.c serializer.c reader.c iterator.c http.c generic.c trace.clle ext/memUtil.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/strUtil.c ext/varchar.c ext/xlate.c ext/e2aa2e.c noxDB2.bnddir
 
 noxDB2.bnddir: noxDB2.entry
 
@@ -84,6 +84,14 @@ all:
 clean:
 	-system -qi "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*FILE)"
 	-system -qi "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
+
+deploy:
+	-system -qi "DLTOBJ   OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
+	-system -qi "CRTSAVF  FILE(QGPL/$(BIN_LIB))"
+	system -qi "CLRSAVF  FILE(QGPL/$(BIN_LIB))"
+	system -qi "SAVLIB   LIB($(BIN_LIB)) DEV(*SAVF) SAVF(QGPL/$(BIN_LIB))" 
+	system -qi "CPYTOARCF  FROMFILE('/QSYS.LIB/QGPL.LIB/$(BIN_LIB).FILE') TOARCF('bin/$(BIN_LIB).zip')"  
+
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
 current: 

@@ -372,8 +372,8 @@
           destName       Like(UTF8) const options(*varsize);
           // source node
           pSource        Pointer    value;
-          // source name (or *NULL or '')
-          sourceName     Like(UTF8) const options(*varsize);
+          // source name (or omit if object)
+          sourceName     Like(UTF8) const options(*varsize:*nopass);
         End-PR;
 
 

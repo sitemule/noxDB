@@ -12,7 +12,9 @@
 #include <leod.h>
 #include <decimal.h>
 #include <wchar.h>
-#include <qp2shell.h>   
+#include <errno.h>
+// #include <qp2shell.h> 
+#include <qp2user.h>  
 // #include <errno.h>
 
 #include <sys/stat.h>
@@ -42,7 +44,28 @@ PUCHAR loadText (PUCHAR file)
 // ---------------------------------------------------------------------------
 void sh (PUCHAR cmd)
 {
-	QP2SHELL  ("/QOpenSys/usr/bin/sh", "-c" , cmd);  
+
+	int rc;                     
+	UCHAR ret [256];              
+	PUCHAR pgm = "/QOpenSys/usr/bin/sh";   
+	PUCHAR argv[4];                           
+	PUCHAR envp[2];                           
+	argv [0] = pgm;   // Note !! argv 0 is always the program it self
+	argv [1] = "-c"  ;                               
+	argv [2] = cmd;                                                 
+	argv [3] = NULL;                                                 
+	rc = Qp2RunPase(                                                        
+		pgm  ,    /* Path name */                                            
+		NULL,     /* Symbol for calling to ILE, not used in this sample */   
+		NULL,     /* Symbol data for ILE call, not used here */              
+		0 ,       /* Symbol data length for ILE call, not used here */       
+		1208,     /* ASCII CCSID for IBM i PASE */                           
+		argv,     /* Arguments for IBM i PASE program */                     
+		NULL      /* Environment variable list */                            
+	);              
+	if (rc) {
+		sprintf(ret , "Error: %d - %s\n", rc, strerror(errno));	
+	}
 }
 /* ---------------------------------------------------------------------------
 	get a resource on the net
@@ -50,84 +73,73 @@ void sh (PUCHAR cmd)
 PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PLVARCHAR optionsP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	UCHAR   cmd [8000];
+	UCHAR   cmd [4097];
 	PUCHAR  p = cmd;
 	UCHAR   temp1[256];
 	UCHAR   temp2[256];
 	UCHAR   error[256];
-	UCHAR   at [2];
-	UCHAR   url  [8000];
+	UCHAR   atemp1[256];
+	UCHAR   atemp2[256];
+	UCHAR   aerror[256];
 	PNOXNODE  pRes;
-	UCHAR options [8000];
-
-	// Setup parameters:
-	Xlatestr (url  , plvc2str (urlP) , 1208 , 0);
+	PUCHAR options = ( pParms->OpDescList->NbrOfParms < 3 )  ? NULL : plvc2str(optionsP);
+	PUCHAR url = plvc2str (urlP);
 
 	if ( pParms->OpDescList->NbrOfParms < 2 )  pNode = NULL;
-	
-	if ( pParms->OpDescList->NbrOfParms < 3 ) {
-		options [0] = '\0';
-	} else {
-		Xlatestr (options , plvc2str(optionsP) , 1208 , 0);
-	}
 
-	// Get the job version of a @	
 	#pragma convert(1252)  
-	Xlatestr (at , "@" , 1252 , 0);
-	#pragma convert(0)  
-	
-	// Build workfile names:
+
 	tmpnam(temp1);
 	tmpnam(temp2);
 	tmpnam(error);
 
-	// buiild the script / curl command
-	p += sprintf( p , "touch -c 1208 %s;" , temp2);
-	p += sprintf( p , "/QOpenSys/pkgs/bin/curl -s -k -o %s", temp2);
+	stre2a (atemp1, temp1);
+	stre2a (atemp2, temp2);
+	stre2a (aerror, error);
+
+	cmd [0] = '\0';
+	strcat(cmd , "touch -C 1208 ");
+	strcat(cmd , atemp2);
+	strcat(cmd , ";curl -s -k -o ");
+	strcat(cmd , atemp2);
 
 	if (pNode) {
-		// The positive value causes it to not produce BOM code
-		nox_WriteJsonStmf (pNode , temp1 , 1208, ON ,NULL);
-		p += sprintf( p , " -X POST --data %s%s " , at, temp1);
+		// The negative causes it not to produce BOM code
+		nox_WriteJsonStmf (pNode , temp1 , -1208, ON ,NULL);
+		strcat (cmd , " -X POST --data @");
+		strcat (cmd , atemp1);
 	}
-	p += sprintf( p ,  " %s ",
-		"-H 'Content-Type: application/json' "
-		"-H 'Accept: application/json' "
+	strcat (cmd,
+		" -H 'Content-Type: application/json' "
+		" -H 'Accept: application/json' "
 	);
 	if (options) {
-		p += sprintf( p , " %s "  , options);
+		strcat (cmd, options);
 	}
-	p += sprintf( p ,  " %s 2>%s;",  url , error);
-	p += sprintf( p , "setccsid 1208 %s" , temp2);
-	
-	// Run the script
+	strcat (cmd, " ");
+	strcat (cmd, url);
 	sh (cmd);
 
-	// Process the response:
 	p =  loadText(error);
 	if (p != NULL) {
 		pRes = nox_NewObject();
-		#pragma convert(1252)  
 		nox_SetValueByName(pRes , "success"  , "false" , LITERAL);
 		nox_SetValueByName(pRes , "reason" , p , VALUE );
-		#pragma convert(0)
 		free(p);
 	} else {
 		pRes = nox_ParseFile (temp2);
 		if (pRes == NULL) {
 			pRes = nox_NewObject();
 			p =  loadText(temp2);
-			#pragma convert(1252)  
 			nox_SetValueByName(pRes , "success"  , "true" , LITERAL);
 			nox_SetValueByName(pRes , "data" , p , VALUE );
-			#pragma convert(0)
 			free(p);
 		}
 	}
-	// Clean up
 	unlink (temp1);
 	unlink (temp2);
 	unlink (error);
 	return pRes;
+	#pragma convert(0)
 }
 
