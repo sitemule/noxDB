@@ -83,7 +83,7 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PLVARCHAR optionsP)
 
 	// buiild the script / curl command
 	p += sprintf( p , "touch -c 1208 %s;" , temp2);
-	p += sprintf( p , "/QOpenSys/pkgs/bin/curl -s -k -o %s", temp2);
+	p += sprintf( p , "/QOpenSys/pkgs/bin/curl -k --silent --show-error -o %s", temp2);
 
 	if (pNode) {
 		// The positive value causes it to not produce BOM code
@@ -97,7 +97,7 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PLVARCHAR optionsP)
 	if (options) {
 		p += sprintf( p , " %s "  , options);
 	}
-	p += sprintf( p ,  " %s 2>%s;",  url , error);
+	p += sprintf( p ,  " %s --stderr %s;",  url , error);
 	p += sprintf( p , "setccsid 1208 %s" , temp2);
 	
 	// Run the script
