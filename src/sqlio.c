@@ -973,10 +973,10 @@ PNOXNODE nox_sqlResultSet( PNOXSQLCONNECT pCon ,PUCHAR sqlstmt, LONG start, LONG
 PNOXNODE nox_sqlResultSetVC( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PNOXNODE pSqlParmsP  )
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	LONG    start     = (pParms->OpDescList->NbrOfParms >= 2) ? startP     : 1;  // From first row
-	LONG    limit     = (pParms->OpDescList->NbrOfParms >= 3) ? limitP     : -1; // All row
-	LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;  // Arrray only
-	PNOXNODE pSqlParms= (pParms->OpDescList->NbrOfParms >= 5) ? pSqlParmsP : NULL;
+	LONG    start     = (pParms->OpDescList->NbrOfParms >= 3) ? startP     : 1;  // From first row
+	LONG    limit     = (pParms->OpDescList->NbrOfParms >= 4) ? limitP     : -1; // All row
+	LONG    format    = (pParms->OpDescList->NbrOfParms >= 5) ? formatP    : 0;  // Arrray only
+	PNOXNODE pSqlParms= (pParms->OpDescList->NbrOfParms >= 6) ? pSqlParmsP : NULL;
 	return nox_sqlResultSet( pCon, plvc2str(sqlstmt) , start, limit, format , pSqlParms);
 }
 /* ------------------------------------------------------------- */

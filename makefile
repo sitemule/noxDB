@@ -11,6 +11,7 @@
 BIN_LIB=noxDB2
 DBGVIEW=*ALL
 TARGET_CCSID=*JOB
+TARGET_OBJ=NOXDB2
 
 # The shell we use
 SHELL=/QOpenSys/usr/bin/qsh
@@ -42,7 +43,7 @@ noxDB2.bnddir: noxDB2.entry
 
 %.bnddir:
 	-system -qi "CRTBNDDIR BNDDIR($(BIN_LIB)/$*)"
-	-system -qi "ADDBNDDIRE BNDDIR($(BIN_LIB)/$*) OBJ($(patsubst %.entry,($(BIN_LIB)/% *SRVPGM *IMMED),$^))"
+	-system -qi "ADDBNDDIRE BNDDIR($(BIN_LIB)/$*) OBJ(*LIBL/$(TARGET_OBJ) *SRVPGM *IMMED),$^))"
 
 %.entry:
 	# Basically do nothing..
@@ -71,11 +72,11 @@ hdr:
 	sed "s/ nox_/ json_/g; s/ NOX_/ JSON_/g" headers/noxDB2.rpgle > headers/noxDB2JSON.rpgle
 	sed "s/ nox_/ xml_/g; s/ NOX_/ XML_/g" headers/noxDB2.rpgle > headers/noxDB2XML.rpgle
 
-	system -i "CRTSRCPF FILE($(BIN_LIB)/QRPGLESRC) RCDLEN(132)"
+	system -i "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(112)"
 	system -i "CRTSRCPF FILE($(BIN_LIB)/H) RCDLEN(132)"
   
-	system "CPYFRMSTMF FROMSTMF('headers/noxDB2JSON.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLESRC.file/noxDB2JSON.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/noxDB2XML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLESRC.file/noxDB2XML.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/noxDB2JSON.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDB2JSON.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/noxDB2XML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDB2XML.mbr') MBROPT(*REPLACE)"
 	system "CPYFRMSTMF FROMSTMF('headers/noxDB2.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/noxDB2.mbr') MBROPT(*REPLACE)"
 
 all:
@@ -86,11 +87,25 @@ clean:
 	-system -qi "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
 
 deploy:
-	-system -qi "DLTOBJ   OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
-	-system -qi "CRTSAVF  FILE(QGPL/$(BIN_LIB))"
-	system -qi "CLRSAVF  FILE(QGPL/$(BIN_LIB))"
-	system -qi "SAVLIB   LIB($(BIN_LIB)) DEV(*SAVF) SAVF(QGPL/$(BIN_LIB))" 
-	system -qi "CPYTOARCF  FROMFILE('/QSYS.LIB/QGPL.LIB/$(BIN_LIB).FILE') TOARCF('bin/$(BIN_LIB).zip')"  
+	@echo " -- Build release save file ... --"
+	-system -K "DLTOBJ   OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
+	-system -K "CRTSAVF FILE($(BIN_LIB)/RELEASE)"
+	system -K "CLRSAVF FILE($(BIN_LIB)/RELEASE)"
+	system -K "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) OMITOBJ((RELEASE *FILE))"
+	-@rm -r release
+	-mkdir release
+	system -K "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release-$(BIN_LIB).savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"
+	@echo " -- Cleaning up... --"
+	system -K "DLTOBJ OBJ($(BIN_LIB)/RELEASE) OBJTYPE(*FILE)"
+	@echo " -- Release created! --"
+	@echo ""
+	@echo "To install the release, run:"
+	@echo "  > CRTLIB $(BIN_LIB)"
+	@echo "  > CPYFRMSTMF FROMSTMF('./release/release-$(BIN_LIB).savf') TOMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') MBROPT(*REPLACE) CVTDTA(*NONE)"
+	@echo "  > RSTLIB SAVLIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE)"
+	@echo ""
+	@echo "Or restore into existing application library"
+	@echo "  > RSTOBJ OBJ(*ALL) SAVLIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) MBROPT(*ALL) ALWOBJDIF(*FILELVL) RSTLIB(yourlib)" 
 
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  

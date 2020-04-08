@@ -76,7 +76,7 @@
             }
         },
         {
-            "label": "Build deploy (zip-file in bin)",
+            "label": "Build deploy (sav-file in bin)",
             "command": "ssh DKSRV133 'cd /prj/noxdbutf8/;gmake deploy'",
             "type": "shell",
             "group": {
