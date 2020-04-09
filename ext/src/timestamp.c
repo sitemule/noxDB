@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*INHERIT) */
+// CMD:CRTCMOD 
 /* ------------------------------------------------------------- */
 /* Company . . . : Agent Data ApS                                */
 /* Design  . . . : Niels Liisberg                                */

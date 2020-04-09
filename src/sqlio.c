@@ -1,12 +1,10 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL)      */
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL)      */
-/* COMPILEOPT('OUTPUT(*PRINT) OPTION(*EXPMAC *SHOWINC)')         */
-/* Program . . . : NOXM002                                        */
+// CMD:CRTCMOD 
+/* ------------------------------------------------------------- */
+/* Program . . . : sqlio                                         */
 /* Design  . . . : Niels Liisberg                                */
 /* Function  . . : SQL database I/O                              */
 /*                                                               */
 /*  SQLCLI documentation:
-
 
 https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang=da
                                                                 */

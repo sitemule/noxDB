@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*INHERIT) */
+// CMD:CRTCMOD 
 //#define TESTMAIN
 #include <stdlib.h>
 #include <string.h>

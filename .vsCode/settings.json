@@ -4,5 +4,6 @@
         "*.dmd": "json",
         "*.widget": "javascript",
         "ostypes.h": "c"
-    }
+    },
+    "files.encoding": "windows1252"
 }

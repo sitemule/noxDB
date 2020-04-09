@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*INHERIT) */
+// CMD:CRTCMOD 
 /* ------------------------------------------------------------- */
 /* Program . . . : varchar                                       */
 /* Design  . . . : Niels Liisberg                                */

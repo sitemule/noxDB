@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*INHERIT) */
+// CMD:CRTCMOD 
 /* ------------------------------------------------------------- */
 /* Date  . . . . : 14.12.3005                                    */
 /* Design  . . . : Niels Liisberg                                */
@@ -92,18 +92,18 @@ PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen,
 UCHAR toUpper(UCHAR c)
 {
    switch(c) {
-      case 'Ã¦' : return 'Ã†';
-      case 'Ã¸' : return 'Ã˜';
-      case 'Ã¥' : return 'Ã…';
+      case 'æ' : return 'Æ';
+      case 'ø' : return 'Ø';
+      case 'å' : return 'Å';
       default  : return toupper(c);
    }
 }
 UCHAR toLower(UCHAR c)
 {
    switch(c) {
-      case 'Ã†' : return 'Ã¦';
-      case 'Ã˜' : return 'Ã¸';
-      case 'Ã…' : return 'Ã¥';
+      case 'Æ' : return 'æ';
+      case 'Ø' : return 'ø';
+      case 'Å' : return 'å';
       default  : return tolower(c);
    }
 }

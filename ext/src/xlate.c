@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*INHERIT) */
+// CMD:CRTCMOD 
 /* ------------------------------------------------------------- */
 /* Program . . . : XLATE                                         */
 /* Date  . . . . : 24.04.2008                                    */

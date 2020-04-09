@@ -5,31 +5,39 @@
     "tasks": [
         {
             "label": "Compile current file",
-            "command": "ssh -t DKSRV133 'cd /prj/noxdbutf8/;echo ${relativeFile} ; gmake current MOD=${fileBasenameNoExtension} SRC=${relativeFile}'",
+            "command": "ssh -t dksrv133  'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake ${relativeFile} --always-make '",
             "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared"
+            },
             "problemMatcher": {
                 "owner": "c",
-                "fileLocation": ["relative", "${workspaceRoot}"],
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+
                 "pattern": {
-                    //"regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    // src/ileastic.c, 241.2: CZM0045(30) Undeclared identifier a.
-                    
-                    "regexp": "^(.*), (\\d+)\\.(\\d+):\\s+(.*)$",
+                    "regexp": "^(.*):(\\d+):(\\d+):(error|warning|info):(.{7}):(.*)$",
                     "file": 1,
                     "line": 2,
                     "column": 3,
-                    // "severity": 4,
-                    "message": 4
+                    "severity": 4,
+                    "code" : 5,
+                    "message": 6
                 }
             }
         },
         {
-            "label": "Compile Service program noxdbutf8",
-            "command": "ssh DKSRV133 'cd /prj/noxdbutf8/;gmake all'",
+            "label": "Compile Service program",
+            "command": "ssh dksrv133 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake all'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -40,8 +48,8 @@
             ]
         },
         {
-            "label": "Compile Test modules for noxdbutf8",
-            "command": "ssh DKSRV133 'cd /prj/noxdbutf8/test/;gmake'",
+            "label": "Compile Test modules for noxDB",
+            "command": "ssh dksrv133 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/test/;gmake'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -53,39 +61,13 @@
         },
         {
             "label": "Compile current example file",
-            "command": "ssh -t DKSRV133 'cd /prj/noxdbutf8;echo ${relativeFile} ; gmake -f examples/makefile MOD=${fileBasenameNoExtension} SRC=${relativeFile}' ",
+            "command": "ssh -t dksrv133 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
             "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": {
-                "owner": "c",
-                "fileLocation": ["relative", "${workspaceRoot}"],
-                "pattern": {
-                    //"regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    // src/ileastic.c, 241.2: CZM0045(30) Undeclared identifier a.
-                    
-                    "regexp": "^(.*), (\\d+)\\.(\\d+):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    // "severity": 4,
-                    "message": 4
-                }
-            }
-        },
-        {
-            "label": "Build deploy (sav-file in bin)",
-            "command": "ssh DKSRV133 'cd /prj/noxdbutf8/;gmake deploy'",
-            "type": "shell",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": [
-                "$gcc"
-            ]
+            "problemMatcher": []
         }
     ]
 }
