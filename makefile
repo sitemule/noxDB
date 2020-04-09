@@ -116,7 +116,7 @@ release: cleanup
 	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) OMITOBJ((RELEASE *FILE))"
 	-rm -r release
 	-mkdir release
-	system "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release.savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"
+	system "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release-noxDB2.savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"
 	@echo " -- Cleaning up... --"
 	system "DLTOBJ OBJ($(BIN_LIB)/RELEASE) OBJTYPE(*FILE)"
 	@echo " -- Release created! --"
