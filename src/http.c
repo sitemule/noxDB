@@ -91,7 +91,7 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PLVARCHAR optionsP)
 		p += sprintf( p , " -X POST --data %s%s " , at, temp1);
 	}
 	p += sprintf( p ,  " %s ",
-		"-H 'Content-Type: application/json' "
+		"-H 'Content-Type: application/json;charset=utf-8' "
 		"-H 'Accept: application/json' "
 	);
 	if (options) {
