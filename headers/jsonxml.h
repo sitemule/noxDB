@@ -328,6 +328,10 @@ PJXNODE  jx_ParseFile (PUCHAR FileName, PUCHAR Options);
 PJXNODE  jx_ParseString  (PUCHAR Buf, PUCHAR Options);
 #pragma descriptor ( void jx_ParseString     (void))
 
+PJXNODE jx_parseStringCcsid(PUCHAR buf, int ccsid);
+void    jx_setDelimitersByCcsid (int ccsid);
+
+
 PJXNODE jx_NewObject (PJXNODE pDest);
 #pragma descriptor ( void jx_NewObject (void))
 

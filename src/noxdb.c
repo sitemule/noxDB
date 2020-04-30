@@ -72,6 +72,16 @@ UCHAR Amp        =  '&' ;
 UCHAR Hash       =  '#' ;
 UCHAR CR         =  0x25;
 
+UCHAR jobSlash       ;
+UCHAR jobBackSlash   ;
+UCHAR jobMasterspace ;
+UCHAR jobBraBeg      ;
+UCHAR jobBraEnd      ;
+UCHAR jobCurBeg      ;
+UCHAR jobCurEnd      ;
+UCHAR jobQuot  ;
+UCHAR jobApos  ;
+
 
 int   InputCcsid = 0, OutputCcsid = 0;
 //  BOOL  skipBlanks = TRUE;
@@ -1161,7 +1171,9 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
       case  '\"' :
       case  '\'' :
         pJxCom->isJson = TRUE;
+        InputCcsid = 277;
         done = TRUE;
+
         break;
 
       case  '<' :
@@ -1194,12 +1206,13 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
 
       default:
         // For other codepages than 277
-        if (*p == BraBeg || *p == CurBeg || *p == Quot || *p == Apos
+        if (*p == jobBraBeg || *p == jobCurBeg || *p == jobQuot || *p == jobApos
         ||  isdigit(*p)
         ||  BeginsWith(p , "true" )
         ||  BeginsWith(p , "false")
         ||  BeginsWith(p , "null" )) {
            pJxCom->isJson = TRUE;
+           InputCcsid = 0;
            done = TRUE;
            break;
         }
@@ -1849,6 +1862,21 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
 
    return (pRoot);
 }
+/* ---------------------------------------------------------------------------
+   --------------------------------------------------------------------------- */
+PJXNODE jx_parseStringCcsid(PUCHAR buf, int ccsid)
+{
+   PJXNODE pRoot;
+   JXDELIM storeDelimiters; 
+
+   storeDelimiters = * jx_GetDelimiters();
+   InputCcsid = ccsid;
+   jx_setDelimitersByCcsid (ccsid);
+   pRoot = jx_ParseString(buf,"");
+   jx_SetDelimiters2(&storeDelimiters);
+   return pRoot;
+}
+
 // ---------------------------------------------------------------------------
 /* ----------------------- OLD !!
 PJXNODE jx_ParseFile(PUCHAR FileName, PUCHAR pOptions)
@@ -1950,6 +1978,7 @@ PJXNODE jx_ParseFile(PUCHAR FileName, PUCHAR pOptions)
    FILE  * f;
    struct  stat statbuf;
 
+
    jxMessage[0] = '\0';
 
    f  = fopen(strTrim(FileName), "rb");
@@ -1983,12 +2012,13 @@ PJXNODE jx_ParseFile(PUCHAR FileName, PUCHAR pOptions)
    // make it a string
    streamBuf[len] = '\0';
    pFirstChar = streamBuf;
-
-   pRoot = jx_ParseString(pFirstChar,Options );
+   
+   pRoot = jx_parseStringCcsid(pFirstChar,0);
    memFree (&streamBuf);
 
    return (pRoot);
 }
+
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
 void jx_CloneFormat(PJXNODE pNode, PJXNODE pSource)

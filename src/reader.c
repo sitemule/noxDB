@@ -62,6 +62,19 @@ extern UCHAR Amp        ;
 extern UCHAR Hash       ;
 extern UCHAR CR         ;
 
+
+extern UCHAR jobSlash       ;
+extern UCHAR jobBackSlash   ;
+extern UCHAR jobMasterspace ;
+extern UCHAR jobBraBeg      ;
+extern UCHAR jobBraEnd      ;
+extern UCHAR jobCurBeg      ;
+extern UCHAR jobCurEnd      ;
+extern UCHAR jobQuot  ;
+extern UCHAR jobApos  ;
+
+
+
 extern UCHAR e2aTbl[256];
 extern UCHAR a2eTbl[256];
 extern UCHAR delimiters [11];
@@ -70,16 +83,9 @@ extern int   InputCcsid , OutputCcsid;
 static LONG  dbgStep=0;
 static BOOL  skipBlanks = TRUE;
 
-/* ---------------------------------------------------------------------------
-   --------------------------------------------------------------------------- */
-void initconst(int ccsid)
+
+void jx_setDelimitersByCcsid (int ccsid)
 {
-   static int prevccsid = -1;  // can not be negative => force rebuild const
-
-   // already done?
-   if ( prevccsid == ccsid) return;
-   prevccsid = ccsid;
-
    RtvXlateTbl  (e2aTbl , a2eTbl , 1252 , ccsid);  // 0=Current job CCSID
 
    #pragma convert(1252)
@@ -122,6 +128,31 @@ void initconst(int ccsid)
    delimiters [6] = Dot;
    delimiters [7] = CurBeg;
    delimiters [8] = CurEnd;
+
+   if (ccsid == 0) {
+      jobSlash       = Slash ;
+      jobBackSlash   = BackSlash   ;
+      jobMasterspace = Masterspace ;
+      jobBraBeg      = BraBeg   ;
+      jobBraEnd      = BraEnd   ;
+      jobCurBeg      = CurBeg   ;
+      jobCurEnd      = CurEnd   ;
+      jobQuot        = Quot ;
+      jobApos        = Apos;
+   }
+
+}
+
+/* ---------------------------------------------------------------------------
+   --------------------------------------------------------------------------- */
+void initconst(int ccsid)
+{
+   static int prevccsid = -1;  // can not be negative => force rebuild const
+
+   // already done?
+   if ( prevccsid == ccsid) return;
+   prevccsid = ccsid;
+   jx_setDelimitersByCcsid (ccsid);
 
 }
 

@@ -39,6 +39,15 @@ extern BOOL  jxError;
 extern UCHAR BraBeg;
 extern UCHAR CurBeg;
 
+extern UCHAR jobSlash       ;
+extern UCHAR jobBackSlash   ;
+extern UCHAR jobMasterspace ;
+extern UCHAR jobBraBeg      ;
+extern UCHAR jobBraEnd      ;
+extern UCHAR jobCurBeg      ;
+extern UCHAR jobCurEnd      ;
+
+
 // Unit Globals:
 static PJXSQLCONNECT pConnection = NULL;
 static BOOL keepConnection = false;
@@ -686,8 +695,8 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
                   // trigger new parsing of JSON-objects in columns:
                   // Predicts json data i columns
                   if (pConnection->options.autoParseContent == ON) {
-                     if (*p == BraBeg || *p == CurBeg) {
-                        PJXNODE pNode = jx_ParseString(p, NULL);
+                     if (*p == jobBraBeg || *p == jobCurBeg) {
+                        PJXNODE pNode = jx_parseStringCcsid(p, 0);
                         if (pNode) {
                            jx_NodeRename(pNode, pCol->colname);
                            jx_NodeAddChildTail (pRow, pNode);

@@ -31,6 +31,7 @@
 #include "mem001.h"
 #include "varchar.h"
 
+/* 
 extern  UCHAR BraBeg;
 extern  UCHAR BraEnd;
 extern  UCHAR CurBeg;
@@ -38,6 +39,20 @@ extern  UCHAR CurEnd;
 extern  UCHAR Quot  ;
 extern  UCHAR Apos  ;
 extern  UCHAR BackSlash;
+*/ 
+
+extern UCHAR jobSlash       ;
+extern UCHAR jobBackSlash   ;
+extern UCHAR jobMasterspace ;
+extern UCHAR jobBraBeg      ;
+extern UCHAR jobBraEnd      ;
+extern UCHAR jobCurBeg      ;
+extern UCHAR jobCurEnd      ;
+extern UCHAR jobQuot  ;
+extern UCHAR jobApos  ;
+
+
+
 
 /* -------------------------------------------------------------*/
 void jx_DecodeJsonBuf2Str (  PUCHAR v, PUCHAR t , LONG len)
@@ -48,7 +63,7 @@ void jx_DecodeJsonBuf2Str (  PUCHAR v, PUCHAR t , LONG len)
    UCHAR c;
 
    for ( end = t + len ; t < end ; t++) {
-      if (*t == BackSlash) {
+      if (*t == jobBackSlash) {
         UCHAR n;
         n  = *( ++t);
         switch (n) {
@@ -78,8 +93,8 @@ void jx_DecodeJsonBuf2Str (  PUCHAR v, PUCHAR t , LONG len)
           *v++ = '"' ;
           break;
         default:
-          if (n != BackSlash) {
-             *v++ = BackSlash;
+          if (n != jobBackSlash) {
+             *v++ = jobBackSlash;
           }
           *v++ = n;
           break;
@@ -102,10 +117,10 @@ BOOL isTermChar(UCHAR c)
 {
   if (c == ','
   ||  c == ':'
-  ||  c == BraEnd
-  ||  c == CurEnd
-  ||  c == BraBeg
-  ||  c == CurBeg) {
+  ||  c == jobBraEnd
+  ||  c == jobCurEnd
+  ||  c == jobBraBeg
+  ||  c == jobCurBeg) {
     return TRUE;
   } else {
     return FALSE;
@@ -139,7 +154,7 @@ TOK getTok(PJXCOM pJxCom) {
     if (*start > ' ') break; // FOUND!!
   }
 
-  if (*start == Quot  || *start == Apos ) {
+  if (*start == jobQuot  || *start == jobApos ) {
     UCHAR fnyt = *start;
     start++; // skip the "
 
@@ -149,7 +164,7 @@ TOK getTok(PJXCOM pJxCom) {
          // now if we have an even number of \ it is actually escaped backslash so we continue
          PUCHAR esc;
          BOOL   flipflop = true;
-         for (esc = p-1; *(esc--) == BackSlash ; flipflop = true - flipflop);
+         for (esc = p-1; *(esc--) == jobBackSlash ; flipflop = true - flipflop);
          if (flipflop) break;
       }
     }
@@ -223,11 +238,11 @@ BOOL jx_ParseJsonNode(PJXCOM pJxCom, JSTATE state,  PUCHAR name , PJXNODE pCurNo
       t = getTok(pJxCom);
       if (t.isEof) {
          return FALSE;
-      } else if (t.token  == CurBeg) {
+      } else if (t.token  == jobCurBeg) {
          pNewNode = jx_AppendType ( pJxCom, pCurNode ,  OBJECT , name, state);
-      } else if (t.token == BraBeg) {
+      } else if (t.token == jobBraBeg) {
          pNewNode = jx_AppendType ( pJxCom, pCurNode ,  ARRAY  , name, state );
-      } else if (t.token == BraEnd && pCurNode->type == ARRAY) {  // Empty array
+      } else if (t.token == jobBraEnd && pCurNode->type == ARRAY) {  // Empty array
          return TRUE;
       } else if (t.data == NULL) {
          jx_SetMessage( "Invalid token %s or no data when parsing an object at (%d:%d) token number: %d"
@@ -260,7 +275,7 @@ BOOL jx_ParseJsonNode(PJXCOM pJxCom, JSTATE state,  PUCHAR name , PJXNODE pCurNo
         }
 
         // Needed for empty object and if extra, end of attribute list
-        if (key.token == CurEnd) {  // the }
+        if (key.token == jobCurEnd) {  // the }
            return FALSE;
         }
         sep = getTok(pJxCom);
@@ -291,7 +306,7 @@ BOOL jx_ParseJsonNode(PJXCOM pJxCom, JSTATE state,  PUCHAR name , PJXNODE pCurNo
           pJxCom->State = XML_EXIT_ERROR;
           return TRUE;
         }
-        if (sep.token == CurEnd) { // The }
+        if (sep.token == jobCurEnd) { // The }
            memFree (&sep.data);
            return FALSE;
         }
@@ -322,7 +337,7 @@ BOOL jx_ParseJsonNode(PJXCOM pJxCom, JSTATE state,  PUCHAR name , PJXNODE pCurNo
           pJxCom->State = XML_EXIT_ERROR;
           return TRUE;
         }
-        if (key.token == BraEnd) {
+        if (key.token == jobBraEnd) {
            memFree (&key.data);
            return FALSE;
         }

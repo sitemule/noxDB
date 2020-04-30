@@ -97,6 +97,14 @@
           Options        Pointer    value options(*string:*nopass);
         End-PR;
 
+        //Returns node json_object tree, ccsid of the string is given
+        Dcl-PR json_ParseString Pointer extproc(*CWIDEN:'jx_parseStringCcsid');
+          //String to parse
+          String         Pointer    value options(*string);
+          // The ccsid of the string
+          ccsid          int(10) value;
+        End-PR;
+
         //Set , or . for numeri decimal point
         Dcl-PR json_setDecPoint  extproc(*CWIDEN : 'jx_SetDecPoint');
           //decimal point char
