@@ -98,7 +98,7 @@
         End-PR;
 
         //Returns node jx_object tree, ccsid of the string is given
-        Dcl-PR jx_ParseString Pointer extproc(*CWIDEN:'jx_parseStringCcsid');
+        Dcl-PR jx_ParseStringCcsid Pointer extproc(*CWIDEN:'jx_parseStringCcsid');
           //String to parse
           String         Pointer    value options(*string);
           // The ccsid of the string
