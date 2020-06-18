@@ -1505,8 +1505,9 @@ SHORT  doInsertOrUpdate(
          }
 
          // Long data > 32K will be chopped into chunks for update.
-         if (pColData->freeme 
-         ||  pColData->length > 32000) {
+         // if (pColData->freeme 
+         // ||  pColData->length > 32000) {
+         {
             // Set parameters based on total data to send.
             SQLINTEGER lbytes = pColData->length;
             SQLINTEGER cbTextSize = SQL_DATA_AT_EXEC;
@@ -1519,7 +1520,7 @@ SHORT  doInsertOrUpdate(
                SQL_C_CHAR,       // fCType
                Col.coltype,      // FSqlType
                lbytes,           // cbColDef
-               0,                // ibScale
+               Col.scale,    // presition /// 0,                // ibScale
                pColData,         // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
                0,                // cbValueMax
                &cbTextSize       // pcbValue
@@ -1530,7 +1531,8 @@ SHORT  doInsertOrUpdate(
                return rc; // we have an error
             }
 
-         } else {
+         } 
+         /* else {
 
             // length  !!! 1234,56 gives 6 digits                                              //GIT
             SQLINTEGER colLen = Col.coltype  == SQL_TIMESTAMP ? Col.collen : pColData->length + Col.scale;  //GIT
@@ -1553,7 +1555,8 @@ SHORT  doInsertOrUpdate(
          if (rc != SQL_SUCCESS ) {
             check_error (pSQL);
             return rc; // we have an error
-         }
+         }*/
+
       }
       pNode = jx_GetNodeNext(pNode);
    }
