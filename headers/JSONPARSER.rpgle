@@ -269,6 +269,8 @@ I         MessageData    Pointer    value options(*string:*nopass);
           Expresion      Pointer    value options(*string);
           //Pointer to anything - You do the cleanup
           Value          Pointer    value;
+          //*ON=Pointer string and stringify, *OFF= Contents is already formated JSON (Default)
+          Stringify      Ind        value options(*nopass);
         End-PR;
 
         Dcl-PR json_SetProcPtr Pointer extproc(*CWIDEN: 'jx_SetPtrByName');
@@ -747,7 +749,7 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
           Defaultvalue   Pointer    value options(*string:*nopass);
         End-PR;
 
-        Dcl-PR json_SetAttrValue extproc(*CWIDEN : 'jx_SetAttrValue');
+        Dcl-PR json_SetAttrValue extproc(*CWIDEN : 'jx_SetNodeAttrValue');
           //Pointer Attribute
           pAttr          Pointer    value;
           //New value
@@ -1003,6 +1005,22 @@ I         Defaultvalue   Int(20)    value options(*NOPASS);
       // you can supply an extr eye-catch wariable :trcid
         Dcl-PR json_traceSetId  extproc(*CWIDEN : 'jx_traceSetId');
           traceId        Int(20)    value; //Ccsid of inpur file
+        End-PR;
+
+      // courtesy joblog tool
+        Dcl-PR json_joblog  int(10) extproc(*CWIDEN : 'Qp0zLprintf');
+          //Format string 
+          format             Pointer    value options(*string);
+          //Any parm
+          p1                 Pointer    value options(*string:*nopass);
+          //Any parm
+          p2                 Pointer    value options(*string:*nopass);
+          //Any parm
+          p3                 Pointer    value options(*string:*nopass);
+          //Any parm
+          p4                 Pointer    value options(*string:*nopass);
+          //Any parm
+          p5                 Pointer    value options(*string:*nopass);
         End-PR;
 
       // --------------------------------------------------------------------------------------------------------------
