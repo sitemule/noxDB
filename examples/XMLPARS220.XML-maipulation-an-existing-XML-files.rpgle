@@ -8,13 +8,13 @@
        // distributed under the License is distributed on an "AS IS" BASIS,
        // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
        //
-       // Look at the header source file "QRPGLESRC" member "NOXDB"
+       // Look at the header source file "QRPGLEREF" member "NOXDB"
        // for a complete description of the functionality
        //
        //
        // -------------------------------------------------------------
 
-       // Look at the header source file "QRPGLESRC" in the IceBreak   library
+       // Look at the header source file "QRPGLEREF" in the IceBreak   library
        // for a complete description of the functionality
 
        // The aim is to produce a XML document from scratch
@@ -25,7 +25,7 @@
 
        // Step 2)
        // Include the prototypes for the xml parser found in member "NOXDB"
-       // in the source file "QRPGLESRC" in the IceBreak   library
+       // in the source file "QRPGLEREF" in the IceBreak   library
 
        // Step 3)
        // Parse your XML file by caling the "xml_Parse" function. It returns

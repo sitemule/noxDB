@@ -7,7 +7,7 @@
        Dcl-S msg                VarChar(50);
        Dcl-S name               VarChar(50);
       /include xmlparser
-      /include QRPGLESRC,ilob
+      /include QRPGLEREF,ilob
 
           pxml  = xml_ParseString (
                '<a>                    '+

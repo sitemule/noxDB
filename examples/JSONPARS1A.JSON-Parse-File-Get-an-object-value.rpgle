@@ -8,7 +8,7 @@
         // distributed under the License is distributed on an "AS IS" BASIS,
         // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
         //
-        // Look at the header source file "QRPGLESRC" member "NOXDB"
+        // Look at the header source file "QRPGLEREF" member "NOXDB"
         // for a complete description of the functionality
         //
         // Build JSON from scratch
@@ -16,7 +16,7 @@
         // Step 1)
         // When using noxDB you need two things:
         //  A: Bind you program with "NOXDB" Bind directory
-        //  B: Include the noxDB prototypes from QRPGLSEREF member NOXDB
+        //  B: Include the noxDB prototypes from QRPGLEREF member NOXDB
         //
         // Step 2)
         // Include the prototypes for noxDB and bind with bibddir NOXDB

@@ -9,7 +9,7 @@
 //  di stributed under the License is distributed on an "AS IS" BASIS,
 //  WITTHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //
-//  Look at the header source file "QRPGLESRC" member "NOXDB"
+//  Look at the header source file "QRPGLEREF" member "NOXDB"
 //  for a complete description of the functionality
 //
 //  T lk to watson
