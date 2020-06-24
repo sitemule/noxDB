@@ -15,7 +15,7 @@ compile:
 	touch error.txt
 	setccsid 1252 error.txt
 	setccsid 1252 $(SRC)
-	system -i "CRTBNDRPG  PGM($(BIN_LIB)/$(OBJ)) SRCSTMF('$(SRC)') $(RPG_OPT)" > error.txt
+	system -i "CRTBNDRPG  PGM($(BIN_LIB)/$(word 1, $(subst ., ,$(OBJ)))) SRCSTMF('$(SRC)') $(RPG_OPT)" > error.txt
 	EOF
        
 .PHONY: compile
