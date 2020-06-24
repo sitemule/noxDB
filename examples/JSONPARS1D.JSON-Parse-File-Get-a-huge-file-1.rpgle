@@ -15,7 +15,7 @@
        // Step 1)
        // When using noxDB you need two things:
        //  A: Bind you program with "NOXDB" Bind directory
-       //  B: Include the noxDB prototypes from QRPGLSERC member NOXDB
+       //  B: Include the noxDB prototypes from QRPGLSEREF member NOXDB
 
        // Step 2)
        // Include the prototypes for the JSONparser found in member "NOXDB"

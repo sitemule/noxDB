@@ -13,7 +13,7 @@
 
        // When using noxDB you need two things:
        //  A: Bind you program with "NOXDB" Bind directory
-       //  B: Include the noxDB prototypes from QRPGLSERC member NOXDB
+       //  B: Include the noxDB prototypes from QRPGLSEREF member NOXDB
 
        // Build a json object with primitive types and write
        // is as astream file to the IFS in UTF-8 format

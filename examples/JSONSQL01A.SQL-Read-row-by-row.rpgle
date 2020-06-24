@@ -13,7 +13,7 @@
 
        // When using noxDB you need two things:
        //  A: Bind you program with "NOXDB" Bind directory
-       //  B: Include the noxDB prototypes from QRPGLSERC member NOXDB
+       //  B: Include the noxDB prototypes from QRPGLSEREF member NOXDB
 
        // ------------------------------------------------------------- *
        // Using SQL cursors. Row by row is one solution
