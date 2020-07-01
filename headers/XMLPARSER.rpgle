@@ -282,6 +282,17 @@ I         MessageData    Pointer    value options(*string:*nopass);
           isString       Ind        value options(*nopass);
         End-PR;
 
+
+        Dcl-PR xml_Set Pointer overload ( 
+          xml_SetBool : 
+          xml_SetNum : 
+          xml_SetInt : 
+          xml_SetStr
+        );
+        End-PR;
+
+
+
         Dcl-PR xml_SetValue Pointer extproc(*CWIDEN: 'jx_SetValueByName');
           //Pointer to xml_ tree
           pNode          Pointer    value;
@@ -309,10 +320,10 @@ I         MessageData    Pointer    value options(*string:*nopass);
           Defaultvalue   Packed(30:15) value options(*NOPASS);
         End-PR;
 
-I       Dcl-PR xml_GetValueInt Int(20) extproc(*CWIDEN : 'jx_GetNodeValueInt');
-I         pNode          Pointer    value; //Pointer to node
+        Dcl-PR xml_GetValueInt Int(20) extproc(*CWIDEN : 'jx_GetNodeValueInt');
+          pNode          Pointer    value; //Pointer to node
           //If not found - default value
-I         Defaultvalue   Int(20)    value options(*NOPASS);
+          Defaultvalue   Int(20)    value options(*NOPASS);
         End-PR;
 
         Dcl-PR xml_GetValuePtr Pointer extproc(*CWIDEN : 'jx_GetNodeValuePtr');
