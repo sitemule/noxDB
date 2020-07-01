@@ -125,18 +125,18 @@
         End-PR;
 
         // Without parameters you will get the last internal error
-        // Otherwise it will format an error object
-I       Dcl-PR json_GetMessageObject Pointer //Return error description
+        // Otherwise it will format an error object 
+        Dcl-PR json_GetMessageObject Pointer //Return error description
                                    extproc(*CWIDEN:'jx_GetMessageObject');
-I         MessageId      Pointer    value options(*string:*nopass);
-I         MessageData    Pointer    value options(*string:*nopass);
+          MessageId      Pointer    value options(*string:*nopass);
+          MessageData    Pointer    value options(*string:*nopass);
         End-PR;
 
         // simple courtesy function to return a {"success":true} object
         //Return success:true object
-I       Dcl-PR json_SuccessTrue Pointer extproc(*CWIDEN:'jx_SuccessTrue');
-I         MessageId      Pointer    value options(*string:*nopass);
-I         MessageData    Pointer    value options(*string:*nopass);
+        Dcl-PR json_SuccessTrue Pointer extproc(*CWIDEN:'jx_SuccessTrue');
+          MessageId      Pointer    value options(*string:*nopass);
+          MessageData    Pointer    value options(*string:*nopass);
         End-PR;
 
         //Returns pointer to node
@@ -262,6 +262,35 @@ I         MessageData    Pointer    value options(*string:*nopass);
           Value          Ind        value;
         End-PR;
 
+        Dcl-PR json_SetDate Pointer extproc(*CWIDEN: 'jx_SetDateByName');
+          //Pointer to json_ tree
+          pNode          Pointer    value;
+          //Location expression to node or attributes
+          Expresion      Pointer    value options(*string);
+          //New value to set / pointer to object
+          Value          date(*ISO)  const;
+        End-PR;
+
+        Dcl-PR json_SetTime Pointer extproc(*CWIDEN: 'jx_SetTimeByName');
+          //Pointer to json_ tree
+          pNode          Pointer    value;
+          //Location expression to node or attributes
+          Expresion      Pointer    value options(*string);
+          //New value to set / pointer to object
+          Value          time(*ISO)   const;
+        End-PR;
+
+        Dcl-PR json_SetTimeStamp Pointer 
+                               extproc(*CWIDEN: 'jx_SetTimeStampByName');
+          //Pointer to json_ tree
+          pNode          Pointer    value;
+          //Location expression to node or attributes
+          Expresion      Pointer    value options(*string);
+          //New value to set / pointer to object
+          Value          timestamp  const;
+        End-PR;
+
+
         Dcl-PR json_SetPtr Pointer extproc(*CWIDEN: 'jx_SetPtrByName');
           //Pointer to json_ tree
           pNode          Pointer    value;
@@ -282,16 +311,17 @@ I         MessageData    Pointer    value options(*string:*nopass);
           isString       Ind        value options(*nopass);
         End-PR;
 
-
-        Dcl-PR json_Set Pointer overload ( 
-          json_SetBool : 
-          json_SetNum : 
-          json_SetInt : 
-          json_SetStr
-        );
-        End-PR;
-
-
+        //         /IF DEFINED(*V7R4M0)
+        //           Dcl-PR json_Set Pointer overload ( 
+        //             json_SetBool : 
+        //             json_SetNum : 
+        //             json_SetInt :             
+        //             json_SetDate:
+        //             json_SetTime:
+        //             json_SetTimeStamp:
+        //             json_SetStr
+        //           );
+        //         /ENDIF
 
         Dcl-PR json_SetValue Pointer extproc(*CWIDEN: 'jx_SetValueByName');
           //Pointer to json_ tree
@@ -397,6 +427,42 @@ I         MessageData    Pointer    value options(*string:*nopass);
           Defaultvalue   Int(20)    value options(*nopass);
         End-PR;
 
+        Dcl-PR json_GetBool ind extproc(*CWIDEN : 'jx_GetValueBool');
+          //Pointer to relative node
+          pNode          Pointer    value;
+          //Locations expression to node
+          Expression     Pointer    value options(*string:*nopass);
+          //If not found - default value
+          Defaultvalue   ind        value options(*nopass);
+        End-PR;
+
+        Dcl-PR json_GetDate date(*ISO)  extproc(*CWIDEN : 'jx_GetValueDate');
+          //Pointer to relative node
+          pNode          Pointer    value;
+          //Locations expression to node
+          Expression     Pointer    value options(*string:*nopass);
+          //If not found - default value
+          Defaultvalue   date(*ISO)    value options(*nopass);
+        End-PR;
+
+        Dcl-PR json_GetTime Time(*ISO)  extproc(*CWIDEN : 'jx_GetValueTime');
+          //Pointer to relative node
+          pNode          Pointer    value;
+          //Locations expression to node
+          Expression     Pointer    value options(*string:*nopass);
+          //If not found - default value
+          Defaultvalue   Time(*ISO)    value options(*nopass);
+        End-PR;
+
+        Dcl-PR json_GetTimeStamp TimeStamp  
+                               extproc(*CWIDEN : 'jx_GetValueTimeStamp');
+          //Pointer to relative node
+          pNode          Pointer    value;
+          //Locations expression to node
+          Expression     Pointer    value options(*string:*nopass);
+          //If not found - default value
+          Defaultvalue   TimeStamp    value options(*nopass);
+        End-PR;
         //Set an ILOB object to a value found by X
         //Return *ON if found
         Dcl-PR json_GetIlobValue Ind extproc(*CWIDEN :'ILOB_XmlGetValue');
@@ -1019,19 +1085,9 @@ I         MessageData    Pointer    value options(*string:*nopass);
         End-PR;
 
       // courtesy joblog tool
-        Dcl-PR json_joblog  int(10) extproc(*CWIDEN : 'Qp0zLprintf');
+        Dcl-PR json_joblog  extproc(*CWIDEN : 'jx_joblog'); 
           //Format string 
-          format             Pointer    value options(*string);
-          //Any parm
-          p1                 Pointer    value options(*string:*nopass);
-          //Any parm
-          p2                 Pointer    value options(*string:*nopass);
-          //Any parm
-          p3                 Pointer    value options(*string:*nopass);
-          //Any parm
-          p4                 Pointer    value options(*string:*nopass);
-          //Any parm
-          p5                 Pointer    value options(*string:*nopass);
+          msg            Pointer    value options(*string);
         End-PR;
 
       // --------------------------------------------------------------------------------------------------------------

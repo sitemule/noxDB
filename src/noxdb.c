@@ -19,6 +19,7 @@
 #include <leod.h>
 #include <decimal.h>
 #include <wchar.h>
+#include <QMHSNDPM.h>
 // #include <errno.h>
 
 #include <sys/stat.h>
@@ -97,7 +98,17 @@ iconv_t xlateEto1208;
 iconv_t xlate1208toE;
 
 
+/* --------------------------------------------------------------------------- */
+void jx_joblog (PUCHAR msg)
+{
+   char msgkey [10];
+   long stackcount=1;
+   UINT64 zeroval  = 0;
+   int  len;
 
+   QMHSNDPM ("CPF9898", "QCPFMSG   *LIBL     ",  msg  , strlen(msg)  , "*INFO     ", "*PGMBDY                    " ,
+             stackcount, msgkey , &zeroval);
+}
 /* --------------------------------------------------------------------------- */
 void jx_SetMessage (PUCHAR Ctlstr , ... )
 {
@@ -3199,6 +3210,33 @@ PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
    return jx_SetValueByName(pNode , Name , Value , VALUE );
 }
 /* -------------------------------------------------------------
+   Set Date by name
+   ------------------------------------------------------------- */
+PJXNODE  jx_SetDateByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
+{
+   UCHAR temp [11];
+   substr (temp, Value ,10);
+   return jx_SetValueByName(pNode , Name , temp , VALUE );
+}
+/* -------------------------------------------------------------
+   Set Time by name
+   ------------------------------------------------------------- */
+PJXNODE  jx_SetTimeByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
+{
+   UCHAR temp [9];
+   substr (temp, Value ,8);
+   return jx_SetValueByName(pNode , Name , temp , VALUE );
+}
+/* -------------------------------------------------------------
+   Set TimeStamp by name
+   ------------------------------------------------------------- */
+PJXNODE  jx_SetTimeStampByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
+{
+   UCHAR temp [27]; 
+   substr (temp, Value , 26);
+   return jx_SetValueByName(pNode , Name , temp , VALUE );
+}
+/* -------------------------------------------------------------
    Set Parse and evaluate  by name
    ------------------------------------------------------------- */
 PJXNODE  jx_SetEvalByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
@@ -3276,6 +3314,71 @@ INT64 jx_GetValueInt (PJXNODE pNode , PUCHAR Name  , INT64 dftParm)
        return  dft;
    }
    return jx_Num(value);
+}
+// -------------------------------------------------------------
+DATE jx_GetValueDate (PJXNODE pNode , PUCHAR Name  , DATE dftParm)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   DATE  dft   =  (pParms->OpDescList->NbrOfParms >= 3) ? dftParm :  *(DATE*) "0001-01-01";
+   PUCHAR   path  =  (pParms->OpDescList->NbrOfParms >= 2) ? Name  : "";
+
+   PUCHAR  value;
+
+   value = jx_GetValuePtr    (pNode , path , NULL ) ;
+   if (value == NULL) {
+       return  dft;
+   }
+   return *(DATE*) value;
+}
+// -------------------------------------------------------------
+TIME jx_GetValueTime (PJXNODE pNode , PUCHAR Name  , TIME dftParm)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   TIME  dft   =  (pParms->OpDescList->NbrOfParms >= 3) ? dftParm : *(TIME*) "00.00.00";
+   PUCHAR   path  =  (pParms->OpDescList->NbrOfParms >= 2) ? Name  : "";
+
+   PUCHAR  value;
+
+   value = jx_GetValuePtr    (pNode , path , NULL ) ;
+   if (value == NULL) {
+       return  dft;
+   }
+   return *(TIME*) value;
+}
+// -------------------------------------------------------------
+TIMESTAMP jx_GetValueTimeStamp (PJXNODE pNode , PUCHAR Name  , TIMESTAMP dftParm)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   TIMESTAMP  dft   =  (pParms->OpDescList->NbrOfParms >= 3) ? dftParm : *(TIMESTAMP*) "0001-01-01-00.00.00.000000";
+   PUCHAR   path  =  (pParms->OpDescList->NbrOfParms >= 2) ? Name  : "";
+
+   PUCHAR  value;
+
+   value = jx_GetValuePtr    (pNode , path , NULL ) ;
+   if (value == NULL) {
+       return  dft;
+   }
+   return *(TIMESTAMP*) value;
+}
+// -------------------------------------------------------------  
+// Same base logic as in "isTrue", but with default value
+// and null/null-values return default values
+// -------------------------------------------------------------  
+LGL jx_GetValueBool  (PJXNODE pNode , PUCHAR Name  , LGL  dftParm)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   LGL      dft   =  (pParms->OpDescList->NbrOfParms >= 3) ? dftParm : OFF;
+   PUCHAR   path  =  (pParms->OpDescList->NbrOfParms >= 2) ? Name  : "";
+   PUCHAR   value;
+   PJXNODE  p = jx_GetNode  (pNode, Name);
+   if (p == NULL) return dft;
+   if (p->type == VALUE) {
+     if (p->Value == NULL)  return dft;
+     if (p->Value[0] == 0 ) return OFF;
+     if (p->Value[0] == '0' && p->Value[1] == 0 )  return OFF;
+     if (p->isLiteral && BeginsWith(p->Value, "false")) return OFF;
+   }
+   return (ON );
 }
 // -------------------------------------------------------------
 VARCHAR jx_GetNodeValueVC (PJXNODE pNode , PUCHAR DefaultValue)
