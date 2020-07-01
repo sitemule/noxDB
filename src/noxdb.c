@@ -106,9 +106,43 @@ void jx_joblog (PUCHAR msg)
    UINT64 zeroval  = 0;
    int  len;
 
-   QMHSNDPM ("CPF9898", "QCPFMSG   *LIBL     ",  msg  , strlen(msg)  , "*INFO     ", "*PGMBDY                    " ,
-             stackcount, msgkey , &zeroval);
+   // Poor mans polymorphisme: Nodes have a signature byte 
+   if ( *msg == NODESIG) {
+      int len;
+      UCHAR mem [999999];
+      len = jx_AsJsonTextMem (((PJXNODE) msg) , mem , 512);
+      QMHSNDPM ("CPF9898", "QCPFMSG   *LIBL     ",  mem  , len  , "*INFO     ", "*PGMBDY                    " ,
+               stackcount, msgkey , &zeroval);
+   } else {
+      QMHSNDPM ("CPF9898", "QCPFMSG   *LIBL     ",  msg  , strlen(msg)  , "*INFO     ", "*PGMBDY                    " ,
+               stackcount, msgkey , &zeroval);
+   }
 }
+/* --------------------------------------------------------------------------- 
+-- TODO !! Messages up to 32K is supported but need a message file :( 
+void jx_joblog (PUCHAR msg)
+{
+   char msgkey [10];
+   long stackcount=1;
+   UINT64 zeroval  = 0;
+   int  len;
+
+   // Poor mans polymorphisme: Nodes have a signature byte 
+   if ( *msg == NODESIG) {
+      int len1, len2;
+      UCHAR mem [999999];
+      memset(mem , ' ' ,80);  
+      len1 = jx_AsJsonTextMem (((PJXNODE) msg) , mem , 80);
+      len2 = jx_AsJsonTextMem (((PJXNODE) msg) , &mem[80] , 9900);
+      if (len2 > 9900) len2 = 9900;
+      QMHSNDPM ("XXX9999", "QCPFMSG   *LIBL     ",  mem  , 80 + len2  , "*INFO     ", "*PGMBDY                    " ,
+               stackcount, msgkey , &zeroval);
+   } else {
+      QMHSNDPM ("CPF9898", "QCPFMSG   *LIBL     ",  msg  , strlen(msg)  , "*INFO     ", "*PGMBDY                    " ,
+               stackcount, msgkey , &zeroval);
+   }
+}
+*/ 
 /* --------------------------------------------------------------------------- */
 void jx_SetMessage (PUCHAR Ctlstr , ... )
 {
@@ -132,22 +166,25 @@ void  freeNodeValue(PJXNODE pNode)
 /* ------------------------------------------------------------- */
 PJXNODE jx_traceNode (PUCHAR text, PJXNODE pNode)
 {
-  static int i;
-  UCHAR filename [128];
+   static int i;
+   UCHAR filename [128];
 
-  if (debugger ==0)  return pNode;
+   if (debugger ==0)  return pNode;
 
-  if (debugger == 1) {
-     sprintf(filename, "/tmp/jsonxml-%05.5d.json" , i ++);
-     jx_WriteJsonStmf (pNode, filename , 1208, OFF, NULL);
-  } else if (debugger == 2) {
-     UCHAR temp [65536];
-     int l = jx_AsJsonTextMem (pNode , temp , sizeof(temp));
-     temp [l] = 0;
-     puts (text);
-     puts (temp);
-     puts ("\n");
-  }
+   if (debugger == 1) {
+      sprintf(filename, "/tmp/jsonxml-%05.5d.json" , i ++);
+      jx_WriteJsonStmf (pNode, filename , 1208, OFF, NULL);
+   } else if (debugger == 2) {
+      UCHAR temp [65536];
+      int l = jx_AsJsonTextMem (pNode , temp , sizeof(temp));
+      temp [l] = 0;
+      puts (text);
+      puts (temp);
+      puts ("\n");
+   } else if (debugger == 3) {
+      jx_joblog ((PUCHAR) pNode);
+   }
+
   return pNode;
 }
 

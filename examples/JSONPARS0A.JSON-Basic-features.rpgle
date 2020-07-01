@@ -33,6 +33,8 @@
         /include qrpgleRef,noxdb
 
         Dcl-S pJson       Pointer;
+        Dcl-S pArr        Pointer;
+        Dcl-S i           int(10);
         Dcl-S msg         varchar(256);
         Dcl-S name        varchar(256);
         Dcl-S age         int(10);
@@ -57,6 +59,16 @@
         json_setTime      (pJson: 'birthTime' : t'12.34.56');
         json_setTimeStamp (pJson: 'updated' : %timestamp());
         json_setBool      (pJson: 'isMale' : *ON);
+
+        // Put the node in the joblog (max 512 is shown)
+        json_joblog(pJson); 
+
+        // Play with arrays
+        pArr = json_newArray();
+        for i = 1 to 100;
+            json_arrayPush (pArr : pJson : JSON_COPY_CLONE);
+        endfor;
+        json_joblog(pArr); 
 
         // Write to the IFS, Note date/time will be stored in *ISO always
         json_WriteJsonStmf(pJson:'/prj/noxdb/testdata/simple0.json':1208:*OFF);
