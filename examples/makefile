@@ -1,10 +1,15 @@
 BIN_LIB=NOXDB
 # NOTE - UTF is not allowed for ILE source (yet) - so convert to WIN-1252
 
-# to this folder the header files (prototypes) are copied in the install step
-#	system -i "CRTBNDRPG  PGM($(BIN_LIB)/demo01) SRCSTMF('demo01.rpgle') $(RPG_OPT)" 
-#	system -i "CRTBNDRPG  PGM($(BIN_LIB)/demo02) SRCSTMF('demo02.rpgle') $(RPG_OPT)" 
-RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb')
+# Note TGTCCSID is only supported from 7.4 > so the examples will run in ccsid 500
+# i.e. you have to do a 
+#    CHGJOB CCSID(500)
+# Before your examples will run.
+# If you are on 7.4 change the compile option to:
+#
+#    RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb') PPGENOPT(*EXPINCLUDE) TGTCCSID(277)
+
+RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb') 
     
 all: compile
 .ONESHELL:

@@ -1436,11 +1436,14 @@ SHORT  doInsertOrUpdate(
 {
 
    typedef struct _COLDATA {
-      SQLINTEGER collen;
-      PJXNODE    pNode;
+      SQLSMALLINT coltype;
+      SQLINTEGER  collen;
+      SQLSMALLINT scale;
+      SQLSMALLINT nullable;
+      PJXNODE     pNode;
    } COLDATA, *PCOLDATA;
       
-   COLDATA colData[4096];
+   COLDATA colData[16000];
    PCOLDATA pColData;
    LONG   attrParm;
    LONG   colno;
@@ -1486,24 +1489,26 @@ SHORT  doInsertOrUpdate(
    bindColNo =0;
    for(colno =1; pNode ; colno ++) {
       PCOLDATA pColData = &colData[colno-1];
-      JXCOL Col;
       BOOL isId = isIdColumn(pSQLmeta->pstmt->hstmt, colno);
 
       if (!isId && !nodeisnull(pNode) && !nodeisblank(pNode)) {
+         UCHAR       colName [256];
+         SQLSMALLINT colNameLen;
+
 
          bindColNo ++; // Only columns with data ( not null nor blank) need to be bound
+         pColData->pNode = pNode;
 
-         memset (&Col , 0 , sizeof(JXCOL));
          rc = SQLDescribeCol (
             pSQLmeta->pstmt->hstmt,
             colno,    // The meta "cursor" contaians all columns
-            Col.colname,
-            sizeof (Col.colname),
-            &Col.colnamelen,
-            &Col.coltype,
-            &Col.collen,
-            &Col.scale,
-            &Col.nullable
+            colName,
+            sizeof (colName),
+            &colNameLen,
+            &pColData->coltype,
+            &pColData->collen,
+            &pColData->scale,
+            &pColData->nullable
          );
 
          if (rc != SQL_SUCCESS ) {
@@ -1511,31 +1516,41 @@ SHORT  doInsertOrUpdate(
             return rc; // we have an error
          }
 
-         // Need later for serialization
-         pColData->collen = Col.collen;
-         pColData->pNode = pNode;
 
          // Blob's need binary data - !!TODO check all binary types.
-         fCType = Col.coltype == SQL_BLOB ? SQL_C_BINARY : SQL_C_CHAR;
-         
-         if (isNumeric(Col.coltype)) {
-            colLen = Col.collen + 1; // Allow space for sign
-            if (Col.scale > 0) {     // Allow space for decimal point
-               colLen ++;
-            }
-         } else {
-            colLen = Col.collen;
+         switch (pColData->coltype) {
+            case SQL_BLOB: 
+               fCType = SQL_C_BINARY;
+               break;
+            case SQL_INTEGER:
+            case SQL_SMALLINT:
+            case SQL_DECIMAL:
+            case SQL_NUMERIC:
+            case SQL_FLOAT:  
+            case SQL_REAL:   
+            case SQL_DOUBLE: 
+            case SQL_DECFLOAT:
+            case SQL_BIGINT:
+            case SQL_DATE:
+            case SQL_TIME:
+            case SQL_TIMESTAMP:
+               pColData->collen = strlen (jx_GetNodeValuePtr  (pNode , NULL));
+               fCType = SQL_C_CHAR;
+               break;
+            default : 
+               fCType = SQL_C_CHAR;
+               break;
          }
-
+         
          // Bind the parameter marker.
          rc  = SQLBindParameter (
             pSQL->pstmt->hstmt, // hstmt
             bindColNo,
             SQL_PARAM_INPUT,  // fParamType
             fCType ,       // fCType
-            Col.coltype,      // FSqlType
-            colLen,
-            Col.scale,        // presition /// 0,                // ibScale
+            pColData->coltype, // FSqlType
+            pColData->collen,
+            pColData->scale,   // presition /// 0,                // ibScale
             pColData,         // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
             0,                // cbValueMax
             &data_at_exec     // pcbValue
@@ -1563,6 +1578,10 @@ SHORT  doInsertOrUpdate(
          PUCHAR  value;
          ULONG   lbytes;
          PJXNODE pNode = pColData->pNode;
+         SQLSMALLINT SmallIntVal;
+         SQLINTEGER intVal;
+         UCHAR buf [256];
+
 
          if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
             freeme = true;
@@ -1573,9 +1592,22 @@ SHORT  doInsertOrUpdate(
             freeme = false;
             value = jx_GetNodeValuePtr  (pNode , NULL);
             lbytes  = value ? strlen(value):0;
+
+            /* 
+            switch (pColData->coltype) {
+               case SQL_INTEGER:
+                  intVal = atoi (value);
+                  value = (PUCHAR) &intVal;
+                  break;
+               case SQL_SMALLINT:
+                  SmallIntVal = atoi (value);
+                  value = (PUCHAR) &SmallIntVal;
+                  break;
+            }
+            */
          }
 
-
+         // Put each block in in buffer
          while (lbytes > cbChunk) {
             rc = SQLPutData(pSQL->pstmt->hstmt, value , cbChunk);
             lbytes -= cbChunk;

@@ -108,6 +108,7 @@ release: clean
 # For vsCode / single file then i.e.: gmake current sqlio.c  
 current: 
 	system -i "CRTCMOD MODULE($(BIN_LIB)/$(SRC)) SRCSTMF('src/$(SRC).c') $(CCFLAGS2) "
+	system -i "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/*ALL)  
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
 example: 

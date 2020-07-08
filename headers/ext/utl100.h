@@ -54,6 +54,7 @@ PUCHAR hex2BinMem (PUCHAR out , PUCHAR in , LONG len);
 void split2LibAndName(PUCHAR Lib , PUCHAR Name , PUCHAR fromString);
 FIXEDDEC num(PVARCHAR Str, PUCHAR DecPointP);
 FIXEDDEC str2dec(PUCHAR str, UCHAR decPoint);
+PUCHAR   str2packedMem ( PUCHAR out , PUCHAR in , SHORT len , SHORT prec);
 LONG packedMem2Int(PUCHAR buf, SHORT bytes);
 void fcloseAndSetNull  (FILE**  p);
 LGL isOn (int boolExpr);
