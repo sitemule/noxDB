@@ -36,10 +36,10 @@
           pJson1 = json_ParseString ('{a:[1,2]}');
           pJson2 = json_ParseString ('{b:[8,9]}');
 
-          json_WriteJsonStmf (pJson1:'/noxdb/json/json_out1.json':1208:*OFF);
-          json_WriteJsonStmf (pJson2:'/noxdb/json/json_out2.json':1208:*OFF);
+          json_WriteJsonStmf (pJson1:'/prj/noxdb/testdata/json_out1.json':1208:*OFF);
+          json_WriteJsonStmf (pJson2:'/prj/noxdb/testdata/json_out2.json':1208:*OFF);
 
           json_merge (pJson1 : pJson2 : json_DONTREPLACE);
-          json_WriteJsonStmf (pJson1:'/noxdb/json/json_merge.json':1208:*OFF);
+          json_WriteJsonStmf (pJson1:'/prj/noxdb/testdata/json_merge.json':1208:*OFF);
           json_delete(pJson1);
           json_delete(pJson2);

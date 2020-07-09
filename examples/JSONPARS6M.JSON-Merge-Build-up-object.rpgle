@@ -37,5 +37,5 @@
           json_delete(json_locate(pNode:'c'));
           json_setInt(pNode : 'd' : 4);
 
-          json_WriteJsonStmf (pNode :'/noxdb/json/simple6m.json':1208:*OFF);
+          json_WriteJsonStmf (pNode :'/prj/noxdb/testdata/simple6m.json':1208:*OFF);
           json_Delete(pNode);

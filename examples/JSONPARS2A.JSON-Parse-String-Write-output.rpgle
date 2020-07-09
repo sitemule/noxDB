@@ -42,7 +42,7 @@
           Return;
        EndIf;
 
-       json_WriteJsonStmf(pJson:'/noxdb/json/dump-payload.json':1208:*OFF);
+       json_WriteJsonStmf(pJson:'/prj/noxdb/testdata/dump-payload.json':1208:*OFF);
        pNode = json_locate(pJson: '/e');
        value = json_getStr  (pNode);
 

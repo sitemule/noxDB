@@ -24,7 +24,7 @@
        // ------------------------------------------------------------- *
 
           *inlr = *on;
-          pJson = json_ParseFile ('/noxdb/json/sample02.json');
+          pJson = json_ParseFile ('/prj/noxdb/testdata/sample02.json');
 
           If json_Error(pJson) ;
              msg = json_Message(pJson);
@@ -35,7 +35,7 @@
 
           // save as new file
           json_WriteJsonStmf(pJson :
-             '/noxdb/json/sample02out.json' : 1208 : *OFF
+             '/prj/noxdb/testdata/sample02out.json' : 1208 : *OFF
           );
 
           json_delete(pJson);

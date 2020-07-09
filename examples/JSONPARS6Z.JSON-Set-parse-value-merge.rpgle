@@ -47,7 +47,7 @@
 
           // Write it out:
           json_WriteJsonStmf (pJson  :
-             '/noxdb/json/json_out-set-By-Parse.json':1208:*OFF
+             '/prj/noxdb/testdata/json_out-set-By-Parse.json':1208:*OFF
           );
 
           // Always close

@@ -56,7 +56,7 @@
           :pRow
        );
        If err;
-          msg = json_Message(*NULL);
+          msg = json_message();
           json_delete(pRow);
           json_sqlDisconnect();
        EndIf;
@@ -77,7 +77,7 @@
           :'SDTTKN = ' + %char(id)
        );
        If err;
-          msg = json_Message(*NULL);
+          msg = json_message();
           json_delete(pRow);
           json_sqlDisconnect();
        EndIf;

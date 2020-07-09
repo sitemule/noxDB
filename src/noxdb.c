@@ -71,6 +71,8 @@ UCHAR Minus      =  '-' ;
 UCHAR Blank      =  ' ' ;
 UCHAR Amp        =  '&' ;
 UCHAR Hash       =  '#' ;
+UCHAR Dollar     =  '$' ;
+
 UCHAR CR         =  0x25;
 
 UCHAR jobSlash       ;
@@ -82,12 +84,13 @@ UCHAR jobCurBeg      ;
 UCHAR jobCurEnd      ;
 UCHAR jobQuot  ;
 UCHAR jobApos  ;
+UCHAR jobDollar  ;
 
 
 int   InputCcsid = 0, OutputCcsid = 0;
 //  BOOL  skipBlanks = TRUE;
 BOOL  doTrim;
-UCHAR delimiters [11] = {'/', '\\', '@', '[', ']', ' ', '.' , '{' , '}', '\'', '\"' };
+UCHAR delimiters [12] = {'/', '\\', '@', '[', ']', ' ', '.' , '{' , '}', '\'', '\"' , '$' };
 
 UCHAR  e2aTbl[256];
 UCHAR  a2eTbl[256];
@@ -1214,6 +1217,7 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
 
   for (i=0; ! done; i++, p++) {
     switch(*p) {
+      #pragma convert(277)
       case  '['  :
       case  '{'  :
       case  '\"' :
@@ -1225,12 +1229,13 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
         break;
 
       case  '<' :
+      #pragma convert(0)
         pJxCom->isJson = FALSE;
         isXml = TRUE;
         done = TRUE;
         break;
 
-   #pragma convert(1252)
+      #pragma convert(1252)
       case  '['  :
       case  '{'  :
       case  '\"' :
@@ -1247,12 +1252,29 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
         done = TRUE;
         break;
 
-   #pragma convert(0)
+      #pragma convert(0)
       case  '\0' :
         InputCcsid = 0; // Empty string; build from scratch XML
         return;
 
       default:
+        // Userdefined charset ( defined by setDelimiter() )
+        if (*p == BraBeg || *p == CurBeg || *p == Quot || *p == Apos
+        ||  isdigit(*p)
+        ||  BeginsWith(p , "true" )
+        ||  BeginsWith(p , "false")
+        ||  BeginsWith(p , "null" )) {
+           jobBraBeg = BraBeg;
+           jobCurBeg = CurBeg;
+           jobBraEnd = BraEnd;
+           jobCurEnd = CurEnd;
+           jobQuot = Quot;
+           jobApos =  Apos;
+           pJxCom->isJson = TRUE;
+           InputCcsid = 0; // Userdefined
+           pJxCom->UseIconv = FALSE;
+           return outbuf + (p - buf);
+        }
         // For other codepages than 277
         if (*p == jobBraBeg || *p == jobCurBeg || *p == jobQuot || *p == jobApos
         ||  isdigit(*p)
@@ -1839,6 +1861,7 @@ void jx_SetDelimiters2(PJXDELIM pDelim)
         case 8 : CurEnd      = c; break;
         case 9 : Apos        = c; break;
         case 10: Quot        = c; break;
+        case 11: Dollar      = c; break;
      }
   }
 }

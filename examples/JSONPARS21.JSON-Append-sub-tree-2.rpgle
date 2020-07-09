@@ -53,7 +53,7 @@
           pO = json_SetValue(pRcv : '/key' : pKey : json_OBJREPLACE);
 
           json_dump(pRcv );
-          json_WriteJsonStmf(pRcv:'/noxdb/json_out.json':1208:*OFF);
+          json_WriteJsonStmf(pRcv:'/prj/noxDB_out.json':1208:*OFF);
           json_delete(pJson);
           json_delete(pKey );
           json_delete(pRcv );

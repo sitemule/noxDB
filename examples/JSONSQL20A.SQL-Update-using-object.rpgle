@@ -107,7 +107,7 @@
              :row
           );
           json_delete(row);
-          msg = json_message(*NULL);
+          msg = json_message();
 
           // Advanced: - insert
           // nestedet objects is serialized CLOBS / BLOB

@@ -47,7 +47,7 @@
           ');
 
           json_mergeObjects (p1 : p2 : json_DONTREPLACE);
-          json_WriteJsonStmf(p1:'/noxdb/json/json-merge1.json':1208:*ON);
+          json_WriteJsonStmf(p1:'/prj/noxdb/testdata/json-merge1.json':1208:*ON);
           json_delete(p1   );
           json_delete(p2   );
 
@@ -95,6 +95,6 @@
           pR    = json_locate(pRcv : '/r');
           json_merge (pR : pO : json_DONTREPLACE);
           json_dump(pRcv );
-          json_WriteJsonStmf(pR:'/noxdb/json/json_out.json':1208:*OFF);
+          json_WriteJsonStmf(pR:'/prj/noxdb/testdata/json_out.json':1208:*OFF);
           json_delete(pJson);
           json_delete(pRcv );

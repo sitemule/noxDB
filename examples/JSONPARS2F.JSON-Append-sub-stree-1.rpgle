@@ -42,7 +42,7 @@
           json_setValue(pTplData :'this' : pData      : json_OBJCOPY);
           json_setValue(pTplData :'site' : pProp      : json_OBJCOPY);
           json_WriteJsonStmf(pTplData:
-              '/noxdb/json/props.json':1208:*OFF
+              '/prj/noxdb/testdata/props.json':1208:*OFF
           );
           json_delete(pProp    );
           json_delete(pData    );

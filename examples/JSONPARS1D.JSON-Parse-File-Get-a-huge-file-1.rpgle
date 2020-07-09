@@ -56,7 +56,7 @@
        // ------------------------------------------------------------- *
 
           *inlr = *on;
-          pJson = json_ParseFile ('/noxdb/json/simple.json');
+          pJson = json_ParseFile ('/prj/noxdb/testdata/simple.json');
 
           If json_Error(pJson) ;
              msg = json_Message(pJson);
@@ -67,7 +67,7 @@
 
           // save as new file
           json_WriteJsonStmf(pJson:
-             '/noxdb/json/simple-out.json':1208:*OFF
+             '/prj/noxdb/testdata/simple-out.json':1208:*OFF
           );
 
           json_delete(pJson);

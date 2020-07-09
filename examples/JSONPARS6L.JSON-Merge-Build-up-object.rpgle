@@ -48,6 +48,6 @@
              json_DONTREPLACE
           );
 
-          json_WriteJsonStmf(pTree :'/noxdb/json/json_merge-6L.json':1208:*OFF);
+          json_WriteJsonStmf(pTree :'/prj/noxdb/testdata/json_merge-6L.json':1208:*OFF);
           json_Delete(pTree);
           json_Delete(pCustomer);

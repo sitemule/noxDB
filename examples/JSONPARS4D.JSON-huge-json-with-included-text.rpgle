@@ -25,7 +25,7 @@
        Dcl-S p3                 Pointer;
 
        p1 = json_newObject();
-       p2 = json_ParseFile ('/noxdb/json/resultset1.json');
+       p2 = json_ParseFile ('/prj/noxdb/testdata/resultset1.json');
        p3 = %alloc(1000000);
        json_AsJsonTextMem(p2 : p3 : 1000000);
 
@@ -35,7 +35,7 @@
        // This is already a serialized JSON string, so we can print it as it is:
        json_setPtr(p1 : 'json_InJson' : p3 : *OFF);
 
-       json_WriteJsonStmf(p1 :'/noxdb/json/json_in_json_.json':1208:*OFF);
+       json_WriteJsonStmf(p1 :'/prj/noxdb/testdata/json_in_json_.json':1208:*OFF);
 
        json_delete(p1);
        json_delete(p2);

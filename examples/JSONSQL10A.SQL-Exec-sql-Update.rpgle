@@ -31,7 +31,7 @@
                'create schema qgpl'
             );
           If err;
-             m = json_Message(*NULL);
+             m = json_message();
              n = json_sqlCode();
           EndIf;
 

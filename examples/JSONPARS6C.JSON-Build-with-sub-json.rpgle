@@ -42,6 +42,6 @@
           json_SetValue ( pJson : '/o/arr':
             '[1,2,3,4,5,6]': json_EVAL );
 
-          json_WriteJsonStmf(pJson:'/noxdb/json_out.json' : 1208 : *OFF);
+          json_WriteJsonStmf(pJson:'/prj/noxDB_out.json' : 1208 : *OFF);
           json_delete(pJson);
           *inlr = *on;

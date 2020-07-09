@@ -36,7 +36,7 @@
 
           // Load an other json into a new memory segment
           pSegment2= json_SegmentSelectNo(2);
-          pJson2 = json_ParseFile ('/noxdb/json/demo.json');
+          pJson2 = json_ParseFile ('/prj/noxdb/testdata/demo.json');
           pNode = json_Locate(pJson2 : '/o/f');
           name =  json_GetStr(pNode);   // Show john
 

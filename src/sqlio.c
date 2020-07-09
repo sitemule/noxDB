@@ -38,6 +38,7 @@ extern UCHAR jxMessage[512];
 extern BOOL  jxError;
 extern UCHAR BraBeg;
 extern UCHAR CurBeg;
+extern UCHAR Dollar;
 
 extern UCHAR jobSlash       ;
 extern UCHAR jobBackSlash   ;
@@ -46,6 +47,7 @@ extern UCHAR jobBraBeg      ;
 extern UCHAR jobBraEnd      ;
 extern UCHAR jobCurBeg      ;
 extern UCHAR jobCurEnd      ;
+extern UCHAR jobDollar      ;
 
 
 // Unit Globals:
@@ -309,8 +311,6 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PJXNODE parms)
   PJXNODE pParms = parms;
   int markerLen ;
   UCHAR marker [64];
-  UCHAR dollar = 0x67;
-
 
   if (parms == NULL) {
      strcpy(out , in);
@@ -322,7 +322,7 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PJXNODE parms)
   }
 
   while (*in) {
-     if (*in == dollar) {
+     if (*in == Dollar) {
        pMarker = ++in;
        for (;isalnum(*in) || *in=='.' || *in=='/' || *in=='_' ; in++);
        markerLen = in - pMarker ;
@@ -1450,17 +1450,13 @@ SHORT  doInsertOrUpdate(
    LONG   i;
    SQLINTEGER sql_nts;
    SQLINTEGER bindColNo;
-
    PJXNODE pNode;
-   PUCHAR comma = "";
    PUCHAR name, value;
-
    SQLSMALLINT   length;
    SQLRETURN     rc;
    PUCHAR        sqlNullPtr = NULL;
    SQLINTEGER    data_at_exec = SQL_DATA_AT_EXEC;
    SQLSMALLINT   fCType;
-   SQLINTEGER    colLen; 
 
 
    if (pSQL == NULL || pSQL->pstmt == NULL) return -1;
@@ -1495,7 +1491,6 @@ SHORT  doInsertOrUpdate(
          UCHAR       colName [256];
          SQLSMALLINT colNameLen;
 
-
          bindColNo ++; // Only columns with data ( not null nor blank) need to be bound
          pColData->pNode = pNode;
 
@@ -1522,38 +1517,30 @@ SHORT  doInsertOrUpdate(
             case SQL_BLOB: 
                fCType = SQL_C_BINARY;
                break;
-            case SQL_INTEGER:
-            case SQL_SMALLINT:
-            case SQL_DECIMAL:
-            case SQL_NUMERIC:
-            case SQL_FLOAT:  
-            case SQL_REAL:   
-            case SQL_DOUBLE: 
-            case SQL_DECFLOAT:
-            case SQL_BIGINT:
-            case SQL_DATE:
-            case SQL_TIME:
-            case SQL_TIMESTAMP:
-               pColData->collen = strlen (jx_GetNodeValuePtr  (pNode , NULL));
-               fCType = SQL_C_CHAR;
-               break;
             default : 
                fCType = SQL_C_CHAR;
                break;
          }
-         
+
+         if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
+            // Keep the max len (from the column) for now.. 
+            // Data will be allocated and serilized in "NEED_DATA" section  
+         } else {
+            pColData->collen = strlen (jx_GetNodeValuePtr  (pNode , NULL));
+         }
+
          // Bind the parameter marker.
          rc  = SQLBindParameter (
             pSQL->pstmt->hstmt, // hstmt
             bindColNo,
-            SQL_PARAM_INPUT,  // fParamType
-            fCType ,       // fCType
-            pColData->coltype, // FSqlType
-            pColData->collen,
-            pColData->scale,   // presition /// 0,                // ibScale
-            pColData,         // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
-            0,                // cbValueMax
-            &data_at_exec     // pcbValue
+            SQL_PARAM_INPUT,    // fParamType
+            fCType ,            // data type here in C
+            pColData->coltype,  // dtatype in SQL
+            pColData->collen,   // Length of the C - string
+            pColData->scale,    // presition /// 0,                // ibScale
+            pColData,           // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
+            0,                  // cbValueMax
+            &data_at_exec       // pcbValue
          );
 
          if (rc != SQL_SUCCESS ) {
@@ -1591,20 +1578,7 @@ SHORT  doInsertOrUpdate(
          } else {
             freeme = false;
             value = jx_GetNodeValuePtr  (pNode , NULL);
-            lbytes  = value ? strlen(value):0;
-
-            /* 
-            switch (pColData->coltype) {
-               case SQL_INTEGER:
-                  intVal = atoi (value);
-                  value = (PUCHAR) &intVal;
-                  break;
-               case SQL_SMALLINT:
-                  SmallIntVal = atoi (value);
-                  value = (PUCHAR) &SmallIntVal;
-                  break;
-            }
-            */
+            lbytes = pColData->collen;
          }
 
          // Put each block in in buffer

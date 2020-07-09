@@ -63,7 +63,7 @@
           // You can copy / clone it into an other object:
           json_SetValue ( pJson : 'emptyObject': pTemp);
 
-          json_WriteJsonStmf  (pJson: '/noxdb/json/build-up-6e.json':1208:*OFF);
+          json_WriteJsonStmf  (pJson: '/prj/noxdb/testdata/build-up-6e.json':1208:*OFF);
           json_dump(pJson);
           json_delete(pJson);    // All objects created must be closed
           json_delete(pNewObj);  // All objects created must be closed

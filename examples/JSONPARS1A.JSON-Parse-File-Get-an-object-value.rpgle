@@ -70,7 +70,7 @@
         mem1 = json_memUse();
 
         // Parse the JSON file
-        pJson = json_ParseFile ('/noxdb/json/simple.json');
+        pJson = json_ParseFile ('/prj/noxdb/testdata/simple.json');
 
         If json_Error(pJson) ;
            msg = json_Message(pJson);

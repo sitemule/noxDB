@@ -36,7 +36,7 @@
 
           e = json_getStr (pJson : 'e');
           n = json_getStr (pJson : 'n' );
-          // json_WriteJsonStmf  (pJson   : '/noxdb/json_out.json' : 1208 : *OFF);
+          // json_WriteJsonStmf  (pJson   : '/prj/noxDB_out.json' : 1208 : *OFF);
           outstr = json_asJsonText(pJson);
           json_delete(pJson);
           *inlr = *on;

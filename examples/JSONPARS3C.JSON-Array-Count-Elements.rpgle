@@ -56,7 +56,7 @@
           bCount = json_getNum(pB : '[UBOUND]');
 
           json_WriteJsonStmf(
-             pJson: '/noxdb/json/buildup1.json': 1208 : *OFF
+             pJson: '/prj/noxdb/testdata/buildup1.json': 1208 : *OFF
           );
           json_delete(pJson);
           *inlr = *on;

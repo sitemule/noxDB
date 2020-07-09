@@ -49,7 +49,7 @@
           json_SetValue     ( pJson  : 'otherArray[].name': 'John');
           json_SetValue     ( pJson  : 'otherArray[].name': 'Albert');
 
-          json_WriteJsonStmf (pJson  : '/noxdb/json_out.json' : 1208 : *OFF);
+          json_WriteJsonStmf (pJson  : '/prj/noxDB_out.json' : 1208 : *OFF);
           json_dump(pJson);
           json_delete(pJson);    // All objects created must be closed
           json_delete(pNewObj);  // All objects created must be closed

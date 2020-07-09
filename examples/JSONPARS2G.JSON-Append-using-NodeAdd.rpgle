@@ -44,7 +44,7 @@
 
           // write a,b,c,d in this order:
           json_WriteJsonStmf(pData:
-            '/noxdb/json/nodeadd-1.json':1208:*OFF
+            '/prj/noxdb/testdata/nodeadd-1.json':1208:*OFF
           );
           json_delete (pData );
           *inlr = *on;

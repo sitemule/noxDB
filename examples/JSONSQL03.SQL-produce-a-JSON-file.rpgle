@@ -45,7 +45,7 @@
           EndDo;
 
           // Produce a JSON stream file in the root of the IFS
-          json_writeJsonStmf(rows : '/noxdb/json/demo.json' : 1208 :*OFF);
+          json_writeJsonStmf(rows : '/prj/noxdb/testdata/demo.json' : 1208 :*OFF);
 
           // Cleanup: Close the SQL cursor, dispose the row and the array
           json_delete(rows);

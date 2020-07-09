@@ -34,7 +34,7 @@
           delimiterStr   Pointer    value options(*string);
         End-PR;
 
-        Dcl-C JX_DELIMITERS const('/\@[] .{}''"');
+        Dcl-C JX_DELIMITERS const('/\@[] .{}''"$');
 
         //---------------------------------------------------------------------- *
         //Type of a node:
@@ -112,6 +112,14 @@
           decPoint       Pointer    value options(*string);
         End-PR;
 
+        // Set the delimiters for the selectors to the charset of the program source
+        Dcl-PR  jx_setDelimitersByCcsid   
+                extproc(*CWIDEN : 'jx_setDelimitersByCcsid');
+          // The ccsid of your program source
+          ccsid          int(10) value;
+        End-PR;
+               
+
         //Bool true if errors occures
         Dcl-PR jx_Error Ind extproc(*CWIDEN:'jx_Error');
           //jx_Object  node
@@ -120,8 +128,8 @@
 
         //Return error description
         Dcl-PR jx_Message Varchar(1024) extproc(*CWIDEN:'jx_Message');
-          //jx_Object
-          pNode          Pointer    value;
+          //jx_Object for a spcific object (*NULL or ommit if just last message)
+          pNode          Pointer    value options(*nopass);
         End-PR;
 
         // Without parameters you will get the last internal error

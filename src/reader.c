@@ -61,6 +61,7 @@ extern UCHAR Blank      ;
 extern UCHAR Amp        ;
 extern UCHAR Hash       ;
 extern UCHAR CR         ;
+extern UCHAR Dollar     ;
 
 
 extern UCHAR jobSlash       ;
@@ -72,12 +73,13 @@ extern UCHAR jobCurBeg      ;
 extern UCHAR jobCurEnd      ;
 extern UCHAR jobQuot  ;
 extern UCHAR jobApos  ;
+extern UCHAR jobDollar  ;
 
 
 
 extern UCHAR e2aTbl[256];
 extern UCHAR a2eTbl[256];
-extern UCHAR delimiters [11];
+extern UCHAR delimiters [12];
 extern int   InputCcsid , OutputCcsid;
 
 static LONG  dbgStep=0;
@@ -110,6 +112,7 @@ void jx_setDelimitersByCcsid (int ccsid)
    Blank      = a2eTbl[' ' ];
    Amp        = a2eTbl['&' ];
    Hash       = a2eTbl['#' ];
+   Dollar     = a2eTbl['$' ];
    #pragma convert(0)
 
    sprintf(Remark    , "%c%c%c", Exclmark , Minus , Minus);    // "!--"
@@ -119,15 +122,16 @@ void jx_setDelimitersByCcsid (int ccsid)
    sprintf(Cdata     , "%c%c%cCDATA%c", LT, Exclmark , BraBeg, BraBeg ) ; // "<![CDATA["
    sprintf(DocType   , "%cDOCTYPE", Exclmark  ) ; // "!DOCTYPE"
 
-   delimiters [0] = Slash;
-   delimiters [1] = BackSlash;
-   delimiters [2] = Masterspace;
-   delimiters [3] = BraBeg;
-   delimiters [4] = BraEnd;
-   delimiters [5] = Blank;
-   delimiters [6] = Dot;
-   delimiters [7] = CurBeg;
-   delimiters [8] = CurEnd;
+   delimiters [0]  = Slash;
+   delimiters [1]  = BackSlash;
+   delimiters [2]  = Masterspace;
+   delimiters [3]  = BraBeg;
+   delimiters [4]  = BraEnd;
+   delimiters [5]  = Blank;
+   delimiters [6]  = Dot;
+   delimiters [7]  = CurBeg;
+   delimiters [8]  = CurEnd;
+   delimiters [11] = Dollar;
 
    if (ccsid == 0) {
       jobSlash       = Slash ;
@@ -139,6 +143,7 @@ void jx_setDelimitersByCcsid (int ccsid)
       jobCurEnd      = CurEnd   ;
       jobQuot        = Quot ;
       jobApos        = Apos;
+      jobDollar      = Dollar;
    }
 
 }

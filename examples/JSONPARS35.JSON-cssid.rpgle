@@ -25,27 +25,27 @@
        Dcl-S value              VarChar(50);
        Dcl-S price               Packed(15:2);
           *inlr = *on;
-          pJson = json_ParseFile ('/noxdb/json   v/ccsid/win-1252.json');
+          pJson = json_ParseFile ('/prj/noxDB   v/ccsid/win-1252.json');
           If json_Error(pJson) ;
              msg = json_Message(pJson);
           EndIf;
           json_Dump(pJson);
           json_delete(pJson);
 
-          pJson = json_ParseFile ('/noxdb/json/doesnotexists.json');
+          pJson = json_ParseFile ('/prj/noxdb/testdata/doesnotexists.json');
           If json_Error(pJson) ;
              msg = json_Message(pJson);
           EndIf;
           json_delete(pJson);
 
 
-          pJson = json_ParseFile ('/noxdb/json/partsplexer.lib');
+          pJson = json_ParseFile ('/prj/noxdb/testdata/partsplexer.lib');
           If json_Error(pJson) ;
              msg = json_Message(pJson);
           EndIf;
           json_delete(pJson);
 
-          pJson = json_ParseFile ('/noxdb/json/webshop.lib');
+          pJson = json_ParseFile ('/prj/noxdb/testdata/webshop.lib');
           If json_Error(pJson) ;
              msg = json_Message(pJson);
           EndIf;

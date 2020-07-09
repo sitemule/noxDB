@@ -210,6 +210,7 @@ typedef _Packed struct  _JXDELIM     {
 	UCHAR     CurEnd      ;
 	UCHAR     Apos        ;
 	UCHAR     Quot        ;
+	UCHAR     Dollar      ;
 } JXDELIM , * PJXDELIM;
 
 #endif

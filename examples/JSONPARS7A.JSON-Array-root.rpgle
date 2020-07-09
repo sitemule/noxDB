@@ -32,7 +32,7 @@
           s     = json_getStr       (pJson : '/[0]'     : 'N/A' );
           s     = json_getStr       (pJson : '[1]'      : 'N/A' );
 
-          json_WriteJsonStmf  (pJson   : '/noxdb/json_out.json' : 1208 : *OFF);
+          json_WriteJsonStmf  (pJson   : '/prj/noxDB_out.json' : 1208 : *OFF);
           json_dump(pJson);
           json_delete(pJson);
           *inlr = *on;

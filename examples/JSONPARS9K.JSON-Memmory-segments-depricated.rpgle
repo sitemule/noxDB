@@ -28,11 +28,11 @@
        // ------------------------------------------------------------- *
           *inlr = *on;
           // Normal parse a file
-          pJson = json_ParseFile ('/noxdb/json/simple.json');
+          pJson = json_ParseFile ('/prj/noxdb/testdata/simple.json');
 
           // Now load an other json into a new memory segment
           pSegment = json_SegmentSelectNo(1);
-          pJson2 = json_ParseFile ('/noxdb/json/demo.json');
+          pJson2 = json_ParseFile ('/prj/noxdb/testdata/demo.json');
           pNode = json_Locate(pJson2 : '/o/f');
           name =  json_GetStr(pNode);   // Show john
           //json_NodeDelete(pNode);        // Delete john

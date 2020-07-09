@@ -66,7 +66,7 @@
 
           // Produce a JSON stream file in the root of the IFS
           json_writeJsonStmf(resultArray  :
-             '/noxdb/json/demo-nested.json' : 1208 : *ON
+             '/prj/noxdb/testdata/demo-nested.json' : 1208 : *ON
           );
           json_NodeRename( resultArray : 'ROWS');
           // Give the root a name for XML

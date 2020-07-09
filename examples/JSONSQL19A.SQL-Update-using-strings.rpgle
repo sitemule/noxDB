@@ -39,6 +39,9 @@
 
          *inlr = *on;
 
+         // Set the delimiters used to access the graph selector
+         json_setDelimiters ('/\@[] .{}''"$');
+
          // Run a "normal SQL " to create the test case 
          err = json_sqlExec('-
             create or replace table noxdb.example (      -         
@@ -60,7 +63,7 @@
 
          // Show the error in the joblog
          if err;
-            json_joblog(json_message(*NULL));
+            json_joblog(json_message());
             json_sqlDisconnect();
             return;
          endif;
@@ -89,7 +92,7 @@
 
          // Show the error in the joblog if anny
          if err;
-            json_joblog(json_message(*NULL));
+            json_joblog(json_message());
             json_sqlDisconnect();
             return;
          endif;
@@ -116,7 +119,7 @@
          // When you test for errors: 
          // You can now use either the 'err' indicator returned 
          if err;
-            json_joblog(json_message(*NULL));
+            json_joblog(json_message());
             json_sqlDisconnect();
             return;
          endif;
@@ -142,24 +145,39 @@
          err = json_sqlUpdate (
             'example'         // table name
             :row              // row in object form {a:1,b:2} etc..
-            :'id = 1'         // This is your where clause
+            :'id = 1'         // This is your "where" clause
          );
 
          rc= json_SqlCode();
 
-         // Note the where claus can be a SQL statement
+         // Note the where clause can be a SQL statement
          err = json_sqlUpdate (
             'example'         // table name
             :row              // row in object form {a:1,b:2} etc..
-            :'id = (select min(id) from example)' // This is your where clause
+            :'id = (select min(id) from example)' // This is your "where" clause
          );
 
-         // Test for errors
+         // Test for errors: This is the long version
          if err;
-            json_joblog(json_message(*NULL));
+            json_joblog(json_message());
             json_sqlDisconnect();
             return;
          endif;
+
+         // Only need to update required columns
+         // Note also here timestamp will be padded if only date a given  
+         row = '{-
+            "xDec": 5 , -
+            "xTimestamp": "2010-01-01" -
+         }';
+
+         err = json_sqlUpdate (
+            'example'         // table name
+            :row              // row in object form {a:1,b:2} etc..
+            :'id = (select min(id) from example)' // This is your "where" clause
+         );
+
+         rc= json_SqlCode();
 
          // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
          json_sqlDisconnect();

@@ -45,7 +45,7 @@
           json_copyValue ( pTo  : 'a[4]' : pTo   : 'o.x');
 
           // Note: *OFF prettify the JSON
-          json_WriteJsonStmf  (pTo: '/noxdb/json/copy1.json':1208:*OFF);
+          json_WriteJsonStmf  (pTo: '/prj/noxdb/testdata/copy1.json':1208:*OFF);
           json_delete(pTo);
           json_delete(pFrom);
           *inlr = *on;

@@ -28,7 +28,7 @@
        // return an simple array with all rows
        sql   = 'Select dec(0 , 9 , 2 ) as a from qsrc';
        pRows = json_sqlResultSet(sql);
-       json_WriteJsonStmf(pRows:'/noxdb/json/dump-payload.json':1208:*OFF);
+       json_WriteJsonStmf(pRows:'/prj/noxdb/testdata/dump-payload.json':1208:*OFF);
        json_delete(pRows);
 
 

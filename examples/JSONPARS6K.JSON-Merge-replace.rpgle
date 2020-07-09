@@ -49,6 +49,6 @@
 
           json_merge (pJson1 : pJson2  : MO_MERGE_MATCH);
 
-         json_WriteJsonStmf(pJson1:'/noxdb/json/json_merge-6i.json':1208:*OFF);
+         json_WriteJsonStmf(pJson1:'/prj/noxdb/testdata/json_merge-6i.json':1208:*OFF);
           json_delete(pJson1);
           json_delete(pJson2);

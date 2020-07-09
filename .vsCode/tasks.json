@@ -18,7 +18,7 @@
                     "${workspaceRoot}"
                 ],
                 "pattern": {
-                    "regexp": "^(.*),\\s+(\\d+).(\\d+):\\s+(.*)$",
+                    "regexp": "(.*),\\s+(\\d+).(\\d+):\\s+(.*)",
                     "file": 1,
                     "line": 2,
                     "column": 3,

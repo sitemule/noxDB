@@ -29,7 +29,7 @@
        Dcl-S s                  VarChar(50);
        Dcl-S n                   Packed(15:2);
        Dcl-S i                      Int(10:0);
-          pJson = json_ParseFile ('/noxdb/json/demo2.json':'');
+          pJson = json_ParseFile ('/prj/noxdb/testdata/demo2.json':'');
 
           If json_Error(pJson) ;
              msg = json_Message(pJson);

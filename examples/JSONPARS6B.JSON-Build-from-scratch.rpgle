@@ -41,7 +41,7 @@
           value = json_getStr ( po : '[UBOUND]');
           json_SetValue ( po    : '[UBOUND]': '40'); // This will not work !!!
           value = json_getStr ( po : '[UBOUND]'); // So UBOUND is still 3
-          json_WriteJsonStmf (pJson: '/noxdb/json_out.json' : 1208 : *OFF);
+          json_WriteJsonStmf (pJson: '/prj/noxDB_out.json' : 1208 : *OFF);
           json_dump(pJson);
           json_delete(pJson);
           *inlr = *on;

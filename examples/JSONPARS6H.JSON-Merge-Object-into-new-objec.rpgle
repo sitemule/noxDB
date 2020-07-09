@@ -38,5 +38,5 @@
           json_delete(pJsonTemp);
 
 
-          json_WriteJsonStmf (pJson:'/noxdb/json/json_merge2.json':1208:*OFF);
+          json_WriteJsonStmf (pJson:'/prj/noxdb/testdata/json_merge2.json':1208:*OFF);
           json_delete(pJson);
