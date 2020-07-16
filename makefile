@@ -11,11 +11,12 @@
 BIN_LIB=NOXDB
 DBGVIEW=*ALL
 TARGET_CCSID=*JOB
+TGTRLS=*CURRENT
 
 # Do not touch below
 INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'
 
-CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) INCDIR($(INCLUDE)) DBGVIEW($(DBGVIEW)) TGTCCSID($(TARGET_CCSID))
+CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) INCDIR($(INCLUDE)) DBGVIEW($(DBGVIEW)) TGTCCSID($(TARGET_CCSID)) TGTRLS($(TGTRLS))
 
 # For current compile:
 CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*NONE) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) DBGVIEW(*ALL) INCDIR($(INCLUDE)) 
@@ -56,21 +57,21 @@ tests: json1.test json2.test
 %.clle:
 	system -i "CHGATR OBJ('src/$*.clle') ATR(*CCSID) VALUE(1252)"
 	-system -qi "CRTSRCPF FILE($(BIN_LIB)/QCLLESRC) RCDLEN(112)"
-	system "CPYFRMSTMF FROMSTMF('src/$*.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/$(notdir $*).mbr') MBROPT(*ADD)"
-	system "CRTCLMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW))"
+	system -s "CPYFRMSTMF FROMSTMF('src/$*.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/$(notdir $*).mbr') MBROPT(*ADD)"
+	system -s "CRTCLMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW)) TGTRLS($(TGTRLS))"
 
 %.srvpgm:
-	-system -qi "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
+	-system -q "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(112)"
 	system "CPYFRMSTMF FROMSTMF('headers/$*.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/$*.mbr') MBROPT(*replace)"
 	
 	# You may be wondering what this ugly string is. It's a list of objects created from the dep list that end with .c or .clle.
 	$(eval modules := $(patsubst %,$(BIN_LIB)/%,$(basename $(filter %.c %.clle,$(notdir $^)))))
 	
-	system -i -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS(*current)"
+	system -i -s "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS($(TGTRLS))"
 	
 %.test:
-	system "CRTRPGMOD MODULE($(BIN_LIB)/$*) SRCSTMF('test/$*.rpgle') DBGVIEW(*SOURCE)"
-	system "CRTPGM PGM($(BIN_LIB)/$*) BNDDIR($(BIN_LIB)/NOXDB)"
+	system -s "CRTRPGMOD MODULE($(BIN_LIB)/$*) SRCSTMF('test/$*.rpgle') DBGVIEW(*SOURCE) TGTRLS($(TGTRLS))"
+	system -s "CRTPGM PGM($(BIN_LIB)/$*) BNDDIR($(BIN_LIB)/NOXDB) TGTRLS($(TGTRLS))"
 
 hdr:
 	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
