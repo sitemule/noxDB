@@ -88,10 +88,10 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PLVARCHAR optionsP)
 	if (pNode) {
 		// The positive value causes it to not produce BOM code
 		nox_WriteJsonStmf (pNode , temp1 , 1208, ON ,NULL);
-		p += sprintf( p , " -X POST --data %s%s " , at, temp1);
+		p += sprintf( p , " -X POST --data-binary %s%s " , at, temp1);
 	}
 	p += sprintf( p ,  " %s ",
-		"-H 'Content-Type: application/json;charset=utf-8' "
+		"-H 'Content-Type: application/json; charset=utf-8' "
 		"-H 'Accept: application/json' "
 	);
 	if (options) {
