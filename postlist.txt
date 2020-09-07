@@ -1,272 +1,271 @@
-Command is > CRTCMOD SRCSTMF('src/csv.c') MODULE(NOXDB2/csv) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) DBGVIEW(*ALL) OPTION(*EVENTF) OUTPUT(*PRINT) INCDIR('/QIBM/include' 'include' 'ext/include')  <
-CZS0607: Module CSV was created in library NOXDB2 on 23-04-20 at 20:07:36.
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    23-04-20 20:07:36 Page           1
-                                                * * * * *   P R O L O G   * * * * *
- Module  . . . . . . . . . . . . :   CSV
-   Library . . . . . . . . . . . :      NOXDB2
- Source stream file  . . . . . . :   src/csv.c
- Text description  . . . . . . . :
- Output options:
-   Output file . . . . . . . . . :   *PRINT
-   Title . . . . . . . . . . . . :   *BLANK
-   Subtitle  . . . . . . . . . . :   *BLANK
- Compiler options  . . . . . . . :   *NOFULL  *SHOWSRC  *NOSHOWSYS  *NOSHOWUSR  *NOSHOWINC  *NOEXPMAC
-                                     *NOSECLVL  *SHOWSKP  *DIGRAPH  *NOAGR  *NOSTRUCREF  *NOXREF  *NOXREFREF
-                                     *EVENTF  *LOGMSG  *NOSTDLOGMSG  *NOSYSINCPATH  *STDINC  *NOINCDIRFIRST  *GEN  *NOPPONLY
- Checkout options  . . . . . . . :   *NOCOND  *NOEFFECT  *NOGENERAL  *NOPARM  *NOPORT  *NOREACH  *NOTRUNC  *NOUNUSED
-                                     *NOGOTO  *NOINIT  *NOCONST  *NOENUM  *NOPPCHECK  *NOPPTRACE  *NOEXTERN
- Optimization  . . . . . . . . . :   10
- Inline options:
-   Inliner . . . . . . . . . . . :   *OFF
-   Mode  . . . . . . . . . . . . :   *AUTO
-   Threshold . . . . . . . . . . :   250
-   Limit . . . . . . . . . . . . :   2000
-   Report  . . . . . . . . . . . :   *NO
- Module creation options . . . . :   *NOKEEPILDTA
- Debugging view  . . . . . . . . :   *ALL
- Debug encryption key  . . . . . :   *NONE
- Define names  . . . . . . . . . :   *NONE
- Language level  . . . . . . . . :   *EXTENDED
- Alias . . . . . . . . . . . . . :   *ANSI
- System interface options  . . . :   *IFSIO  *NOASYNCSIGNAL
- Locale object type  . . . . . . :   *LOCALE
- Message flagging level  . . . . :   0
- Compiler messages:
-   Message limit . . . . . . . . :   *NOMAX
-   Message limit severity  . . . :   30
- Replace module object . . . . . :   *YES
- Authority . . . . . . . . . . . :   *LIBCRTAUT
- Target release  . . . . . . . . :   *CURRENT
- Performance collection  . . . . :   *PEP
- Performance options . . . . . . :   *SETFPCA  *NOSTRDONLY
- Profiling data  . . . . . . . . :   *NOCOL
- Teraspace options . . . . . . . :   *YES  *NOTSIFC
- Storage model . . . . . . . . . :   *INHERIT
- Data model  . . . . . . . . . . :   *P128
- Preprocessor generation options :   *NONE
- Include directory . . . . . . . :   /QIBM/include
-                                     include
-                                     ext/include
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    23-04-20 20:07:36 Page           2
- Pack structure  . . . . . . . . :   *NATURAL
- Enum size . . . . . . . . . . . :   *INT
- Dependency information  . . . . :   *NONE
- Default char type . . . . . . . :   *UNSIGNED
- Compiler services option  . . . :   *BLANK
- Licensed internal code options  :   *BLANK
- Target CCSID  . . . . . . . . . :   *SOURCE
- Decimal float round mode  . . . :   *HALFEVEN
- Last change . . . . . . . . . . :   09-04-20 03:14:45
- Source description  . . . . . . :
- Compiler  . . . . . . . . . . . :   IBM ILE C compiler
-                                         * * * * *   E N D   O F   P R O L O G   * * * * *
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    23-04-20 20:07:36 Page           3
-                                                * * * * *   S O U R C E   * * * * *
- LINE  STMT                                                                                                       SEQNBR INCNO
-             *...+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9........
-    1       |// CMD:CRTCMOD                                                                                    |      1
-    2       |/* ------------------------------------------------------------- *                                |      2
-    3       | * Company . . . : System & Method A/S                           *                                |      3
-    4       | * Design  . . . : Niels Liisberg                                *                                |      4
-    5       | * Function  . . : NOX - main service program API exports        *                                |      5
-    6       | *                                                               *                                |      6
-    7       | * By     Date     Task    Description                           *                                |      7
-    8       | * NL     02.06.03 0000000 New program                           *                                |      8
-    9       | * NL     27.02.08 0000510 Allow also no namespace for *:tag     *                                |      9
-   10       | * NL     27.02.08 0000510 nox_NodeCopy                           *                               |     10
-   11       | * NL     13.05.08 0000577 nox_NodeAdd / WriteNote                *                               |     11
-   12       | * NL     13.05.08 0000577 Support for refference location       *                                |     12
-   13       | * ------------------------------------------------------------- */                               |     13
-   14       |#include <stdio.h>                                                                                |     14
-   15       |#include <string.h>                                                                               |     15
-   16       |#include <stdlib.h>                                                                               |     16
-   17       |#include <stdarg.h>                                                                               |     17
-   18       |#include <ctype.h>                                                                                |     18
-   19       |#include <leod.h>                                                                                 |     19
-   20       |#include <decimal.h>                                                                              |     20
-   21       |#include <wchar.h>                                                                                |     21
-   22       |// #include <errno.h>                                                                             |     22
-   23       |                                                                                                  |     23
-   24       |#include <sys/stat.h>                                                                             |     24
-   25       |#include "ostypes.h"                                                                              |     25
-   26       |#include "varchar.h"                                                                              |     26
-   27       |#include "xlate.h"                                                                                |     27
-   28       |#include "parms.h"                                                                                |     28
-   29       |// #include "rtvsysval.h"                                                                         |     29
-   30       |#include "strUtil.h"                                                                              |     30
-   31       |#include "memUtil.h"                                                                              |     31
-   32       |#include "streamer.h"                                                                             |     32
-   33       |#include "noxdb2.h"                                                                               |     33
-   34       |                                                                                                  |     34
-   35       |                                                                                                  |     35
-   36       |// ---------------------------------------------------------------------------                    |     36
-   37       |// CSV Helpers                                                                                    |     37
-   38       |// ---------------------------------------------------------------------------                    |     38
-   39       |void csvReplaceDecpoint ( PUCHAR out , PUCHAR in , UCHAR decpoint)                                |     39
-   40       |{                                                                                                 |     40
-   41     1 | for(;*in; in++) {                                                                                |     41
-   42     2 |  *out++ = (*in == '.') ? decpoint: *in;                                                          |     42
-   43       | }                                                                                                |     43
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    23-04-20 20:07:36 Page           4
-   44     5 | *out = '\0';                                                                                     |     44
-   45       |}                                                                                                 |     45
-   46       |// ---------------------------------------------------------------------------                    |     46
-   47       |void csvStringEscape (PUCHAR out, PUCHAR in)                                                      |     47
-   48       |{                                                                                                 |     48
-   49       |                                                                                                  |     49
-   50     1 | *out++ = '"';                                                                                    |     50
-   51     2 | while(*in) {                                                                                     |     51
-   52     3 |  if (*in == '"') *out++ = '"';                                                                   |     52
-   53     5 |  *out++ = *in++;                                                                                 |     53
-   54       | }                                                                                                |     54
-   55     6 | *out++ = '"';                                                                                    |     55
-   56     7 | *out = '\0';                                                                                     |     56
-   57       |}                                                                                                 |     57
-   58       |// ---------------------------------------------------------------------------                    |     58
-   59       |void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options) |     59
-   60       |{                                                                                                 |     60
-   61     1 | PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();                                                   |     61
-   62       | JWRITE jWrite;                                                                                   |     62
-   63     2 | PJWRITE pjWrite = &jWrite;                                                                       |     63
-   64       | UCHAR  mode[32];                                                                                 |     64
-   65     3 | UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};                                                |     65
-   66     7 | UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};                                                       |     66
-   67    10 | UCHAR  CrLf []= {0x0d, 0x0a , 0x00};                                                             |     67
-   68       | UCHAR  wTemp[100000];                                                                            |     68
-   69       | UCHAR  temp [32766];                                                                             |     69
-   70    13 | UCHAR  comma    = ';';                                                                           |     70
-   71    14 | UCHAR  decpoint = '.';                                                                           |     71
-   72    15 | BOOL   headers  = false;                                                                         |     72
-   73       |                                                                                                  |     73
-   74    16 | if (pNode == NULL) return;                                                                       |     74
-   75    18 | memset(pjWrite , 0 , sizeof(jWrite));                                                            |     75
-   76       |                                                                                                  |     76
-   77    19 | sprintf(mode , "wb,codepage=%d", Ccsid);                                                         |     77
-   78    20 | pjWrite->outFile  = fopen ( strTrim(FileName) , mode );                                          |     78
-   79    21 | if (pjWrite->outFile == NULL) return;                                                            |     79
-   80       |                                                                                                  |     80
-   81    23 | if (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 5) {                         |     81
-   82    24 |  PNOXNODE  pOptions  = nox_ParseString((PUCHAR) options ); // When already a object: simply retu\|     82
-   82       |rns that                                                                                          |     82
-   83    25 |  comma    = *nox_GetValuePtr    (pOptions , "delimiter" , &comma );                              |     83
-   84    26 |  decpoint = *nox_GetValuePtr    (pOptions , "decPoint"  , &decpoint );                           |     84
-   85    27 |  headers  = (ON == nox_IsTrue   (pOptions , "headers"));                                         |     85
-   86    28 |  if (pOptions != options) nox_Close(&pOptions); // It was already a josn object , then don't clo\|     86
-   86       |se                                                                                                |     86
-   87       | }                                                                                                |     87
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    23-04-20 20:07:36 Page           5
-   88       |                                                                                                  |     88
-   89    30 | pjWrite->buf    = wTemp;                                                                         |     89
-   90    31 | pjWrite->iconv  = XlateOpen(1208 , Ccsid );                                                      |     90
-   91       |                                                                                                  |     91
-   92    32 | switch(Ccsid) {                                                                                  |     92
-   93       |  case 1208 :                                                                                     |     93
-   94    33 |   fputs (sigUtf8 , pjWrite->outFile);                                                            |     94
-   95    34 |   break;                                                                                         |     95
-   96       |  case 1200 :                                                                                     |     96
-   97    35 |   fputs (sigUtf16 , pjWrite->outFile);                                                           |     97
-   98    36 |   break;                                                                                         |     98
-   99       | }                                                                                                |     99
-  100       |                                                                                                  |    100
-  101    37 | if ( pNode == NULL || pNode->pNodeChildHead  == NULL) return;                                    |    101
-  102       |                                                                                                  |    102
-  103       | // Arrays - need first child;                                                                    |    103
-  104    39 | pNode = pNode->pNodeChildHead;                                                                   |    104
-  105       |                                                                                                  |    105
-  106       | // Need the headers as first row;                                                                |    106
-  107    40 | if (headers) {                                                                                   |    107
-  108    41 |  PNOXNODE pHead  = pNode->pNodeChildHead;                                                        |    108
-  109    42 |  while (pHead) {                                                                                 |    109
-  110    43 |   csvStringEscape (temp , pHead->Name);                                                          |    110
-  111    44 |   iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);                                    |    111
-  112    45 |   pHead  = pHead->pNodeSibling;                                                                  |    112
-  113    46 |   if (pHead) iconvPutc(pjWrite->outFile , &pjWrite->iconv, comma);                               |    113
-  114       |  }                                                                                               |    114
-  115       |  // newline                                                                                      |    115
-  116    48 |  fwrite (CrLf , 1 , 2 , pjWrite->outFile);                                                       |    116
-  117       | }                                                                                                |    117
-  118       |                                                                                                  |    118
-  119    49 | while (pNode) {                                                                                  |    119
-  120       |                                                                                                  |    120
-  121    50 |  PNOXNODE pCol  = pNode->pNodeChildHead;                                                         |    121
-  122       |                                                                                                  |    122
-  123    51 |  while (pCol) {                                                                                  |    123
-  124       |                                                                                                  |    124
-  125    52 |   if (pCol->Value) {                                                                             |    125
-  126       |                                                                                                  |    126
-  127    53 |    if (pCol->isLiteral) {                                                                        |    127
-  128    54 |     if (decpoint == '.') {                                                                       |    128
-  129    55 |      iconvWrite(pjWrite->outFile ,&pjWrite->iconv, pCol->Value, FALSE);                          |    129
-  130       |     } else {                                                                                     |    130
-  131    56 |      csvReplaceDecpoint (temp , pCol->Value , decpoint);                                         |    131
-  132    57 |      iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);                                 |    132
-  133       |     }                                                                                            |    133
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    23-04-20 20:07:36 Page           6
-  134       |    } else {                                                                                      |    134
-  135    58 |     csvStringEscape (temp , pCol->Value);                                                        |    135
-  136    59 |     iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);                                  |    136
-  137       |    }                                                                                             |    137
-  138       |   }                                                                                              |    138
-  139    60 |   pCol  = pCol->pNodeSibling;                                                                    |    139
-  140    61 |   if ( pCol) iconvPutc(pjWrite->outFile , &pjWrite->iconv, comma);                               |    140
-  141       |  }                                                                                               |    141
-  142       |  // newline                                                                                      |    142
-  143    63 |  fwrite (CrLf , 1 , 2 , pjWrite->outFile);                                                       |    143
-  144    64 |  pNode = pNode->pNodeSibling;                                                                    |    144
-  145       |                                                                                                  |    145
-  146       | }                                                                                                |    146
-  147       |                                                                                                  |    147
-  148    65 | fclose(pjWrite->outFile);                                                                        |    148
-  149    66 | iconv_close(pjWrite->iconv);                                                                     |    149
-  150       |}                                                                                                 |    150
-                                         * * * * *   E N D   O F   S O U R C E   * * * * *
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    23-04-20 20:07:36 Page           7
-                                              * * * * *   I N C L U D E S   * * * * *
-INCNBR  Include Name                     Last change        Actual Include Name
-    1   stdio.h                          04-10-15 09:42:48  /QIBM/include/stdio.h
-    2   ifs.h                            04-10-15 09:42:13  /QIBM/include/ifs.h
-    3   wctype.h                         04-10-15 09:41:55  /QIBM/include/wctype.h
-    4   qp0lstdi.h                       04-10-15 09:52:19  /QIBM/include/qp0lstdi.h
-    5   sys/types.h                      04-10-15 10:01:46  /QIBM/include/sys/types.h
-    6   string.h                         04-10-15 09:42:06  /QIBM/include/string.h
-    7   qlg.h                            04-10-15 09:51:29  /QIBM/include/qlg.h
-    8   qp0lscan.h                       04-10-15 10:00:32  /QIBM/include/qp0lscan.h
-    9   stdlib.h                         04-10-15 09:42:27  /QIBM/include/stdlib.h
-   10   mallocinfo.h                     04-10-15 09:42:01  /QIBM/include/mallocinfo.h
-   11   p_stdlib.h                       04-10-15 09:41:58  /QIBM/include/p_stdlib.h
-   12   stdarg.h                         04-10-15 09:42:28  /QIBM/include/stdarg.h
-   13   ctype.h                          04-10-15 09:42:06  /QIBM/include/ctype.h
-   14   p_ctype.h                        04-10-15 09:42:00  /QIBM/include/p_ctype.h
-   15   leod.h                           04-10-15 09:42:15  /QIBM/include/leod.h
-   16   letype.h                         04-10-15 09:41:55  /QIBM/include/letype.h
-   17   pointer.h                        04-10-15 09:42:02  /QIBM/include/pointer.h
-   18   decimal.h                        04-10-15 09:42:11  /QIBM/include/decimal.h
-   19   wchar.h                          04-10-15 09:42:24  /QIBM/include/wchar.h
-   20   wcstr.h                          04-10-15 09:42:19  /QIBM/include/wcstr.h
-   21   sys/stat.h                       04-10-15 10:00:13  /QIBM/include/sys/stat.h
-   22   sys/types.h                      04-10-15 10:01:46  /QIBM/include/sys/types.h
-   23   ostypes.h                        06-12-18 23:20:34  /prj/noxDB2/ext/include/ostypes.h
-   24   varchar.h                        21-11-18 23:22:55  /prj/noxDB2/ext/include/varchar.h
-   25   xlate.h                          22-11-18 00:12:01  /prj/noxDB2/ext/include/xlate.h
-   26   iconv.h                          04-10-15 09:42:48  /QIBM/include/iconv.h
-   27   stddef.h                         04-10-15 09:42:28  /QIBM/include/stddef.h
-   28   QTQICONV.h                       04-10-15 09:53:11  /QIBM/include/QTQICONV.h
-   29   parms.h                          12-11-18 18:09:21  /prj/noxDB2/ext/include/parms.h
-   30   strUtil.h                        22-01-19 13:07:41  /prj/noxDB2/ext/include/strUtil.h
-   31   memUtil.h                        21-11-18 22:42:38  /prj/noxDB2/ext/include/memUtil.h
-   32   streamer.h                       12-11-18 18:09:21  /prj/noxDB2/ext/include/streamer.h
-   33   noxdb2.h                         08-04-20 23:25:13  /prj/noxDB2/include/noxdb2.h
-   34   sqlcli.h                         04-10-15 09:42:26  /QIBM/include/sqlcli.h
-   35   sql.h                            20-11-15 13:00:45  /QIBM/include/sql.h
-   36   sqlsystm.h                       04-10-15 09:42:08  /QIBM/include/sqlsystm.h
-   37   sqludf.h                         04-10-15 09:42:19  /QIBM/include/sqludf.h
-   38   math.h                           04-10-15 09:42:22  /QIBM/include/math.h
-   39   apierr.h                         12-11-18 18:09:21  /prj/noxDB2/ext/include/apierr.h
-                                      * * * * *   E N D   O F   I N C L U D E S   * * * * *
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    23-04-20 20:07:36 Page           8
-                                       * * * * *   M E S S A G E   S U M M A R Y   * * * * *
-      Total      Informational(00)      Warning(10)      Error(20)      Severe Error(30)      Unrecoverable Error(40)
-        0              0                    0               0                  0                        0
-                               * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
-Module CSV was created in library NOXDB2 on 23-04-20 at 20:07:36.
-                                   * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *
+Command > CRTCMOD SRCSTMF('src/csv.c') MODULE(NOXDB2/csv) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) DBGVIEW(*ALL) TGTRLS(V7R1M0) OPTION(*EVENTF) OUTPUT(*PRINT) INCDIR('/QIBM/include' 'include' 'ext/include') <
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    07-09-20 13:26:07 Page           1
+                                                 * * * * *   P R O L O G   * * * * *
+  Module  . . . . . . . . . . . . :   CSV
+    Library . . . . . . . . . . . :      NOXDB2
+  Source stream file  . . . . . . :   src/csv.c
+  Text description  . . . . . . . :
+  Output options:
+    Output file . . . . . . . . . :   *PRINT
+    Title . . . . . . . . . . . . :   *BLANK
+    Subtitle  . . . . . . . . . . :   *BLANK
+  Compiler options  . . . . . . . :   *NOFULL  *SHOWSRC  *NOSHOWSYS  *NOSHOWUSR  *NOSHOWINC  *NOEXPMAC
+                                      *NOSECLVL  *SHOWSKP  *DIGRAPH  *NOAGR  *NOSTRUCREF  *NOXREF  *NOXREFREF
+                                      *EVENTF  *LOGMSG  *NOSTDLOGMSG  *NOSYSINCPATH  *STDINC  *NOINCDIRFIRST  *GEN  *NOPPONLY
+  Checkout options  . . . . . . . :   *NOCOND  *NOEFFECT  *NOGENERAL  *NOPARM  *NOPORT  *NOREACH  *NOTRUNC  *NOUNUSED
+                                      *NOGOTO  *NOINIT  *NOCONST  *NOENUM  *NOPPCHECK  *NOPPTRACE  *NOEXTERN
+  Optimization  . . . . . . . . . :   10
+  Inline options:
+    Inliner . . . . . . . . . . . :   *OFF
+    Mode  . . . . . . . . . . . . :   *AUTO
+    Threshold . . . . . . . . . . :   250
+    Limit . . . . . . . . . . . . :   2000
+    Report  . . . . . . . . . . . :   *NO
+  Module creation options . . . . :   *NOKEEPILDTA
+  Debugging view  . . . . . . . . :   *ALL
+  Debug encryption key  . . . . . :   *NONE
+  Define names  . . . . . . . . . :   *NONE
+  Language level  . . . . . . . . :   *EXTENDED
+  Alias . . . . . . . . . . . . . :   *ANSI
+  System interface options  . . . :   *IFSIO  *NOASYNCSIGNAL
+  Locale object type  . . . . . . :   *LOCALE
+  Message flagging level  . . . . :   0
+  Compiler messages:
+    Message limit . . . . . . . . :   *NOMAX
+    Message limit severity  . . . :   30
+  Replace module object . . . . . :   *YES
+  Authority . . . . . . . . . . . :   *LIBCRTAUT
+  Target release  . . . . . . . . :   V7R1M0
+  Performance collection  . . . . :   *PEP
+  Performance options . . . . . . :   *SETFPCA  *NOSTRDONLY
+  Profiling data  . . . . . . . . :   *NOCOL
+  Teraspace options . . . . . . . :   *YES  *NOTSIFC
+  Storage model . . . . . . . . . :   *INHERIT
+  Data model  . . . . . . . . . . :   *P128
+  Preprocessor generation options :   *NONE
+  Include directory . . . . . . . :   /QIBM/include
+                                      include
+                                      ext/include
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    07-09-20 13:26:07 Page           2
+  Pack structure  . . . . . . . . :   *NATURAL
+  Enum size . . . . . . . . . . . :   *INT
+  Dependency information  . . . . :   *NONE
+  Default char type . . . . . . . :   *UNSIGNED
+  Compiler services option  . . . :   *BLANK
+  Licensed internal code options  :   *BLANK
+  Target CCSID  . . . . . . . . . :   *SOURCE
+  Decimal float round mode  . . . :   *HALFEVEN
+  Last change . . . . . . . . . . :   09-04-20 03:14:45
+  Source description  . . . . . . :
+  Compiler  . . . . . . . . . . . :   IBM ILE C compiler
+                                          * * * * *   E N D   O F   P R O L O G   * * * * *
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    07-09-20 13:26:07 Page           3
+                                                 * * * * *   S O U R C E   * * * * *
+  LINE  STMT                                                                                                       SEQNBR INCNO
+              *...+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9........
+     1       |// CMD:CRTCMOD                                                                                    |      1
+     2       |/* ------------------------------------------------------------- *                                |      2
+     3       | * Company . . . : System & Method A/S                           *                                |      3
+     4       | * Design  . . . : Niels Liisberg                                *                                |      4
+     5       | * Function  . . : NOX - main service program API exports        *                                |      5
+     6       | *                                                               *                                |      6
+     7       | * By     Date     Task    Description                           *                                |      7
+     8       | * NL     02.06.03 0000000 New program                           *                                |      8
+     9       | * NL     27.02.08 0000510 Allow also no namespace for *:tag     *                                |      9
+    10       | * NL     27.02.08 0000510 nox_NodeCopy                           *                               |     10
+    11       | * NL     13.05.08 0000577 nox_NodeAdd / WriteNote                *                               |     11
+    12       | * NL     13.05.08 0000577 Support for refference location       *                                |     12
+    13       | * ------------------------------------------------------------- */                               |     13
+    14       |#include <stdio.h>                                                                                |     14
+    15       |#include <string.h>                                                                               |     15
+    16       |#include <stdlib.h>                                                                               |     16
+    17       |#include <stdarg.h>                                                                               |     17
+    18       |#include <ctype.h>                                                                                |     18
+    19       |#include <leod.h>                                                                                 |     19
+    20       |#include <decimal.h>                                                                              |     20
+    21       |#include <wchar.h>                                                                                |     21
+    22       |// #include <errno.h>                                                                             |     22
+    23       |                                                                                                  |     23
+    24       |#include <sys/stat.h>                                                                             |     24
+    25       |#include "ostypes.h"                                                                              |     25
+    26       |#include "varchar.h"                                                                              |     26
+    27       |#include "xlate.h"                                                                                |     27
+    28       |#include "parms.h"                                                                                |     28
+    29       |// #include "rtvsysval.h"                                                                         |     29
+    30       |#include "strUtil.h"                                                                              |     30
+    31       |#include "memUtil.h"                                                                              |     31
+    32       |#include "streamer.h"                                                                             |     32
+    33       |#include "noxdb2.h"                                                                               |     33
+    34       |                                                                                                  |     34
+    35       |                                                                                                  |     35
+    36       |// ---------------------------------------------------------------------------                    |     36
+    37       |// CSV Helpers                                                                                    |     37
+    38       |// ---------------------------------------------------------------------------                    |     38
+    39       |void csvReplaceDecpoint ( PUCHAR out , PUCHAR in , UCHAR decpoint)                                |     39
+    40       |{                                                                                                 |     40
+    41     1 | for(;*in; in++) {                                                                                |     41
+    42     2 |  *out++ = (*in == '.') ? decpoint: *in;                                                          |     42
+    43       | }                                                                                                |     43
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    07-09-20 13:26:07 Page           4
+    44     3 | *out = '\0';                                                                                     |     44
+    45       |}                                                                                                 |     45
+    46       |// ---------------------------------------------------------------------------                    |     46
+    47       |void csvStringEscape (PUCHAR out, PUCHAR in)                                                      |     47
+    48       |{                                                                                                 |     48
+    49       |                                                                                                  |     49
+    50     1 | *out++ = '"';                                                                                    |     50
+    51     2 | while(*in) {                                                                                     |     51
+    52     3 |  if (*in == '"') *out++ = '"';                                                                   |     52
+    53     5 |  *out++ = *in++;                                                                                 |     53
+    54       | }                                                                                                |     54
+    55     6 | *out++ = '"';                                                                                    |     55
+    56     7 | *out = '\0';                                                                                     |     56
+    57       |}                                                                                                 |     57
+    58       |// ---------------------------------------------------------------------------                    |     58
+    59       |void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options) |     59
+    60       |{                                                                                                 |     60
+    61     1 | PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();                                                   |     61
+    62       | JWRITE jWrite;                                                                                   |     62
+    63     2 | PJWRITE pjWrite = &jWrite;                                                                       |     63
+    64       | UCHAR  mode[32];                                                                                 |     64
+    65     3 | UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};                                                |     65
+    66     7 | UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};                                                       |     66
+    67    10 | UCHAR  CrLf []= {0x0d, 0x0a , 0x00};                                                             |     67
+    68       | UCHAR  wTemp[100000];                                                                            |     68
+    69       | UCHAR  temp [32766];                                                                             |     69
+    70    13 | UCHAR  comma    = ';';                                                                           |     70
+    71    14 | UCHAR  decpoint = '.';                                                                           |     71
+    72    15 | BOOL   headers  = false;                                                                         |     72
+    73       |                                                                                                  |     73
+    74    16 | if (pNode == NULL) return;                                                                       |     74
+    75    18 | memset(pjWrite , 0 , sizeof(jWrite));                                                            |     75
+    76       |                                                                                                  |     76
+    77    19 | sprintf(mode , "wb,codepage=%d", Ccsid);                                                         |     77
+    78    20 | pjWrite->outFile  = fopen ( strTrim(FileName) , mode );                                          |     78
+    79    21 | if (pjWrite->outFile == NULL) return;                                                            |     79
+    80       |                                                                                                  |     80
+    81    23 | if (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 5) {                         |     81
+    82    24 |  PNOXNODE  pOptions  = nox_ParseString((PUCHAR) options ); // When already a object: simply retu\|     82
+    82       |rns that                                                                                          |     82
+    83    25 |  comma    = *nox_GetValuePtr    (pOptions , "delimiter" , &comma );                              |     83
+    84    26 |  decpoint = *nox_GetValuePtr    (pOptions , "decPoint"  , &decpoint );                           |     84
+    85    27 |  headers  = (ON == nox_IsTrue   (pOptions , "headers"));                                         |     85
+    86    28 |  if (pOptions != options) nox_Close(&pOptions); // It was already a josn object , then don't clo\|     86
+    86       |se                                                                                                |     86
+    87       | }                                                                                                |     87
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    07-09-20 13:26:07 Page           5
+    88       |                                                                                                  |     88
+    89    30 | pjWrite->buf    = wTemp;                                                                         |     89
+    90    31 | pjWrite->iconv  = XlateOpen(1208 , Ccsid );                                                      |     90
+    91       |                                                                                                  |     91
+    92    32 | switch(Ccsid) {                                                                                  |     92
+    93       |  case 1208 :                                                                                     |     93
+    94    33 |   fputs (sigUtf8 , pjWrite->outFile);                                                            |     94
+    95    34 |   break;                                                                                         |     95
+    96       |  case 1200 :                                                                                     |     96
+    97    35 |   fputs (sigUtf16 , pjWrite->outFile);                                                           |     97
+    98    36 |   break;                                                                                         |     98
+    99       | }                                                                                                |     99
+   100       |                                                                                                  |    100
+   101    37 | if ( pNode == NULL || pNode->pNodeChildHead  == NULL) return;                                    |    101
+   102       |                                                                                                  |    102
+   103       | // Arrays - need first child;                                                                    |    103
+   104    39 | pNode = pNode->pNodeChildHead;                                                                   |    104
+   105       |                                                                                                  |    105
+   106       | // Need the headers as first row;                                                                |    106
+   107    40 | if (headers) {                                                                                   |    107
+   108    41 |  PNOXNODE pHead  = pNode->pNodeChildHead;                                                        |    108
+   109    42 |  while (pHead) {                                                                                 |    109
+   110    43 |   csvStringEscape (temp , pHead->Name);                                                          |    110
+   111    44 |   iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);                                    |    111
+   112    45 |   pHead  = pHead->pNodeSibling;                                                                  |    112
+   113    46 |   if (pHead) iconvPutc(pjWrite->outFile , &pjWrite->iconv, comma);                               |    113
+   114       |  }                                                                                               |    114
+   115       |  // newline                                                                                      |    115
+   116    48 |  fwrite (CrLf , 1 , 2 , pjWrite->outFile);                                                       |    116
+   117       | }                                                                                                |    117
+   118       |                                                                                                  |    118
+   119    49 | while (pNode) {                                                                                  |    119
+   120       |                                                                                                  |    120
+   121    50 |  PNOXNODE pCol  = pNode->pNodeChildHead;                                                         |    121
+   122       |                                                                                                  |    122
+   123    51 |  while (pCol) {                                                                                  |    123
+   124       |                                                                                                  |    124
+   125    52 |   if (pCol->Value) {                                                                             |    125
+   126       |                                                                                                  |    126
+   127    53 |    if (pCol->isLiteral) {                                                                        |    127
+   128    54 |     if (decpoint == '.') {                                                                       |    128
+   129    55 |      iconvWrite(pjWrite->outFile ,&pjWrite->iconv, pCol->Value, FALSE);                          |    129
+   130       |     } else {                                                                                     |    130
+   131    56 |      csvReplaceDecpoint (temp , pCol->Value , decpoint);                                         |    131
+   132    57 |      iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);                                 |    132
+   133       |     }                                                                                            |    133
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    07-09-20 13:26:07 Page           6
+   134       |    } else {                                                                                      |    134
+   135    58 |     csvStringEscape (temp , pCol->Value);                                                        |    135
+   136    59 |     iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);                                  |    136
+   137       |    }                                                                                             |    137
+   138       |   }                                                                                              |    138
+   139    60 |   pCol  = pCol->pNodeSibling;                                                                    |    139
+   140    61 |   if ( pCol) iconvPutc(pjWrite->outFile , &pjWrite->iconv, comma);                               |    140
+   141       |  }                                                                                               |    141
+   142       |  // newline                                                                                      |    142
+   143    63 |  fwrite (CrLf , 1 , 2 , pjWrite->outFile);                                                       |    143
+   144    64 |  pNode = pNode->pNodeSibling;                                                                    |    144
+   145       |                                                                                                  |    145
+   146       | }                                                                                                |    146
+   147       |                                                                                                  |    147
+   148    65 | fclose(pjWrite->outFile);                                                                        |    148
+   149    66 | iconv_close(pjWrite->iconv);                                                                     |    149
+   150       |}                                                                                                 |    150
+                                          * * * * *   E N D   O F   S O U R C E   * * * * *
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    07-09-20 13:26:07 Page           7
+                                               * * * * *   I N C L U D E S   * * * * *
+ INCNBR  Include Name                     Last change        Actual Include Name
+     1   stdio.h                          06-10-13 12:50:02  /QIBM/include/stdio.h
+     2   ifs.h                            06-10-13 12:49:48  /QIBM/include/ifs.h
+     3   wctype.h                         06-10-13 12:50:07  /QIBM/include/wctype.h
+     4   qp0lstdi.h                       06-10-13 12:58:02  /QIBM/include/qp0lstdi.h
+     5   sys/types.h                      06-10-13 13:01:08  /QIBM/include/sys/types.h
+     6   string.h                         06-10-13 12:50:12  /QIBM/include/string.h
+     7   qlg.h                            06-10-13 12:56:29  /QIBM/include/qlg.h
+     8   qp0lscan.h                       06-10-13 13:01:53  /QIBM/include/qp0lscan.h
+     9   stdlib.h                         06-10-13 12:49:25  /QIBM/include/stdlib.h
+    10   mallocinfo.h                     06-10-13 12:50:01  /QIBM/include/mallocinfo.h
+    11   p_stdlib.h                       06-10-13 12:50:10  /QIBM/include/p_stdlib.h
+    12   stdarg.h                         06-10-13 12:50:09  /QIBM/include/stdarg.h
+    13   ctype.h                          06-10-13 12:49:23  /QIBM/include/ctype.h
+    14   p_ctype.h                        06-10-13 12:50:00  /QIBM/include/p_ctype.h
+    15   leod.h                           06-10-13 12:50:11  /QIBM/include/leod.h
+    16   letype.h                         06-10-13 12:49:46  /QIBM/include/letype.h
+    17   pointer.h                        06-10-13 12:50:11  /QIBM/include/pointer.h
+    18   decimal.h                        06-10-13 12:49:40  /QIBM/include/decimal.h
+    19   wchar.h                          06-10-13 12:50:09  /QIBM/include/wchar.h
+    20   wcstr.h                          06-10-13 12:50:00  /QIBM/include/wcstr.h
+    21   sys/stat.h                       06-10-13 13:01:10  /QIBM/include/sys/stat.h
+    22   sys/types.h                      06-10-13 13:01:08  /QIBM/include/sys/types.h
+    23   ostypes.h                        06-12-18 23:20:34  /prj/noxDB2/ext/include/ostypes.h
+    24   varchar.h                        21-11-18 23:22:55  /prj/noxDB2/ext/include/varchar.h
+    25   xlate.h                          22-11-18 00:12:01  /prj/noxDB2/ext/include/xlate.h
+    26   iconv.h                          06-10-13 12:49:21  /QIBM/include/iconv.h
+    27   stddef.h                         06-10-13 12:50:05  /QIBM/include/stddef.h
+    28   QTQICONV.h                       06-10-13 12:57:24  /QIBM/include/QTQICONV.h
+    29   parms.h                          12-11-18 18:09:21  /prj/noxDB2/ext/include/parms.h
+    30   strUtil.h                        22-01-19 13:07:41  /prj/noxDB2/ext/include/strUtil.h
+    31   memUtil.h                        21-11-18 22:42:38  /prj/noxDB2/ext/include/memUtil.h
+    32   streamer.h                       12-11-18 18:09:21  /prj/noxDB2/ext/include/streamer.h
+    33   noxdb2.h                         08-04-20 23:25:13  /prj/noxDB2/include/noxdb2.h
+    34   sqlcli.h                         04-02-14 17:01:23  /QIBM/include/sqlcli.h
+    35   sql.h                            06-10-13 13:02:23  /QIBM/include/sql.h
+    36   sqlsystm.h                       06-10-13 12:50:06  /QIBM/include/sqlsystm.h
+    37   sqludf.h                         06-10-13 12:50:02  /QIBM/include/sqludf.h
+    38   math.h                           06-10-13 12:50:00  /QIBM/include/math.h
+    39   apierr.h                         12-11-18 18:09:21  /prj/noxDB2/ext/include/apierr.h
+                                       * * * * *   E N D   O F   I N C L U D E S   * * * * *
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    07-09-20 13:26:07 Page           8
+                                        * * * * *   M E S S A G E   S U M M A R Y   * * * * *
+       Total      Informational(00)      Warning(10)      Error(20)      Severe Error(30)      Unrecoverable Error(40)
+         0              0                    0               0                  0                        0
+                                * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
+ Module CSV was created in library NOXDB2 on 07-09-20 at 13:26:07.
+                                    * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *
