@@ -1421,8 +1421,41 @@ static BOOL isNumeric (SQLSMALLINT colType)
    return false; 
 }
 // ------------------------------------------------------------- 
+// Quick fix - double escape \ for unicode in json  - that is not supported by IBM 
+PUCHAR  escapeBackSlash ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
+{
+   ULONG  cntback = 0;
+   PUCHAR p, pIn , pOut;
+   PUCHAR valout;
+
+   for (p=value; *p ; p++) {
+      if (*p == '\\') cntback ++; 
+   }
+   if ( cntback == 0 ) return value;
+
+   // escape is nessesary 
+   valout = memAlloc ( (*plbytes) +  cntback);
+
+   pIn= value; 
+   pOut = valout;
+   while (*pIn ) { 
+      if (*pIn ==  '\\') * (pOut ++) = '\\';
+      * (pOut ++)  = * (pIn ++);
+   }  
+
+   if (*pfreeme) {
+      memFree(&value);
+   } 
+   *pfreeme = true;
+   return valout;
+}
+
+// ------------------------------------------------------------- 
 //  supports this:
 //   curl 'http://myibmi:15020/.1/ip2-services/ip2dmdProxy.aspx' -H 'Pragma: no-cache' -H 'Origin: http://localhost:3000' -H 'Accept-Encoding: gzip, deflate, br' -H 'Accept-Language: da,en-US;q=0.9,en;q=0.8,sv;q=0.7,fr;q=0.6' -H 'x-profile: 2019-04-16-09.57.15.263576/PNO/148/3' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36' -H 'Content-Type: application/json' -H 'Accept: */*' -H 'Cache-Control: no-cache' -H 'X-Requested-With: XMLHttpRequest' -H 'Cookie: sys_sesid="2019-04-16-09.57.15.263576"; ' -H 'Connection: keep-alive' -H 'Referer: http://localhost:3000/' --data-binary '{"batch":[{"type":"upsert","dmd":"dmd/pnoTest.dmd","entity":"PROPTST","transactiontype":"PROPTST","key":{"ID":1},"row":{"ID":1,"PROP":{"field_1":"123t","field_2":"123","field_3":"123","Tester_test":"123"},"PROPS":{"test":"test","tester":"test"}}}]}' --compressed
+//
+// Unicode escaped chars
+//   curl 'http://myibmi:15020/.1/ip2-services/ip2dmdProxy.aspx' -H 'Pragma: no-cache' -H 'Origin: http://localhost:3000' -H 'Accept-Encoding: gzip, deflate, br' -H 'Accept-Language: da,en-US;q=0.9,en;q=0.8,sv;q=0.7,fr;q=0.6' -H 'x-profile: 2019-04-16-09.57.15.263576/PNO/148/3' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36' -H 'Content-Type: application/json' -H 'Accept: */*' -H 'Cache-Control: no-cache' -H 'X-Requested-With: XMLHttpRequest' -H 'Cookie: sys_sesid="2019-04-16-09.57.15.263576"; ' -H 'Connection: keep-alive' -H 'Referer: http://localhost:3000/' --data-binary '{"batch":[{"type":"upsert","dmd":"dmd/pnoTest.dmd","entity":"PROPTST","transactiontype":"PROPTST","key":{"ID":1},"row":{"ID":1,"PROP":{"field_1":"123t","field_2":"123","field_3":"123","Tester_test":"123"},"PROPS":{"test":"test","tester":"\u00f8"}}}]}' --compressed
 // ------------------------------------------------------------- 
 SHORT  doInsertOrUpdate(
    PJXSQL pSQL,
@@ -1511,6 +1544,14 @@ SHORT  doInsertOrUpdate(
             return rc; // we have an error
          }
 
+         // TODO When the table-data is in UTF-8 we can unescape unicode data and store it as real unicode
+         rc= SQLRETURN SQLColAttribute  (SQLHSTMT       StatementHandle,
+                            SQLSMALLINT    ColumnNumber,
+                            SQLSMALLINT    FieldIdentifier,
+                            SQLPOINTER     CharacterAttributePtr,
+                            SQLSMALLINT    BufferLength,
+                            SQLSMALLINT    *StringLengthPtr,
+                            SQLPOINTER     NumericAttributePtr);
 
          // Blob's need binary data - !!TODO check all binary types.
          switch (pColData->coltype) {
@@ -1579,7 +1620,9 @@ SHORT  doInsertOrUpdate(
             freeme = false;
             value = jx_GetNodeValuePtr  (pNode , NULL);
             lbytes = pColData->collen;
-         }
+         } 
+         value = escapeBackSlash (&lbytes , value , &freeme);
+
 
          // Put each block in in buffer
          while (lbytes > cbChunk) {
