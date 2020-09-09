@@ -1264,6 +1264,8 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
         ||  BeginsWith(p , "true" )
         ||  BeginsWith(p , "false")
         ||  BeginsWith(p , "null" )) {
+           // This is not good - some places it is converted to job other not !!
+           // DODO!! For now patch the actual into the job  
            jobBraBeg = BraBeg;
            jobCurBeg = CurBeg;
            jobBraEnd = BraEnd;
@@ -2853,7 +2855,9 @@ void  jx_SetByParseString (PJXNODE pDest , PUCHAR pSourceStr , MERGEOPTION merge
 
    // TODO :  jx_ParseString returns object for any string which is an error; now dont use
    // the paser if it is not an OBJECT or ARRAY
-   if ( *firstNonBlank == BraBeg ||  *firstNonBlank == CurBeg) {
+   // TODO !! have to test posibilies for spacial chars ... 
+   if ( *firstNonBlank == BraBeg    ||  *firstNonBlank == CurBeg 
+   ||   *firstNonBlank == jobBraBeg ||  *firstNonBlank == jobCurBeg) {
       pSource = jx_ParseString(  firstNonBlank , "");
    }
 
