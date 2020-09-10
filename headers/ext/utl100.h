@@ -51,6 +51,8 @@ ULONG hexstr2int (PUCHAR s);
 UCHAR hexchar2int (UCHAR c);
 PUCHAR binMem2Hex (PUCHAR out , PUCHAR in , LONG len);
 PUCHAR hex2BinMem (PUCHAR out , PUCHAR in , LONG len);
+UCHAR asciihexchar2int (UCHAR c);
+PUCHAR asciihex2BinMem (PUCHAR out , PUCHAR in , LONG len);
 void split2LibAndName(PUCHAR Lib , PUCHAR Name , PUCHAR fromString);
 FIXEDDEC num(PVARCHAR Str, PUCHAR DecPointP);
 FIXEDDEC str2dec(PUCHAR str, UCHAR decPoint);

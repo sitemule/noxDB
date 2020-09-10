@@ -1421,6 +1421,49 @@ static BOOL isNumeric (SQLSMALLINT colType)
    return false; 
 }
 // ------------------------------------------------------------- 
+// Note this is done in ascii
+#pragma convert(1252)
+PUCHAR convertAndUnescapeUTF8 ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
+{
+   PUCHAR pIn , pOut;
+   PUCHAR valout;
+   ULONG newLen;
+   int FromCCSID = 0;
+   int ToCCSID = 1208;
+
+   // first convert from job to UTF-8
+   valout = memAlloc ( (*plbytes) * 4);
+   newLen =  XlateBuf(valout, value , *plbytes, FromCCSID, ToCCSID);
+   valout[newLen] = '\0'; // Use it as as zero term string later in this logic
+   
+   if (*pfreeme) {
+      memFree(&value);
+   } 
+
+   // now replace unicode escapes utf8 values
+   // pickup the next four hex chars and convert it
+   // Note: we can use the same overlapping buff since we are ahread while we replace
+   pIn = pOut = valout; 
+   while (*pIn) {
+      if (*pIn == '\\' && *(pIn+1) == 'u') {
+         UCHAR temp [4];
+         ULONG skip;
+         skip = XlateBuf(pOut, asciihex2BinMem (temp , pIn+2 , 2)  , 2 , 1200 , 1208);
+         pIn += 6; // skip the \uFFFF sequence
+         pOut += skip;
+      } else {
+         *(pOut++) = *(pIn++);
+      }
+   } 
+
+   *(pOut) = '\0'; 
+   *pfreeme = true;
+   *plbytes = pOut - valout;
+   return valout;
+
+}
+#pragma convert(0)
+// ------------------------------------------------------------- 
 // Quick fix - double escape \ for unicode in json  - that is not supported by IBM 
 PUCHAR  escapeBackSlash ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
 {
@@ -1474,6 +1517,7 @@ SHORT  doInsertOrUpdate(
       SQLSMALLINT scale;
       SQLSMALLINT nullable;
       PJXNODE     pNode;
+      BOOL        isUTF8;
    } COLDATA, *PCOLDATA;
       
    COLDATA colData[16000];
@@ -1483,6 +1527,8 @@ SHORT  doInsertOrUpdate(
    LONG   i;
    SQLINTEGER sql_nts;
    SQLINTEGER bindColNo;
+   UCHAR dummy[1024];
+   SQLPOINTER CharacterAttributePtr = dummy;
    PJXNODE pNode;
    PUCHAR name, value;
    SQLSMALLINT   length;
@@ -1523,6 +1569,7 @@ SHORT  doInsertOrUpdate(
       if (!isId && !nodeisnull(pNode) && !nodeisblank(pNode)) {
          UCHAR       colName [256];
          SQLSMALLINT colNameLen;
+         ULONG       ccsid;
 
          bindColNo ++; // Only columns with data ( not null nor blank) need to be bound
          pColData->pNode = pNode;
@@ -1544,23 +1591,26 @@ SHORT  doInsertOrUpdate(
             return rc; // we have an error
          }
 
-         // TODO When the table-data is in UTF-8 we can unescape unicode data and store it as real unicode
-         rc= SQLRETURN SQLColAttribute  (SQLHSTMT       StatementHandle,
-                            SQLSMALLINT    ColumnNumber,
-                            SQLSMALLINT    FieldIdentifier,
-                            SQLPOINTER     CharacterAttributePtr,
-                            SQLSMALLINT    BufferLength,
-                            SQLSMALLINT    *StringLengthPtr,
-                            SQLPOINTER     NumericAttributePtr);
+         // When the table-data is in UTF-8 we can unescape unicode data and store it as real UTF-8
+         rc = SQLColAttribute  (
+            pSQLmeta->pstmt->hstmt,
+            colno,                  // The meta "cursor" contaians all columns
+            SQL_DESC_COLUMN_CCSID, 
+            CharacterAttributePtr , // SQLPOINTER     CharacterAttributePtr,
+            0 ,                     // SQLSMALLINT    BufferLength,
+            NULL ,                  // SQLSMALLINT    *StringLengthPtr,
+            &ccsid                  //  ullable SQLPOINTER     NumericAttributePtr);
+         );
+
+         pColData->isUTF8 = ccsid == 1208;
 
          // Blob's need binary data - !!TODO check all binary types.
-         switch (pColData->coltype) {
-            case SQL_BLOB: 
-               fCType = SQL_C_BINARY;
-               break;
-            default : 
-               fCType = SQL_C_CHAR;
-               break;
+         if (pColData->isUTF8) {
+            fCType = SQL_UTF8_CHAR;
+         }  else if (pColData->coltype == SQL_BLOB ) {
+            fCType = SQL_C_BINARY;
+         } else {
+            fCType = SQL_C_CHAR;
          }
 
          if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
@@ -1621,8 +1671,11 @@ SHORT  doInsertOrUpdate(
             value = jx_GetNodeValuePtr  (pNode , NULL);
             lbytes = pColData->collen;
          } 
-         value = escapeBackSlash (&lbytes , value , &freeme);
 
+         if (pColData->isUTF8) {
+            value = convertAndUnescapeUTF8 (&lbytes , value , &freeme);
+         }
+         // value = escapeBackSlash (&lbytes , value , &freeme);
 
          // Put each block in in buffer
          while (lbytes > cbChunk) {

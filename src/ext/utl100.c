@@ -690,6 +690,21 @@ UCHAR hexchar2int (UCHAR c)
    }
 }
 /* --------------------------------------------------------------------------- */
+#pragma convert(1252)
+UCHAR asciihexchar2int (UCHAR c)
+{
+   if (c >= '0' && c <= '9') {
+     return (c - '0');
+   }
+   if (c >= 'A' && c <= 'F') {
+     return (c - 'A' + 10);
+   }
+   if (c >= 'a' && c <= 'f') {
+     return (c - 'a' + 10);
+   }
+}
+#pragma convert(0)
+/* --------------------------------------------------------------------------- */
 VARCHAR hexStr (PVARCHAR in)
 {
    VARCHAR res;
@@ -720,12 +735,23 @@ PUCHAR binMem2Hex (PUCHAR out , PUCHAR in , LONG len)
     *(res++) = '\0';   // Can be a string
    return out;
 }
+/* --------------------------------------------------------------------------- */
 PUCHAR hex2BinMem (PUCHAR out , PUCHAR in , LONG len)
 {
    PUCHAR  res = out;
 
    while (len-- > 0) {
      *(out++) = (16 * hexchar2int(*(in++)) + hexchar2int(*(in++)));
+   }
+   return res;
+}
+/* --------------------------------------------------------------------------- */
+PUCHAR asciihex2BinMem (PUCHAR out , PUCHAR in , LONG len)
+{
+   PUCHAR  res = out;
+
+   while (len-- > 0) {
+     *(out++) = (16 * asciihexchar2int(*(in++)) + asciihexchar2int(*(in++)));
    }
    return res;
 }

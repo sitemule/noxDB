@@ -16,8 +16,8 @@
        //  B: Include the noxDB prototypes from QRPGLEREF member NOXDB
 
        // ------------------------------------------------------------- *
-       // Using SQL cursors. Row by row is one solution
-
+       // Using SQL: Direct sql command
+       
        // ------------------------------------------------------------- *
        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
       /include qrpgleRef,noxdb
@@ -28,7 +28,7 @@
 
         // Simple sql
           err = json_sqlExec(
-               'create schema qgpl'
+               'create schema deleteme'
             );
           If err;
              m = json_message();
