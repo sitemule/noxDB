@@ -180,6 +180,12 @@
           NodeName       Pointer    value options(*string);
         End-PR;
 
+        //Returns 'ON' if node is literals
+        Dcl-PR jx_IsLiteral Ind extproc(*CWIDEN : 'jx_IsLiteral');
+          //Pointer to tree or node
+          pNode          Pointer    value;
+        End-PR;
+
         //Returns 'ON' if node exists and has <> 0
         Dcl-PR jx_isNull Ind extproc(*CWIDEN : 'jx_IsNull');
           //Pointer to tree or node
@@ -1015,6 +1021,18 @@
           sqlStmt        Pointer    value options(*string);
           //json object template data
           parms          Pointer    value options(*string:*nopass);
+        End-PR;
+
+
+      // call stored procedures 
+        //Returns handle to sql statement
+        Dcl-PR jx_sqlCall  ind   extproc(*CWIDEN:'jx_sqlCall'  );
+          // SQL procedure to call
+          procedure        Pointer    value options(*string);
+          // json object of output parameter ( NOTE: It is named parameters)
+          outputParms      Pointer    value;
+          // json object of input  parameter ( NOTE: It is named parameters)
+          inputParms       Pointer    value;
         End-PR;
 
       // Execute an update table where the row is defined as a json object

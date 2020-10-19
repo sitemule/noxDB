@@ -1039,6 +1039,115 @@ LONG jx_sqlRows (PJXSQL pSQL)
 
    return (pSQL->rowcount);
 }
+
+/* ------------------------------------------------------------- */
+LGL jx_sqlCall ( PUCHAR procedureName , PJXNODE pOutParms , PJXNODE pInParms)
+{
+   UCHAR   stmtBuf [32760]; 
+   PUCHAR  stmt =stmtBuf;
+   PJXNODE pNode;
+   PUCHAR  name;
+   UCHAR   temp [256]; 
+   PUCHAR  comma = "";
+   PJXSQL  pSQL;
+   int     rc;
+   int     outCol;
+   SQLSMALLINT     col; 
+   SQLSMALLINT   fCType;
+   UCHAR out  [256][256];
+
+
+   stmt += sprintf (stmt , "call %s (" , procedureName );
+
+   pNode    =  jx_GetNodeChild (pInParms);
+   while (pNode) {
+      name  = jx_GetNodeNamePtr   (pNode);
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+      stmt += sprintf (stmt , "%s%s=>?"  , comma , temp);
+      comma = ",";
+      pNode = jx_GetNodeNext(pNode);
+   }
+
+   pNode    =  jx_GetNodeChild (pOutParms);
+   while (pNode) {
+      name  = jx_GetNodeNamePtr   (pNode);
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+      stmt += sprintf (stmt , "%s%s=>?"  , comma , temp);
+      comma = ",";
+      pNode = jx_GetNodeNext(pNode);
+   }
+   stmt += sprintf (stmt , ")" );
+
+
+   pSQL = jx_sqlNewStatement (NULL, true, false);
+   rc  = SQLPrepare( pSQL->pstmt->hstmt, stmtBuf, SQL_NTS );
+
+   // bind input parameters:
+   pNode    =  jx_GetNodeChild (pInParms);
+   col = 1;
+   while (pNode) {
+
+      SQLSMALLINT fCType = SQL_C_CHAR;
+      PUCHAR pData = jx_GetValuePtr(pNode , "" ,null);
+      SQLINTEGER len = strlen(pData);
+      SQLINTEGER scale =0;
+      SQLINTEGER outLen = 0;
+
+      rc  = SQLBindParameter (
+         pSQL->pstmt->hstmt, // hstmt
+         col ++ ,
+         SQL_PARAM_INPUT,    // fParamType
+         fCType ,            // data type here in C
+         fCType,             // dtatype in SQL
+         len ,               // precision / Length of the C - string
+         scale,              // scale  /// 0,                // ibScale
+         pData,              // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
+         0,                  // cbValueMax
+         &outLen             // pcbValue
+      );
+      pNode = jx_GetNodeNext(pNode);
+   }
+
+   // bind output  parameters:
+   pNode    =  jx_GetNodeChild (pOutParms);
+   outCol = 0;
+   while (pNode) {
+
+      SQLSMALLINT fCType = SQL_C_CHAR;
+      PUCHAR pData = jx_GetValuePtr(pNode , "" ,null);
+      SQLINTEGER len = 255;
+      SQLINTEGER scale =0;
+      SQLINTEGER outLen = 0;
+
+      rc  = SQLBindParameter (
+         pSQL->pstmt->hstmt, // hstmt
+         col ++,
+         SQL_PARAM_OUTPUT,   // fParamType
+         fCType ,            // data type here in C
+         fCType,             // dtatype in SQL
+         len ,               // precision / Length of the C - string
+         scale,              // scale  /// 0,                // ibScale
+         out [outCol ++ ,0], // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
+         0,                  // cbValueMax
+         &outLen             // pcbValue
+      );
+      pNode = jx_GetNodeNext(pNode);
+   }
+
+   rc = SQLExecute(pSQL->pstmt->hstmt);
+
+   pNode    =  jx_GetNodeChild (pOutParms);
+   outCol   = 0;
+   while (pNode) {
+      jx_NodeSet (pNode , out [outCol++,0]);
+      pNode = jx_GetNodeNext(pNode);
+   }
+
+   jx_sqlClose (&pSQL);
+
+   return (rc == 0 ? OFF: ON);
+
+}
 /* ------------------------------------------------------------- */
 PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PJXNODE pSqlParmsP  )
 {
