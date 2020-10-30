@@ -33,31 +33,37 @@
      H*STGMDL(*TERASPACE)
        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
       /include qrpgleRef,noxdb
-       Dcl-S err                    Ind;
-       Dcl-S pIn                    Pointer;
-       Dcl-S pOut                   Pointer;
-
+       Dcl-S err        Ind;
+       Dcl-S pIn        Pointer;
+       Dcl-S pOut       Pointer;
+       Dcl-s msg        char(50);
+       Dcl-s i          int(10);
 
           // Call stored procedures
 
-          // Build input parameter object
-          pIn  = json_newObject();
-          json_SetInt(pIn: 'a': 123);
-          json_SetInt(pIn: 'b': 456);
+
+            // Build input parameter object
+            pIn  = json_newObject();
+            json_SetInt(pIn: 'a': 123);
+            json_SetInt(pIn: 'b': 456);
 
 
-          // Build output parameter object
-          pOut  = json_newObject();
-          json_SetInt(pOut: 'c': 0);
+            // Call the procedure
+            pOut = json_sqlCall ('qgpl.add' : pIn);
 
-          // Call the procedure
-          err = json_sqlCall ('add' : pOut : pIn);
+            If json_Error(pOut) ;
+              msg = json_Message(pOut);
+              dsply msg;
+              Return;
+            EndIf;
+
+            
+            // Dump the result
+            json_joblog(pOut);  
+
+            json_delete(pIn);
+            json_delete(pOut);
           
-          // Dump the result
-          json_joblog(pOut);  
-
-          json_delete(pIn);
-          json_delete(pOut);
 
           // That's it..
           *inlr = *on;

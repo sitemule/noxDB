@@ -1026,11 +1026,9 @@
 
       // call stored procedures 
         //Returns handle to sql statement
-        Dcl-PR xml_sqlCall  ind   extproc(*CWIDEN:'jx_sqlCall'  );
+        Dcl-PR xml_sqlCall  pointer   extproc(*CWIDEN:'jx_sqlCall'  );
           // SQL procedure to call
           procedure        Pointer    value options(*string);
-          // json object of output parameter ( NOTE: It is named parameters)
-          outputParms      Pointer    value;
           // json object of input  parameter ( NOTE: It is named parameters)
           inputParms       Pointer    value;
         End-PR;

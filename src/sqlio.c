@@ -1039,10 +1039,70 @@ LONG jx_sqlRows (PJXSQL pSQL)
 
    return (pSQL->rowcount);
 }
+/* ------------------------------------------------------------- *\
+   Maybe use this for jx_sqlProcedureMeta :
+   
+   SQLRETURN sqlRet = SQLProcedureColumns(
+      SQLHSTMT          pSQL->pstmt->hstmt,
+      SQLCHAR           NULL, // *CatalogName,
+      SQLSMALLINT       0 , // NameLength1,
+      SQLCHAR           NULL // *SchemaName,
+      SQLSMALLINT       NameLength2,
+      SQLCHAR           *ProcName,
+      SQLSMALLINT       NameLength3,
+      SQLCHAR           *ColumnName,
+      SQLSMALLINT       NameLength4
+   );
 
-/* ------------------------------------------------------------- */
-LGL jx_sqlCall ( PUCHAR procedureName , PJXNODE pOutParms , PJXNODE pInParms)
+   but for now:
+\* ------------------------------------------------------------- */ 
+PJXNODE jx_sqlProcedureMeta (PUCHAR procedureName)
 {
+
+   UCHAR sqlStmt [1024];
+   UCHAR schema [32];
+   UCHAR procedure  [256];
+   PUCHAR split;
+
+   split = strchr(procedureName , '.');
+
+   if (split == NULL) return NULL;
+
+   substr (schema    , procedureName , split - procedureName);
+   strcpy (procedure , split +1);
+
+
+   sprintf (sqlStmt , 
+      "with cte as ( "  
+      "select "  
+         "a.specific_name specific_name,"
+         "parameter_mode,"
+         "parameter_name,"
+         "data_type,"
+         "numeric_scale,"
+         "numeric_precision,"
+         "character_maximum_length,"
+         "numeric_precision_radix,"
+         "datetime_precision,"
+         "is_nullable,"
+         "max(ifnull(numeric_precision , 0) + 2, ifnull(character_maximum_length,0))  buffer_length "
+      "from sysprocs a "
+      "left join  sysparms b " 
+      "on a.specific_schema = b.specific_schema and a.specific_name = b.specific_name "
+      "where a.routine_schema  = upper('%s') "
+      "and   a.routine_name = upper('%s') "
+      ") "
+      "select (select count(distinct cte.specific_name) from cte) number_of_implementations  , cte.* from cte "
+      , schema ,procedure
+   );
+   return jx_sqlResultSet(sqlStmt, 0 , 99999 , 0 , NULL);
+}
+/* ------------------------------------------------------------- */
+// Note: Only works on qualified procedure calls 
+/* ------------------------------------------------------------- */
+PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
+{
+   PJXNODE pResult = NULL;
    UCHAR   stmtBuf [32760]; 
    PUCHAR  stmt =stmtBuf;
    PJXNODE pNode;
@@ -1052,10 +1112,39 @@ LGL jx_sqlCall ( PUCHAR procedureName , PJXNODE pOutParms , PJXNODE pInParms)
    PJXSQL  pSQL;
    int     rc;
    int     outCol;
+   int     i;
+   int     bufLen;
+   int     impl;
    SQLSMALLINT     col; 
    SQLSMALLINT   fCType;
-   UCHAR out  [256][256];
+   
+   UCHAR      out  [650000];
+   PUCHAR     outPos = out;
+   SQLINTEGER outParmLen  [4096];
+   PUCHAR     outParmBuf  [4096];
+   PUCHAR     outParmName [4096];
+   SHORT      outParmType [4096];
+   int        outParmsCnt =0;
+   
+   SQLRETURN sqlRet;
+   PUCHAR  parmMode;
+   PUCHAR  parmName;
+   PJXNODE pProcMeta = jx_sqlProcedureMeta (procedureName);
 
+   if (pProcMeta == NULL) {
+      sprintf( jxMessage , "Procedure %s is not found or not called qualified" , procedureName);
+      jxError = true;
+      return NULL;
+   }
+   pNode    =  jx_GetNodeChild (pProcMeta);
+   impl = atoi (jx_GetValuePtr (pNode , "number_of_implementations" , "0"));
+
+   if (impl > 1) {
+      sprintf( jxMessage , "Procedure %s has %d implementations. Can not decide which to use" , procedureName, impl);
+      jxError = true;
+      jx_NodeDelete (pProcMeta);
+      return NULL;
+   }
 
    stmt += sprintf (stmt , "call %s (" , procedureName );
 
@@ -1068,20 +1157,33 @@ LGL jx_sqlCall ( PUCHAR procedureName , PJXNODE pOutParms , PJXNODE pInParms)
       pNode = jx_GetNodeNext(pNode);
    }
 
-   pNode    =  jx_GetNodeChild (pOutParms);
+   pNode    =  jx_GetNodeChild (pProcMeta);
    while (pNode) {
-      name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
-      stmt += sprintf (stmt , "%s%s=>?"  , comma , temp);
-      comma = ",";
+      parmMode = jx_GetValuePtr    (pNode , "parameter_mode" , "");
+      if (0 == strcmp (parmMode , "OUT")
+      ||  0 == strcmp (parmMode , "INOUT")) {
+         parmName = jx_GetValuePtr    (pNode , "parameter_name" , "");
+         stmt += sprintf (stmt , "%s%s=>?"  , comma , parmName);
+
+         // Build output buffer list. Get room for zero termination
+         outParmName [outParmsCnt] = parmName;
+         outParmBuf  [outParmsCnt] = outPos;
+         bufLen = atoi (jx_GetValuePtr   (pNode , "buffer_length" , "0"));
+         outParmLen  [outParmsCnt] = bufLen;
+         outParmType [outParmsCnt] = 0 == atoi (jx_GetValuePtr (pNode , "numeric_precision" , "0")) ? VALUE:LITERAL;
+         outParmsCnt ++;
+         *(outPos + bufLen) = '\0';  // Ensure each is zero terminated
+         outPos += bufLen + 1; 
+         comma = ",";
+      }
       pNode = jx_GetNodeNext(pNode);
    }
    stmt += sprintf (stmt , ")" );
 
-
    pSQL = jx_sqlNewStatement (NULL, true, false);
    rc  = SQLPrepare( pSQL->pstmt->hstmt, stmtBuf, SQL_NTS );
 
+   
    // bind input parameters:
    pNode    =  jx_GetNodeChild (pInParms);
    col = 1;
@@ -1109,43 +1211,42 @@ LGL jx_sqlCall ( PUCHAR procedureName , PJXNODE pOutParms , PJXNODE pInParms)
    }
 
    // bind output  parameters:
-   pNode    =  jx_GetNodeChild (pOutParms);
-   outCol = 0;
-   while (pNode) {
-
-      SQLSMALLINT fCType = SQL_C_CHAR;
-      PUCHAR pData = jx_GetValuePtr(pNode , "" ,null);
-      SQLINTEGER len = 255;
-      SQLINTEGER scale =0;
+   for (outCol = 0 ; outCol < outParmsCnt ; outCol ++) {
       SQLINTEGER outLen = 0;
 
       rc  = SQLBindParameter (
-         pSQL->pstmt->hstmt, // hstmt
+         pSQL->pstmt->hstmt,  // hstmt
          col ++,
-         SQL_PARAM_OUTPUT,   // fParamType
-         fCType ,            // data type here in C
-         fCType,             // dtatype in SQL
-         len ,               // precision / Length of the C - string
-         scale,              // scale  /// 0,                // ibScale
-         out [outCol ++ ,0], // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
-         0,                  // cbValueMax
-         &outLen             // pcbValue
+         SQL_PARAM_OUTPUT,    // fParamType
+         SQL_C_CHAR,          // data type here in C
+         SQL_C_CHAR,          // dtatype in SQL
+         outParmLen[outCol],  // precision / Length of the C - string
+         0,                  //scale,
+         outParmBuf[outCol],   // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
+         0,                   // cbValueMax
+         &outLen              // pcbValue
       );
-      pNode = jx_GetNodeNext(pNode);
+
    }
 
    rc = SQLExecute(pSQL->pstmt->hstmt);
+   if (rc != SQL_SUCCESS) {
+      check_error (pSQL);
+      jxError = true;
+      jx_NodeDelete (pProcMeta);
+      return NULL;
+   }
 
-   pNode    =  jx_GetNodeChild (pOutParms);
-   outCol   = 0;
-   while (pNode) {
-      jx_NodeSet (pNode , out [outCol++,0]);
-      pNode = jx_GetNodeNext(pNode);
+   pResult = jx_NewObject(NULL);
+
+   for (outCol = 0 ; outCol < outParmsCnt ; outCol ++) {
+      jx_SetValueByName(pResult , outParmName[outCol],  outParmBuf[outCol] , outParmType[outCol]);
    }
 
    jx_sqlClose (&pSQL);
+   jx_NodeDelete (pProcMeta);
 
-   return (rc == 0 ? OFF: ON);
+   return (pResult);
 
 }
 /* ------------------------------------------------------------- */
