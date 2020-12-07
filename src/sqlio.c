@@ -1191,9 +1191,18 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
 
       SQLSMALLINT fCType = SQL_C_CHAR;
       PUCHAR pData = jx_GetValuePtr(pNode , "" ,null);
-      SQLINTEGER len = strlen(pData);
+      SQLINTEGER len;
       SQLINTEGER scale =0;
-      SQLINTEGER outLen = 0;
+      SQLINTEGER outLen;
+
+      if (pData == null) {
+         pData = "";
+         len =  1;
+         outLen = SQL_NULL_DATA;
+      } else {
+         len = strlen(pData);
+         outLen = len;
+      }
 
       rc  = SQLBindParameter (
          pSQL->pstmt->hstmt, // hstmt
@@ -1204,7 +1213,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
          len ,               // precision / Length of the C - string
          scale,              // scale  /// 0,                // ibScale
          pData,              // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
-         0,                  // cbValueMax
+         0,                  // cbValueMax ( not used)
          &outLen             // pcbValue
       );
       pNode = jx_GetNodeNext(pNode);
@@ -1224,7 +1233,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
          0,                  //scale,
          outParmBuf[outCol],   // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
          0,                   // cbValueMax
-         &outLen              // pcbValue
+         &outParmLen[outCol]  // Strlen or indPtr // was:  &outLen              // pcbValue
       );
 
    }
