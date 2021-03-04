@@ -325,17 +325,10 @@
           isString       Ind        value options(*nopass);
         End-PR;
 
-        //         /IF DEFINED(*V7R4M0)
-        //           Dcl-PR xml_Set Pointer overload ( 
-        //             xml_SetBool : 
-        //             xml_SetNum : 
-        //             xml_SetInt :             
-        //             xml_SetDate:
-        //             xml_SetTime:
-        //             xml_SetTimeStamp:
-        //             xml_SetStr
-        //           );
-        //         /ENDIF
+        // Set the delimiters for the selectors to the charset of the program source
+        Dcl-PR  xml_DataInto Pointer(*Proc) extproc(*CWIDEN : 'jx_dataInto');
+          pNode          Pointer    value; //Pointer to xml_ tree
+        End-PR;
 
         Dcl-PR xml_SetValue Pointer extproc(*CWIDEN: 'jx_SetValueByName');
           //Pointer to xml_ tree
@@ -1289,4 +1282,17 @@
           Ccsid          Int(10)    value;
           Trim           Ind        value options(*nopass);
         End-PR;
+      /endif
+
+
+      /if defined(JX_OVERLOAD)
+          Dcl-PR xml_Set Pointer overload ( 
+            xml_SetBool : 
+            xml_SetNum : 
+            xml_SetInt :             
+            xml_SetDate:
+            xml_SetTime:
+            xml_SetTimeStamp:
+            xml_SetStr
+          );
       /endif

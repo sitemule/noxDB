@@ -325,17 +325,10 @@
           isString       Ind        value options(*nopass);
         End-PR;
 
-        //         /IF DEFINED(*V7R4M0)
-        //           Dcl-PR json_Set Pointer overload ( 
-        //             json_SetBool : 
-        //             json_SetNum : 
-        //             json_SetInt :             
-        //             json_SetDate:
-        //             json_SetTime:
-        //             json_SetTimeStamp:
-        //             json_SetStr
-        //           );
-        //         /ENDIF
+        // Set the delimiters for the selectors to the charset of the program source
+        Dcl-PR  json_DataInto Pointer(*Proc) extproc(*CWIDEN : 'jx_dataInto');
+          pNode          Pointer    value; //Pointer to json_ tree
+        End-PR;
 
         Dcl-PR json_SetValue Pointer extproc(*CWIDEN: 'jx_SetValueByName');
           //Pointer to json_ tree
@@ -1289,4 +1282,17 @@
           Ccsid          Int(10)    value;
           Trim           Ind        value options(*nopass);
         End-PR;
+      /endif
+
+
+      /if defined(JX_OVERLOAD)
+          Dcl-PR json_Set Pointer overload ( 
+            json_SetBool : 
+            json_SetNum : 
+            json_SetInt :             
+            json_SetDate:
+            json_SetTime:
+            json_SetTimeStamp:
+            json_SetStr
+          );
       /endif
