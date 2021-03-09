@@ -1285,7 +1285,7 @@
       /endif
 
 
-      /if defined(JX_OVERLOAD)
+      /if defined( json_OVERLOAD)
           Dcl-PR json_Set Pointer overload ( 
             json_SetBool : 
             json_SetNum : 

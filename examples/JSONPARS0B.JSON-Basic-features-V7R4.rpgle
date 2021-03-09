@@ -30,6 +30,7 @@
          // Finally remember to cleanup otherwise you will have a memory leak
          // ------------------------------------------------------------- *
          Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+         /define JSON_OVERLOAD
          /include qrpgleRef,noxdb
 
          Dcl-S pJson       Pointer;

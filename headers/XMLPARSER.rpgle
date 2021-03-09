@@ -1285,7 +1285,7 @@
       /endif
 
 
-      /if defined(JX_OVERLOAD)
+      /if defined( xml_OVERLOAD)
           Dcl-PR xml_Set Pointer overload ( 
             xml_SetBool : 
             xml_SetNum : 
