@@ -24,6 +24,7 @@ compile:
 	system -i "CRTSRCPF $(BIN_LIB)/srctemp RCDLEN(240)"
 	system -i "CPYFRMSTMF FROMSTMF('$(SRC)') TOMBR('/QSYS.LIB/$(BIN_LIB).LIB/srctemp.file/srctemp.mbr')  MBROPT(*REPLACE)"
 	system -i "CRTBNDRPG  PGM($(BIN_LIB)/$(OBJNAME)) SRCFILE($(BIN_LIB)/srctemp) SRCMBR(SRCTEMP) $(RPG_OPT)" > error.txt
+	system -i "DLTF $(BIN_LIB)/srctemp"
 	EOF
        
 .PHONY: compile

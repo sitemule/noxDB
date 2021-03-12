@@ -27,10 +27,9 @@ CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*none) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES
 
 # Dependency list
 
-all:  $(BIN_LIB).lib jsonxml.srvpgm hdr
+all:  $(BIN_LIB).lib jsonxml.srvpgm  hdr
 
-jsonxml.srvpgm: noxdb.c sqlio.c xmlparser.c jsonparser.c serializer.c reader.c segments.c iterator.c datainto.c http.c generic.c runqsh.clle trace.clle ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
-
+jsonxml.srvpgm: noxdb.c sqlio.c xmlparser.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c runqsh.clle trace.clle ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
 jsonxml.bnddir: jsonxml.entry
 noxdb.bnddir: jsonxml.entry
 
@@ -66,6 +65,7 @@ noxdb.bnddir: jsonxml.entry
 	$(eval modules := $(patsubst %,$(BIN_LIB)/%,$(basename $(filter %.c %.clle,$(notdir $^)))))
 	
 	system -q -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS($(TARGET_RLS))"
+
 
 hdr:
 	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
@@ -108,7 +108,7 @@ release: clean
 # For vsCode / single file then i.e.: gmake current sqlio.c  
 current: 
 	system -i "CRTCMOD MODULE($(BIN_LIB)/$(SRC)) SRCSTMF('src/$(SRC).c') $(CCFLAGS2) "
-	system -i "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/*ALL)  
+	system -i "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/*ALL)"  
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
 example: 

@@ -330,6 +330,11 @@
           pNode          Pointer    value; //Pointer to xml_ tree
         End-PR;
 
+        // Set the delimiters for the selectors to the charset of the program source
+        Dcl-PR  xml_DataGen  Pointer(*Proc)  extproc(*CWIDEN : 'jx_dataGen');
+          pNode          Pointer   ; // Note this is parse by reference Pointer to xml_ tree
+        End-PR;
+
         Dcl-PR xml_SetValue Pointer extproc(*CWIDEN: 'jx_SetValueByName');
           //Pointer to xml_ tree
           pNode          Pointer    value;

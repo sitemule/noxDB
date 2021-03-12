@@ -3,10 +3,11 @@
 #include <stdio.h>
 #include <iconv.h>
 #include <sqlcli.h>
+
 #ifdef IFSCOMPILE
  #include "/qsys.lib/include.lib/h.file/ostypes.mbr"
 #else
- #include "ostypes.h"     //
+ #include "ostypes.h"     
  #include "streamer.h"
  #include "apierr.h"
  #include "xlate.h"
@@ -597,8 +598,6 @@ PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT options);
 
 void jx_deleteWriter (PJWRITE  pjWrite);
 PJWRITE jx_newWriter (void);
-
-
 
 
 #endif

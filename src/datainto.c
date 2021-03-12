@@ -1,12 +1,12 @@
 /* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL) */
-/* ------------------------------------------------------------- *
- * Company . . . : System & Method A/S                           *
- * Design  . . . : Niels Liisberg                                *
- * Function  . . : NOX - JSON serializer                         *
- *                                                               *
- * By     Date     Task    Description                           *
- * NL     02.06.03 0000000 New program                           *
- * ------------------------------------------------------------- */
+/* --------------------------------------------------------------- *
+ * Company . . . : System & Method A/S                             *
+ * Design  . . . : Niels Liisberg                                  *
+ * Function  . . : NOX - JSON serializer                           *
+ *                                                                 *
+ * By     Date       Task    Description                           *
+ * NL     02.03.2021 0000000 New program                           *
+ * --------------------------------------------------------------- */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -27,12 +27,12 @@
 #include "jsonxml.h"
 #include "/QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR"
 
-
-extern int   OutputCcsid;
-
-PJXNODE pRoot; 
+static PJXNODE pRoot; 
+static PXLATEDESC pXd = NULL;
 
 typedef void (*JX_DATAINTO)();
+
+// Portotype can not move to generic header since dubble defintion i IBM headers :(
 static void  jx_dataIntoMapNode  (PJXNODE pNode, QrnDiParm_T * pParms, SHORT level);
 
 /* --------------------------------------------------------------------------- */
@@ -44,7 +44,10 @@ static void  jx_dataIntoMapObject  (PJXNODE pParent, QrnDiParm_T * pParms, SHORT
 	pParms->env->QrnDiStartStruct (pParms->handle);
 	for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
 		if  ( pNode->Name && *pNode->Name > 0) {
-			pParms->env->QrnDiReportName  (pParms->handle , pNode->Name , strlen(pNode->Name));    
+			UCHAR name [256];
+			ULONG namelen = XlateXdBuf(pXd, name , pNode->Name , strlen(pNode->Name));
+			name[namelen] = '\0';
+			pParms->env->QrnDiReportName  (pParms->handle , name , namelen);    
 		}
 		jx_dataIntoMapNode (pNode , pParms, nextLevel);
 	}
@@ -67,7 +70,9 @@ static void jx_dataIntoMapValue   (PJXNODE pNode, QrnDiParm_T * pParms )
 {
 	// Has value?
 	if (pNode->Value && pNode->Value[0] > '\0') {
-		pParms->env->QrnDiReportValue (pParms->handle , pNode->Value, strlen(pNode->Value));
+		UCHAR value [32768];
+		ULONG valuelen = XlateXdBuf(pXd, value , pNode->Value , strlen(pNode->Value));
+		pParms->env->QrnDiReportValue (pParms->handle , value , valuelen);
 	// Else it is some kind of null: Strings are "". Literals will return "null"
 	} else {
 		// Null handeling
@@ -104,6 +109,10 @@ static void  jx_dataIntoMapNode  (PJXNODE pNode, QrnDiParm_T * pParms, SHORT lev
 static void   jx_dataIntoMapper (QrnDiParm_T * pParms)
 {
 
+	if (pXd == NULL ) {
+		pXd = XlateXdOpen (0, 13488);
+	}
+			
 	pParms->env->QrnDiStart  (pParms->handle); 
 	jx_dataIntoMapNode (pRoot , pParms , 0 );             
 	pParms->env->QrnDiFinish (pParms->handle );              
@@ -113,7 +122,6 @@ static void   jx_dataIntoMapper (QrnDiParm_T * pParms)
 	--------------------------------------------------------------------------- */
 JX_DATAINTO jx_dataInto (PJXNODE pNode) 
 {
-	pRoot = pNode; // not reentrant 
-
+	pRoot = pNode; 
     return &jx_dataIntoMapper;
 }

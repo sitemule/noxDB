@@ -330,6 +330,11 @@
           pNode          Pointer    value; //Pointer to jx_ tree
         End-PR;
 
+        // Set the delimiters for the selectors to the charset of the program source
+        Dcl-PR  jx_DataGen  Pointer(*Proc)  extproc(*CWIDEN : 'jx_dataGen');
+          pNode          Pointer   ; // Note this is parse by reference Pointer to jx_ tree
+        End-PR;
+
         Dcl-PR jx_SetValue Pointer extproc(*CWIDEN: 'jx_SetValueByName');
           //Pointer to jx_ tree
           pNode          Pointer    value;

@@ -151,5 +151,7 @@ STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('JSONXML01')
   EXPORT SYMBOL("jx_joblog")
   EXPORT SYMBOL("jx_sqlCall")
   EXPORT SYMBOL("jx_dataInto")
+  EXPORT SYMBOL("jx_dataGen")
+  EXPORT SYMBOL("jx_dataGenMapper")
 
 ENDPGMEXP
