@@ -112,10 +112,9 @@ dcl-proc example2;
     alltypes.substructure.margin = -22.5;
     alltypes.substructure.pi     = 22.0/7;
 
-    // alltypes.dynarr(*next) = 'a';
-    // alltypes.dynarr(*next) = 'b';
-    // alltypes.dynarr(*next) = 'c';
-    
+    //alltypes.dynarr(*next) = 'a';
+    //alltypes.dynarr(*next) = 'b';
+    //alltypes.dynarr(*next) = 'c';
 
     // Now the magic: the pJson pointer is send to the mapper and returns as an object graph
     data-gen alltypes %data(handle: '') %gen(json_DataGen(pJson));

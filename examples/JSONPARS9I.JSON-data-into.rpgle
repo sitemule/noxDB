@@ -50,7 +50,7 @@ dcl-proc example1;
     // This is our array of objects:
     pJson = json_ParseString(   
         '[                                 -
-            {"id":1,"name":"John"},        -
+            {"id":1,"name":"John"  },        -
             {"id":2,"name":"Doe","age":25} -     
         ]'
     );     
