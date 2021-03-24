@@ -12,6 +12,8 @@
 #include <leod.h>
 #include <decimal.h>
 #include <wchar.h>
+#include <qp2shell2.h>
+
 // #include <errno.h>
 
 #include <sys/stat.h>
@@ -39,13 +41,12 @@ PUCHAR loadText (PUCHAR file)
      p[l] = '\0';
      return p;
 }
-// ---------------------------------------------------------------------------
-void qsh (PUCHAR cmd)
+/* ---------------------------------------------------------------------------
+   Run a schell script 
+   --------------------------------------------------------------------------- */
+void shell (PUCHAR cmd)
 {
-   VOID RUNQSH  (PUCHAR cmd);
-   UCHAR cmdP [4097];
-   padncpy ( cmdP , cmd , 4096);
-   RUNQSH  (cmd);
+   QP2SHELL2  ("/QOpenSys/usr/bin/sh" , "-c" , cmd);
 }
 /* ---------------------------------------------------------------------------
    get a resource on the net
@@ -90,7 +91,7 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options)
    }
    p += sprintf( p ,  " %s 2>%s;",  url , error);
    p += sprintf( p , "setccsid 1208 %s" , temp2);
-   qsh (cmd);
+   shell (cmd);
 
    p =  loadText(error);
    if (p != NULL) {

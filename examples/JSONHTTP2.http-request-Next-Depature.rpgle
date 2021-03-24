@@ -29,28 +29,16 @@ dcl-proc main;
    dcl-s  pReq   	  		pointer;
    dcl-s  pResponse 		pointer;
    dcl-s  url  	  	  	varchar(1024);
-   dcl-s  text 	  	  	varchar(4096);
-   dcl-s  dsp     	  	char   (52);
 
-   pReq = json_newObject();
-   json_setStr (pReq : 'source'   : 'en');
-   json_setStr (pReq : 'target'   : 'es');
-   json_setStr (pReq : 'text'     : 'Good afternoon my friends');
+   // parameters on URL
+   url = 'https://www.molslinjen.dk/umbraco/api/departure/getnextdepartures?departureRegionId=JYL';
 
-   url = 'https://watson-api-explorer.mybluemix.net/language-translator/api/v2/translate';
-
-   // Do the http request to watson.
+   // Do the http request to get next depature
    // Use YUM to install curl, which is the tool used by httpRequest
    pResponse = json_httpRequest (url: pReq);
 
    json_WriteJsonStmf(pResponse:'/prj/noxdb/testdata/httpdump.json':1208:*OFF);
 
-   // Just debug the response
-   text = json_getStr(pResponse : 'translations[0].translation' : 'N/A');
-   dsp = text;
-   dsply (dsp);
-
-   // Always remember to clean up
    json_delete(pReq);
    json_delete(pResponse);
 
