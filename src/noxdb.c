@@ -102,22 +102,27 @@ iconv_t xlate1208toE;
 
 
 /* --------------------------------------------------------------------------- */
-void jx_joblog (PUCHAR msg)
+void jx_joblog (PUCHAR msg , ...)
 {
+   va_list arg_ptr;
    char msgkey [10];
    long stackcount=1;
    UINT64 zeroval  = 0;
    int  len;
+   UCHAR mem [999999];
 
    // Poor mans polymorphisme: Nodes have a signature byte 
-   if ( *msg == NODESIG) {
-      int len;
-      UCHAR mem [999999];
+   if (msg == null){
+      return; 
+   } else if ( *msg == NODESIG) {
       len = jx_AsJsonTextMem (((PJXNODE) msg) , mem , 512);
-      QMHSNDPM ("CPF9898", "QCPFMSG   *LIBL     ",  mem  , len  , "*INFO     ", "*PGMBDY                    " ,
+      QMHSNDPM ("CPF9898", "QCPFMSG   *LIBL     ",  mem  , len  , "*INFO     ", "jx_joblog                "  ,
                stackcount, msgkey , &zeroval);
    } else {
-      QMHSNDPM ("CPF9898", "QCPFMSG   *LIBL     ",  msg  , strlen(msg)  , "*INFO     ", "*PGMBDY                    " ,
+      va_start(arg_ptr,  msg);
+      len = vsprintf(mem, msg, arg_ptr);
+      va_end(arg_ptr);
+      QMHSNDPM ("CPF9898", "QCPFMSG   *LIBL     ",  mem , len  , "*INFO     ", "jx_joblog                      " ,
                stackcount, msgkey , &zeroval);
    }
 }

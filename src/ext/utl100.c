@@ -61,18 +61,18 @@ int memIcmp (PUCHAR s1, PUCHAR s2 , int len)
 UCHAR toUpper(UCHAR c)
 {
    switch(c) {
-      case 'Ã¦' : return 'Ã†';
-      case 'Ã¸' : return 'Ã˜';
-      case 'Ã¥' : return 'Ã…';
+      case 'æ' : return 'Æ';
+      case 'ø' : return 'Ø';
+      case 'å' : return 'Å';
       default  : return toupper(c);
    }
 }
 UCHAR toLower(UCHAR c)
 {
    switch(c) {
-      case 'Ã†' : return 'Ã¦';
-      case 'Ã˜' : return 'Ã¸';
-      case 'Ã…' : return 'Ã¥';
+      case 'Æ' : return 'æ';
+      case 'Ø' : return 'ø';
+      case 'Å' : return 'å';
       default  : return tolower(c);
    }
 }
@@ -111,6 +111,17 @@ PUCHAR stristr(PUCHAR base, PUCHAR key )
      base ++;
    }
    return NULL;
+}
+/* ------------------------------------------------------------- *\
+   replace char
+\* ------------------------------------------------------------- */
+PUCHAR strreplacechar(PUCHAR str, UCHAR find, UCHAR replace){
+    PUCHAR current_pos = strchr(str,find);
+    while (current_pos) {
+        *current_pos = replace;
+        current_pos = strchr(current_pos,find);
+    }
+    return str;
 }
 /* ------------------------------------------------------------- *\
    strchrreplace returns a string, where chars are replaced one by one if byte match

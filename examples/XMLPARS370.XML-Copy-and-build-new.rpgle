@@ -21,7 +21,7 @@
        Dcl-S msg                VarChar(50);
        Dcl-S n                      Int(10:0);
        Dcl-S i                      Int(10:0);
-      /include xmlParser
+      /include qrpgleRef,noxdb
           pXml1= xml_ParseString('<a><b atr="john"/></a>');
 
           If xml_Error(pXml1) ;

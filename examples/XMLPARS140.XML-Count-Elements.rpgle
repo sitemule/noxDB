@@ -19,7 +19,7 @@
        Dcl-S lCount             Int(10:0);
        Dcl-S kCount                 Int(10:0);
        Dcl-S countChildren          Int(10:0);
-      /include xmlParser
+      /include qrpgleRef,noxdb
           pXml  = xml_parseString('                  -
                 <a>                                    -
                    <l>1</l>                            -

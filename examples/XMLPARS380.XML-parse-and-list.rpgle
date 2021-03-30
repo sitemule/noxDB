@@ -5,7 +5,7 @@
        Dcl-S msg                VarChar(50);
        Dcl-S n                  VarChar(50);
        Dcl-S v                  VarChar(50);
-      /include xmlparser
+      /include qrpgleRef,noxdb
 
           pxml  = xml_ParseString (
                '<a>                    '+

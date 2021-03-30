@@ -24,24 +24,26 @@
        Dcl-S pResult            Pointer;
        Dcl-S pSelected          Pointer;
        Dcl-S sql                VarChar(512);
-       Dcl-S start                  Int(10:0);
-       Dcl-S limit                  Int(10:0);
+       Dcl-S start              Int(10:0);
+       Dcl-S limit              Int(10:0);
 
 
         // return a object with first 10, give me the approximatly number of rows ( fast result)
           sql   = 'Select * from product';
-          start = 225;
-          limit = 10; // Give me the 10 first rows
+          start = 1;
+          limit = -1; // Give me all rows
 
           // The json_META constructs a resultset object with a "row" array
           // Total rows convert ( if possible ) the select to an select count(*) first
           pResult = json_sqlResultSet(sql:start:limit:
-             json_META + json_APPROXIMATE_TOTALROWS
+             JSON_META + JSON_APPROXIMATE_TOTALROWS
           );
 
           // Produce a JSON stream file in the root of the IFS
           json_writeJsonStmf(pResult:
-             '/prj/noxdb/testdata/resultset-object-total-rows1.json' : 1208 : *ON
+             '/prj/noxdb/testdata/resultset-object-total-rows1.json' 
+             : 1208 
+             : *ON
           );
 
           // Cleanup: Close the SQL cursor, dispose the row and the array
@@ -60,7 +62,9 @@
 
           // Produce a JSON stream file in the root of the IFS
           json_writeJsonStmf(pResult:
-             '/prj/noxdb/testdata/resultset-object-total-rows2.json' : 1208 : *ON
+             '/prj/noxdb/testdata/resultset-object-total-rows2.json' 
+             : 1208 
+             : *ON
           );
 
           // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect

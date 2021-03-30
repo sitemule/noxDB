@@ -6,7 +6,7 @@
        Dcl-S p2                 Pointer;
        Dcl-S msg                VarChar(50);
        Dcl-S name               VarChar(50);
-      /include xmlparser
+      /include qrpgleRef,noxdb
       /include QRPGLEREF,ilob
 
           pxml  = xml_ParseString (

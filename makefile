@@ -84,7 +84,6 @@ all:
 	@echo Build success!
 
 clean:
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*FILE)"
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
 	
 release: clean

@@ -14,6 +14,7 @@ LONG   strTrimLen(PUCHAR str);
 LONG   strtrim(PUCHAR str);
 PUCHAR strchrreplace(PUCHAR out , PUCHAR in , PUCHAR from , PUCHAR to );
 LONG   memstrreplace(PUCHAR buf , LONG len , PUCHAR from , PUCHAR to );
+PUCHAR strreplacechar(PUCHAR str, UCHAR find, UCHAR replace);
 PUCHAR fmtPacked(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint);
 PUCHAR fmtZoned(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint);
 PUCHAR stripLeadingZeros(PUCHAR out, PUCHAR input);

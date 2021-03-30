@@ -79,7 +79,7 @@
 
        // ------------------------------------------------------------- *
        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
-      /include xmlparser
+      /include qrpgleRef,noxdb
        Dcl-S pXml               Pointer;
        Dcl-S pVisit             Pointer;
        Dcl-S pConsignment       Pointer;

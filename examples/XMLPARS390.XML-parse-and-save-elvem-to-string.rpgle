@@ -6,7 +6,7 @@
        Dcl-S len                int(10);
        Dcl-S msg                VarChar(50);
        Dcl-S s                  VarChar(32766);
-      /include xmlparser
+      /include qrpgleRef,noxdb
       /include QRPGLEREF,ilob
 
           pxml  = xml_ParseFile('/noxdb/xml/XmlSample2.xml');
