@@ -1,5 +1,4 @@
 *.DS_Store
-release/*
 *.fuse*
 error.txt
 *.bin
