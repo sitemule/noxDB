@@ -87,6 +87,7 @@ void          jx_sqlDisconnect (void);
 PJXSQLCONNECT jx_sqlNewConnection(void);
 void jx_traceOpen (PJXSQLCONNECT pCon);
 void jx_traceInsert (PJXSQL pSQL, PUCHAR stmt , PUCHAR sqlState);
+static PJXNODE pMemRef = null;
 
 /* ------------------------------------------------------------- */
 SQLINTEGER jx_sqlCode(void)
@@ -167,6 +168,8 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
    PUCHAR        server = "*LOCAL";
    int rc;
    PSQLOPTIONS po;
+
+   if (pMemRef == null) pMemRef = memAlloc(1);
 
    pConnection = memAlloc(sizeof(JXSQLCONNECT));
    memset(pConnection , 0 , sizeof(JXSQLCONNECT));
@@ -1162,6 +1165,11 @@ static LONG currentLength (PPROCPARM p, LONG length)
       return length;
    } 
 }
+PJXNODE jx_getNodeByOffset (INT64 offset) 
+{
+   PUCHAR newRef = (PUCHAR) pMemRef + offset;
+   return (PJXNODE) newRef;
+}
 /* ------------------------------------------------------------- */
 // Note: Only works on qualified procedure calls 
 /* ------------------------------------------------------------- */
@@ -1215,7 +1223,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
       p->name = jx_GetValuePtr    (pNode , "parameter_name" , "");
       p->mode = text2parmtype (jx_GetValuePtr    (pNode , "parameter_mode" , ""));                 
       p->sqlType  = textType2SQLtype (jx_GetValuePtr (pNode , "data_type" , ""), p->name);
-      
+
       if (p->mode == SQL_PARAM_INPUT 
       && NULL == jx_GetNode  (pInParms, p->name)) {
          // Omit it from parmist, reuse this slot for next parameter 
@@ -1371,6 +1379,85 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
 
    jx_sqlClose (&pSQL);
    jx_NodeDelete (pProcMeta);
+
+   return (pResult);
+
+}
+//////////////////////
+
+
+/* ------------------------------------------------------------- */
+// Note: Only works on qualified procedure calls 
+/* ------------------------------------------------------------- */
+PJXNODE jx_sqlCallObject ( PUCHAR procedureName , PJXNODE pInParms)
+{
+   PJXNODE pResult = jx_NewObject(NULL);
+   UCHAR   stmtBuf [32760]; 
+   PUCHAR  stmt =stmtBuf;
+   PJXSQL  pSQL;
+   int     rc;
+   SQLSMALLINT  fCtype;                    
+   SQLSMALLINT  fSQLtype;                    
+      
+   INT64       buffer1; 
+   INT64       buffer2; 
+   SQLINTEGER  inLen1 ;
+   SQLINTEGER  inLen2;
+
+   stmt += sprintf (stmt , "call %s (?,?)" , procedureName );
+
+   pSQL = jx_sqlNewStatement (NULL, true, false);
+
+   rc  = SQLPrepare( pSQL->pstmt->hstmt, stmtBuf, SQL_NTS );
+
+   if (rc != SQL_SUCCESS &&  rc != SQL_SUCCESS_WITH_INFO) {
+      check_error (pSQL);
+      jxError = true;
+      jx_NodeDelete(pResult);
+      return NULL;
+   }
+
+   inLen1  = sizeof(INT64);
+   buffer1 = (PUCHAR) pMemRef - (PUCHAR )pResult;
+   
+   rc  = SQLBindParameter (
+      pSQL->pstmt->hstmt,  // hstmt
+      1,                   // Parm number
+      SQL_PARAM_INPUT,     // fParamType
+      SQL_BIGINT,          // data type here in C
+      SQL_BIGINT,          // dtatype in SQL
+      sizeof(INT64),       // precision / Length of the C - string
+      0, 
+      &buffer1,            // buffer ,
+      0,                   // cbValueMax
+      &inLen1              // Buffer length  or indPtr // was:  &outLen              // pcbValue
+   );
+
+   inLen2  = sizeof(INT64);
+   buffer2 = (PUCHAR) pMemRef - (PUCHAR) pInParms;
+
+   rc  = SQLBindParameter (
+      pSQL->pstmt->hstmt,  // hstmt
+      2,                   // Parm number
+      SQL_PARAM_INPUT,     // fParamType
+      SQL_BIGINT,          // data type here in C
+      SQL_BIGINT,          // dtatype in SQL
+      sizeof(INT64),       // precision / Length of the C - string
+      0, 
+      &buffer2,            // buffer ,
+      0,                   // cbValueMax
+      &inLen2              // Buffer length  or indPtr // was:  &outLen              // pcbValue
+   );
+
+   rc = SQLExecute(pSQL->pstmt->hstmt);
+   if (rc != SQL_SUCCESS &&  rc != SQL_SUCCESS_WITH_INFO) {
+      check_error (pSQL);
+      jxError = true;
+      jx_NodeDelete(pResult);
+      return NULL;
+   }
+
+   jx_sqlClose (&pSQL);
 
    return (pResult);
 

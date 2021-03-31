@@ -1023,8 +1023,19 @@
 
 
       // call stored procedures 
-        //Returns handle to sql statement
+        // JSON in/JSON out style - 
+        // See example JSONSQL30A from more info
         Dcl-PR xml_sqlCall  pointer   extproc(*CWIDEN:'jx_sqlCall'  );
+          // SQL procedure to call
+          procedure        Pointer    value options(*string);
+          // json object of input  parameter ( NOTE: It is named parameters)
+          inputParms       Pointer    value;
+        End-PR;
+
+      // call stored procedures - with objects allows you to use nox_getStr etc. 
+      // from stored procedures. 
+        // See example JSONSQL30A from more info
+        Dcl-PR xml_sqlCallObject pointer extproc(*CWIDEN:'jx_sqlCallObject');
           // SQL procedure to call
           procedure        Pointer    value options(*string);
           // json object of input  parameter ( NOTE: It is named parameters)

@@ -2,7 +2,10 @@
 #define JSONXML
 #include <stdio.h>
 #include <iconv.h>
+
+#ifndef FROMSQLPROC
 #include <sqlcli.h>
+#endif
 
 #ifdef IFSCOMPILE
  #include "/qsys.lib/include.lib/h.file/ostypes.mbr"
@@ -598,6 +601,8 @@ PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT options);
 
 void jx_deleteWriter (PJWRITE  pjWrite);
 PJWRITE jx_newWriter (void);
+
+PJXNODE jx_getNodeByOffset (INT64 offset); 
 
 
 #endif

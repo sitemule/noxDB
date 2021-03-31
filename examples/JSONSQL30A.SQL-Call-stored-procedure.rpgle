@@ -35,6 +35,7 @@ Dcl-s i          int(10);
     commonTypesNegative();
     commonTypesNull();
     performance();
+    //object();
 
 
     // That's it..
@@ -371,3 +372,39 @@ dcl-proc performance;
 
 end-proc;
 
+// ------------------------------------------------------------------------------------
+// performance  - inout parameter usecase 
+// 
+// Create the procedure from ACS. Maybe change the schema location 
+// 
+// create or replace procedure qgpl.inc (
+//     inout a int
+// ) 
+// begin 
+//     set a = a + 1;
+// end;
+// call inc (a=>123);
+// ------------------------------------------------------------------------------------
+dcl-proc object ;
+
+    dcl-s i	            int(10);
+    dcl-s iterations	int(10);
+    dcl-s elapsed       int(20);
+    dcl-s before	    timestamp;
+
+    // Build input parameter object
+    pIn  = json_newObject();
+    json_SetStr(pIn: 'name': 'John');
+
+    pOut = json_sqlCallObject ('qgpl.noxtest' : pIn);
+
+    If json_Error(pOut) ;
+        msg = json_Message(pOut);
+        dsply msg;
+    EndIf;
+
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testdata/procparms.json':1208:*OFF);
+    json_delete(pOut);
+    json_delete(pIn);
+
+end-proc;
