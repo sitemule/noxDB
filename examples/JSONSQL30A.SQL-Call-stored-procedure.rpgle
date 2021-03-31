@@ -32,6 +32,10 @@ Dcl-s i          int(10);
     add();
     inc();
     commonTypes();
+    commonTypesNegative();
+    commonTypesNull();
+    performance();
+
 
     // That's it..
     *inlr = *on;
@@ -122,7 +126,7 @@ end-proc;
 // 
 // drop procedure qgpl.common_types;
 // create or replace procedure qgpl.common_types  (
-//       in ismallint smallint default null
+//     in ismallint smallint default null,
 //     in iinteger integer default null,
 //     in ibigint bigint default null,
 //     in idecimal decimal (30, 10) default null,
@@ -164,42 +168,42 @@ end-proc;
 // )
 // set option output=*print, commit=*none, dbgview = *list 
 // begin 
-//     set ismallint = 1;
-//     set iinteger = 1;
-//     set ibigint = 1;
-//     set idecimal  = 1;
-//     set inumeric  = 1;
-//     set ifloat = 1;
-//     set ireal = 1;
-//     set idouble = 1;
-//     set ichar = 1;
-//     set ivarchar = 1;
+
+//     set iinteger = ismallint;
+//     set ibigint = ismallint;
+//     set idecimal  = ismallint;
+//     set inumeric  = ismallint;
+//     set ifloat = ismallint;
+//     set ireal = ismallint;
+//     set idouble = ismallint;
+//     set ichar = ismallint;
+//     set ivarchar = ismallint;
 //     set idate = now();
 //     set itime = now();
 //     set itimestamp = now();
-//     set osmallint = 1;
-//     set ointeger = 1;
-//     set obigint = 1;
-//     set odecimal  = 1;
-//     set onumeric  = 1;
-//     set ofloat = 1;
-//     set oreal = 1;
-//     set odouble = 1;
-//     set ochar = 1;
-//     set ovarchar = 1;
+//     set osmallint = ismallint;
+//     set ointeger = ismallint;
+//     set obigint = ismallint;
+//     set odecimal  = ismallint;
+//     set onumeric  = ismallint;
+//     set ofloat = ismallint;
+//     set oreal = ismallint;
+//     set odouble = ismallint;
+//     set ochar = ismallint;
+//     set ovarchar = ismallint;
 //     set odate = now();
 //     set otime = now();
 //     set otimestamp = now();
-//     set iosmallint = 1;
-//     set iointeger = 1;
-//     set iobigint = 1;
-//     set iodecimal  = 1;
-//     set ionumeric  = 1;
-//     set iofloat = 1;
-//     set ioreal = 1;
-//     set iodouble = 1;
-//     set iochar  = 1;
-//     set iovarchar = 1;
+//     set iosmallint = ismallint;
+//     set iointeger = ismallint;
+//     set iobigint = ismallint;
+//     set iodecimal  = ismallint;
+//     set ionumeric  = ismallint;
+//     set iofloat = ismallint;
+//     set ioreal = ismallint;
+//     set iodouble = ismallint;
+//     set iochar  = ismallint;
+//     set iovarchar = ismallint;
 //     set iodate = now();
 //     set iotime = now();
 //     set iotimestamp = now();
@@ -261,7 +265,7 @@ dcl-proc commonTypes;
       msg = json_Message(pOut);
       dsply msg;
     EndIf;
-
+    
     // Dump the result
     json_joblog(pOut);
     json_WriteJsonStmf(pOut:'/prj/noxdb/testdata/procparms.json':1208:*OFF);
@@ -271,4 +275,99 @@ dcl-proc commonTypes;
 
 end-proc;
 
+dcl-proc commonTypesNegative;
+
+    // Build input parameter object
+    pIn  = json_newObject();
+    json_SetInt(pIn: 'ismallint' :   -1);
+  
+    // Call the procedure
+    pOut = json_sqlCall ('qgpl.common_types' : pIn);
+
+    If json_Error(pOut) ;
+      msg = json_Message(pOut);
+      dsply msg;
+    EndIf;
+    
+    // Dump the result
+    json_joblog(pOut);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testdata/procparms.json':1208:*OFF);
+
+    json_delete(pIn);
+    json_delete(pOut);
+
+end-proc;
+
+dcl-proc commonTypesNull;
+
+    // Build input parameter object
+    pIn  = json_newObject();
+    json_SetNull(pIn: 'ismallint' );
+  
+    // Call the procedure
+    pOut = json_sqlCall ('qgpl.common_types' : pIn);
+
+    If json_Error(pOut) ;
+      msg = json_Message(pOut);
+      dsply msg;
+    EndIf;
+    
+    // Dump the result
+    json_joblog(pOut);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testdata/procparms.json':1208:*OFF);
+
+    json_delete(pIn);
+    json_delete(pOut);
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// performance  - inout parameter usecase 
+// 
+// Create the procedure from ACS. Maybe change the schema location 
+// 
+// create or replace procedure qgpl.inc (
+//     inout a int
+// ) 
+// begin 
+//     set a = a + 1;
+// end;
+// call inc (a=>123);
+// ------------------------------------------------------------------------------------
+dcl-proc performance;
+
+    dcl-s i	            int(10);
+    dcl-s iterations	int(10);
+    dcl-s elapsed       int(20);
+    dcl-s before	    timestamp;
+
+    // Build input parameter object
+    pIn  = json_newObject();
+    json_SetInt(pIn: 'a': 1);
+
+    // Call the procedure a numer of times
+    before = %timestamp(); 
+    iterations = 1000;
+
+    for i = 1 to iterations;
+        pOut = json_sqlCall ('qgpl.inc' : pIn);
+
+        If json_Error(pOut) ;
+            msg = json_Message(pOut);
+            dsply msg;
+            leave;
+        EndIf;
+        // json_joblog(pOut);
+        json_copyvalue (pIn : 'a' : pOut : 'a');
+        // Always delte the output object, it will produce a new in next iteration       
+        json_delete(pOut);
+    endfor;
+
+    elapsed = %diff (%timestamp() : before : *MSECONDS );
+    json_joblog(%char (iterations) + ' iteratinons in ' + %char(elapsed / 1000.0) + ' milliseconds');
+		
+
+    json_delete(pIn);
+
+end-proc;
 

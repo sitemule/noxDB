@@ -10,7 +10,7 @@
 #    RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb') PPGENOPT(*EXPINCLUDE) TGTCCSID(277)
 # 
 BIN_LIB=NOXDB
-RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb') 
+RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb')  OPTION(*NOSHOWCPY *NODEBUGIO *NOUNREF *EVENTF *NOEXT *NOEXPDDS)
 OBJNAME=$(word 1, $(subst ., ,$(OBJ)))    
 
 all: compile
@@ -21,10 +21,10 @@ compile:
 	touch error.txt
 	setccsid 1208 error.txt
 	setccsid 1208 $(SRC)
-	system -i "CRTSRCPF $(BIN_LIB)/srctemp RCDLEN(240)"
-	system -i "CPYFRMSTMF FROMSTMF('$(SRC)') TOMBR('/QSYS.LIB/$(BIN_LIB).LIB/srctemp.file/srctemp.mbr')  MBROPT(*REPLACE)"
+	system -iq "CRTSRCPF $(BIN_LIB)/srctemp RCDLEN(240)"
+	system -iq "CPYFRMSTMF FROMSTMF('$(SRC)') TOMBR('/QSYS.LIB/$(BIN_LIB).LIB/srctemp.file/srctemp.mbr')  MBROPT(*REPLACE)"
 	system -i "CRTBNDRPG  PGM($(BIN_LIB)/$(OBJNAME)) SRCFILE($(BIN_LIB)/srctemp) SRCMBR(SRCTEMP) $(RPG_OPT)" > error.txt
-	system -i "DLTF $(BIN_LIB)/srctemp"
+	system -iq "DLTF $(BIN_LIB)/srctemp"
 	EOF
        
 .PHONY: compile

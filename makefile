@@ -85,6 +85,12 @@ all:
 
 clean:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/XMLPARS*) OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/JXTEST*) OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/JSONSQL*) OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/JSONPARS*) OBJTYPE(*PGM)"
+	
+
 	
 release: clean
 	@echo " -- Creating noxdb release. --"
