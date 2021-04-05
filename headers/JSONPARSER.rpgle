@@ -1035,11 +1035,20 @@
       // call stored procedures - with objects allows you to use nox_getStr etc. 
       // from stored procedures. 
         // See example JSONSQL30A from more info
-        Dcl-PR json_sqlCallObject pointer extproc(*CWIDEN:'jx_sqlCallObject');
+        Dcl-PR json_sqlCallNode ind extproc(*CWIDEN:'jx_sqlCallNode');
           // SQL procedure to call
           procedure        Pointer    value options(*string);
-          // json object of input  parameter ( NOTE: It is named parameters)
-          inputParms       Pointer    value;
+          // nox node or JSON / XML string to parse 
+          parm01            Pointer    value options(*string:*nopass);
+          parm02            Pointer    value options(*string:*nopass);
+          parm03            Pointer    value options(*string:*nopass);
+          parm04            Pointer    value options(*string:*nopass);
+          parm05            Pointer    value options(*string:*nopass);
+          parm06            Pointer    value options(*string:*nopass);
+          parm07            Pointer    value options(*string:*nopass);
+          parm08            Pointer    value options(*string:*nopass);
+          parm09            Pointer    value options(*string:*nopass);
+          parm10            Pointer    value options(*string:*nopass);
         End-PR;
 
       // Execute an update table where the row is defined as a json object

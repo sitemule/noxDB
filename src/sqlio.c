@@ -87,7 +87,6 @@ void          jx_sqlDisconnect (void);
 PJXSQLCONNECT jx_sqlNewConnection(void);
 void jx_traceOpen (PJXSQLCONNECT pCon);
 void jx_traceInsert (PJXSQL pSQL, PUCHAR stmt , PUCHAR sqlState);
-static PJXNODE pMemRef = null;
 
 /* ------------------------------------------------------------- */
 SQLINTEGER jx_sqlCode(void)
@@ -168,8 +167,6 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
    PUCHAR        server = "*LOCAL";
    int rc;
    PSQLOPTIONS po;
-
-   if (pMemRef == null) pMemRef = memAlloc(1);
 
    pConnection = memAlloc(sizeof(JXSQLCONNECT));
    memset(pConnection , 0 , sizeof(JXSQLCONNECT));
@@ -1165,11 +1162,6 @@ static LONG currentLength (PPROCPARM p, LONG length)
       return length;
    } 
 }
-PJXNODE jx_getNodeByOffset (INT64 offset) 
-{
-   PUCHAR newRef = (PUCHAR) pMemRef + offset;
-   return (PJXNODE) newRef;
-}
 /* ------------------------------------------------------------- */
 // Note: Only works on qualified procedure calls 
 /* ------------------------------------------------------------- */
@@ -1389,23 +1381,29 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
 /* ------------------------------------------------------------- */
 // Note: Only works on qualified procedure calls 
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlCallObject ( PUCHAR procedureName , PJXNODE pInParms)
+LGL jx_sqlCallNode ( PUCHAR procedureName , ... )
 {
-   PJXNODE pResult = jx_NewObject(NULL);
+   va_list vl;
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    UCHAR   stmtBuf [32760]; 
    PUCHAR  stmt =stmtBuf;
+   PUCHAR  comma = "";
    PJXSQL  pSQL;
    int     rc;
+   int     i, pIx;
    SQLSMALLINT  fCtype;                    
    SQLSMALLINT  fSQLtype;                    
       
-   INT64       buffer1; 
-   INT64       buffer2; 
-   SQLINTEGER  inLen1 ;
-   SQLINTEGER  inLen2;
-
-   stmt += sprintf (stmt , "call %s (?,?)" , procedureName );
-
+   INT64       buffer [10]; 
+   SQLINTEGER  inLen  [10] ;
+ 
+   stmt += sprintf (stmt , "call %s (" , procedureName );
+   for (i=1; i <  pParms->OpDescList->NbrOfParms; i++) {
+      stmt += sprintf (stmt , "%s?" , comma);
+      comma = ",";
+   } 
+   stmt += sprintf (stmt , ")" );
+   
    pSQL = jx_sqlNewStatement (NULL, true, false);
 
    rc  = SQLPrepare( pSQL->pstmt->hstmt, stmtBuf, SQL_NTS );
@@ -1413,53 +1411,40 @@ PJXNODE jx_sqlCallObject ( PUCHAR procedureName , PJXNODE pInParms)
    if (rc != SQL_SUCCESS &&  rc != SQL_SUCCESS_WITH_INFO) {
       check_error (pSQL);
       jxError = true;
-      jx_NodeDelete(pResult);
-      return NULL;
+      return ON;
    }
 
-   inLen1  = sizeof(INT64);
-   buffer1 = (PUCHAR) pMemRef - (PUCHAR )pResult;
-   
-   rc  = SQLBindParameter (
-      pSQL->pstmt->hstmt,  // hstmt
-      1,                   // Parm number
-      SQL_PARAM_INPUT,     // fParamType
-      SQL_BIGINT,          // data type here in C
-      SQL_BIGINT,          // dtatype in SQL
-      sizeof(INT64),       // precision / Length of the C - string
-      0, 
-      &buffer1,            // buffer ,
-      0,                   // cbValueMax
-      &inLen1              // Buffer length  or indPtr // was:  &outLen              // pcbValue
-   );
+   va_start(vl,procedureName);
+   for (i=1, pIx=0; i <  pParms->OpDescList->NbrOfParms; i++, pIx++) {
 
-   inLen2  = sizeof(INT64);
-   buffer2 = (PUCHAR) pMemRef - (PUCHAR) pInParms;
-
-   rc  = SQLBindParameter (
-      pSQL->pstmt->hstmt,  // hstmt
-      2,                   // Parm number
-      SQL_PARAM_INPUT,     // fParamType
-      SQL_BIGINT,          // data type here in C
-      SQL_BIGINT,          // dtatype in SQL
-      sizeof(INT64),       // precision / Length of the C - string
-      0, 
-      &buffer2,            // buffer ,
-      0,                   // cbValueMax
-      &inLen2              // Buffer length  or indPtr // was:  &outLen              // pcbValue
-   );
-
+      inLen[pIx]  = sizeof(INT64);
+      buffer[pIx] = jx_cvtNodePtr2Offset ( (PJXNODE ) va_arg(vl,PJXNODE) );
+      
+      rc  = SQLBindParameter (
+         pSQL->pstmt->hstmt,  // hstmt
+         i,                   // Parm number
+         SQL_PARAM_INPUT,     // fParamType
+         SQL_BIGINT,          // data type here in C
+         SQL_BIGINT,          // dtatype in SQL
+         sizeof(INT64),       // precision / Length of the C - string
+         0, 
+         &buffer[pIx],        // buffer ,
+         0,                   // cbValueMax
+         &inLen [pIx]         // Buffer length  or indPtr // was:  &outLen              // pcbValue
+      );
+   }
+   va_end(vl);
+  
    rc = SQLExecute(pSQL->pstmt->hstmt);
    if (rc != SQL_SUCCESS &&  rc != SQL_SUCCESS_WITH_INFO) {
       check_error (pSQL);
       jxError = true;
-      jx_NodeDelete(pResult);
-      return NULL;
+      return ON;
    }
 
    jx_sqlClose (&pSQL);
 
-   return (pResult);
+   return OFF;
 
 }
 

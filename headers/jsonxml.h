@@ -602,7 +602,11 @@ PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT options);
 void jx_deleteWriter (PJWRITE  pjWrite);
 PJWRITE jx_newWriter (void);
 
-PJXNODE jx_getNodeByOffset (INT64 offset); 
+PJXNODE jx_cvtNodeOffset2Ptr (INT64 offset); 
+INT64   jx_cvtNodePtr2Offset (PJXNODE pNode); 
+
+LGL jx_sqlCallNode ( PUCHAR procedureName , ... )  ;
+#pragma descriptor ( void jx_sqlCallNode  (void))
 
 
 #endif

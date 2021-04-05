@@ -153,7 +153,8 @@ STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('JSONXML01')
   EXPORT SYMBOL("jx_dataInto")
   EXPORT SYMBOL("jx_dataGen")
   EXPORT SYMBOL("jx_dataGenMapper")
-  EXPORT SYMBOL("jx_getNodeByOffset")
-  EXPORT SYMBOL("jx_sqlCallObject")
+  EXPORT SYMBOL("jx_sqlCallNode")
+  EXPORT SYMBOL("jx_noxGetStr")
+  EXPORT SYMBOL("jx_noxGetNum")
 
 ENDPGMEXP
