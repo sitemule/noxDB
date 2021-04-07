@@ -31,17 +31,42 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
     *inlr = *on;
 
 // ------------------------------------------------------------------------------------
-// performance  - inout parameter usecase 
 // 
 // Create the procedure from ACS. Maybe change the schema location 
 // 
-// create or replace procedure qgpl.inc (
-//     inout a int
+// create or replace table noxdb.customer  ( 
+//   id  int generated always as identity primary key,
+//   name varchar(30),
+//   age  int
+// ); 
+
+
+// insert into noxdb.customer (name) values ('john'); 
+// select * from noxdb.customer;
+
+// drop procedure   qgpl.noxtest;
+// create or replace procedure qgpl.noxtest (
+//   in noxinobj  bigint,
+//   in noxoutobj bigint
 // ) 
-// begin 
-//     set a = a + 1;
+// set option output=*print, commit=*none, dbgview = *list
+
+// begin
+//     declare sqlcode int;
+//     declare tempnode bigint;
+    
+//     insert into noxdb.customer (name , age) values (
+//         nox_getStr(noxinobj, 'name' , 'N/A'),
+//         nox_getNum(noxinobj, 'age'  , 0 )
+//     );
+    
+//     if sqlcode = 0 then
+//         set tempnode = nox_setStr(noxoutobj, 'message' , 'Completed normally');
+//     else 
+//         set tempnode = nox_setStr(noxoutobj, 'message' , 'Error occured - Sqlcode: ' || sqlcode );
+//     end if;
+
 // end;
-// call inc (a=>123);
 // ------------------------------------------------------------------------------------
 dcl-proc callUsingNoxNodes ;
 
