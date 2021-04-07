@@ -24,6 +24,7 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt
 
     example1();
     example2();
+    example3();
     *INLR = *ON;
 
 // ------------------------------------------------------------------------------------
@@ -124,5 +125,44 @@ dcl-proc example2;
 
     // Always remember to delete used memory !!
     json_delete(pJson);
+
+end-proc;
+// ------------------------------------------------------------------------------------
+// Generating JSON or XML by placing the datastructure in the objectgraph
+// ------------------------------------------------------------------------------------
+dcl-proc example3;
+
+
+    // This is he data structure we map the object graph into:
+    // The name "rows" is in the data-into statement
+    // The "dim" causes it to be an array: 
+    dcl-DS row  qualified inz;
+        id   int(10);
+        name varchar(256);
+    end-ds;  
+
+    dcl-s pArr	    pointer;
+    dcl-s pRow      pointer;
+    dcl-s i	        int(10);  
+    dcl-s handle	char(1);
+
+    // Make some data we can play with
+    for i = 1 to 10 ;
+        row.id = i;
+        row.name = 'John ' + %char(i);
+
+        // Now the magic: the pJson pointer is send to the mapper and returns as an object graph
+        data-gen rows %data(handle: '') %gen(json_DataGen(pRow));
+        json_arrayPush (pArr , pRow);
+
+    endfor;                                                           
+
+    
+    // Let's see what we got
+    json_WriteJsonStmf(pArr:'/prj/noxdb/testdata/dump-payload.json':1208:*OFF);
+       
+
+    // Always remember to delete used memory. pArr "owns" all object generated 
+    json_delete(pArr);
 
 end-proc;

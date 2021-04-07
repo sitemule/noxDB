@@ -36,23 +36,6 @@ static PXLATEDESC pXd = NULL;
 
 typedef void (*JX_DATAGEN)();
 
-// ---------------------------------------------------------------------------
-// simple stack
-PJXNODE nodes[256];
-PJXNODE nodeTop;
-int nodesLen =0;
-
-static push (PJXNODE pNode) {
-    nodes [nodesLen ++] = nodeTop = pNode; 
-}
-static PJXNODE pop  () {
-    nodeTop = nodes [--nodesLen];
-    return nodeTop; 
-}
-static PJXNODE top  () {
-    return nodeTop;
-}
-
 /* 	---------------------------------------------------------------------------
     Implement;
     https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_74/rzasm/roaDataGenExample.htm
