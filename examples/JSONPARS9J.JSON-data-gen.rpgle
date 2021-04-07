@@ -152,8 +152,8 @@ dcl-proc example3;
         row.name = 'John ' + %char(i);
 
         // Now the magic: the pJson pointer is send to the mapper and returns as an object graph
-        data-gen rows %data(handle: '') %gen(json_DataGen(pRow));
-        json_arrayPush (pArr , pRow);
+        data-gen row %data(handle: '') %gen(json_DataGen(pRow));
+        json_arrayPush (pArr : pRow);
 
     endfor;                                                           
 
