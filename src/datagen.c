@@ -44,6 +44,7 @@ typedef void (*JX_DATAGEN)();
 void  jx_dataGenMapper (QrnDgParm_T * pParms)
 {
     static PJXNODE pNode;
+    static BOOL first;
 
     switch ( pParms->event) {
         case QrnDgEvent_01_StartMultiple    : {
@@ -58,6 +59,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
                 pXd = XlateXdOpen (13488 , 0);
             }
             pNode = NULL;
+            first = true;
             break;
         }
         case QrnDgEvent_04_End              : {
@@ -73,7 +75,10 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             jx_NodeRename(pObj ,  name);
             jx_NodeAddChildTail (pNode , pObj);
             pNode = pObj;
-            if (*ppRoot == NULL) *ppRoot = pNode; 
+            if (first) {
+                first = false;
+                *ppRoot = pNode;
+            };
             break;
         }
         case QrnDgEvent_06_EndStruct        : {
@@ -90,7 +95,10 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             jx_NodeRename(pArr ,  name);
             jx_NodeAddChildTail (pNode , pArr);  
             pNode = pArr;
-            if (*ppRoot == NULL) *ppRoot = pNode; 
+            if (first) {
+                first = false;
+                *ppRoot = pNode;
+            };
             break;
         }
         case QrnDgEvent_08_EndScalarArray   : {
@@ -107,7 +115,10 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             jx_NodeRename(pArr ,  name);
             jx_NodeAddChildTail (pNode , pArr);
             pNode = pArr; 
-            if (*ppRoot == NULL) *ppRoot = pNode; 
+            if (first) {
+                first = false;
+                *ppRoot = pNode;
+            };
             break;
         }
         case QrnDgEvent_10_EndStructArray   : {
@@ -149,7 +160,10 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             }
 
             pValueNode = jx_NodeAdd (pNode , RL_LAST_CHILD , name , pValue, type);
-            if (*ppRoot == NULL) *ppRoot = pValueNode; 
+            if (first) {
+                first = false;
+                *ppRoot = pValueNode;
+            };
             break;
         }
         case QrnDgEvent_12_Terminate        : {

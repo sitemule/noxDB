@@ -146,6 +146,8 @@ dcl-proc example3;
     dcl-s i	        int(10);  
     dcl-s handle	char(1);
 
+    pArr = json_newArray();
+
     // Make some data we can play with
     for i = 1 to 10 ;
         row.id = i;
@@ -159,7 +161,7 @@ dcl-proc example3;
 
     
     // Let's see what we got
-    json_WriteJsonStmf(pArr:'/prj/noxdb/testdata/dump-payload.json':1208:*OFF);
+    json_WriteJsonStmf(pArr:'/prj/noxdb/testdata/dump-payload3.json':1208:*OFF);
        
 
     // Always remember to delete used memory. pArr "owns" all object generated 
