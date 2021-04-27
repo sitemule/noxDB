@@ -1235,6 +1235,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    rc  = SQLPrepare( pSQL->pstmt->hstmt, stmtBuf, SQL_NTS );
 
    for (i=0; i < numerOfParms ; i++) {
+      int nullterm = 0;
       p = &procParms[i];
 
       p->buffer = bufferPos;
@@ -1251,8 +1252,13 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
          case NOXDB_UNKNOWN_SQL_DATATYPE:
             fCtype = SQL_C_CHAR;
             p->inLen   = currentLength (p, p->pData ? strlen(p->pData):0);
-            p->bufLen  = atol (jx_GetValuePtr   (p->pNode , "buffer_length" , "0")) +1;
-            substr( p->buffer , p->pData , p->inLen);
+            p->bufLen  = atol (jx_GetValuePtr   (p->pNode , "buffer_length" , "0"));
+            if ( p->inLen != SQL_NULL_DATA ) {
+               if (p->inLen > p->bufLen) p->inLen = p->bufLen;  
+               substr( p->buffer , p->pData , p->inLen);
+            }
+            *(p->buffer + p->bufLen) = '\0'; // Always keep an final zertermination at the end of buffer
+            nullterm = 1 ; // Keep the zerotermination in the buffer;
             break;
          case SQL_SMALLINT:
             fCtype = SQL_C_SHORT;
@@ -1300,9 +1306,8 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
          &p->inLen         // Buffer length  or indPtr // was:  &outLen              // pcbValue
       );
 
-      // Setup next; ensure zeortermination for esp. DECIMAL and NUMERIC
-      *(bufferPos + p->bufLen) = '\0';
-      bufferPos += p->bufLen; 
+      // Setup next; 
+      bufferPos += p->bufLen + nullterm;
    }
 
    rc = SQLExecute(pSQL->pstmt->hstmt);
@@ -1334,6 +1339,9 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
                case SQL_TIMESTAMP:
                case SQL_DATE:
                case SQL_TIME:
+               case SQL_DECIMAL:
+               case SQL_NUMERIC:
+                  *(p->buffer + p->bufLen) = '\0'; // Always keep an final zertermination at the end of buffer
                   jx_SetValueByName(pResult , p->name,  p->buffer , p->type);
                   break;
                case SQL_SMALLINT: 
@@ -1348,9 +1356,6 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
                   sprintf(temp, "%lld" , * (INT64*) p->buffer);
                   jx_SetValueByName(pResult , p->name,  temp , p->type);
                   break;
-               case SQL_DECIMAL:
-                  jx_SetValueByName(pResult , p->name,  p->buffer , p->type);
-                  break;
                case SQL_REAL:
                   sprintf(temp, "%.5f" , * (float *) p->buffer);
                   strreplacechar(temp ,',', '.'); // locale safty 
@@ -1360,9 +1365,6 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
                   sprintf(temp, "%.10f" , * (double *) p->buffer);
                   strreplacechar(temp ,',', '.'); // locale safty
                   jx_SetValueByName(pResult , p->name,  temp , p->type);
-                  break;
-               case SQL_NUMERIC:
-                  jx_SetValueByName(pResult , p->name,  p->buffer , p->type);
                   break;
             }
          }

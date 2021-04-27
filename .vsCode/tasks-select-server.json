@@ -2,10 +2,17 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
+    "inputs": [
+        {
+          "id": "IBMI",
+          "type": "promptString",
+          "description": "Host name of your IBM i"
+        }
+    ],
     "tasks": [
         {
             "label": "Compile current file",
-            "command": "ssh -t dksrv206 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake current SRC=${fileBasenameNoExtension}'",
+            "command": "ssh -t ${input:IBMI} 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake current SRC=${fileBasenameNoExtension}'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -28,7 +35,7 @@
         },
         {
             "label": "Compile Service program noxDB",
-            "command": "ssh dksrv206 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake all'",
+            "command": "ssh ${input:IBMI} 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake all'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -40,7 +47,7 @@
         },
         {
             "label": "Compile Test modules for noxDB",
-            "command": "ssh dksrv206 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/test/;gmake'",
+            "command": "ssh ${input:IBMI} 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/test/;gmake'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -52,7 +59,7 @@
         },
         {
             "label": "Compile current example file",
-            "command": "ssh -t dksrv206 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
+            "command": "ssh -t ${input:IBMI} 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
             "type": "shell",
             "group": {
                 "kind": "build",
