@@ -1,3 +1,4 @@
+
        // -------------------------------------------------------------
        // noxDB - Not only XML. JSON, SQL and XML made easy for RPG
        //
@@ -60,33 +61,27 @@
        //   </root>
        // ------------------------------------------------------------- *
        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
-       Dcl-S pXml1              Pointer;
        Dcl-S pRoot              Pointer;
        Dcl-S pt                 Pointer;
        Dcl-S msg                VarChar(50);
       /include qrpgleRef,noxdb
-        // first we run the paser on a minimal string to build the XML tree with the root name "root
-          pXml1 = xml_ParseString('<root/>':'syntax=LOOSE');
-          If xml_Error(pXml1) ;
-             msg = xml_Message(pXml1);
-             xml_delete(pXml1);
-             Return;
-          EndIf;
 
-          // Now we retrive an element pointer to the "root"
-          pRoot   = xml_locate(pXml1:'/Root');
+        // Produce the root int the object graph and give ti a name
+        pRoot = xml_newObject();
+        xml_nodeRename(pRoot:'root');
 
-          // elements are now added sucessivly using the reference location and element pointer
-          // note the order..
-          pt = xml_elementAdd(pRoot : xml_LAST_CHILD  : 'last' : 'Some value');
-          pt = xml_elementAdd(pRoot : xml_FIRST_CHILD : 'first' : 'More value');
+
+        // elements are now added sucessivly using the reference location and element pointer
+        // note the order..
+        pt = xml_elementAdd(pRoot : xml_LAST_CHILD  : 'last' : 'Some value');
+        pt = xml_elementAdd(pRoot : xml_FIRST_CHILD : 'first' : 'More value');
         pt = xml_elementAdd(pt    : xml_LAST_CHILD  : 'subnode2' : 'Sub-stuff');
-          xml_SetAttrValue(pt    : 'MyAttribute' : 'First value');
-          xml_SetAttrValue(pt    : 'MyAttribute' : 'New Value');
-          xml_SetAttrValue(pt    : 'a2'          : 'a2 1');
-          xml_SetAttrValue(pt    : 'a2'          : 'a2 2');
+        xml_SetAttrValue(pt    : 'MyAttribute' : 'First value');
+        xml_SetAttrValue(pt    : 'MyAttribute' : 'New Value');
+        xml_SetAttrValue(pt    : 'a2'          : 'a2 1');
+        xml_SetAttrValue(pt    : 'a2'          : 'a2 2');
 
-          // Finally we can produce the XML file
-          xml_writeStmf(pRoot : '/noxdb/xml/xmlsampleout6.xml' : 1208);
-          xml_delete(pXml1);
-          *inlr = *on;
+        // Finally we can produce the XML file
+        xml_writeStmf(pRoot : '/prj/noxdb/testdata/xml190out.xml' : 1208);
+        xml_delete(pRoot);
+        *inlr = *on;
