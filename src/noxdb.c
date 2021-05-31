@@ -1911,7 +1911,7 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
    if (pJxCom->UseIconv) {
      int inlen = strlen(Buf);
      int templen;
-     PUCHAR temp = memAlloc(inlen);
+     PUCHAR temp = memAlloc(inlen + 1); // Need room for zerotermination 
 
      if (pJxCom->LittleEndian) {
        swapEndian(Buf , inlen);
