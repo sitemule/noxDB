@@ -27,35 +27,35 @@
 // A transaction window is defined 
 // by sqlStartTransaction and the window keeps 
 // open until you do a sqlCommit or a sqlRollback ( or your job ends ). 
-// Hereafter noxDB is back into a transaction less state where everything
-// is done without any lock and  reads, writes, 
-// updates and deletes is happening immediately.
+// Hereafter noxDB is back into a transaction-less state where everything
+// is done without any lock and  reads, writes, 
+// updates and deletes are happening immediately.
 
 // So the transaction in noxDB is well defined 
 // and designed to be used together with a 
 // microservice architecture in mind. It is not 
 // designed for pessimistic data locking, but 
-// of cause also be (mis)used in this way. 
+// of course also be (mis)used in this way. 
 
-// Note: This is buy nature not threadsafe
-// You have to serialize transactions with semaphors or alike 
+// Note: This is buy nature not thread safe
+// You have to serialize transactions with semaphores or alike 
 // when using threads 
 // Also this requires that the files/tables a under journaling
 
-// The flow is:  
+// The flow is:  
 
-//     sqlStartTransaction
-//     do reads, writes, updates and deletes 
-//     sqlCommit
+//     sqlStartTransaction
+//     do reads, writes, updates and deletes 
+//     sqlCommit
 
 // or if anything goes wrong:
 
-//     sqlStartTransaction
-//     do reads, writes, updates and deletes 
-//     sqlRollback
+//     sqlStartTransaction
+//     do reads, writes, updates and deletes 
+//     sqlRollback
 
-// Note: testing the errors are omiited for clear reading
-// .. but you schould not :) 
+// Note: testing the errors are omitted for clear reading
+// .. but you should not :) 
 
 // ------------------------------------------------------------- *
 Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
