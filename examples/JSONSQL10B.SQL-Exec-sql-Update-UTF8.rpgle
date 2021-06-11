@@ -28,7 +28,7 @@
 
         // Simple sql
         err =json_sqlExec(
-            'create schema deleteme'
+            'create schema noxdbdemo'
         );
         if err and json_sqlcode() <> -601; // already exists is ok  
             json_joblog(json_message());
@@ -38,7 +38,7 @@
 
         // Create the table
         err = json_sqlExec(
-            'create or replace table deleteme.test (    - 
+            'create or replace table noxdbdemo.test_utf8 (    - 
                 text1 clob ccsid 1208,       -
                 text2 varchar(30) ccsid 1208, -
                 text3 clob,       -
@@ -62,7 +62,7 @@
         // Insert a mult-charset text: 
         // UTF-8 will convert and single bytes will keep the escape 
         err = json_sqlInsert (
-            'deleteme.test'
+            'noxdbdemo.test_utf8'
             :pRow
         );
 

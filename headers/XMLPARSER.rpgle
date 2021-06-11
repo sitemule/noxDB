@@ -249,13 +249,13 @@
           Value          Pointer    value options(*string);
         End-PR;
 
-        Dcl-PR xml_SetInt Pointer extproc(*CWIDEN: 'jx_SetIntByName');
+        Dcl-PR xml_SetInt Pointer extproc(*CWIDEN: 'jx_SetIntByName2');
           //Pointer to xml_ tree
           pNode          Pointer    value;
           //Location expression to node or attributes
           Expresion      Pointer    value options(*string);
           //New value to set / pointer to object
-          Value          Int(10)    value;
+          Value          Int(20)    value;
         End-PR;
 
         Dcl-PR xml_SetNum Pointer extproc(*CWIDEN: 'jx_SetDecByName');
@@ -535,6 +535,13 @@
           //node. Retrive from Locate()
           pRootNode      Pointer    value;
         End-PR;
+
+        // Synoným/shorthand for xml_NodeDelete
+        Dcl-PR xml_Delete extproc(*CWIDEN : 'jx_NodeDelete');
+          //element. Retrive from Locate()
+          pRootNode      Pointer    value;
+        End-PR;
+
 
         //Unlink the note from its previous and promote it as a new root node
         Dcl-PR xml_NodeUnlink Pointer extproc(*CWIDEN : 'jx_NodeUnlink');
@@ -958,12 +965,12 @@
         Dcl-C xml_TOTALROWS const(4);
         //+ Uppercase column names
         Dcl-C xml_UPPERCASE const(8);
-
         //+ Appoximate number of rows..
         //  ( unpresise but cheap !! prefered  )
         Dcl-C xml_APPROXIMATE_TOTALROWS const(16); 
-     
-
+        //+ resultset reurns system names
+        Dcl-C xml_SYSTEM_NAMES  const(32); 
+ 
 
       // SQL cursor processing
         //Returns handle to sql statement
@@ -1074,7 +1081,7 @@
           parms          Pointer    value options(*string:*nopass);
         End-PR;
 
-        //Returns *ON if error
+        // Returns *ON if error
         Dcl-PR xml_sqlUpsert Ind extproc(*CWIDEN:'jx_sqlUpsert');
           //table name
           table          Pointer    value options(*string);
@@ -1086,27 +1093,44 @@
           whereParms     Pointer    value options(*string:*nopass);
         End-PR;
 
-        //Returns id of last insert
-        Dcl-PR xml_sqlGetInsertId Int(10) extproc(*CWIDEN:'jx_sqlGetInsertId');
+        // Returns id of last insert
+        Dcl-PR xml_sqlGetInsertId Int(20) 
+          extproc(*CWIDEN:'jx_sqlGetInsertId2');
         End-PR;
 
-        //Returns array of column info
+        // Returns array of column info
         Dcl-PR xml_sqlGetMeta Pointer extproc(*CWIDEN:'jx_sqlGetMeta');
           sqlstmt        Pointer    value options(*string);
         End-PR;
 
-      // Return pointer to database connection. No options => will be default local database
+        // Return pointer to database connection. No options => will be default local database
         Dcl-PR xml_sqlConnect Pointer extproc(*CWIDEN: 'jx_sqlConnect');
           //json object or string with options
           parms          Pointer    value options(*string:*nopass);
         End-PR;
 
-      // Return pointer to database connection. No options => will be default local database
-        Dcl-PR xml_sqlDisconnect  extproc(*CWIDEN: 'jx_sqlDisconnect');
+        // Return pointer to database connection. No options => will be default local database
+        Dcl-PR xml_sqlDisconnect  
+          extproc(*CWIDEN: 'jx_sqlDisconnect');
+        End-PR;
+
+
+      // Start commitment control - this will be active until a commit or rollback
+        Dcl-PR xml_sqlStartTransaction ind 
+          extproc(*CWIDEN: 'jx_sqlStartTransaction');
+        End-PR;
+
+        Dcl-PR xml_sqlCommit  ind 
+          extproc(*CWIDEN: 'jx_sqlCommit');
+        End-PR;
+
+        Dcl-PR xml_sqlRollback  ind 
+          extproc(*CWIDEN: 'jx_sqlRollback');
         End-PR;
 
       // Return sql code for previous statement
-        Dcl-PR xml_sqlCode Int(10) extproc(*CWIDEN: 'jx_sqlCode');
+        Dcl-PR xml_sqlCode Int(10) 
+          extproc(*CWIDEN: 'jx_sqlCode');
         End-PR;
 
       //Returns a JSON object from a REST call
@@ -1164,11 +1188,6 @@
           RefLocation    Int(10)    value;
         End-PR;
 
-      // Depricated - use  xml_NodeDelete
-        Dcl-PR xml_Delete extproc(*CWIDEN : 'jx_NodeDelete');
-          //element. Retrive from Locate()
-          pRootNode      Pointer    value;
-        End-PR;
 
       // Depricated - use  xml_NodeDelete
         Dcl-PR xml_ElementDelete extproc(*CWIDEN : 'jx_NodeDelete');

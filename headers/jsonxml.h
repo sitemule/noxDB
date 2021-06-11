@@ -546,6 +546,7 @@ typedef _Packed struct  {
 	 JXSQLSTMT     stmts[JXSQLSTMT_MAX];
 	 SHORT         stmtIx;
 	 JXTRACE       sqlTrace;
+	 BOOL          transaction;
 } JXSQLCONNECT , * PJXSQLCONNECT;
 
 typedef enum _JX_RESULTSET {
@@ -553,21 +554,22 @@ typedef enum _JX_RESULTSET {
 	 JX_FIELDS     = 2,
 	 JX_TOTALROWS  = 4,
 	 JX_UPPERCASE  = 8,
-	 JX_APROXIMATE_TOTALROWS = 16
+	 JX_APROXIMATE_TOTALROWS = 16,
+	 JX_SYSTEM_NAMES = 32
 } JX_RESULTSET, *PJX_RESULTSET;
 
 VOID TRACE ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);
 
-PJXNODE jx_sqlResultRow ( PUCHAR sqlstmt, PJXNODE pSqlParmsP ) ;
+PJXNODE jx_sqlResultRow ( PUCHAR sqlstmt, PJXNODE pSqlParmsP , LONG format) ;
 #pragma descriptor ( void jx_sqlResultRow   (void))
 
-PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startAt , PJXNODE pSqlParmsP ) ;
+PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startAt , PJXNODE pSqlParmsP , LONG format) ;
 #pragma descriptor ( void jx_sqlResultRowAt   (void))
 
 PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PJXNODE pSqlParmsP );
 #pragma descriptor ( void jx_sqlResultSet   (void))
 
-PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParms, BOOL scroll);
+PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParms, BOOL scroll, LONG format);
 #pragma descriptor ( void jx_sqlOpen        (void))
 
 LGL jx_sqlUpdate (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParmsP  );

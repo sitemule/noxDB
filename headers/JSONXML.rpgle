@@ -249,13 +249,13 @@
           Value          Pointer    value options(*string);
         End-PR;
 
-        Dcl-PR jx_SetInt Pointer extproc(*CWIDEN: 'jx_SetIntByName');
+        Dcl-PR jx_SetInt Pointer extproc(*CWIDEN: 'jx_SetIntByName2');
           //Pointer to jx_ tree
           pNode          Pointer    value;
           //Location expression to node or attributes
           Expresion      Pointer    value options(*string);
           //New value to set / pointer to object
-          Value          Int(10)    value;
+          Value          Int(20)    value;
         End-PR;
 
         Dcl-PR jx_SetNum Pointer extproc(*CWIDEN: 'jx_SetDecByName');
@@ -535,6 +535,13 @@
           //node. Retrive from Locate()
           pRootNode      Pointer    value;
         End-PR;
+
+        // Synoným/shorthand for jx_NodeDelete
+        Dcl-PR jx_Delete extproc(*CWIDEN : 'jx_NodeDelete');
+          //element. Retrive from Locate()
+          pRootNode      Pointer    value;
+        End-PR;
+
 
         //Unlink the note from its previous and promote it as a new root node
         Dcl-PR jx_NodeUnlink Pointer extproc(*CWIDEN : 'jx_NodeUnlink');
@@ -926,6 +933,8 @@
           sqlStmt        Pointer    value options(*string);
           //json object template
           parms          Pointer    value options(*string:*nopass);
+          //resultset format:
+          format         Int(10)    value options(*nopass);
         End-PR;
 
       // returns an array (or object with array) of resulting rows for the SQL statment
@@ -958,12 +967,12 @@
         Dcl-C JX_TOTALROWS const(4);
         //+ Uppercase column names
         Dcl-C JX_UPPERCASE const(8);
-
         //+ Appoximate number of rows..
         //  ( unpresise but cheap !! prefered  )
         Dcl-C JX_APPROXIMATE_TOTALROWS const(16); 
-     
-
+        //+ resultset reurns system names
+        Dcl-C JX_SYSTEM_NAMES  const(32); 
+ 
 
       // SQL cursor processing
         //Returns handle to sql statement
@@ -972,6 +981,8 @@
           sqlStmt        Pointer    value options(*string);
           //json object template
           parms          Pointer    value options(*string:*nopass);
+          //resultset format:
+          format         Int(10)    value options(*nopass);
         End-PR;
 
       // Fetch next from from that open sql handle, starting from rowNumer. 1=First row
@@ -1074,7 +1085,7 @@
           parms          Pointer    value options(*string:*nopass);
         End-PR;
 
-        //Returns *ON if error
+        // Returns *ON if error
         Dcl-PR jx_sqlUpsert Ind extproc(*CWIDEN:'jx_sqlUpsert');
           //table name
           table          Pointer    value options(*string);
@@ -1086,27 +1097,44 @@
           whereParms     Pointer    value options(*string:*nopass);
         End-PR;
 
-        //Returns id of last insert
-        Dcl-PR jx_sqlGetInsertId Int(10) extproc(*CWIDEN:'jx_sqlGetInsertId');
+        // Returns id of last insert
+        Dcl-PR jx_sqlGetInsertId Int(20) 
+          extproc(*CWIDEN:'jx_sqlGetInsertId2');
         End-PR;
 
-        //Returns array of column info
+        // Returns array of column info
         Dcl-PR jx_sqlGetMeta Pointer extproc(*CWIDEN:'jx_sqlGetMeta');
           sqlstmt        Pointer    value options(*string);
         End-PR;
 
-      // Return pointer to database connection. No options => will be default local database
+        // Return pointer to database connection. No options => will be default local database
         Dcl-PR jx_sqlConnect Pointer extproc(*CWIDEN: 'jx_sqlConnect');
           //json object or string with options
           parms          Pointer    value options(*string:*nopass);
         End-PR;
 
-      // Return pointer to database connection. No options => will be default local database
-        Dcl-PR jx_sqlDisconnect  extproc(*CWIDEN: 'jx_sqlDisconnect');
+        // Return pointer to database connection. No options => will be default local database
+        Dcl-PR jx_sqlDisconnect  
+          extproc(*CWIDEN: 'jx_sqlDisconnect');
+        End-PR;
+
+
+      // Start commitment control - this will be active until a commit or rollback
+        Dcl-PR jx_sqlStartTransaction ind 
+          extproc(*CWIDEN: 'jx_sqlStartTransaction');
+        End-PR;
+
+        Dcl-PR jx_sqlCommit  ind 
+          extproc(*CWIDEN: 'jx_sqlCommit');
+        End-PR;
+
+        Dcl-PR jx_sqlRollback  ind 
+          extproc(*CWIDEN: 'jx_sqlRollback');
         End-PR;
 
       // Return sql code for previous statement
-        Dcl-PR jx_sqlCode Int(10) extproc(*CWIDEN: 'jx_sqlCode');
+        Dcl-PR jx_sqlCode Int(10) 
+          extproc(*CWIDEN: 'jx_sqlCode');
         End-PR;
 
       //Returns a JSON object from a REST call
@@ -1164,11 +1192,6 @@
           RefLocation    Int(10)    value;
         End-PR;
 
-      // Depricated - use  jx_NodeDelete
-        Dcl-PR jx_Delete extproc(*CWIDEN : 'jx_NodeDelete');
-          //element. Retrive from Locate()
-          pRootNode      Pointer    value;
-        End-PR;
 
       // Depricated - use  jx_NodeDelete
         Dcl-PR jx_ElementDelete extproc(*CWIDEN : 'jx_NodeDelete');

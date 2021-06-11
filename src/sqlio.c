@@ -296,6 +296,75 @@ static int insertMarkerValue (PUCHAR buf , PUCHAR marker, PJXNODE parms)
    return len;
 }
 /* ------------------------------------------------------------- */
+LGL jx_sqlStartTransaction (void)
+{
+   PJXSQLCONNECT pc;
+   int rc;
+   LONG   attrParm;
+
+
+   // build or get the connection
+   pc = jx_getCurrentConnection();
+   if (pc == NULL) return ON;
+
+   pConnection->transaction = true;
+
+   attrParm = SQL_FALSE;
+   rc = SQLSetConnectAttr(pConnection->hdbc, SQL_ATTR_AUTOCOMMIT, &attrParm, 0) ;
+
+   attrParm = SQL_TXN_REPEATABLE_READ;
+   // attrParm = SQL_TXN_READ_UNCOMMITTED; // does not work for updates !!! can noet bes pr- statemnet
+   rc = SQLSetConnectAttr (pConnection->hdbc, SQL_ATTR_COMMIT , &attrParm  , 0);
+
+   return (rc==0) ? OFF:ON;
+}
+/* ------------------------------------------------------------- */
+static LGL jx_sqlCommitOrRollback(int type)
+{
+
+   PJXSQLCONNECT pc;
+   int rc1;
+   int rc2;
+   int rc3;
+   LONG   attrParm;
+
+   // build or get the connection
+   pc = jx_getCurrentConnection();
+   if (pc == NULL) return ON;
+
+   pConnection->transaction = false;
+
+   rc1 = SQLTransact ( 
+      SQL_HANDLE_DBC, 
+      pConnection->hdbc, 
+      type 
+   ); 
+
+   if (rc1!=0) {
+      //check_error (NULL);
+   }    
+
+   attrParm = SQL_TXN_NO_COMMIT; // does not work with BLOBS
+   rc2 = SQLSetConnectAttr (pConnection->hdbc, SQL_ATTR_COMMIT , &attrParm  , 0);
+
+   attrParm = SQL_TRUE;
+   rc3 = SQLSetConnectAttr(pConnection->hdbc, SQL_ATTR_AUTOCOMMIT, &attrParm, 0) ;
+
+   return (rc1==0) ? OFF:ON;
+
+   return OFF;
+}
+/* ------------------------------------------------------------- */
+LGL jx_sqlCommit()
+{
+   return jx_sqlCommitOrRollback(SQL_COMMIT_HOLD);
+}
+/* ------------------------------------------------------------- */
+LGL jx_sqlRollback()
+{
+   return jx_sqlCommitOrRollback(SQL_ROLLBACK_HOLD);
+}
+/* ------------------------------------------------------------- */
 int jx_sqlExecDirectTrace(PJXSQL pSQL , int hstmt, PUCHAR sqlstmt)
 {
 
@@ -433,12 +502,13 @@ static PJXSQL jx_sqlNewStatement(PJXNODE pSqlParms, BOOL exec, BOOL scroll)
 }
 /* ------------------------------------------------------------- */
 /* ------------------------------------------------------------- */
-PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll)
+PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP)
 {
 
    UCHAR sqlTempStmt[32766];
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    PJXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 2 ) ? pSqlParmsP : NULL;
+   LONG   format      =  (pParms->OpDescList->NbrOfParms >= 3 ) ? formatP : 0;
    LONG   attrParm;
    LONG   i;
    //   PJXSQL pSQL = jx_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
@@ -467,7 +537,8 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll)
    //// huxi !! need uncomitted read for blob fields
    // and IBMi does not support statement attribute to set the pr statement. :/
    // so we simply append the "ur" uncommited read options
-   if (0 != memicmp ( sqlTempStmt , "call", 4)) {
+   if (0 != memicmp ( sqlTempStmt , "call", 4)
+   && pConnection->transaction == false ) {
       strcat ( sqlTempStmt , " with ur");
    }
    pSQL->sqlstmt = strdup(sqlTempStmt);
@@ -508,8 +579,27 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll)
 
       pCol->colname[pCol->colnamelen] = '\0';
 
-      // If all uppsercase ( not given name by .. AS "newName") the lowercase
-      if (OFF == jx_IsTrue (pConnection->pOptions ,"uppercasecolname")) {
+
+
+      // If all uppsercase ( not given name by .. AS "newName") then lowercase
+      if (format & (JX_SYSTEM_NAMES)) {
+         UCHAR temp [256];
+         // Is a colum name is give bu "AS" .. we dont touch
+         str2upper  (temp , pCol->colname);
+         if (strcmp (temp , pCol->colname) == 0) {
+            LONG len;
+            LONG p = SQL_DESC_NAME;
+            rc = SQLColAttributes (pSQL->pstmt->hstmt,i+1,p, pCol->colname, sizeof (pCol->colname), &len,&descLen);
+            pCol->colnamelen = len;
+            pCol->colname[len];
+            if (!(format & (JX_UPPERCASE))) {
+               str2lower  (pCol->colname , pCol->colname);
+            } 
+         }
+      } else if (format & (JX_UPPERCASE)) {
+         // It is upper NOW
+         // jx_sqlUpperCaseNames(pSQL);
+      } else if (OFF == jx_IsTrue (pConnection->pOptions ,"uppercasecolname")) {
          UCHAR temp [256];
          str2upper  (temp , pCol->colname);
          if (strcmp (temp , pCol->colname) == 0) {
@@ -990,14 +1080,13 @@ LONG jx_sqlNumberOfRows(PUCHAR sqlstmt)
    }
 
 
-
    // rebuild the select statement as a "select count(*) from ..."
    substr (str2 , sqlstmt , lastSelect - sqlstmt); // if a "With" exists then grab that
    strcat (str2 ,"select count(*) as counter" );
    strcat (str2 , from );
 
    // Get that only row
-   pRow = jx_sqlResultRow(str2, NULL);
+   pRow = jx_sqlResultRow(str2, NULL, 0);
 
    rowCount = atoi(jx_GetValuePtr(pRow, "counter", NULL));
 
@@ -1029,6 +1118,7 @@ LONG jx_sqlNumberOfRowsDiag(PUCHAR sqlstmt)
 }
 */
 /* ------------------------------------------------------------- */
+/********
 void jx_sqlUpperCaseNames(PJXSQL pSQL)
 {
    int i;
@@ -1037,6 +1127,7 @@ void jx_sqlUpperCaseNames(PJXSQL pSQL)
      str2upper (pCol->colname , pCol->colname);
    }
 }
+*****/
 /* ------------------------------------------------------------- */
 LONG jx_sqlColumns (PJXSQL pSQL)
 {
@@ -1648,13 +1739,9 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
 
    start = start < 1 ? 1 : start;
 
-   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, start > 1);
+   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, start > 1, format);
    if ( pSQL == NULL) {
         return NULL;
-   }
-
-   if (format & (JX_UPPERCASE)) {
-        jx_sqlUpperCaseNames(pSQL);
    }
 
    pRow  = jx_sqlFetchFirst (pSQL, start);
@@ -1713,16 +1800,17 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
 
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startP, PJXNODE pSqlParmsP )
+PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startP, PJXNODE pSqlParmsP , LONG formatP)
 {
 
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    LONG    start     = (pParms->OpDescList->NbrOfParms >= 2) ? startP     : 1;  // From first row
    PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
+   LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0; 
    PJXNODE pRow;
    PJXSQL  pSQL;
 
-   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, start > 1);
+   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, start > 1 , format);
    pRow  = jx_sqlFetchFirst (pSQL, start);
    jx_sqlClose (&pSQL);
    return pRow;
@@ -1732,21 +1820,22 @@ PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startP, PJXNODE pSqlParmsP )
 PJXNODE jx_sqlGetMeta (PUCHAR sqlstmt)
 {
    int i;
-   PJXSQL  pSQL  = jx_sqlOpen(sqlstmt , NULL, false);
+   PJXSQL  pSQL  = jx_sqlOpen(sqlstmt , NULL, false, 0);
    PJXNODE pMeta = jx_buildMetaFields ( pSQL );
    jx_sqlClose (&pSQL);
    return pMeta;
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlResultRow ( PUCHAR sqlstmt, PJXNODE pSqlParmsP )
+PJXNODE jx_sqlResultRow ( PUCHAR sqlstmt, PJXNODE pSqlParmsP , LONG formatP)
 {
 
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 2) ? pSqlParmsP : NULL;
+   LONG    format    = (pParms->OpDescList->NbrOfParms >= 3) ? formatP : 0;
    PJXNODE pRow;
    PJXSQL  pSQL;
 
-   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, false);
+   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, false, format);
    pRow  = jx_sqlFetchNext (pSQL);
    jx_sqlClose (&pSQL);
    return pRow;
@@ -2551,22 +2640,29 @@ LGL jx_sqlUpsert (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParm
 /* -------------------------------------------------------------------
  * Provide options to a pSQL environment - If NULL then use the default
  * ------------------------------------------------------------------- */
-LONG jx_sqlGetInsertId (void)
+INT64 jx_sqlGetInsertId2 (void)
 {
-   LONG    id;
+   INT64   id;
    PJXNODE pRow;
    // PUCHAR  sqlStmt = "values IDENTITY_VAL_LOCAL() as id ";
    // PUCHAR  sqlStmt = "values IDENTITY_VAL_LOCAL() into :id";
-   PUCHAR  sqlStmt = "Select IDENTITY_VAL_LOCAL() as id from sysibm/sysdummy1";
+   PUCHAR  sqlStmt = "select IDENTITY_VAL_LOCAL() as id from sysibm.sysdummy1";
 
    // Get that only row
-   pRow = jx_sqlResultRow(sqlStmt, NULL);
+   pRow = jx_sqlResultRow(sqlStmt, NULL, 0);
 
-   id = atoi(jx_GetValuePtr(pRow, "id", NULL));
+   id = atoll(jx_GetValuePtr(pRow, "id", NULL));
 
    jx_NodeDelete (pRow);
 
    return id ;
+}
+/* -------------------------------------------------------------------
+ * Back compat old version
+ * ------------------------------------------------------------------- */
+LONG jx_sqlGetInsertId (void)
+{
+   return jx_sqlGetInsertId2();
 }
 /* -------------------------------------------------------------------
  * Provide options to a pSQL environment - If NULL the use the default

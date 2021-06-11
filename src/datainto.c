@@ -25,7 +25,7 @@
 #include "mem001.h"
 #include "varchar.h"
 #include "jsonxml.h"
-#include "/QSYS.LIB/QOAR.LIB/H.file/qrntypes.mbr"
+
 #include "/QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR"
 
 static PJXNODE pRoot; 

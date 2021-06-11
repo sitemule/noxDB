@@ -3221,12 +3221,21 @@ PJXNODE  jx_SetValueByName (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETY
    return jx_traceNode("Set value" , pParentNode);
 }
 /* -------------------------------------------------------------
-   Set integer by name
+   Set integer by name - old version 
    ------------------------------------------------------------- */
 PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value)
 {
    UCHAR  s [32];
    sprintf(s , "%ld" , Value);
+   return jx_SetValueByName(pNode , Name , s, LITERAL );
+}
+/* -------------------------------------------------------------
+   Set integer by name
+   ------------------------------------------------------------- */
+PJXNODE  jx_SetIntByName2 (PJXNODE pNode, PUCHAR Name, INT64 Value)
+{
+   UCHAR  s [32];
+   sprintf(s , "%lld" , Value);
    return jx_SetValueByName(pNode , Name , s, LITERAL );
 }
 /* -------------------------------------------------------------

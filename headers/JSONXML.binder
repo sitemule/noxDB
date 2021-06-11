@@ -156,5 +156,10 @@ STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('JSONXML01')
   EXPORT SYMBOL("jx_sqlCallNode")
   EXPORT SYMBOL("jx_noxGetStr")
   EXPORT SYMBOL("jx_noxGetNum")
+  EXPORT SYMBOL("jx_sqlStartTransaction")
+  EXPORT SYMBOL("jx_sqlCommit")
+  EXPORT SYMBOL("jx_sqlRollback")
+  EXPORT SYMBOL("jx_sqlGetInsertId2")
+  EXPORT SYMBOL("jx_SetIntByName2")
 
 ENDPGMEXP
