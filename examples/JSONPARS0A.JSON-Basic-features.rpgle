@@ -49,6 +49,7 @@
         // Setup trace/debugging ( or perhaps unit testing) for 
         // your code if you like - this is optional
         // myTrace is defined in the bottom in the example 
+        // Note - you can disable the trace by setting it to *NULL
         json_SetTraceProc (%paddr(myTrace));
  
         // Step 1) 
