@@ -580,7 +580,6 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP
       pCol->colname[pCol->colnamelen] = '\0';
 
 
-
       // If all uppsercase ( not given name by .. AS "newName") then lowercase
       if (format & (JX_SYSTEM_NAMES)) {
          UCHAR temp [256];

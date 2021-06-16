@@ -31,7 +31,6 @@
 static PJXNODE pRoot; 
 static PXLATEDESC pXd = NULL;
 
-typedef void (*JX_DATAINTO)();
 
 // Portotype can not move to generic header since dubble defintion i IBM headers :(
 static void  jx_dataIntoMapNode  (PJXNODE pNode, QrnDiParm_T * pParms, SHORT level);

@@ -1154,6 +1154,12 @@
           traceId        Int(20)    value; //Ccsid of inpur file
         End-PR;
 
+      // Calls you callback function for any interaction with the object graph
+        Dcl-PR jx_SetTraceProc extproc(*CWIDEN: 'jx_SetTraceProc');
+          Proc           Pointer(*Proc) value; //Pointer to a procedure
+        End-PR;
+
+
       // courtesy joblog tool
         Dcl-PR jx_joblog  extproc(*CWIDEN : 'jx_joblog'); 
           //Format string 

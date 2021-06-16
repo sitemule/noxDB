@@ -29,7 +29,7 @@
         // Step 4)
         // Finally remember to cleanup otherwise you will have a memory leak
         // ------------------------------------------------------------- *
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) actgrp('QILE') option(*nodebugio:*srcstmt:*nounref);
         /include qrpgleRef,noxdb
 
         Dcl-S pJson       Pointer;
@@ -44,9 +44,15 @@
         Dcl-S updated     timestamp;
         Dcl-S isMale      ind;
         // ------------------------------------------------------------- *
-        *inlr = *on;
 
-        // Step 1) Produce a JSON object and write it to a file: 
+        // Step 0) 
+        // Setup trace/debugging ( or perhaps unit testing) for 
+        // your code if you like - this is optional
+        // myTrace is defined in the bottom in the example 
+        json_SetTraceProc (%paddr(myTrace));
+ 
+        // Step 1) 
+        // Produce a JSON object and write it to a file: 
         // Let start with an object: 
         pJson = json_newObject();
 
@@ -61,14 +67,15 @@
         json_setBool      (pJson: 'isMale' : *ON);
 
         // Put the node in the joblog (max 512 is shown)
-        json_joblog(pJson); 
+        myTrace ('The final object':pJson); 
 
         // Play with arrays
         pArr = json_newArray();
         for i = 1 to 100;
             json_arrayPush (pArr : pJson : JSON_COPY_CLONE);
         endfor;
-        json_joblog(pArr); 
+
+        myTrace ('After the loop':pArr); 
 
         // Write to the IFS, Note date/time will be stored in *ISO always
         json_WriteJsonStmf(pJson:'/prj/noxdb/testdata/simple0.json':1208:*OFF);
@@ -83,7 +90,8 @@
         pJson = json_ParseFile ('/prj/noxdb/testdata/simple0.json');
         If json_Error(pJson) ;
             msg = json_Message(pJson);
-            json_dump(pJson);
+            myTrace (msg :pJson); 
+            // json_dump(pJson);
             json_delete(pJson);
             Return;
         EndIf;
@@ -110,3 +118,37 @@
         
         // And always remember to cleanup
         json_delete (pJson);
+
+        // That's it
+        *inlr = *on;
+
+        // ------------------------------------------------------------------------------------
+        // myTrace - an example of a trace procedure for debugging and unit test
+        // This will be called each time you interact with the objec graph - if set by  
+        // json_SetTraceProc ( %paddr(myTrace));
+        // ------------------------------------------------------------------------------------
+        dcl-proc myTrace;
+        
+            dcl-pi myTrace ;
+                text  char(30) const;
+                pNode pointer value;
+            end-pi;
+
+            dcl-s action char(30);
+            dcl-s showme varchar(32000);
+
+            // I could put it into the joblog
+            json_joblog(Text); 
+            json_joblog(pNode); 
+
+            // Or I could just have it in variables that i debug
+            action = text;
+            showme = json_AsJsonText(pNode);
+
+            // Or maybe put it into a stream file
+            //json_WriteJsonStmf(pJson:'/prj/noxdb/testdata/trace.json':1208:*OFF);
+
+            // Or place it into a trace table.. Up to you !! 
+
+
+        end-proc;

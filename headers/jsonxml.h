@@ -427,6 +427,10 @@ VARCHAR jx_AsJsonText(PJXNODE pNode);
 LGL     jx_IsJson (PJXNODE pNode);
 BOOL    jx_HasMore(PJXNODE pNode);
 
+typedef void (*JX_TRACE) ( PUCHAR text , PJXNODE pNode);
+typedef void (*JX_DATAINTO)();
+
+
 /* Internals */
 void     jx_SkipBlanks(BOOL skip);
 BOOL    JSON_Parse(PJXCOM pJxCom);

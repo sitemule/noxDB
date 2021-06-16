@@ -933,6 +933,8 @@
           sqlStmt        Pointer    value options(*string);
           //json object template
           parms          Pointer    value options(*string:*nopass);
+          //resultset format:
+          format         Int(10)    value options(*nopass);
         End-PR;
 
       // returns an array (or object with array) of resulting rows for the SQL statment
@@ -979,6 +981,8 @@
           sqlStmt        Pointer    value options(*string);
           //json object template
           parms          Pointer    value options(*string:*nopass);
+          //resultset format:
+          format         Int(10)    value options(*nopass);
         End-PR;
 
       // Fetch next from from that open sql handle, starting from rowNumer. 1=First row
@@ -1149,6 +1153,12 @@
         Dcl-PR json_traceSetId  extproc(*CWIDEN : 'jx_traceSetId');
           traceId        Int(20)    value; //Ccsid of inpur file
         End-PR;
+
+      // Calls you callback function for any interaction with the object graph
+        Dcl-PR json_SetTraceProc extproc(*CWIDEN: 'jx_SetTraceProc');
+          Proc           Pointer(*Proc) value; //Pointer to a procedure
+        End-PR;
+
 
       // courtesy joblog tool
         Dcl-PR json_joblog  extproc(*CWIDEN : 'jx_joblog'); 

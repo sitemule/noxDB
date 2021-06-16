@@ -100,6 +100,8 @@ UCHAR  jx_DecPoint = '.';
 iconv_t xlateEto1208;
 iconv_t xlate1208toE;
 
+static JX_TRACE jx_trace = null; 
+
 
 /* --------------------------------------------------------------------------- */
 void jx_joblog (PUCHAR msg , ...)
@@ -169,6 +171,9 @@ void  freeNodeValue(PJXNODE pNode)
       memFree(&pNode->Value );
    }
 }
+void jx_SetTraceProc (JX_TRACE  proc) {
+   jx_trace = proc;
+} 
 /* ------------------------------------------------------------- */
 //void dummy01(){}
 /* ------------------------------------------------------------- */
@@ -176,6 +181,15 @@ PJXNODE jx_traceNode (PUCHAR text, PJXNODE pNode)
 {
    static int i;
    UCHAR filename [128];
+   static BOOL avoidRecursion = false;
+
+   if (jx_trace && !avoidRecursion ) {
+      UCHAR padtext [32];
+      padncpy ( padtext , text , sizeof(padtext));
+      avoidRecursion = true;
+      jx_trace (padtext , pNode);
+      avoidRecursion = false;
+   }
 
    if (debugger ==0)  return pNode;
 
