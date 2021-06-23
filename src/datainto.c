@@ -46,7 +46,7 @@ static void  jx_dataIntoMapObject  (PJXNODE pParent, QrnDiParm_T * pParms, SHORT
 		if  ( pNode->Name && *pNode->Name > 0) {
 			UCHAR name [256];
 			ULONG namelen = XlateXdBuf(pXd, name , pNode->Name , strlen(pNode->Name));
-			name[namelen] = '\0';
+			* ((PUSHORT) (name + namelen)) = 0; // Unicode termination
 			pParms->env->QrnDiReportName  (pParms->handle , name , namelen);    
 		}
 		jx_dataIntoMapNode (pNode , pParms, nextLevel);
@@ -72,6 +72,7 @@ static void jx_dataIntoMapValue   (PJXNODE pNode, QrnDiParm_T * pParms )
 	if (pNode->Value && pNode->Value[0] > '\0') {
 		UCHAR value [32768];
 		ULONG valuelen = XlateXdBuf(pXd, value , pNode->Value , strlen(pNode->Value));
+		* ((PUSHORT) (value + valuelen)) = 0; // Unicode termination
 		pParms->env->QrnDiReportValue (pParms->handle , value , valuelen);
 	// Else it is some kind of null: Strings are "". Literals will return "null"
 	} else {

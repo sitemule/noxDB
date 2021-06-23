@@ -22,6 +22,13 @@
 Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
 /include qrpgleRef,noxdb
 
+
+    // Setup trace/debugging ( or perhaps unit testing) for 
+    // your code if you like - this is optional
+    // myTrace is defined in the bottom in the example 
+    // Note - you can disable the trace by setting it to *NULL
+    json_SetTraceProc (%paddr(myTrace));
+ 
     example1();
     example2();
     *INLR = *ON;
@@ -36,8 +43,8 @@ dcl-proc example1;
     // The name "rows" is in the data-into statement
     // The "dim" causes it to be an array: 
     dcl-DS rows dim(100) qualified inz;
-        id       int(10);
         name     varchar(256);
+        id       int(10);
         country  varchar(256);
     end-ds;  
 
@@ -108,3 +115,34 @@ dcl-proc example2;
     json_delete(pJson);
 
 end-proc;
+// ------------------------------------------------------------------------------------
+// myTrace - an example of a trace procedure for debugging and unit test
+// This will be called each time you interact with the objec graph - if set by  
+// json_SetTraceProc ( %paddr(myTrace));
+// ------------------------------------------------------------------------------------
+dcl-proc myTrace;
+
+    dcl-pi myTrace ;
+        text  char(30) const;
+        pNode pointer value;
+    end-pi;
+
+    dcl-s action char(30);
+    dcl-s showme varchar(32000);
+
+    // I could put it into the joblog
+    json_joblog(Text); 
+    json_joblog(pNode); 
+
+    // Or I could just have it in variables that i debug
+    action = text;
+    showme = json_AsJsonText(pNode);
+
+    // Or maybe put it into a stream file
+    //json_WriteJsonStmf(pJson:'/prj/noxdb/testdata/trace.json':1208:*OFF);
+
+    // Or place it into a trace table.. Up to you !! 
+
+
+end-proc;
+
