@@ -25,9 +25,7 @@
 #include "mem001.h"
 #include "varchar.h"
 #include "jsonxml.h"
-
-#include "/QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR"
-
+#include  <qoar/h/qrndtainto>
 static PJXNODE pRoot; 
 static PXLATEDESC pXd = NULL;
 

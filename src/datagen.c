@@ -27,9 +27,8 @@
 #include "jsonxml.h"
 #include "xlate.h"
 
-
-#include "/QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR"
-#include "/QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR"
+#include  <qoar/h/qrntypes>
+#include  <qoar/h/qrndtagen>
 
 static PJXNODE * ppRoot;
 static PXLATEDESC pXd = NULL;

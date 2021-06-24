@@ -11,10 +11,10 @@
 BIN_LIB=NOXDB
 DBGVIEW=*ALL
 TARGET_CCSID=*JOB
-TARGET_RLS=V7R1M0
+TARGET_RLS=*PRV
 
 # Do not touch below
-INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'
+INCLUDE='/QIBM/include' 'headers/' 'headers/ext/' 
 
 CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) INCDIR($(INCLUDE)) DBGVIEW($(DBGVIEW)) TGTCCSID($(TARGET_CCSID)) TGTRLS($(TARGET_RLS))
 
@@ -27,7 +27,7 @@ CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*none) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES
 
 # Dependency list
 
-all:  $(BIN_LIB).lib jsonxml.srvpgm  hdr
+all:  $(BIN_LIB).lib link jsonxml.srvpgm  hdr
 
 jsonxml.srvpgm: noxdb.c sqlio.c sqlwrapper.c xmlparser.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c trace.clle ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
 jsonxml.bnddir: jsonxml.entry
@@ -37,6 +37,13 @@ noxdb.bnddir: jsonxml.entry
 
 %.lib:
 	-system -q "CRTLIB $* TYPE(*TEST)"
+
+# QOAR are for unknow reasons not in /QIBM/include
+link:	
+	-mkdir -p ./headers/qoar/h
+	-ln -s  /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./headers/qoar/h/qrntypes
+	-ln -s  /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./headers/qoar/h/qrndtagen
+	-ln -s  /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./headers/qoar/h/qrndtainto
 
 %.bnddir:
 	-system -q "DLTBNDDIR BNDDIR($(BIN_LIB)/$*)"

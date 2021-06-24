@@ -30,7 +30,7 @@
         End-PR;
         //Set delimiter used for locate expression
         Dcl-PR json_setDelimiters  extproc(*CWIDEN :'jx_SetDelimiters2');
-          //always: '/\@[] .{}' in your  local CCSID
+          //always: '/\@[] .{}''"$' in your  local CCSID
           delimiterStr   Pointer    value options(*string);
         End-PR;
 
