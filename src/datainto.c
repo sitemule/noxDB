@@ -25,7 +25,15 @@
 #include "mem001.h"
 #include "varchar.h"
 #include "jsonxml.h"
+
+
+#ifdef QOAR_INCLUDE_IFS
 #include  <qoar/h/qrndtainto>
+#else
+#include  "/QSYS.LIB/QOAR.LIB/H.FILE/QRNDTAINTO.MBR"
+#endif 
+
+
 static PJXNODE pRoot; 
 static PXLATEDESC pXd = NULL;
 

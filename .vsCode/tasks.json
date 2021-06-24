@@ -5,7 +5,7 @@
     "tasks": [
         {
             "label": "Compile current file",
-            "command": "ssh -t dksrv134 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake current SRC=${fileBasenameNoExtension}'",
+            "command": "ssh -t myibmi 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake current SRC=${fileBasenameNoExtension}'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -28,7 +28,7 @@
         },
         {
             "label": "Compile Service program noxDB",
-            "command": "ssh dksrv134 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake all'",
+            "command": "ssh myibmi 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake all'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -40,7 +40,7 @@
         },
         {
             "label": "Compile Test modules for noxDB",
-            "command": "ssh dksrv134 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/test/;gmake'",
+            "command": "ssh myibmi 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/test/;gmake'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -52,13 +52,26 @@
         },
         {
             "label": "Compile current example file",
-            "command": "ssh -t dksrv134 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
+            "command": "ssh -t myibmi 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
             "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Make release savefile",
+            "command": "ssh myibmi 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake release'",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
         }
+
     ]
 }
