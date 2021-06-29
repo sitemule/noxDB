@@ -1340,13 +1340,13 @@
 
 
       /if defined( json_OVERLOAD)
-          Dcl-PR json_Set Pointer overload ( 
-            json_SetBool :
+        Dcl-PR json_Set Pointer overload ( 
+            json_SetBool: 
             json_SetNum : 
             json_SetInt :
             json_SetDate:
             json_SetTime:
             json_SetTimeStamp:
             json_SetStr
-          );
+        );
       /endif

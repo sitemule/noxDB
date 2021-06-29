@@ -1340,13 +1340,13 @@
 
 
       /if defined( jx_OVERLOAD)
-          Dcl-PR jx_Set Pointer overload ( 
-            jx_SetBool : 
+        Dcl-PR jx_Set Pointer overload ( 
+            jx_SetBool: 
             jx_SetNum : 
-            jx_SetInt :             
+            jx_SetInt :
             jx_SetDate:
             jx_SetTime:
-            jx_SetTimeStamp:
-            jx_SetStr
-          );
+            jx_SetTimeStamp:
+            jx_SetStr
+        );
       /endif

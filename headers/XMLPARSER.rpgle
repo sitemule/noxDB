@@ -1340,13 +1340,13 @@
 
 
       /if defined( xml_OVERLOAD)
-          Dcl-PR xml_Set Pointer overload ( 
-            xml_SetBool : 
+        Dcl-PR xml_Set Pointer overload ( 
+            xml_SetBool: 
             xml_SetNum : 
-            xml_SetInt :             
+            xml_SetInt :
             xml_SetDate:
             xml_SetTime:
-            xml_SetTimeStamp:
-            xml_SetStr
-          );
+            xml_SetTimeStamp:
+            xml_SetStr
+        );
       /endif
