@@ -82,6 +82,7 @@ static void jx_dataIntoMapValue   (PJXNODE pNode, QrnDiParm_T * pParms )
 		pParms->env->QrnDiReportValue (pParms->handle , value , valuelen);
 	// Else it is some kind of null: Strings are "". Literals will return "null"
 	} else {
+		pParms->env->QrnDiReportValue (pParms->handle , "" , 0);
 		// Null handeling
 		if (pNode->isLiteral) {
 		//	pParms->env->QrnDiReportName  (pParms->handle , pNode->Name , strlen(pNode->Name));    
