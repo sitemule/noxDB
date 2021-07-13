@@ -802,7 +802,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
                         PJXNODE pNode = jx_parseStringCcsid(p, 0);
                         if (pNode) {
                            jx_NodeRename(pNode, pCol->colname);
-                           jx_NodeAddChildTail (pRow, pNode);
+                           jx_NodeInsertChildTail (pRow, pNode);
                            break;
                         }
                      }

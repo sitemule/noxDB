@@ -50,7 +50,8 @@
         Dcl-C xml_OBJLINK const(17);
         Dcl-C xml_OBJREPLACE const(18);
         Dcl-C xml_OBJCOPY const(18);
-        Dcl-C xml_BY_CONTEXT const(19);
+        Dcl-C xml_BY_CONTEXT const(19);  
+              
         Dcl-C xml_OBJMOVE const(2048);
 
         //* Modifiers to "add" / "or" into "parseString" and "evaluate"
@@ -82,6 +83,7 @@
 
         //---------------------------------------------------------------------- *
         //Returns node to the xml_object tree
+        // options can be: syntax=loose singleroot=true
         Dcl-PR xml_ParseFile Pointer extproc(*CWIDEN:'jx_ParseFile');
           //File to parse
           FileName       Pointer    value options(*string);
@@ -90,6 +92,7 @@
         End-PR;
 
         //Returns node xml_object tree
+        // options can be: syntax=loose singleroot=true
         Dcl-PR xml_ParseString Pointer extproc(*CWIDEN:'jx_ParseString');
           //String to parse
           String         Pointer    value options(*string);
@@ -394,6 +397,43 @@
           //Pointer to xml_ tree to receive format
           pNode          Pointer    value;
         End-PR;
+
+        // For XML serializer;
+        Dcl-C xml_FORMAT_DEFAULT   const(0);
+        Dcl-C xml_FORMAT_CDATA     const(1);
+ 
+        //* Refer to node type above
+        Dcl-PR xml_SetNodeFormat Pointer extproc(*CWIDEN : 'jx_SetNodeFormat');
+          //Pointer to xml_ tree to receive format
+          pNode          Pointer    value;
+          format         int(5)     value ;
+        End-PR;
+
+        // Node insertation 
+        Dcl-PR xml_NodeInsertChildTail 
+                extproc(*CWIDEN : 'jx_NodeInsertChildTail');
+          pDest          Pointer    value;
+          pSource        Pointer    value;
+        End-PR;
+
+        Dcl-PR xml_NodeInsertChildHead 
+                extproc(*CWIDEN : 'jx_NodeInsertChildHead');
+          pDest          Pointer    value;
+          pSource        Pointer    value;
+        End-PR;
+
+        Dcl-PR xml_NodeInsertSiblingBefore 
+                extproc(*CWIDEN : 'jx_NodeInsertSiblingBefore');
+          pDest          Pointer    value;
+          pSource        Pointer    value;
+        End-PR;
+
+        Dcl-PR xml_NodeInsertSiblingAfter 
+                extproc(*CWIDEN : 'jx_NodeInsertSiblingAfter');
+          pDest          Pointer    value;
+          pSource        Pointer    value;
+        End-PR;
+
 
       // Get string by expresion
       //  /object/array[123]/name
