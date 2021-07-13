@@ -25,10 +25,10 @@
                <TransportType>10</TransportType>-
             </DeliveryDetails>-
             <PartnerDescription Type="BY">-
-               <PartnerNumber>650</PartnerNumber>-
-               <PartnerName1>Hornbach Onlineshop Duitsland</PartnerName1>-
-               <Street1>Hornbachstrae 11</Street1>-
-               <City1>Bornheim</City1>-
+               <PartnerNumber>1650</PartnerNumber>-
+               <PartnerName1>My Onlineshop</PartnerName1>-
+               <Street1>Germanstreet 123</Street1>-
+               <City1>Germanheim</City1>-
                <CountryCode>DE</CountryCode>-
                <LanguageCode>DE</LanguageCode>-
             </PartnerDescription>-
