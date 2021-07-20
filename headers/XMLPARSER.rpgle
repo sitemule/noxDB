@@ -409,31 +409,6 @@
           format         int(5)     value ;
         End-PR;
 
-        // Node insertation 
-        Dcl-PR xml_NodeInsertChildTail 
-                extproc(*CWIDEN : 'jx_NodeInsertChildTail');
-          pDest          Pointer    value;
-          pSource        Pointer    value;
-        End-PR;
-
-        Dcl-PR xml_NodeInsertChildHead 
-                extproc(*CWIDEN : 'jx_NodeInsertChildHead');
-          pDest          Pointer    value;
-          pSource        Pointer    value;
-        End-PR;
-
-        Dcl-PR xml_NodeInsertSiblingBefore 
-                extproc(*CWIDEN : 'jx_NodeInsertSiblingBefore');
-          pDest          Pointer    value;
-          pSource        Pointer    value;
-        End-PR;
-
-        Dcl-PR xml_NodeInsertSiblingAfter 
-                extproc(*CWIDEN : 'jx_NodeInsertSiblingAfter');
-          pDest          Pointer    value;
-          pSource        Pointer    value;
-        End-PR;
-
 
       // Get string by expresion
       //  /object/array[123]/name
@@ -570,6 +545,7 @@
           //New type (Refer "node type"
           Type           Uns(5)     value;
         End-PR;
+
 
         Dcl-PR xml_NodeDelete extproc(*CWIDEN : 'jx_NodeDelete');
           //node. Retrive from Locate()
@@ -714,18 +690,30 @@
           pSourceObj     Pointer    value;
         End-PR;
 
+        // For XML documents; returns the destination node after 
+        // moveing the source document elements into the destination graph
+        // See example XMLPARS386 for usage:
+        Dcl-PR xml_documentInsert Pointer 
+          extproc(*CWIDEN : 'jx_documentInsert');
+          //node. Retrive from Locate() - the destination element 
+          pDestination      Pointer    value;
+
+          // A root node either from newObejct, ParseString or SQL resultset.
+          // Note the contents of this is moved into the destination, so source will
+          // be null after the operation ( and therfor pased by reference)
+          pSource         Pointer;
+
+          //Reference location to where it arrive
+          RefLocation    Int(10)    value;
+        End-PR;
+
+
         Dcl-PR xml_Dump  extproc(*CWIDEN : 'jx_Dump');
           //Pointer to tree
           pNode          Pointer    value;
         End-PR;
 
 
-        Dcl-PR xml_CloneFormat  extproc(*CWIDEN : 'jx_CloneFormat');
-          //Pointer to tree to receive format
-          pNode          Pointer    value;
-          //node ptr or path with right formating
-          pCloneFrom     Pointer    value options(*string);
-        End-PR;
 
         //**  JSON renderes ***
         Dcl-PR xml_WriteJsonStmf  extproc(*CWIDEN : 'jx_WriteJsonStmf');
@@ -856,6 +844,8 @@
         Dcl-PR xml_forEach Ind extproc(*CWIDEN : 'jx_ForEach');
           iterator                  likeds( xml_Iterator);
         End-PR;
+
+
 
         //For XML attributes
         Dcl-PR xml_GetNodeAttrValue Varchar(32767) 
@@ -1209,6 +1199,16 @@
       // --------------------------------------------------------------------------------------------------------------
       // Depricated and renamed functions :
       // --------------------------------------------------------------------------------------------------------------
+
+      // Rather use a formatter; this is discontinued
+        Dcl-PR xml_CloneFormat  extproc(*CWIDEN : 'jx_CloneFormat');
+          //Pointer to tree to receive format
+          pNode          Pointer    value;
+          //node ptr or path with right formating
+          pCloneFrom     Pointer    value options(*string);
+        End-PR;
+
+
       // Depricated - use  xml_GetValueStr
         Dcl-PR xml_GetValue Varchar(32767) extproc(*CWIDEN : 'jx_GetValueVC');
           //Pointer to node

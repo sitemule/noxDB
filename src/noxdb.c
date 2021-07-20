@@ -101,7 +101,6 @@ iconv_t xlateEto1208;
 iconv_t xlate1208toE;
 
 static JX_TRACE jx_trace = null; 
-static singleRoot = false;
 
 
 /* --------------------------------------------------------------------------- */
@@ -598,73 +597,85 @@ static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode, 
 
    while (pNode) {
 
-      // For current node and children
-      if (pNode->format == JX_FORMAT_CDATA && cdatamode == 0) {
-         cdatamode = level;
-         fputs ( "<![CDATA[",  f);
-      }
-      doEscape = cdatamode ? FALSE : TRUE;
-
-      if (pNode->Comment) {
-         if (!doTrim && cdatamode == 0)  fputs ( tab,  f);
-         fputs ( "<!--",  f);
-         iconvWrite(f,pIconv, pNode->Comment, FALSE);
-         fputs ( "-->",  f);
-      }
-
-      if (!doTrim && cdatamode == 0)  fputs ( tab,  f);
-      fputs ("<", f);
-      iconvWrite(f,pIconv, pNode->Name ? pNode->Name: defaultNode, FALSE);
-
-      for (pAttrTemp = pNode->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
-         if (pNode->newlineInAttrList) {
-            if (!doTrim && cdatamode == 0)  fputs ( tab,  f);
-            fputs ("  ", f);
-         } else {
-            fputc( 0x20 , f);
-         }
-         iconvWrite( f,pIconv, pAttrTemp->Name, FALSE);
-         fputs("=\"" , f);
-         iconvWrite( f,pIconv, pAttrTemp->Value, doEscape);
-         fputs("\"", f);
-      }
-
-      shortform = TRUE;
-
-      if (pNode->Value != NULL && pNode->Value[0] > '\0') {
-          shortform = FALSE;
-          fputs(">", f);
-          iconvWrite( f,pIconv, pNode->Value, doEscape);
-      }
-
-      if (pNode->pNodeChildHead) {
-          shortform = FALSE;
-          if (pNode->Value != NULL && pNode->Value[0] > '\0') {
-          // Already put - in the above
-          } else {
-              fputs(">", f);
-          }
-          jx_WriteXmlStmfNodeList (f, pIconv, pNode->pNodeChildHead, cdatamode);
-      }
-
-      if (shortform) {
-         if (pNode->newlineInAttrList) {
-            if (!doTrim && cdatamode==0)  fputs ( tab,  f);
-         }
-         fputs("/>", f);
+      // Anonymus roots is a XML document placeholder - continue with children
+      if (pNode->Name == NULL || *pNode->Name == '\0') {
+         jx_WriteXmlStmfNodeList (f, pIconv, pNode->pNodeChildHead, cdatamode);
       } else {
-         if (pNode->pNodeChildHead) {
-            if (!doTrim && cdatamode==0)  fputs ( tab,  f);
-         }
-         fputs("</" , f);
-         iconvWrite( f,pIconv, pNode->Name ? pNode->Name : defaultNode , FALSE);
-         fputs(">", f);
-      }
-      if (cdatamode==level) {
-         fputs ( "]]>",  f);
-         cdatamode = 0;
-      }
 
+         // For current node and children
+         if (pNode->format == JX_FORMAT_CDATA && cdatamode == 0) {
+            cdatamode = level;
+         }
+         doEscape = cdatamode ? FALSE : TRUE;
+
+         if (pNode->Comment) {
+            if (!doTrim && cdatamode == 0)  fputs ( tab,  f);
+            fputs ( "<!--",  f);
+            iconvWrite(f,pIconv, pNode->Comment, FALSE);
+            fputs ( "-->",  f);
+         }
+
+         if (!doTrim && cdatamode == 0)  fputs ( tab,  f);
+         fputs ("<", f);
+         iconvWrite(f,pIconv, pNode->Name, FALSE);
+
+         for (pAttrTemp = pNode->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
+            if (pNode->newlineInAttrList) {
+               if (!doTrim && cdatamode == 0)  fputs ( tab,  f);
+               fputs ("  ", f);
+            } else {
+               fputc( 0x20 , f);
+            }
+            iconvWrite( f,pIconv, pAttrTemp->Name, FALSE);
+            fputs("=\"" , f);
+            iconvWrite( f,pIconv, pAttrTemp->Value, doEscape);
+            fputs("\"", f);
+         }
+
+         shortform = TRUE;
+
+         if (pNode->Value != NULL && pNode->Value[0] > '\0') {
+            shortform = FALSE;
+            fputs(">", f);
+            if (cdatamode == level) {
+               fputs("<![CDATA[", f);
+            }
+            iconvWrite( f,pIconv, pNode->Value, doEscape);
+         }
+
+         if (pNode->pNodeChildHead) {
+            shortform = FALSE;
+            if (pNode->Value != NULL && pNode->Value[0] > '\0') {
+            // Already put - in the above
+            } else {
+               fputs(">", f);
+               if (cdatamode == level) {
+                  fputs("<![CDATA[", f);
+               }
+            }
+            jx_WriteXmlStmfNodeList (f, pIconv, pNode->pNodeChildHead, cdatamode);
+         }
+
+         if (shortform) {
+            if (pNode->newlineInAttrList) {
+               if (!doTrim && cdatamode==0)  fputs ( tab,  f);
+            }
+            fputs("/>", f);
+         } else {
+            if (pNode->pNodeChildHead) {
+               if (!doTrim && cdatamode==0)  fputs ( tab,  f);
+            }
+            if (cdatamode == level) {
+               fputs("]]>", f);
+            }
+            fputs("</" , f);
+            iconvWrite( f,pIconv, pNode->Name ? pNode->Name : defaultNode , FALSE);
+            fputs(">", f);
+         }
+         if (cdatamode==level) {
+            cdatamode = 0;
+         }
+      }
       pNode = (level == 1) ? NULL: pNode->pNodeSibling;
    }
 
@@ -680,49 +691,62 @@ static LONG xmlTextMem (PJXNODE pNode, PUCHAR buf, SHORT cdatamode)
    static int level = 0;
    BOOL       shortform;
    PUCHAR     temp = buf;
+   PUCHAR     CdataBegin = "";
+   PUCHAR     CdataEnd   = "";
+   
 
    level++;
 
    while (pNode) {
 
-      // For current node and children
-      if (pNode->format == JX_FORMAT_CDATA && cdatamode == 0) {
-         cdatamode = level;
-         temp +=  sprintf(temp , "%s" , Cdata) ; 
-      }
-
-      temp +=  sprintf(temp , "<%s", pNode->Name ? pNode->Name : "row");
-      for (pAttrTemp = pNode->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
-         temp +=  sprintf(temp , " %s=\"%s\"", pAttrTemp->Name, pAttrTemp->Value);
-      }
-
-      shortform = TRUE;
-
-      if (pNode->Value != NULL && pNode->Value[0] > '\0') {
-          shortform = FALSE;
-          temp +=  sprintf(temp , ">%s", pNode->Value);
-      }
-
-      if (pNode->pNodeChildHead) {
-          shortform = FALSE;
-          if (pNode->Value != NULL && pNode->Value[0] > '\0') {
-          // Already put - in the above
-          } else {
-              temp +=  sprintf(temp , ">");
-          }
-          temp += xmlTextMem (pNode->pNodeChildHead , temp, cdatamode);
-      }
-
-      if (shortform) {
-         temp +=  sprintf(temp , "/>");
+      // Anonymus roots is a XML document placeholder - continue with children
+      if (pNode->Name == NULL || *pNode->Name == '\0') {
+         temp += xmlTextMem (pNode->pNodeChildHead , temp, cdatamode);
       } else {
-         temp +=  sprintf(temp , "</%s>", pNode->Name ? pNode->Name : "row");
+
+         // For current node and children
+         if (pNode->format == JX_FORMAT_CDATA && cdatamode == 0) {
+            cdatamode  = level;
+            CdataBegin = Cdata;
+            CdataEnd   = BraBraGT;
+         }
+
+         temp +=  sprintf(temp , "<%s", pNode->Name );
+         for (pAttrTemp = pNode->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
+            temp +=  sprintf(temp , " %s=\"%s\"", pAttrTemp->Name, pAttrTemp->Value);
+         }
+
+         shortform = TRUE;
+
+         if (pNode->Value != NULL && pNode->Value[0] > '\0') {
+            shortform = FALSE;
+            temp +=  sprintf(temp , ">%s%s", CdataBegin, pNode->Value);
+         }
+
+         if (pNode->pNodeChildHead) {
+            shortform = FALSE;
+            if (pNode->Value != NULL && pNode->Value[0] > '\0') {
+            // Already put - in the above
+            } else {
+               temp +=  sprintf(temp , ">%s",CdataBegin);
+            }
+            temp += xmlTextMem (pNode->pNodeChildHead , temp, cdatamode);
+         }
+
+         if (shortform) {
+            temp +=  sprintf(temp , "/>");
+         } else {
+            temp +=  sprintf(temp , "%s</%s>", CdataEnd, pNode->Name );
+         }
+
+         if (cdatamode == level) {
+            cdatamode = 0;
+         } 
+         CdataBegin = "";
+         CdataEnd   = "";
+
       }
 
-      if (cdatamode == level) {
-         temp +=  sprintf(temp , "%c%c>" , BraEnd , BraEnd ) ; 
-         cdatamode = 0;
-      } 
 
       pNode = (level == 1) ? NULL: pNode->pNodeSibling;
    }
@@ -1418,13 +1442,6 @@ static PJXNODE  SelectParser (PJXCOM pJxCom)
       jxError = jx_ParseJson (pJxCom);
    } else {
       jxError = jx_ParseXml (pJxCom);
-      // XML caries a hidden root since XML can contain siblings in the root, 
-      // when singelroote is given, the first physical node becomes the real root
-      if (singleRoot) {
-         pRoot = jx_NodeUnlink( pJxCom->pNodeRoot->pNodeChildHead); 
-         jx_NodeDelete(pJxCom->pNodeRoot);
-         singleRoot = false;
-      }
    }
 
    // Clean up
@@ -1511,7 +1528,6 @@ void jx_NodeInsertChildTail( PJXNODE pRoot, PJXNODE pChild)
 {
    if (pChild == NULL || pRoot == NULL) return;
 
-   jx_NodeUnlink (pChild);
    pChild->pNodeParent = pRoot;
 
    if (pChild->pNodeParent->type == ARRAY) {
@@ -1661,7 +1677,6 @@ void jx_NodeMoveAndReplace (PJXNODE  pDest, PJXNODE pSource)
 // ---------------------------------------------------------------------------
 void jx_NodeInsertChildHead( PJXNODE pRoot, PJXNODE pChild)
 {
-   jx_NodeUnlink (pChild);
 
    pChild->pNodeParent = pRoot;
 
@@ -1685,8 +1700,6 @@ void jx_NodeInsertSiblingBefore( PJXNODE pRef, PJXNODE pSibling)
 {
     PJXNODE pPrev = previousSibling(pRef);
 
-    jx_NodeUnlink (pSibling);
-
     if (pPrev == NULL) {
         jx_NodeInsertChildHead( pRef->pNodeParent, pSibling);
         return;
@@ -1701,7 +1714,6 @@ void jx_NodeInsertSiblingBefore( PJXNODE pRef, PJXNODE pSibling)
 // ---------------------------------------------------------------------------
 void jx_NodeInsertSiblingAfter( PJXNODE pRef, PJXNODE pSibling)
 {
-   jx_NodeUnlink (pSibling);
 
    if (pRef->pNodeSibling == NULL) {
       jx_NodeInsertChildTail ( pRef->pNodeParent, pSibling);
@@ -1732,6 +1744,58 @@ void jx_nodeInsert(PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
      jx_NodeInsertSiblingAfter(pDest, pSource);
      break;
    }
+}
+// ---------------------------------------------------------------------------
+// XML documents has a anonymus root node. Each child from the 
+// root is added  
+PJXNODE jx_documentInsert(PJXNODE pDest, PJXNODE * ppSource, REFLOC refloc)
+{
+   PJXNODE pTemp;
+   PJXNODE * pNodes;
+   LONG len, i;
+   PJXNODE pSource = * ppSource;
+   if (pDest == NULL || pSource == NULL ) return NULL;
+
+   // find length of source nodes:
+   for (len =0, pTemp = pSource->pNodeChildHead ; pTemp != NULL; len++, pTemp = pTemp->pNodeSibling);
+   
+   if (len == 0) return pDest;
+
+   // Store the list of nodes and make each of them them roots;
+   pNodes = malloc( len * sizeof(PJXNODE));
+   for (i =0, pTemp = pSource->pNodeChildHead ; pTemp != NULL;pTemp = pTemp->pNodeSibling) {
+       pNodes[i++] = pTemp;
+      jx_NodeUnlink (pTemp);
+   }
+
+   pTemp = pNodes[0];
+
+   switch ( refloc) {
+   case RL_LAST_CHILD:
+     jx_NodeInsertChildTail (pDest, pTemp);
+     break;
+   case RL_FIRST_CHILD:
+     jx_NodeInsertChildHead (pDest, pTemp);
+     break;
+   case RL_BEFORE_SIBLING:
+     jx_NodeInsertSiblingBefore(pDest, pTemp);
+     break;
+   case RL_AFTER_SIBLING:
+     jx_NodeInsertSiblingAfter(pDest, pTemp);
+     break;
+   }
+
+   // Following siblings are just added as new siblings;
+   for ( i = 1; i < len ; i++) {
+      jx_NodeInsertSiblingAfter(pTemp, pNodes[i]);
+   }
+
+   free(pNodes);
+
+   jx_NodeDelete (pSource);
+   * ppSource = NULL;
+   return pDest;
+
 }
 // ---------------------------------------------------------------------------
 PJXNODE jx_NodeClone  (PJXNODE pSource)
@@ -1931,7 +1995,7 @@ PJXDELIM jx_GetDelimiters(void)
   return   (PJXDELIM)   &delimiters;
 }
 // ---------------------------------------------------------------------------
-// Note: Options was depricated ... introduced for xml singleroot=true
+// Note: Options is depricated 
 // ---------------------------------------------------------------------------
 PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
 {
@@ -1949,7 +2013,6 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
    substr(tempStr , Buf , 100);
    #endif
 
-   singleRoot = strstr (Options , "singleroot=true") != NULL;
 
    // Asume OK
    jxError = false;
@@ -2011,7 +2074,7 @@ PJXNODE jx_parseStringCcsid(PUCHAR buf, int ccsid)
    storeDelimiters = * jx_GetDelimiters();
    InputCcsid = ccsid;
    jx_setDelimitersByCcsid (ccsid);
-   pRoot = jx_ParseString(buf, singleRoot ? "singleroot=true":"");
+   pRoot = jx_ParseString(buf, "");
    jx_SetDelimiters2(&storeDelimiters);
    return pRoot;
 }
@@ -2116,8 +2179,6 @@ PJXNODE jx_ParseFile(PUCHAR FileName, PUCHAR pOptions)
    LONG    len ;
    FILE  * f;
    struct  stat statbuf;
-
-   singleRoot = strstr (Options , "singleroot=true") != NULL;
 
    jxMessage[0] = '\0';
 

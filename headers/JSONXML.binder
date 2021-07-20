@@ -163,9 +163,6 @@ STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('JSONXML01')
   EXPORT SYMBOL("jx_SetIntByName2")
   EXPORT SYMBOL("jx_SetTraceProc")
   EXPORT SYMBOL("jx_SetNodeFormat")
-  EXPORT SYMBOL("jx_NodeInsertChildTail")
-  EXPORT SYMBOL("jx_NodeInsertChildHead")
-  EXPORT SYMBOL("jx_NodeInsertSiblingBefore")
-  EXPORT SYMBOL("jx_NodeInsertSiblingAfter")
+  EXPORT SYMBOL("jx_documentInsert")
 
 ENDPGMEXP
