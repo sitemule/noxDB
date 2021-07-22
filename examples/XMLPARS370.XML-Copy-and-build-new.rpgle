@@ -42,7 +42,7 @@
           k = xml_Locate(pxml2 : 'k');
           xml_ElementCopy(k : a   : xml_FIRST_CHILD);
 
-          xml_writeStmf(pXml2  : '/noxdb/xml/newout.xml'  : 1208);
+          xml_writeStmf(pXml2  : '/prj/noxdb/testout/newout.xml'  : 1208);
 
           xml_delete(pXml1);
           xml_delete(pXml2);

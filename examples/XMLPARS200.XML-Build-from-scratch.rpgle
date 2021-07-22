@@ -47,6 +47,6 @@
        xml_SetValue(pXml1: '/root/row[LAST]@nextAtr' : 'value for next atr');
        xml_SetValue(pXml1: '/root/row[LAST]@atr' : 'value for next atr');
        // Finally we can produce the XML file
-       xml_writeStmf(pXml1 : '/noxdb/xml/sampleout6a.xml' : 1208);
+       xml_writeStmf(pXml1 : '/prj/noxdb/testout/sampleout6a.xml' : 1208);
        xml_delete(pXml1);
        *inlr = *on;

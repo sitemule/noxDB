@@ -69,23 +69,23 @@
        Dcl-S pOut               Pointer;
        Dcl-S msg                VarChar(50);
       /include qrpgleRef,noxdb
-          pXml1 = xml_ParseFile('/noxdb/xml/simple1.xml':'syntax=LOOSE');
+          pXml1 = xml_ParseFile('/prj/noxdb/testdata/simple1.xml':'syntax=LOOSE');
           If xml_Error(pXml1) ;
              msg = xml_Message(pXml1);
              xml_delete(pXml1);
              Return;
           EndIf;
           pOut    = xml_locate(pXml1:'/A');
-          xml_writeStmf(pXml1 : '/noxdb/xml/simpleout1.xml' : 1208);
+          xml_writeStmf(pXml1 : '/prj/noxdb/testout/simpleout1.xml' : 1208);
 
-          pXml2 = xml_ParseFile('/noxdb/xml/simple2.xml':'syntax=LOOSE');
+          pXml2 = xml_ParseFile('/prj/noxdb/testdata/simple2.xml':'syntax=LOOSE');
           If xml_Error(pXml2) ;
              msg = xml_Message(pXml2);
              xml_delete(pXml2);
              Return;
           EndIf;
 
-          xml_writeStmf(pXml2 : '/noxdb/xml/simpleout2.xml' : 1208);
+          xml_writeStmf(pXml2 : '/prj/noxdb/testout/simpleout2.xml' : 1208);
 
           // initial locatores in the XML tree
           pOut    = xml_locate(pXml1:'/A');

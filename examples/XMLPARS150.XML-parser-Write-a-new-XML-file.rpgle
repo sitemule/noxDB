@@ -66,12 +66,12 @@
        Dcl-S pElem              Pointer;
        Dcl-S msg                VarChar(50);
       /include qrpgleRef,noxdb
-          pXml = xml_ParseFile('/noxdb/xml/xmlsample2.xml':'syntax=LOOSE');
+          pXml = xml_ParseFile('/prj/noxdb/testdata/xmlsample2.xml':'syntax=LOOSE');
           If xml_Error(pXml) ;
              msg = xml_Message(pXml);
           Else;
              pElem = xml_locate(pXml:'/MyRoot/MyElement[9]');
-             xml_writeStmf(pElem : '/noxdb/xml/xmlsampleout.xml' : 1208 : *ON);
+             xml_writeStmf(pElem : '/prj/noxdb/testout/xmlsampleout.xml' : 1208 : *ON);
           EndIf;
           xml_delete(pXml);
           *inlr = *on;

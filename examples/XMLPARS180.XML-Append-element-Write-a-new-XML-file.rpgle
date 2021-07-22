@@ -60,7 +60,7 @@
        Dcl-S i                      Int(10:0);
        Dcl-S c                     Char(10);
       /include qrpgleRef,noxdb
-          pXml  = xml_ParseFile('/noxdb/xml/XmlSample2.xml':'syntax=LOOSE');
+          pXml  = xml_ParseFile('/prj/noxdb/testdata/XmlSample2.xml':'syntax=LOOSE');
           If xml_Error(pXml ) ;
              msg = xml_Message(pXml );
              xml_delete(pXml );
@@ -72,7 +72,7 @@
 
           For i = 0 to count -1;
              pOut = xml_Locate(pXml: '/myroot/myElement[' + %char(i) + ']    ');
-             xml_writeStmf(pOut : '/noxdb/xml/split' + %char(i) + '.xml' : 1208);
+             xml_writeStmf(pOut : '/prj/noxdb/testout/split' + %char(i) + '.xml' : 1208);
           EndFor;
 
           xml_delete(pXml);
