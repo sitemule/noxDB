@@ -22,7 +22,7 @@
 
         Result = '';
 
-        pXml  = xml_ParseFile('./test/documents/XmlSample2.xml':'syntax=LOOSE');
+        pXml  = xml_ParseFile('/prj/noxdb/testdata/XmlSample2.xml':'syntax=LOOSE');
         if Xml_Error(pXml ) ;
            pResult = xml_Message(pXml);
            xml_Close(pXml );

@@ -26,10 +26,11 @@
        Dcl-S name               VarChar(64);
        // ------------------------------------------------------------- *
           *inlr = *on;
+          // Segments are discontinued 
 
           // Load an other json into a new memory segment
           pSegment1 = json_SegmentSelectNo(1);
-          pJson1 = json_ParseFile ('/noxdbe/json/demo.json');
+          pJson1 = json_ParseFile ('/prj/noxdb/testdata/demo.json');
           pNode = json_Locate(pJson1 : '/'); // Delete root ... empty all
           json_NodeDelete(pNode);        // Delete john
 

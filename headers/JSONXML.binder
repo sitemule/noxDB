@@ -162,7 +162,7 @@ STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('JSONXML01')
   EXPORT SYMBOL("jx_sqlGetInsertId2")
   EXPORT SYMBOL("jx_SetIntByName2")
   EXPORT SYMBOL("jx_SetTraceProc")
-  EXPORT SYMBOL("jx_SetNodeFormat")
+  EXPORT SYMBOL("jx_SetNodeOptions")
   EXPORT SYMBOL("jx_documentInsert")
 
 ENDPGMEXP

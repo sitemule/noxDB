@@ -54,7 +54,7 @@
    pn = xml_locate (pxml :'a');
    v = xml_getStr(pn);
 
-   xml_WriteXmlStmf (pn: '/prj/noxdb/testdata/xmlnode.xml' : 1208: *OFF);
-   xml_WriteXmlStmf (pxml: '/prj/noxdb/testdata/cdata1.xml' : 1208: *OFF);
+   xml_WriteXmlStmf (pn: '/prj/noxdb/testout/xmlnode.xml' : 1208: *OFF);
+   xml_WriteXmlStmf (pxml: '/prj/noxdb/testout/cdata1.xml' : 1208: *OFF);
    xml_delete(pxml);
    *inlr = *on;

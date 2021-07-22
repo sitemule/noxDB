@@ -92,7 +92,7 @@ dcl-proc callUsingNoxNodes ;
         dsply msg;
     EndIf;
 
-    json_WriteJsonStmf(p2:'/prj/noxdb/testdata/procparms.json':1208:*OFF);
+    json_WriteJsonStmf(p2:'/prj/noxdb/testout/procparms.json':1208:*OFF);
     json_delete(p1);
     json_delete(p2);
 

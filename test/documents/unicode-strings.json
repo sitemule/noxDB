@@ -1,4 +1,0 @@
-﻿{ 
-  "a": "A valid unicode µ string",
-  "b": "An invalid unicode \u2318 string",
-  "c": "Escaped \\ string \"  data "}

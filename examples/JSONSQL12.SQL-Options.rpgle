@@ -55,7 +55,7 @@
 
          // Produce a JSON stream file in the root of the IFS
          json_writeJsonStmf(pResult:
-            '/prj/noxdb/testdata/using-options-default.json' : 1208 : *ON
+            '/prj/noxdb/testout/using-options-default.json' : 1208 : *ON
          );
 
          // Always delete objects after use - Otherwise yoy will have a memry leak
@@ -89,7 +89,7 @@
 
          // Produce a JSON stream file in the root of the IFS
          json_writeJsonStmf(pResult:
-            '/prj/noxdb/testdata/using-options-changed.json' : 1208 : *ON
+            '/prj/noxdb/testout/using-options-changed.json' : 1208 : *ON
          );
 
          // Always delete objects after use - Otherwise you will have a memory leak

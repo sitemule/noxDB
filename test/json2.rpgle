@@ -14,7 +14,7 @@
         End-Pi;
 
         *inlr = *on;
-        pJson = Json_ParseFile ('./test/documents/simple.json');
+        pJson = Json_ParseFile ('/prj/noxdb/testdata/simple.json');
 
         if Json_Error(pJson) ;
            pResult = Json_Message(pJson);

@@ -36,7 +36,7 @@
 
           // Write it out:
           json_WriteJsonStmf (pJson  :
-             '/prj/noxdb/testdata/Simple-1.json':1208:*OFF
+             '/prj/noxdb/testout/Simple-1.json':1208:*OFF
           );
           json_delete(pJson);
           *inlr = *on;

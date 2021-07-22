@@ -66,7 +66,7 @@
        Dcl-S MyElem             VarChar(50);
        Dcl-S msg                VarChar(50);
       /include qrpgleRef,noxdb
-          pXml = xml_ParseFile('/noxdb/xml/xmlsample1.xml');
+          pXml = xml_ParseFile('/prj/noxdb/testdata/xmlsample1.xml');
           If xml_Error(pXml) ;
              msg = xml_Message(pXml);
           Else;

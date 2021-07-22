@@ -59,7 +59,7 @@
        // ' Mainline
        // ' -----------------------------------------------------------
           // pXml  = xml_ParseFile('/IceBreak  /demo/oiodemo.xml':'syntax=LOOSE');
-          pXml  = xml_ParseFile('/noxdb/xml/XmlSample1.xml':'syntax=LOOSE');
+          pXml  = xml_ParseFile('/prj/noxdb/testdata/XmlSample1.xml':'syntax=LOOSE');
           If xml_Error(pXml) ;
              Print(xml_Message(pXml));
           Else;

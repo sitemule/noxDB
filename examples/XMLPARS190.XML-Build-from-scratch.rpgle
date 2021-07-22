@@ -82,6 +82,6 @@
         xml_SetAttrValue(pt    : 'a2'          : 'a2 2');
 
         // Finally we can produce the XML file
-        xml_writeStmf(pRoot : '/prj/noxdb/testdata/xml190out.xml' : 1208);
+        xml_writeStmf(pRoot : '/prj/noxdb/testout/xml190out.xml' : 1208);
         xml_delete(pRoot);
         *inlr = *on;

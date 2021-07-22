@@ -41,7 +41,7 @@
 
           // Produce a JSON stream file in the root of the IFS
           json_writeJsonStmf(pResult:
-             '/prj/noxdb/testdata/resultset-object-total-rows1.json' 
+             '/prj/noxdb/testout/resultset-object-total-rows1.json' 
              : 1208 
              : *ON
           );
@@ -62,7 +62,7 @@
 
           // Produce a JSON stream file in the root of the IFS
           json_writeJsonStmf(pResult:
-             '/prj/noxdb/testdata/resultset-object-total-rows2.json' 
+             '/prj/noxdb/testout/resultset-object-total-rows2.json' 
              : 1208 
              : *ON
           );

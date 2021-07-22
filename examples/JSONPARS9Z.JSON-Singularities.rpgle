@@ -52,15 +52,15 @@
           p7 = json_parseString('false');
           p8 = json_parseString('12345');
 
-          json_WriteJsonStmf(p1:'/prj/noxdb/testdata/limits0.json':1208:*OFF);
-          json_WriteJsonStmf(p1:'/prj/noxdb/testdata/limits1.json':1208:*OFF);
-          json_WriteJsonStmf(p2:'/prj/noxdb/testdata/limits2.json':1208:*OFF);
-          json_WriteJsonStmf(p3:'/prj/noxdb/testdata/limits3.json':1208:*OFF);
-          json_WriteJsonStmf(p4:'/prj/noxdb/testdata/limits4.json':1208:*OFF);
-          json_WriteJsonStmf(p5:'/prj/noxdb/testdata/limits5.json':1208:*OFF);
-          json_WriteJsonStmf(p6:'/prj/noxdb/testdata/limits6.json':1208:*OFF);
-          json_WriteJsonStmf(p7:'/prj/noxdb/testdata/limits7.json':1208:*OFF);
-          json_WriteJsonStmf(p8:'/prj/noxdb/testdata/limits8.json':1208:*OFF);
+          json_WriteJsonStmf(p1:'/prj/noxdb/testout/limits0.json':1208:*OFF);
+          json_WriteJsonStmf(p1:'/prj/noxdb/testout/limits1.json':1208:*OFF);
+          json_WriteJsonStmf(p2:'/prj/noxdb/testout/limits2.json':1208:*OFF);
+          json_WriteJsonStmf(p3:'/prj/noxdb/testout/limits3.json':1208:*OFF);
+          json_WriteJsonStmf(p4:'/prj/noxdb/testout/limits4.json':1208:*OFF);
+          json_WriteJsonStmf(p5:'/prj/noxdb/testout/limits5.json':1208:*OFF);
+          json_WriteJsonStmf(p6:'/prj/noxdb/testout/limits6.json':1208:*OFF);
+          json_WriteJsonStmf(p7:'/prj/noxdb/testout/limits7.json':1208:*OFF);
+          json_WriteJsonStmf(p8:'/prj/noxdb/testout/limits8.json':1208:*OFF);
 
           json_delete(p1);
           json_delete(p2);

@@ -58,7 +58,7 @@
        Dcl-S i                      Int(10:0);
       /include qrpgleRef,noxdb
           pXml = xml_ParseFile (
-               '/noxdb/xml/multitag.xml'
+               '/prj/noxdb/testdata/multitag.xml'
             );
 
           If xml_Error(pXml) ;

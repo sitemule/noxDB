@@ -268,7 +268,7 @@ dcl-proc commonTypes;
     
     // Dump the result
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testdata/procparms.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/procparms.json':1208:*OFF);
 
     json_delete(pIn);
     json_delete(pOut);
@@ -291,7 +291,7 @@ dcl-proc commonTypesNegative;
     
     // Dump the result
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testdata/procparms.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/procparms.json':1208:*OFF);
 
     json_delete(pIn);
     json_delete(pOut);
@@ -314,7 +314,7 @@ dcl-proc commonTypesNull;
     
     // Dump the result
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testdata/procparms.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/procparms.json':1208:*OFF);
 
     json_delete(pIn);
     json_delete(pOut);

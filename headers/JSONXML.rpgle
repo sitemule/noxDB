@@ -403,7 +403,8 @@
         Dcl-C JX_FORMAT_CDATA     const(1);
  
         //* Refer to node type above
-        Dcl-PR jx_SetNodeFormat Pointer extproc(*CWIDEN : 'jx_SetNodeFormat');
+        Dcl-PR jx_SetNodeOptions Pointer 
+          extproc(*CWIDEN : 'jx_SetNodeOptions');
           //Pointer to jx_ tree to receive format
           pNode          Pointer    value;
           format         int(5)     value ;

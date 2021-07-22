@@ -40,12 +40,12 @@
 
           // Write it out:
           json_WriteJsonStmf (pJson  :
-             '/prj/noxdb/testdata/json_out-set-value-to-object.json':1208:*OFF
+             '/prj/noxdb/testout/json_out-set-value-to-object.json':1208:*OFF
           );
 
           // Write it out:
           json_WriteJsonStmf (pText  :
-             '/prj/noxdb/testdata/json_out-ptext.json':1208:*OFF
+             '/prj/noxdb/testout/json_out-ptext.json':1208:*OFF
           );
 
           // Always close

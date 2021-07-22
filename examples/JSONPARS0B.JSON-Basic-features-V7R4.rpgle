@@ -52,7 +52,7 @@
          json_set(pJson: 'isMale' : *ON);
 
          // Write to the IFS, 
-         json_WriteJsonStmf(pJson:'/prj/noxdb/testdata/simple0.json':1208:*OFF);
+         json_WriteJsonStmf(pJson:'/prj/noxdb/testout/simple0.json':1208:*OFF);
 
          // And always remember to cleanup
          json_delete (pJson);

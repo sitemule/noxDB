@@ -43,7 +43,7 @@ dcl-proc main;
    // Use YUM to install curl, which is the tool used by httpRequest
    pResponse = json_httpRequest (url: pReq);
 
-   json_WriteJsonStmf(pResponse:'/prj/noxdb/testdata/httpdump.json':1208:*OFF);
+   json_WriteJsonStmf(pResponse:'/prj/noxdb/testout/httpdump.json':1208:*OFF);
 
    // Just debug the response
    text = json_getStr(pResponse : 'translations[0].translation' : 'N/A');

@@ -96,7 +96,7 @@ typedef struct _JXNODE {
 	LONG     lineNo;
 	BOOL     isLiteral;
 	SHORT    ccsid;
-	FORMAT_OPTION format;
+	FORMAT_OPTION options;
 } JXNODE, *PJXNODE;
 
 typedef struct _JXSEGMENT {

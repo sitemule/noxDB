@@ -35,7 +35,7 @@
        // This is already a serialized JSON string, so we can print it as it is:
        json_setPtr(p1 : 'json_InJson' : p3 : *OFF);
 
-       json_WriteJsonStmf(p1 :'/prj/noxdb/testdata/json_in_json_.json':1208:*OFF);
+       json_WriteJsonStmf(p1 :'/prj/noxdb/testout/json_in_json_.json':1208:*OFF);
 
        json_delete(p1);
        json_delete(p2);

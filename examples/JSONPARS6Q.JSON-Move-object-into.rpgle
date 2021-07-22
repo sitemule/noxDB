@@ -58,7 +58,7 @@
 
           // Write it out:
           json_WriteJsonStmf (root  :
-             '/prj/noxdb/testdata/abc-object1.json':1208:*OFF
+             '/prj/noxdb/testout/abc-object1.json':1208:*OFF
           );
 
 

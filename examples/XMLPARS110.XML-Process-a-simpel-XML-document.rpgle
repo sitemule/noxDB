@@ -96,7 +96,7 @@
        Dcl-S customerCode       VarChar(10);
        Dcl-S discrepancy            Ind;
         // First parse the XML stream
-          pXml = xml_ParseFile('/noxdb/xml/manifest.xml');
+          pXml = xml_ParseFile('/prj/noxdb/testdata/manifest.xml');
           If xml_Error(pXml) ;
              msg = xml_Message(pXml);
              xml_delete(pXml);

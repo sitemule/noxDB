@@ -55,7 +55,7 @@ dcl-proc example1;
     data-gen rows %data(handle: '') %gen(json_DataGen(pJson));
     
     // Let's see what we got
-    json_WriteJsonStmf(pJson:'/prj/noxdb/testdata/dump-payload.json':1208:*OFF);
+    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/dump-payload.json':1208:*OFF);
        
 
     // Always remember to delete used memory !!
@@ -121,7 +121,7 @@ dcl-proc example2;
     data-gen alltypes %data(handle: '') %gen(json_DataGen(pJson));
     
     // Let's see what we got
-    json_WriteJsonStmf(pJson:'/prj/noxdb/testdata/dump-payload2.json':1208:*OFF);
+    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/dump-payload2.json':1208:*OFF);
 
     // Always remember to delete used memory !!
     json_delete(pJson);
@@ -161,7 +161,7 @@ dcl-proc example3;
 
     
     // Let's see what we got
-    json_WriteJsonStmf(pArr:'/prj/noxdb/testdata/dump-payload3.json':1208:*OFF);
+    json_WriteJsonStmf(pArr:'/prj/noxdb/testout/dump-payload3.json':1208:*OFF);
        
 
     // Always remember to delete used memory. pArr "owns" all object generated 

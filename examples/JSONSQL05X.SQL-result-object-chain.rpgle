@@ -37,7 +37,7 @@
 
                 // Produce a JSON stream file in the root of the IFS
                 json_writeJsonStmf(pRow   :
-                   '/prj/noxdb/testdata/one-object.json' : 1208 : *ON
+                   '/prj/noxdb/testout/one-object.json' : 1208 : *ON
                 );
 
                 // Cleanup: delete the object and disconnect

@@ -40,6 +40,6 @@
           b  = json_getStr(pJson: 'b');
           c  = json_getStr(pJson: 'c');
           json_WriteJsonStmf( pJson:
-              '/prj/noxdb/testdata/unicode-strings.json': 1208 : *OFF);
+              '/prj/noxdb/testout/unicode-strings.json': 1208 : *OFF);
           json_delete(pJson);
           *inlr = *on;

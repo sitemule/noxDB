@@ -59,7 +59,7 @@ dcl-s err	      ind;
 
    // Produce a JSON stream file in the IFS
    json_writeJsonStmf(pRows2 :
-      '/prj/noxdb/testdata/system-names1.json' : 1208 :*OFF
+      '/prj/noxdb/testout/system-names1.json' : 1208 :*OFF
    );
 
    // returns the output - system (short) names
@@ -73,7 +73,7 @@ dcl-s err	      ind;
 
    // Produce a JSON stream file in the IFS
    json_writeJsonStmf(pRows3 :
-      '/prj/noxdb/testdata/system-names2.json' : 1208 :*OFF
+      '/prj/noxdb/testout/system-names2.json' : 1208 :*OFF
    );
 
    // Cleanup: delete the object
