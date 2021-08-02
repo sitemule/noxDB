@@ -805,23 +805,23 @@
           Quot           Char(1);
         End-DS;
 
-        //Iterators: First use the set the use forEach
+
+        //Iterators: First use the set then use forEach
+        // All properties are read-only except where stated
         Dcl-DS jx_Iterator  based(prototype_only) qualified;
-          root           Pointer;
-          this           Pointer;
-          isList         Ind;
-          isFirst        Ind;
-          isLast         Ind;
-          isRecursive    Ind;
-          comma          Varchar(1);
-          count          Int(10);
-          length         Int(10);
-          size           Int(10);
-          //Pointer to temp array of elms
-          listArr        Pointer;
-          //Set  this to *ON to teminate loop
-          break          Ind;
-          filler         Char(64);
+          root           Pointer; // Node of the origin of the iterator
+          this           Pointer; // Current node in the list
+          isList         Ind; // Will be *ON if the iterator is working in the list
+          isFirst        Ind; // Will be *ON only at the first element
+          isLast         Ind; // Will be *ON only at the last element
+          isRecursive    Ind; // Will be on in a recursion 
+          comma          Varchar(1); // Will we ',' as long there are more in the list 
+          count          Int(10); // Current element number
+          length         Int(10); // Number of elements
+          size           Int(10); // Size of the iterator object ( internal use only)
+          listArr        Pointer; // Pointer to temp array of elms for recursive lists ( internal use only)
+          break          Ind; //Set  this to *ON to terminate loop
+          filler         Char(64); // Extra space for the future
         End-DS;
 
         Dcl-PR jx_setIterator  likeds( jx_Iterator) 
