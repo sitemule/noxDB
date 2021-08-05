@@ -491,8 +491,8 @@ typedef _Packed struct  {
 	 BOOL          exec;
 } JXSQLSTMT, * PJXSQLSTMT;
 
-typedef _Packed struct  {
-	 SQLCHAR       colname[256]; // !!!! TODO !!! set len to 32!!
+typedef struct  {
+	 SQLCHAR       colname[64]; // !!!! TODO !!! set len to 32!!
 	 SQLSMALLINT   coltype;
 	 SQLSMALLINT   colnamelen;
 	 SQLSMALLINT   nullable;
@@ -502,7 +502,7 @@ typedef _Packed struct  {
 	 SQLCHAR *     data;
 	 SQLINTEGER    displaysize;
 	 NODETYPE      nodeType;
-	 SQLCHAR       header[256];
+	 SQLCHAR       header[128];
 	 BOOL          isId;
 } JXCOL, * PJXCOL;
 
@@ -573,7 +573,8 @@ typedef enum _JX_RESULTSET {
 	 JX_TOTALROWS  = 4,
 	 JX_UPPERCASE  = 8,
 	 JX_APROXIMATE_TOTALROWS = 16,
-	 JX_SYSTEM_NAMES = 32
+	 JX_SYSTEM_NAMES = 32,
+	 JX_CAMMEL_CASE = 64
 } JX_RESULTSET, *PJX_RESULTSET;
 
 VOID TRACE ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);

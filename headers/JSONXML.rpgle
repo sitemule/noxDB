@@ -1001,8 +1001,10 @@
         //+ Appoximate number of rows..
         //  ( unpresise but cheap !! prefered  )
         Dcl-C JX_APPROXIMATE_TOTALROWS const(16); 
-        //+ resultset reurns system names
+        //+ resultset returns system names
         Dcl-C JX_SYSTEM_NAMES  const(32); 
+        //+ resultset convert names like THE_COLUMN_NAME to theColumnName 
+        Dcl-C JX_CAMMEL_CASE   const(64); 
  
 
       // SQL cursor processing

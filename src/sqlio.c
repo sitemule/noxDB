@@ -212,6 +212,12 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
    }
    */
 
+   /* done on each statement */ 
+   /*
+   attrParm = SQL_TRUE;
+   rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_EXTENDED_COL_INFO , &attrParm  , 0);
+   */ 
+
    attrParm = SQL_TRUE;
    rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
    if (rc != SQL_SUCCESS ) {
@@ -513,7 +519,8 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP
    LONG   i;
    //   PJXSQL pSQL = jx_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
    PJXSQL pSQL;
-   SQLINTEGER len, descLen, isTrue;
+   SQLINTEGER  dummyInt , isTrue,descLen;
+   SQLSMALLINT len , dummyShort;
 
    int rc;
 
@@ -528,11 +535,13 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP
 
    if ( pConnection->options.hexSort == ON ) {
       LONG attrParm = SQL_FALSE ;
-      rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
+      LONG attr = SQL_ATTR_JOB_SORT_SEQUENCE;
+      rc = SQLSetEnvAttr  (pConnection->henv, attr , &attrParm  , 0);
    }
 
    // build the final sql statement
    strFormat(sqlTempStmt , sqlstmt , pSqlParms);
+
 
    //// huxi !! need uncomitted read for blob fields
    // and IBMi does not support statement attribute to set the pr statement. :/
@@ -572,10 +581,21 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP
 
    for (i = 0; i < pSQL->nresultcols; i++) {
 
+      int labelRc; 
+
       PJXCOL pCol = &pSQL->cols[i];
 
-      SQLDescribeCol (pSQL->pstmt->hstmt, i+1, pCol->colname, sizeof (pCol->colname),
-          &pCol->colnamelen, &pCol->coltype, &pCol->collen, &pCol->scale, &pCol->nullable);
+      rc = SQLDescribeCol (
+         pSQL->pstmt->hstmt, 
+         i+1, 
+         pCol->colname, 
+         sizeof (pCol->colname),
+         &pCol->colnamelen, 
+         &pCol->coltype, 
+         &pCol->collen, 
+         &pCol->scale, 
+         &pCol->nullable
+      );
 
       pCol->colname[pCol->colnamelen] = '\0';
 
@@ -586,9 +606,8 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP
          // Is a colum name is give bu "AS" .. we dont touch
          str2upper  (temp , pCol->colname);
          if (strcmp (temp , pCol->colname) == 0) {
-            LONG len;
             LONG p = SQL_DESC_NAME;
-            rc = SQLColAttributes (pSQL->pstmt->hstmt,i+1,p, pCol->colname, sizeof (pCol->colname), &len,&descLen);
+            rc = SQLColAttribute (pSQL->pstmt->hstmt,i+1,p, pCol->colname, sizeof (pCol->colname), &len,NULL);
             pCol->colnamelen = len;
             pCol->colname[len];
             if (!(format & (JX_UPPERCASE))) {
@@ -608,23 +627,22 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP
 
       // is it an ID column ? get the label, if no label then use the column name
       isTrue = SQL_FALSE;
-      rc = SQLColAttributes (pSQL->pstmt->hstmt,i+1,SQL_DESC_AUTO_INCREMENT, NULL, 0, NULL ,&isTrue);
+      rc = SQLColAttribute (pSQL->pstmt->hstmt,i+1,SQL_DESC_AUTO_INCREMENT, NULL, 0, NULL ,&isTrue);
       pCol->isId = isTrue == SQL_TRUE;
-
 
       // get the label, if no label then use the column name
       // NOTE in ver 5.4 this only return the 10 first chars ...
-      rc = SQLColAttributes (pSQL->pstmt->hstmt,i+1,SQL_DESC_LABEL, pCol->header, 127,&len,&descLen);
-
-      // No headers, if none provided
-      if (rc != SQL_SUCCESS ) {
-         strcpy(pCol->header ,  pCol->colname);
-      } else {
+      labelRc = SQLColAttribute (pSQL->pstmt->hstmt,i+1,SQL_DESC_LABEL, pCol->header, sizeof(pCol->header),&len,&dummyInt);
+      if (labelRc == SQL_SUCCESS) {
          pCol->header[len] =  '\0';
+         righttrim(pCol->header);
+      } else {
+         // No headers, if none provided, default to the column name
+         strcpy(pCol->header ,  pCol->colname);
       }
 
       // get display length for column
-      SQLColAttributes (pSQL->pstmt->hstmt, i+1, SQL_DESC_PRECISION, NULL, 0,NULL, &pCol->displaysize);
+      SQLColAttribute (pSQL->pstmt->hstmt, i+1, SQL_DESC_PRECISION, NULL, 0,NULL, &pCol->displaysize);
 
       // set column length to max of display length, and column name
       //   length.  Plus one byte for null terminator
@@ -980,6 +998,9 @@ PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
          case SQL_WVARCHAR:    type = "wvarchar"       ; break;
          case SQL_GRAPHIC:     type = "graphic"        ; break;
          case SQL_VARGRAPHIC:  type = "vargraphic"     ; break;
+         case SQL_BIGINT     : type = "bigint"         ; break;
+         case SQL_TINYINT    : type = "tinyint"        ; break;
+
          default: {
             if (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE ) {
                if (pCol->scale > 0) {
@@ -1010,7 +1031,7 @@ PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
       }
 
       jx_NodeAdd (pField  , RL_LAST_CHILD, "header" , pCol->header, VALUE  );
-
+      
       // Push to array
       jx_ArrayPush (pFields , pField, FALSE);
    }
