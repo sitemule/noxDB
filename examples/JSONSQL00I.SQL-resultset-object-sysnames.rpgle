@@ -31,7 +31,7 @@ Dcl-S pRows              Pointer;
         'Select * from noxdbdemo.sysnames':
         1: // Starting from row
         JSON_ALLROWS: // Number of rows to read
-        JSON_META+JSON_FIELDS // Embed the rows array in an object and produce a metatag with column info
+        JSON_META+JSON_FIELDS+ JSON_SYSTEM_NAMES  // Embed the rows array in an object and produce a metatag with column info
     );
 
     // Produce a JSON stream file in the IFS
