@@ -17,7 +17,7 @@
         End-Pi;
 
         Result = '';
-        pXml = xml_ParseFile('./test/documents/XmlSample1.xml');
+        pXml = xml_ParseFile('/prj/noxdb/testdata/XmlSample1.xml');
 
         if Xml_Error(pXml) ;
            pResult = xml_Message(pXml);

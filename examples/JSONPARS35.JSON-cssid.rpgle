@@ -23,9 +23,9 @@
        Dcl-S msg                VarChar(50);
        Dcl-S tag                VarChar(50);
        Dcl-S value              VarChar(50);
-       Dcl-S price               Packed(15:2);
+       Dcl-S price              Packed(15:2);
           *inlr = *on;
-          pJson = json_ParseFile ('/prj/noxDB   v/ccsid/win-1252.json');
+          pJson = json_ParseFile ('/prj/noxdb/testdata/win-1252.json');
           If json_Error(pJson) ;
              msg = json_Message(pJson);
           EndIf;

@@ -77,7 +77,7 @@
    pNode = json_locate(pJson: 'a');
    value = json_getStr(pNode : '[0]');   // The first element
 
-   json_WriteJsonStmf( pJson: '/prj/noxdb/testdata/dump2c.json': 1208 : *OFF);
+   json_WriteJsonStmf( pJson: '/prj/noxdb/testout/dump2c.json': 1208 : *OFF);
    json_delete(pJson);
 
    *inlr = *on;

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<Myroot>
-   <Myelement Myattribute1="My Company name &lt; &gt;" Myattribute2="1" Myattribute3="Ä">
-   		abc
-   </Myelement>
-   <Myelement Myattribute1="My Company name &lt; &gt;" Myattribute2="0" Myattribute3="Ä">
-   		opq2
-   	</Myelement>
-</Myroot>

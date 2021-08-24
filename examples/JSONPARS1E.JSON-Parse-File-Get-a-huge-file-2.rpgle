@@ -35,7 +35,7 @@
 
           // save as new file
           json_WriteJsonStmf(pJson :
-             '/prj/noxdb/testdata/sample02out.json' : 1208 : *OFF
+             '/prj/noxdb/testout/sample02out.json' : 1208 : *OFF
           );
 
           json_delete(pJson);

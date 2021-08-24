@@ -18,7 +18,7 @@
         
         Result = '';
         *inlr = *on;
-        pJson = Json_ParseFile ('./test/documents/demo.json');
+        pJson = Json_ParseFile ('/prj/noxdb/testdata/demo.json');
 
         if Json_Error(pJson) ;
            pResult = Json_Message(pJson);

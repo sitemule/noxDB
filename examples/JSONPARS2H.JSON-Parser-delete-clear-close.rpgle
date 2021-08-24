@@ -57,7 +57,7 @@
 
           // write a,b,c,d in this order:
           json_WriteJsonStmf(pData:
-            '/prj/noxdb/testdata/clear_delete.json':1208:*OFF
+            '/prj/noxdb/testout/clear_delete.json':1208:*OFF
           );
 
           // At this point you can use close and delete since pData has the complete tree:

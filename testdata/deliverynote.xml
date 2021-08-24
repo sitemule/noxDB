@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DeliveryNote>
+	<DocumentReference Type="Delivery">
+		<DocumentNumber>0000000003</DocumentNumber>
+		<DocumentDate>2021-03-26</DocumentDate>
+	</DocumentReference>
+	<Qualifier>ORI</Qualifier>
+	<ServiceRequirements>GEN</ServiceRequirements>
+	<DeliveryDetails>
+		<ModeOfTransport>30</ModeOfTransport>
+		<TransportType>10</TransportType>
+	</DeliveryDetails>
+	<PartnerDescription Type="BY">
+		<PartnerNumber>1650</PartnerNumber>
+		<PartnerName1>My Onlineshop</PartnerName1>
+		<Street1>Germanstraße 123</Street1>
+		<City1>Germanheim</City1>
+		<CountryCode>DE</CountryCode>
+		<LanguageCode>DE</LanguageCode>
+	</PartnerDescription>
+	<GoodsValue>
+		<Value>0</Value>
+		<Currency>EUR</Currency>
+	</GoodsValue>
+</DeliveryNote>

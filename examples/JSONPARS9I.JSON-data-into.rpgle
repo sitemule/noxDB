@@ -234,7 +234,7 @@ dcl-proc myTrace;
     showme = json_AsJsonText(pNode);
 
     // Or maybe put it into a stream file
-    //json_WriteJsonStmf(pJson:'/prj/noxdb/testdata/trace.json':1208:*OFF);
+    //json_WriteJsonStmf(pJson:'/prj/noxdb/testout/trace.json':1208:*OFF);
 
     // Or place it into a trace table.. Up to you !! 
 

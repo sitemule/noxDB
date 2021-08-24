@@ -23,6 +23,9 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #include <decimal.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <recio.h>
+#include <errno.h>
+
 #include "ostypes.h"
 #include "xlate.h"
 #include "varchar.h"
@@ -211,6 +214,12 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
      return NULL; // we have an error
    }
    */
+
+   /* done on each statement */ 
+   /*
+   attrParm = SQL_TRUE;
+   rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_EXTENDED_COL_INFO , &attrParm  , 0);
+   */ 
 
    attrParm = SQL_TRUE;
    rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
@@ -501,6 +510,83 @@ static PJXSQL jx_sqlNewStatement(PJXNODE pSqlParms, BOOL exec, BOOL scroll)
 
 }
 /* ------------------------------------------------------------- */
+// ------------------------------------------------------------------
+// https://www.ibm.com/docs/en/i/7.4?topic=program-null-capable-fields
+// ------------------------------------------------------------------
+static PUCHAR getSystemColumnName ( PUCHAR sysColumnName, PUCHAR schema , PUCHAR table , PUCHAR column )
+{
+
+   #pragma mapinc("QADBILFI", "QSYS/QADBILFI(*all)" , "both key nullflds", "_P", "RecBuf" , "")
+   #include "/QSYS.LIB/QTEMP.LIB/QACYXTRA.FILE/QADBILFI.MBR"
+   typedef QDBIFLD_both_t SYSCOLR, * PSYSCOLR;
+   typedef QDBIFLD_key_t  SYSCOLK;
+
+   _RIOFB_T * fb;
+   SYSCOLR sysColR;
+   SYSCOLK sysColK;
+   int keylen;
+   int i; 
+
+   static _RFILE * fSysCol = null;
+   if ((fSysCol = _Ropen ("QSYS/QADBILFI" , "rr,nullcap=Y")) == NULL) {
+      jx_joblog ( "Not able to open QADBILFI: %s",  strerror(errno)) ;
+      return sysColumnName;
+   }
+
+   // memset will not work on "volatile" in null maps 
+   for (i=0; i< fSysCol->null_map_len     ; i ++) { fSysCol->in_null_map[i]= '0';}
+   for (i=0; i< fSysCol->null_key_map_len ; i ++) { fSysCol->null_key_map[i]= '0';}
+
+   padncpy  (sysColK.DBILIB , schema , sizeof(sysColK.DBILIB));
+   str2vc   (&sysColK.DBILFI , table  );
+   keylen = sizeof(sysColK.DBILIB) + sysColK.DBILFI.len;
+
+   // Get format and part info  by table / file name:
+   fb = _Rreadk (fSysCol  ,&sysColR , sizeof(SYSCOLR) ,
+                 __KEY_EQ | __NULL_KEY_MAP  , &sysColK , keylen);
+   if (fb->num_bytes == 0) {
+      strcpy (sysColumnName , column);
+      return sysColumnName;
+   }
+   // Now have the format and part no
+   // now move the format and part into key
+   sysColK.DBIFMP = sysColR.DBIFMP;
+   memcpy   (sysColK.DBIFMT , sysColR.DBIFMT , sizeof ( sysColK.DBIFMT ));
+   str2vc   ((PVAR_CHAR) &sysColK.DBILFL , column );
+
+   // We have the complete key -  get the name for column
+   fb = _Rreadk (fSysCol  ,&sysColR , sizeof(SYSCOLR) , __KEY_EQ  , &sysColK , sizeof(SYSCOLK));
+   if (fb->num_bytes == 0) {
+      strcpy (sysColumnName , column);
+      return sysColumnName;
+   }
+   strtrimncpy ( sysColumnName , sysColR.DBIINT , sizeof(sysColR.DBIINT));
+
+   return sysColumnName;
+
+}
+// ------------------------------------------------------------------
+static PUCHAR  getSysNameForColumn ( PUCHAR sysColumnName, SQLHSTMT hstmt , SQLSMALLINT columnNo)
+{
+   SQLRETURN     rc;
+   SQLSMALLINT   len1=0, len2=0, len3=0;
+   SQLINTEGER    numlen;
+
+   UCHAR column [256];
+   UCHAR table [256];
+   UCHAR schema[256];
+
+   // We simply ignore the errors, and let getSystemColumnName handle the error if any 
+   rc = SQLColAttribute (hstmt, columnNo , SQL_DESC_BASE_SCHEMA , schema, sizeof(schema), &len1 , &numlen);
+   rc = SQLColAttribute (hstmt, columnNo , SQL_DESC_BASE_TABLE  , table , sizeof(table) , &len2 , &numlen);
+   rc = SQLColAttribute (hstmt, columnNo , SQL_DESC_BASE_COLUMN , column, sizeof(column), &len3 , &numlen);
+   schema [len1] = '\0';
+   table  [len2] = '\0';
+   column [len3] = '\0';
+   
+   return  getSystemColumnName ( sysColumnName, schema , table , column);
+}
+
 /* ------------------------------------------------------------- */
 PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP)
 {
@@ -513,7 +599,8 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP
    LONG   i;
    //   PJXSQL pSQL = jx_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
    PJXSQL pSQL;
-   SQLINTEGER len, descLen, isTrue;
+   SQLINTEGER  dummyInt , isTrue,descLen;
+   SQLSMALLINT len , dummyShort;
 
    int rc;
 
@@ -528,11 +615,13 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP
 
    if ( pConnection->options.hexSort == ON ) {
       LONG attrParm = SQL_FALSE ;
-      rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
+      LONG attr = SQL_ATTR_JOB_SORT_SEQUENCE;
+      rc = SQLSetEnvAttr  (pConnection->henv, attr , &attrParm  , 0);
    }
 
    // build the final sql statement
    strFormat(sqlTempStmt , sqlstmt , pSqlParms);
+
 
    //// huxi !! need uncomitted read for blob fields
    // and IBMi does not support statement attribute to set the pr statement. :/
@@ -572,29 +661,31 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP
 
    for (i = 0; i < pSQL->nresultcols; i++) {
 
+      int labelRc; 
+
       PJXCOL pCol = &pSQL->cols[i];
 
-      SQLDescribeCol (pSQL->pstmt->hstmt, i+1, pCol->colname, sizeof (pCol->colname),
-          &pCol->colnamelen, &pCol->coltype, &pCol->collen, &pCol->scale, &pCol->nullable);
+      rc = SQLDescribeCol (
+         pSQL->pstmt->hstmt, 
+         i+1, 
+         pCol->colname, 
+         sizeof (pCol->colname),
+         &pCol->colnamelen, 
+         &pCol->coltype, 
+         &pCol->collen, 
+         &pCol->scale, 
+         &pCol->nullable
+      );
 
       pCol->colname[pCol->colnamelen] = '\0';
 
 
       // If all uppsercase ( not given name by .. AS "newName") then lowercase
       if (format & (JX_SYSTEM_NAMES)) {
-         UCHAR temp [256];
-         // Is a colum name is give bu "AS" .. we dont touch
-         str2upper  (temp , pCol->colname);
-         if (strcmp (temp , pCol->colname) == 0) {
-            LONG len;
-            LONG p = SQL_DESC_NAME;
-            rc = SQLColAttributes (pSQL->pstmt->hstmt,i+1,p, pCol->colname, sizeof (pCol->colname), &len,&descLen);
-            pCol->colnamelen = len;
-            pCol->colname[len];
-            if (!(format & (JX_UPPERCASE))) {
-               str2lower  (pCol->colname , pCol->colname);
-            } 
-         }
+         getSysNameForColumn ( pCol->colname , pSQL->pstmt->hstmt , i+1);
+         if (!(format & (JX_UPPERCASE))) {
+            str2lower  (pCol->colname , pCol->colname);
+         } 
       } else if (format & (JX_UPPERCASE)) {
          // It is upper NOW
          // jx_sqlUpperCaseNames(pSQL);
@@ -608,23 +699,22 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP
 
       // is it an ID column ? get the label, if no label then use the column name
       isTrue = SQL_FALSE;
-      rc = SQLColAttributes (pSQL->pstmt->hstmt,i+1,SQL_DESC_AUTO_INCREMENT, NULL, 0, NULL ,&isTrue);
+      rc = SQLColAttribute (pSQL->pstmt->hstmt,i+1,SQL_DESC_AUTO_INCREMENT, NULL, 0, NULL ,&isTrue);
       pCol->isId = isTrue == SQL_TRUE;
-
 
       // get the label, if no label then use the column name
       // NOTE in ver 5.4 this only return the 10 first chars ...
-      rc = SQLColAttributes (pSQL->pstmt->hstmt,i+1,SQL_DESC_LABEL, pCol->header, 127,&len,&descLen);
-
-      // No headers, if none provided
-      if (rc != SQL_SUCCESS ) {
-         strcpy(pCol->header ,  pCol->colname);
-      } else {
+      labelRc = SQLColAttribute (pSQL->pstmt->hstmt,i+1,SQL_DESC_LABEL, pCol->header, sizeof(pCol->header),&len,&dummyInt);
+      if (labelRc == SQL_SUCCESS) {
          pCol->header[len] =  '\0';
+         righttrim(pCol->header);
+      } else {
+         // No headers, if none provided, default to the column name
+         strcpy(pCol->header ,  pCol->colname);
       }
 
       // get display length for column
-      SQLColAttributes (pSQL->pstmt->hstmt, i+1, SQL_DESC_PRECISION, NULL, 0,NULL, &pCol->displaysize);
+      SQLColAttribute (pSQL->pstmt->hstmt, i+1, SQL_DESC_PRECISION, NULL, 0,NULL, &pCol->displaysize);
 
       // set column length to max of display length, and column name
       //   length.  Plus one byte for null terminator
@@ -802,7 +892,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
                         PJXNODE pNode = jx_parseStringCcsid(p, 0);
                         if (pNode) {
                            jx_NodeRename(pNode, pCol->colname);
-                           jx_NodeAddChildTail (pRow, pNode);
+                           jx_NodeInsertChildTail (pRow, pNode);
                            break;
                         }
                      }
@@ -980,6 +1070,9 @@ PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
          case SQL_WVARCHAR:    type = "wvarchar"       ; break;
          case SQL_GRAPHIC:     type = "graphic"        ; break;
          case SQL_VARGRAPHIC:  type = "vargraphic"     ; break;
+         case SQL_BIGINT     : type = "bigint"         ; break;
+         case SQL_TINYINT    : type = "tinyint"        ; break;
+
          default: {
             if (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE ) {
                if (pCol->scale > 0) {
@@ -1010,7 +1103,7 @@ PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
       }
 
       jx_NodeAdd (pField  , RL_LAST_CHILD, "header" , pCol->header, VALUE  );
-
+      
       // Push to array
       jx_ArrayPush (pFields , pField, FALSE);
    }

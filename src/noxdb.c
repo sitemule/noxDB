@@ -89,7 +89,6 @@ UCHAR jobDollar  ;
 
 int   InputCcsid = 0, OutputCcsid = 0;
 //  BOOL  skipBlanks = TRUE;
-BOOL  doTrim;
 UCHAR delimiters [12] = {'/', '\\', '@', '[', ']', ' ', '.' , '{' , '}', '\'', '\"' , '$' };
 
 UCHAR  e2aTbl[256];
@@ -570,161 +569,6 @@ ULONG jx_NodeCheckSum (PJXNODE pNode)
    return sum;
 }
 /* ---------------------------------------------------------------------------
-   --------------------------------------------------------------------------- */
-#pragma convert(1252)
-static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode)
-{
-   PJXNODE  pNodeTemp, pNodeNext;
-   PXMLATTR pAttrTemp;
-   static int level = 0;
-   UCHAR    tab[256];
-   BOOL     shortform;
-
-#pragma convert(0)
-   PUCHAR  defaultNode = "row";
-#pragma convert(1252)
-
-   if ( pNode == NULL) return;
-
-   //' Make indention
-   tab [0] = 0x0d;
-   tab [1] = 0x0a;
-   memset(tab+2, 0x20 ,level*2);
-   tab [2 + (level*2)] = '\0';
-
-   level++;
-
-   while (pNode) {
-
-      if (pNode->Comment) {
-         if (!doTrim)  fputs ( tab,  f);
-         fputs ( "<!--",  f);
-         iconvWrite(f,pIconv, pNode->Comment, FALSE);
-         fputs ( "-->",  f);
-      }
-
-      if (!doTrim)  fputs ( tab,  f);
-      fputs ("<", f);
-      iconvWrite(f,pIconv, pNode->Name ? pNode->Name: defaultNode, FALSE);
-
-
-
-      for (pAttrTemp = pNode->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
-         if (pNode->newlineInAttrList) {
-            if (!doTrim)  fputs ( tab,  f);
-            fputs ("  ", f);
-         } else {
-            fputc( 0x20 , f);
-         }
-         iconvWrite( f,pIconv, pAttrTemp->Name, FALSE);
-         fputs("=\"" , f);
-         iconvWrite( f,pIconv, pAttrTemp->Value, TRUE);
-         fputs("\"", f);
-      }
-
-      shortform = TRUE;
-
-      if (pNode->Value != NULL && pNode->Value[0] > '\0') {
-          shortform = FALSE;
-          fputs(">", f);
-          iconvWrite( f,pIconv, pNode->Value, TRUE);
-      }
-
-      if (pNode->pNodeChildHead) {
-          shortform = FALSE;
-          if (pNode->Value != NULL && pNode->Value[0] > '\0') {
-          // Already put - in the above
-          } else {
-              fputs(">", f);
-          }
-          jx_WriteXmlStmfNodeList (f, pIconv, pNode->pNodeChildHead);
-      }
-
-      if (shortform) {
-         if (pNode->newlineInAttrList) {
-            if (!doTrim)  fputs ( tab,  f);
-         }
-         fputs("/>", f);
-      } else {
-         if (pNode->pNodeChildHead) {
-            if (!doTrim)  fputs ( tab,  f);
-         }
-         fputs("</" , f);
-         iconvWrite( f,pIconv, pNode->Name ? pNode->Name : defaultNode , FALSE);
-         fputs(">", f);
-      }
-
-      if (level == 1) {
-         pNode = NULL;
-      } else {
-         pNode = pNode->pNodeSibling;
-      }
-   }
-
-   level --;
-}
-#pragma convert(0)
-/* ---------------------------------------------------------------------------
-   --------------------------------------------------------------------------- */
-LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf)
-{
-   PJXNODE    pNodeTemp, pNodeNext;
-   PXMLATTR   pAttrTemp;
-   static int level = 0;
-   BOOL       shortform;
-   PUCHAR     temp = buf;
-
-   level++;
-
-   while (pNode) {
-
-      temp +=  sprintf(temp , "<%s", pNode->Name ? pNode->Name : "row");
-      for (pAttrTemp = pNode->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
-         temp +=  sprintf(temp , " %s=\"%s\"", pAttrTemp->Name, pAttrTemp->Value);
-      }
-
-      shortform = TRUE;
-
-      if (pNode->Value != NULL && pNode->Value[0] > '\0') {
-          shortform = FALSE;
-          temp +=  sprintf(temp , ">%s", pNode->Value);
-      }
-
-      if (pNode->pNodeChildHead) {
-          shortform = FALSE;
-          if (pNode->Value != NULL && pNode->Value[0] > '\0') {
-          // Already put - in the above
-          } else {
-              temp +=  sprintf(temp , ">");
-          }
-          temp += jx_AsXmlTextMem (pNode->pNodeChildHead , temp);
-      }
-
-      if (shortform) {
-         temp +=  sprintf(temp , "/>");
-      } else {
-         temp +=  sprintf(temp , "</%s>", pNode->Name ? pNode->Name : "row");
-      }
-
-      if (level == 1) {
-         pNode = NULL;
-      } else {
-         pNode = pNode->pNodeSibling;
-      }
-   }
-
-   level --;
-   return temp - buf;
-
-}
-// ---------------------------------------------------------------------------
-VARCHAR jx_AsXmlText (PJXNODE pNode)
-{
-   VARCHAR  res;
-   res.Length = jx_AsXmlTextMem (pNode , res.String);
-   return res;
-}
-/* ---------------------------------------------------------------------------
    Traverse up the tree and build the name  like: "root/tree/node"
    --------------------------------------------------------------------------- */
 VARCHAR jx_GetNodeNameAsPath (PJXNODE pNode, UCHAR Delimiter)
@@ -883,6 +727,12 @@ void jx_WriteCsvStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJ
 SHORT jx_GetNodeType (PJXNODE pNode)
 {
    return (pNode) ? pNode->type : 0;
+}
+/* --------------------------------------------------------------------------- */
+PJXNODE jx_SetNodeOptions (PJXNODE pNode, SHORT options)
+{
+   if (pNode) pNode->options = options;
+   return pNode;
 }
 /* --------------------------------------------------------------------------- */
 void  jx_CloneNodeFormat (PJXNODE pNode, PJXNODE pSource, PJWRITE pjWrite, PUCHAR name, PJXNODE pParent)
@@ -1127,76 +977,6 @@ void  jx_NodeSanitize(PJXNODE pNode)
       }
       pNode = pNext;
    }
-}
-/* ---------------------------------------------------------------------------
-   --------------------------------------------------------------------------- */
-void jx_WriteXmlStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , PJXNODE options)
-{
-   FILE * f;
-   iconv_t Iconv;
-   UCHAR mode[32];
-   PUCHAR enc;
-   PUCHAR sig;
-   UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
-   UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
-   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PUCHAR  value;
-   PUCHAR  dft;
-   VARCHAR res;
-
-   doTrim = (pParms->OpDescList &&  pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
-
-   if (pNode == NULL) return;
-
-   if (pNode->pNodeParent == NULL
-   &&  pNode->Name       == NULL) {
-     if (pNode->pNodeChildHead != NULL) {
-       // TODO!! This root Nodeens empty in some case; the first child is actually the root
-       pNode = pNode->pNodeChildHead;
-     }
-   }
-   if (pNode == NULL) return;
-
-   sprintf(mode , "wb,codepage=%d", Ccsid);
-   f = fopen ( strTrim(FileName) , mode );
-   if (f == NULL) return;
-
-   Iconv = OpenXlate(OutputCcsid , Ccsid );
-
-
-   #pragma convert(1252)
-   switch(Ccsid) {
-     case 1252 :
-       enc = "WINDOWS-1252";
-       sig = "";
-       break;
-     case 1208 :
-       enc = "UTF-8";
-       sig = sigUtf8;
-       break;
-     case 1200 :
-       enc = "UTF-16";
-       sig = sigUtf16;
-       break;
-     case 819  :
-       enc = "ISO-8859-1";
-       sig = "";
-       break;
-     default   :
-       enc = "windows-1252";
-       sig = "";
-   }
-
-   fputs (sig , f);
-   fputs ("<?xml version=\"1.0\" encoding=\"", f);
-   fputs (enc, f);
-   fputs ("\" ?>", f);
-
-
-   #pragma convert(0)
-   jx_WriteXmlStmfNodeList (f , &Iconv , pNode);
-   fclose(f);
-   iconv_close(Iconv);
 }
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
@@ -1475,7 +1255,7 @@ static PJXNODE DupNode(PJXNODE pSource)
    return (pNode);
 }
 // ---------------------------------------------------------------------------
-void jx_NodeAddChildTail( PJXNODE pRoot, PJXNODE pChild)
+void jx_NodeInsertChildTail( PJXNODE pRoot, PJXNODE pChild)
 {
    if (pChild == NULL || pRoot == NULL) return;
 
@@ -1590,7 +1370,7 @@ PJXNODE jx_NodeMoveInto (PJXNODE  pDest, PUCHAR name , PJXNODE pSource)
    //    jx_NodeDelete (pSource);
    //    return pDest;
    // }
-      jx_NodeAddChildTail (pDest, pSource);
+      jx_NodeInsertChildTail (pDest, pSource);
 
       // Since we have a name - we must be an object
       // required if we were a value i.e. produce by
@@ -1602,7 +1382,7 @@ PJXNODE jx_NodeMoveInto (PJXNODE  pDest, PUCHAR name , PJXNODE pSource)
 
    } else {
       // replace, by adding a new with same name and the remove the original. Will keep the same position
-      jx_NodeAddSiblingAfter(pTempNode, pSource);
+      jx_NodeInsertSiblingAfter(pTempNode, pSource);
       jx_NodeDelete (pTempNode);
    }
 
@@ -1622,12 +1402,13 @@ void jx_NodeMoveAndReplace (PJXNODE  pDest, PJXNODE pSource)
    jx_NodeRename(pSource , pDest->Name);  // I need the same name of the node i gonna replace
 
    // replace, by adding a new with same name and the remove the original. Will keep the same position
-   jx_NodeAddSiblingAfter(pDest, pSource);
+   jx_NodeInsertSiblingAfter(pDest, pSource);
    jx_NodeDelete (pDest);
 }
 // ---------------------------------------------------------------------------
-void jx_NodeAddChildHead( PJXNODE pRoot, PJXNODE pChild)
+void jx_NodeInsertChildHead( PJXNODE pRoot, PJXNODE pChild)
 {
+
    pChild->pNodeParent = pRoot;
 
    if (pChild->pNodeParent->type == ARRAY) {
@@ -1646,12 +1427,12 @@ void jx_NodeAddChildHead( PJXNODE pRoot, PJXNODE pChild)
    }
 }
 // ---------------------------------------------------------------------------
-void jx_NodeAddSiblingBefore( PJXNODE pRef, PJXNODE pSibling)
+void jx_NodeInsertSiblingBefore( PJXNODE pRef, PJXNODE pSibling)
 {
     PJXNODE pPrev = previousSibling(pRef);
 
     if (pPrev == NULL) {
-        jx_NodeAddChildHead( pRef->pNodeParent, pSibling);
+        jx_NodeInsertChildHead( pRef->pNodeParent, pSibling);
         return;
     }
     pSibling->pNodeParent  = pRef->pNodeParent;
@@ -1662,37 +1443,90 @@ void jx_NodeAddSiblingBefore( PJXNODE pRef, PJXNODE pSibling)
 
 }
 // ---------------------------------------------------------------------------
-void jx_NodeAddSiblingAfter( PJXNODE pRef, PJXNODE pSibling)
+void jx_NodeInsertSiblingAfter( PJXNODE pRef, PJXNODE pSibling)
 {
-    if (pRef->pNodeSibling == NULL) {
-        jx_NodeAddChildTail ( pRef->pNodeParent, pSibling);
-        return;
-    }
-    pSibling->pNodeParent  = pRef->pNodeParent;
-    pSibling->pNodeSibling = pRef->pNodeSibling;
-    pRef->pNodeSibling     = pSibling;
+
+   if (pRef->pNodeSibling == NULL) {
+      jx_NodeInsertChildTail ( pRef->pNodeParent, pSibling);
+      return;
+   }
+   pSibling->pNodeParent  = pRef->pNodeParent;
+   pSibling->pNodeSibling = pRef->pNodeSibling;
+   pRef->pNodeSibling     = pSibling;
 
 //    to do ... renumber seq.
 }
 // ---------------------------------------------------------------------------
-void AddNode(PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
+void jx_nodeInsert(PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
 {
    if (pDest   == NULL) return;
 
    switch ( refloc) {
    case RL_LAST_CHILD:
-     jx_NodeAddChildTail (pDest, pSource);
+     jx_NodeInsertChildTail (pDest, pSource);
      break;
    case RL_FIRST_CHILD:
-     jx_NodeAddChildHead (pDest, pSource);
+     jx_NodeInsertChildHead (pDest, pSource);
      break;
    case RL_BEFORE_SIBLING:
-     jx_NodeAddSiblingBefore(pDest, pSource);
+     jx_NodeInsertSiblingBefore(pDest, pSource);
      break;
    case RL_AFTER_SIBLING:
-     jx_NodeAddSiblingAfter(pDest, pSource);
+     jx_NodeInsertSiblingAfter(pDest, pSource);
      break;
    }
+}
+// ---------------------------------------------------------------------------
+// XML documents has a anonymus root node. Each child from the 
+// root is added  
+PJXNODE jx_documentInsert(PJXNODE pDest, PJXNODE * ppSource, REFLOC refloc)
+{
+   PJXNODE pTemp;
+   PJXNODE * pNodes;
+   LONG len, i;
+   PJXNODE pSource = * ppSource;
+   if (pDest == NULL || pSource == NULL ) return NULL;
+
+   // find length of source nodes:
+   for (len =0, pTemp = pSource->pNodeChildHead ; pTemp != NULL; len++, pTemp = pTemp->pNodeSibling);
+   
+   if (len == 0) return pDest;
+
+   // Store the list of nodes and make each of them them roots;
+   pNodes = malloc( len * sizeof(PJXNODE));
+   for (i =0, pTemp = pSource->pNodeChildHead ; pTemp != NULL;pTemp = pTemp->pNodeSibling) {
+       pNodes[i++] = pTemp;
+      jx_NodeUnlink (pTemp);
+   }
+
+   pTemp = pNodes[0];
+
+   switch ( refloc) {
+   case RL_LAST_CHILD:
+     jx_NodeInsertChildTail (pDest, pTemp);
+     break;
+   case RL_FIRST_CHILD:
+     jx_NodeInsertChildHead (pDest, pTemp);
+     break;
+   case RL_BEFORE_SIBLING:
+     jx_NodeInsertSiblingBefore(pDest, pTemp);
+     break;
+   case RL_AFTER_SIBLING:
+     jx_NodeInsertSiblingAfter(pDest, pTemp);
+     break;
+   }
+
+   // Following siblings are just added as new siblings;
+   for ( i = 1; i < len ; i++) {
+      jx_NodeInsertSiblingAfter(pTemp, pNodes[i]);
+   }
+
+   free(pNodes);
+
+   jx_NodeDelete (pSource);
+   * ppSource = NULL;
+   return pDest;
+
 }
 // ---------------------------------------------------------------------------
 PJXNODE jx_NodeClone  (PJXNODE pSource)
@@ -1706,7 +1540,7 @@ PJXNODE jx_NodeClone  (PJXNODE pSource)
    pNext = pSource->pNodeChildHead;
    while (pNext) {
       PJXNODE  pNewChild = jx_NodeClone (pNext);
-      jx_NodeAddChildTail (pNewNode , pNewChild);
+      jx_NodeInsertChildTail (pNewNode , pNewChild);
       pNext=pNext->pNodeSibling;
    }
    return pNewNode;
@@ -1720,7 +1554,7 @@ PJXNODE jx_NodeCopy (PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
    if (pSource == NULL) return;
 
    pNewNode = jx_NodeClone  (pSource);
-   AddNode(pDest, pNewNode, refloc);
+   jx_nodeInsert(pDest, pNewNode, refloc);
    return pNewNode;
 
 }
@@ -1752,7 +1586,7 @@ PJXNODE NewNode  (PUCHAR Name , PUCHAR Value, NODETYPE type)
 PJXNODE jx_NodeAdd (PJXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type)
 {
    PJXNODE  pNewNode  = NewNode  (Name , Value, type);
-   AddNode(pDest, pNewNode, refloc);
+   jx_nodeInsert(pDest, pNewNode, refloc);
    return pNewNode;
 }
 // ---------------------------------------------------------------------------
@@ -1892,17 +1726,24 @@ PJXDELIM jx_GetDelimiters(void)
   return   (PJXDELIM)   &delimiters;
 }
 // ---------------------------------------------------------------------------
-// Note: Options is depricated ...
+// Note: Options is depricated 
 // ---------------------------------------------------------------------------
 PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
 {
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PUCHAR  Options =  (pParms->OpDescList == NULL
+                  ||  pParms->OpDescList->NbrOfParms == 0
+                  ||  pParms->OpDescList->NbrOfParms >= 2 && pOptions) ? pOptions : "";
+
    PJXNODE pRoot;
    PJXCOM pJxCom;
+   
 
    #ifdef MEMDEBUG
    UCHAR  tempStr[100];
    substr(tempStr , Buf , 100);
    #endif
+
 
    // Asume OK
    jxError = false;
@@ -1964,7 +1805,7 @@ PJXNODE jx_parseStringCcsid(PUCHAR buf, int ccsid)
    storeDelimiters = * jx_GetDelimiters();
    InputCcsid = ccsid;
    jx_setDelimitersByCcsid (ccsid);
-   pRoot = jx_ParseString(buf,"");
+   pRoot = jx_ParseString(buf, "");
    jx_SetDelimiters2(&storeDelimiters);
    return pRoot;
 }
@@ -2069,7 +1910,6 @@ PJXNODE jx_ParseFile(PUCHAR FileName, PUCHAR pOptions)
    LONG    len ;
    FILE  * f;
    struct  stat statbuf;
-
 
    jxMessage[0] = '\0';
 
@@ -2929,7 +2769,7 @@ PJXNODE  jx_ArrayPush (PJXNODE pDest, PJXNODE pSource , BOOL16 copyP)
       pNewNode = jx_NodeUnlink  (pSource);
    }
 
-   jx_NodeAddChildTail (pDest, pNewNode);
+   jx_NodeInsertChildTail (pDest, pNewNode);
 
 }
 /* ---------------------------------------------------------------------------

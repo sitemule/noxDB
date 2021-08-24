@@ -50,7 +50,8 @@
         Dcl-C JX_OBJLINK const(17);
         Dcl-C JX_OBJREPLACE const(18);
         Dcl-C JX_OBJCOPY const(18);
-        Dcl-C JX_BY_CONTEXT const(19);
+        Dcl-C JX_BY_CONTEXT const(19);  
+              
         Dcl-C JX_OBJMOVE const(2048);
 
         //* Modifiers to "add" / "or" into "parseString" and "evaluate"
@@ -82,6 +83,7 @@
 
         //---------------------------------------------------------------------- *
         //Returns node to the jx_object tree
+        // options can be: syntax=loose singleroot=true
         Dcl-PR jx_ParseFile Pointer extproc(*CWIDEN:'jx_ParseFile');
           //File to parse
           FileName       Pointer    value options(*string);
@@ -90,6 +92,7 @@
         End-PR;
 
         //Returns node jx_object tree
+        // options can be: syntax=loose singleroot=true
         Dcl-PR jx_ParseString Pointer extproc(*CWIDEN:'jx_ParseString');
           //String to parse
           String         Pointer    value options(*string);
@@ -395,6 +398,19 @@
           pNode          Pointer    value;
         End-PR;
 
+        // For XML serializer;
+        Dcl-C JX_FORMAT_DEFAULT   const(0);
+        Dcl-C JX_FORMAT_CDATA     const(1);
+ 
+        //* Refer to node type above
+        Dcl-PR jx_SetNodeOptions Pointer 
+          extproc(*CWIDEN : 'jx_SetNodeOptions');
+          //Pointer to jx_ tree to receive format
+          pNode          Pointer    value;
+          format         int(5)     value ;
+        End-PR;
+
+
       // Get string by expresion
       //  /object/array[123]/name
       //  .object.array[123].name
@@ -530,6 +546,7 @@
           //New type (Refer "node type"
           Type           Uns(5)     value;
         End-PR;
+
 
         Dcl-PR jx_NodeDelete extproc(*CWIDEN : 'jx_NodeDelete');
           //node. Retrive from Locate()
@@ -674,18 +691,30 @@
           pSourceObj     Pointer    value;
         End-PR;
 
+        // For XML documents; returns the destination node after 
+        // moveing the source document elements into the destination graph
+        // See example XMLPARS386 for usage:
+        Dcl-PR jx_documentInsert Pointer 
+          extproc(*CWIDEN : 'jx_documentInsert');
+          //node. Retrive from Locate() - the destination element 
+          pDestination      Pointer    value;
+
+          // A root node either from newObejct, ParseString or SQL resultset.
+          // Note the contents of this is moved into the destination, so source will
+          // be null after the operation ( and therfor pased by reference)
+          pSource         Pointer;
+
+          //Reference location to where it arrive
+          RefLocation    Int(10)    value;
+        End-PR;
+
+
         Dcl-PR jx_Dump  extproc(*CWIDEN : 'jx_Dump');
           //Pointer to tree
           pNode          Pointer    value;
         End-PR;
 
 
-        Dcl-PR jx_CloneFormat  extproc(*CWIDEN : 'jx_CloneFormat');
-          //Pointer to tree to receive format
-          pNode          Pointer    value;
-          //node ptr or path with right formating
-          pCloneFrom     Pointer    value options(*string);
-        End-PR;
 
         //**  JSON renderes ***
         Dcl-PR jx_WriteJsonStmf  extproc(*CWIDEN : 'jx_WriteJsonStmf');
@@ -776,23 +805,23 @@
           Quot           Char(1);
         End-DS;
 
-        //Iterators: First use the set the use forEach
+
+        //Iterators: First use the set then use forEach
+        // All properties are read-only except where stated
         Dcl-DS jx_Iterator  based(prototype_only) qualified;
-          root           Pointer;
-          this           Pointer;
-          isList         Ind;
-          isFirst        Ind;
-          isLast         Ind;
-          isRecursive    Ind;
-          comma          Varchar(1);
-          count          Int(10);
-          length         Int(10);
-          size           Int(10);
-          //Pointer to temp array of elms
-          listArr        Pointer;
-          //Set  this to *ON to teminate loop
-          break          Ind;
-          filler         Char(64);
+          root           Pointer; // Node of the origin of the iterator
+          this           Pointer; // Current node in the list
+          isList         Ind; // Will be *ON if the iterator is working in the list
+          isFirst        Ind; // Will be *ON only at the first element
+          isLast         Ind; // Will be *ON only at the last element
+          isRecursive    Ind; // Will be on in a recursion 
+          comma          Varchar(1); // Will we ',' as long there are more in the list 
+          count          Int(10); // Current element number
+          length         Int(10); // Number of elements
+          size           Int(10); // Size of the iterator object ( internal use only)
+          listArr        Pointer; // Pointer to temp array of elms for recursive lists ( internal use only)
+          break          Ind; //Set  this to *ON to terminate loop
+          filler         Char(64); // Extra space for the future
         End-DS;
 
         Dcl-PR jx_setIterator  likeds( jx_Iterator) 
@@ -816,6 +845,8 @@
         Dcl-PR jx_forEach Ind extproc(*CWIDEN : 'jx_ForEach');
           iterator                  likeds( jx_Iterator);
         End-PR;
+
+
 
         //For XML attributes
         Dcl-PR jx_GetNodeAttrValue Varchar(32767) 
@@ -970,8 +1001,10 @@
         //+ Appoximate number of rows..
         //  ( unpresise but cheap !! prefered  )
         Dcl-C JX_APPROXIMATE_TOTALROWS const(16); 
-        //+ resultset reurns system names
+        //+ resultset returns system names
         Dcl-C JX_SYSTEM_NAMES  const(32); 
+        //+ resultset convert names like THE_COLUMN_NAME to theColumnName 
+        Dcl-C JX_CAMMEL_CASE   const(64); 
  
 
       // SQL cursor processing
@@ -1169,6 +1202,16 @@
       // --------------------------------------------------------------------------------------------------------------
       // Depricated and renamed functions :
       // --------------------------------------------------------------------------------------------------------------
+
+      // Rather use a formatter; this is discontinued
+        Dcl-PR jx_CloneFormat  extproc(*CWIDEN : 'jx_CloneFormat');
+          //Pointer to tree to receive format
+          pNode          Pointer    value;
+          //node ptr or path with right formating
+          pCloneFrom     Pointer    value options(*string);
+        End-PR;
+
+
       // Depricated - use  jx_GetValueStr
         Dcl-PR jx_GetValue Varchar(32767) extproc(*CWIDEN : 'jx_GetValueVC');
           //Pointer to node

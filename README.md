@@ -1,3 +1,4 @@
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/sitemule/noxDB)
 # noxDB – Not Only XML…
 
 noxDB is an opensource framework that makes it easy to work with XML, JSON and SQL with one single approach - from within RPG.

@@ -22,14 +22,14 @@
        Dcl-S pOut               Pointer;
        Dcl-S msg                VarChar(50);
       /include qrpgleRef,noxdb
-          pXml1 = xml_ParseFile('/noxdb/xml/xmlsample1.xml');
+          pXml1 = xml_ParseFile('/prj/noxdb/testdata/xmlsample1.xml');
           If xml_Error(pXml1) ;
              msg = xml_Message(pXml1);
              xml_delete(pXml1);
              Return;
           EndIf;
 
-          pXml2 = xml_ParseFile('/noxdb/xml/xmlsample2.xml' );
+          pXml2 = xml_ParseFile('/prj/noxdb/testdata/xmlsample2.xml' );
           If xml_Error(pXml2) ;
              msg = xml_Message(pXml2);
              xml_delete(pXml1);
@@ -45,28 +45,28 @@
           pDstElm = xml_locate(pXml1:'/MyRoot');
           xml_ElementCopy(pDstElm : pSrcElm : xml_FIRST_CHILD);
 
-          xml_writeStmf(pOut : '/noxdb/xml/xmlsampleout1.xml' : 1208);
+          xml_writeStmf(pOut : '/prj/noxdb/testout/xmlsampleout1.xml' : 1208);
           pDelete = xml_locate(pXml1:'/MyRoot/SubElement');
           xml_ElementDelete (pDelete);
 
           // ex2 : Add a child at the bottom
           pDstElm = xml_locate(pXml1:'/MyRoot');
           xml_ElementCopy(pDstElm : pSrcElm : xml_LAST_CHILD);
-          xml_writeStmf(pOut : '/noxdb/xml/xmlsampleout2.xml' : 1208);
+          xml_writeStmf(pOut : '/prj/noxdb/testout/xmlsampleout2.xml' : 1208);
           pDelete = xml_locate(pXml1:'/MyRoot/SubElement');
           xml_ElementDelete (pDelete);
 
           // ex3 : Add a sibling after a reference location
           pDstElm = xml_locate(pXml1:'/MyRoot/MyElement[0]');
           xml_ElementCopy(pDstElm : pSrcElm : xml_AFTER_SIBLING);
-          xml_writeStmf(pOut : '/noxdb/xml/xmlsampleout3.xml' : 1208);
+          xml_writeStmf(pOut : '/prj/noxdb/testout/xmlsampleout3.xml' : 1208);
           pDelete = xml_locate(pXml1:'/MyRoot/SubElement');
           xml_ElementDelete (pDelete);
 
           // ex4 : Add a sibling before a reference location
           pDstElm = xml_locate(pXml1:'/MyRoot/MyElement[1]');
           xml_ElementCopy(pDstElm : pSrcElm : xml_BEFORE_SIBLING);
-          xml_writeStmf(pOut : '/noxdb/xml/xmlsampleout4.xml' : 1208);
+          xml_writeStmf(pOut : '/prj/noxdb/testout/xmlsampleout4.xml' : 1208);
           pDelete = xml_locate(pXml1:'/MyRoot/SubElement');
           xml_ElementDelete (pDelete);
 

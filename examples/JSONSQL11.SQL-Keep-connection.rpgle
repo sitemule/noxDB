@@ -48,7 +48,7 @@
           // Produce a JSON stream file in the root of the IFS
           json_writeJsonStmf(
              pResult:
-             '/prj/noxdb/testdata/using-options.json' : 1208 : *ON
+             '/prj/noxdb/testout/using-options.json' : 1208 : *ON
           );
 
           // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect

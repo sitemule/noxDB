@@ -23,7 +23,7 @@
         // First parse the XML stream
           // pXml = xml_ParseILOB(iRes:'syntax=LOOSE':0:0);
 
-          pXml = xml_ParseFile('/noxdb/xml/xml4.xml');
+          pXml = xml_ParseFile('/prj/noxdb/testdata/xml4.xml');
           If xml_Error(pXml) ;
              msg = xml_Message(pXml);
              xml_delete(pXml);

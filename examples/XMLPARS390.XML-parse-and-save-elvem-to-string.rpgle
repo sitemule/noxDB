@@ -9,7 +9,7 @@
       /include qrpgleRef,noxdb
       /include QRPGLEREF,ilob
 
-          pxml  = xml_ParseFile('/noxdb/xml/XmlSample2.xml');
+          pxml  = xml_ParseFile('/prj/noxdb/testdata/XmlSample2.xml');
 
           If xml_Error(pxml) ;
              msg = xml_Message(pxml);
@@ -29,7 +29,7 @@
           len = xml_AsXmlTextMem ( pElem : p1);
           ilob_setLength(p1 : len);
 
-          ilob_SaveToBinaryStream(p1:'/noxdb/xml/sixthElement.xml');
+          ilob_SaveToBinaryStream(p1:'/prj/noxdb/testout/sixthElement.xml');
 
           xml_delete(pxml);
           *inlr = *on;

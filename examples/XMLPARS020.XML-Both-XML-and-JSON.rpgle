@@ -19,8 +19,8 @@
 
           // the json and xml namespace is the same, just syntactical suggar
           // and the parser will determine by filetype
-          pXml  = xml_ParseFile('/noxdb/xml/xmlsample1.xml');
-          pJson = json_ParseFile('/noxdb/xml/xmlsample1.xml');
+          pXml  = xml_ParseFile('/prj/noxdb/testdata/xmlsample1.xml');
+          pJson = json_ParseFile('/prj/noxdb/testdata/xmlsample1.xml');
           xml_delete(pXml);
           json_delete(pJson);
           *inlr = *on;

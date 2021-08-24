@@ -29,6 +29,12 @@ typedef enum {
 
 typedef decimal(30,15) FIXEDDEC, * PFIXEDDEC;
 
+typedef enum {
+	JX_FORMAT_DEFAULT     = 0,
+	JX_FORMAT_CDATA       = 1
+} FORMAT_OPTION , *PFORMAT_OPTION;
+
+
 #define ATTRSIG 0x03
 typedef struct _XMLATTR {
 	UCHAR  signature; // always hex 03
@@ -62,6 +68,7 @@ typedef enum {
 } NODETYPE, *PNODETYPE;
 typedef NODETYPE  JSTATE, *PJSTATE;
 
+
 typedef enum {
 	// Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
 	MO_MERGE_NEW      =   256,  // Only new elements are merged - existing are left untouched
@@ -89,6 +96,7 @@ typedef struct _JXNODE {
 	LONG     lineNo;
 	BOOL     isLiteral;
 	SHORT    ccsid;
+	FORMAT_OPTION options;
 } JXNODE, *PJXNODE;
 
 typedef struct _JXSEGMENT {
@@ -145,6 +153,7 @@ typedef struct {
 	BOOL    isJson;
 	BOOL    hasRoot;
 	LONG    tokenNo;
+	BOOL    singleRoot;
 } JXCOM , * PJXCOM;
 
 typedef enum {
@@ -226,6 +235,9 @@ VARCHAR jx_AsJsonText (PJXNODE pNode);
 LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP);
 #pragma descriptor ( void jx_AsJsonTextMem                     (void))
 
+LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf);
+
+
 LONG jx_fileWriter  (PSTREAM pStream , PUCHAR buf , ULONG len);
 LONG jx_memWriter  (PSTREAM pStream, PUCHAR buf , ULONG len);
 void  jx_AsJsonStream (PJXNODE pNode, PSTREAM pStream);
@@ -275,10 +287,12 @@ void jx_SetMessage (PUCHAR Ctlstr , ... );
 void jx_NodeFreeNodeOnly(PJXNODE pNode);
 
 // Prototypes  - main  - exports
-void jx_NodeAddChildHead( PJXNODE pRoot, PJXNODE pChild);
-void jx_NodeAddChildTail( PJXNODE pRoot, PJXNODE pChild);
-void jx_NodeAddSiblingBefore( PJXNODE pRef, PJXNODE pSibling);
-void jx_NodeAddSiblingAfter( PJXNODE pRef, PJXNODE pSibling);
+void jx_NodeInsertChildHead( PJXNODE pRoot, PJXNODE pChild);
+void jx_NodeInsertChildTail( PJXNODE pRoot, PJXNODE pChild);
+void jx_NodeInsertSiblingBefore( PJXNODE pRef, PJXNODE pSibling);
+void jx_NodeInsertSiblingAfter( PJXNODE pRef, PJXNODE pSibling);
+PJXNODE jx_NodeUnlink  (PJXNODE  pNode);
+
 
 LGL jx_ParseStmfFile (PJXNODE  * ppRoot , PUCHAR FileName , PUCHAR Mode);
 #pragma descriptor ( void jx_ParseStmfFile                     (void))
@@ -477,8 +491,8 @@ typedef _Packed struct  {
 	 BOOL          exec;
 } JXSQLSTMT, * PJXSQLSTMT;
 
-typedef _Packed struct  {
-	 SQLCHAR       colname[256]; // !!!! TODO !!! set len to 32!!
+typedef struct  {
+	 SQLCHAR       colname[64]; // !!!! TODO !!! set len to 32!!
 	 SQLSMALLINT   coltype;
 	 SQLSMALLINT   colnamelen;
 	 SQLSMALLINT   nullable;
@@ -488,7 +502,7 @@ typedef _Packed struct  {
 	 SQLCHAR *     data;
 	 SQLINTEGER    displaysize;
 	 NODETYPE      nodeType;
-	 SQLCHAR       header[256];
+	 SQLCHAR       header[128];
 	 BOOL          isId;
 } JXCOL, * PJXCOL;
 
@@ -559,7 +573,8 @@ typedef enum _JX_RESULTSET {
 	 JX_TOTALROWS  = 4,
 	 JX_UPPERCASE  = 8,
 	 JX_APROXIMATE_TOTALROWS = 16,
-	 JX_SYSTEM_NAMES = 32
+	 JX_SYSTEM_NAMES = 32,
+	 JX_CAMMEL_CASE = 64
 } JX_RESULTSET, *PJX_RESULTSET;
 
 VOID TRACE ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);

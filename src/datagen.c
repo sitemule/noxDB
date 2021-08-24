@@ -78,7 +78,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             
             pObj  = jx_NewObject(NULL);
             jx_NodeRename(pObj ,  name);
-            jx_NodeAddChildTail (pNode , pObj);
+            jx_NodeInsertChildTail (pNode , pObj);
             pNode = pObj;
             if (first) {
                 first = false;
@@ -98,7 +98,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
 
             pArr = jx_NewArray(NULL);
             jx_NodeRename(pArr ,  name);
-            jx_NodeAddChildTail (pNode , pArr);  
+            jx_NodeInsertChildTail (pNode , pArr);  
             pNode = pArr;
             if (first) {
                 first = false;
@@ -118,7 +118,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
 
             pArr = jx_NewArray(NULL);
             jx_NodeRename(pArr ,  name);
-            jx_NodeAddChildTail (pNode , pArr);
+            jx_NodeInsertChildTail (pNode , pArr);
             pNode = pArr; 
             if (first) {
                 first = false;

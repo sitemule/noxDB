@@ -79,7 +79,7 @@
         myTrace ('After the loop':pArr); 
 
         // Write to the IFS, Note date/time will be stored in *ISO always
-        json_WriteJsonStmf(pJson:'/prj/noxdb/testdata/simple0.json':1208:*OFF);
+        json_WriteJsonStmf(pJson:'/prj/noxdb/testout/simple0.json':1208:*OFF);
 
         // And always remember to cleanup
         json_delete (pJson);
@@ -88,7 +88,7 @@
         
         // Now let's load it from the disk and have fun with it:
         // Note the error detection: It will return *NULL if errors 
-        pJson = json_ParseFile ('/prj/noxdb/testdata/simple0.json');
+        pJson = json_ParseFile ('/prj/noxdb/testout/simple0.json');
         If json_Error(pJson) ;
             msg = json_Message(pJson);
             myTrace (msg :pJson); 
@@ -147,7 +147,7 @@
             showme = json_AsJsonText(pNode);
 
             // Or maybe put it into a stream file
-            //json_WriteJsonStmf(pJson:'/prj/noxdb/testdata/trace.json':1208:*OFF);
+            //json_WriteJsonStmf(pJson:'/prj/noxdb/testout/trace.json':1208:*OFF);
 
             // Or place it into a trace table.. Up to you !! 
 
