@@ -27,16 +27,25 @@
        Dcl-S name               VarChar(64);
        // ------------------------------------------------------------- *
           *inlr = *on;
+          // Normal parse a file
+          pJson = json_ParseFile ('/prj/noxdb/testdata/simple.json');
 
-          // Load an other json into a new memory segment
+          // Now load an other json into a new memory segment
           pSegment = json_SegmentSelectNo(1);
-          pJson2 = json_ParseFile ('/prj/noxdb/testout/demo.json');
+          pJson2 = json_ParseFile ('/prj/noxdb/testdata/demo.json');
           pNode = json_Locate(pJson2 : '/o/f');
           name =  json_GetStr(pNode);   // Show john
-          json_NodeDelete(pNode);        // Delete john
+          //json_NodeDelete(pNode);        // Delete john
+
+          // !! don't use close when using segments!!
+          // !! json_delete(pJson2);  << Dont do this in segments
+          json_delete(pJson2);
 
           // Always dispose the complete Segment
           json_SegmentDispose(pSegment);
+
+          // Always close nodes not within segments
+          json_delete(pJson);
 
           json_memstat();
 
