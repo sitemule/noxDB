@@ -789,7 +789,7 @@ End-PR;
 // @param Node path element delimiter (for example . or /)
 // @return Node path expression
 ///
-Dcl-PR jx_getNameAsPath varchar(32767) extproc(*CWIDEN : 'jx_GetNodeNameAsPath');
+Dcl-PR jx_getNameAsPath varchar(32767) extproc(*CWIDEN :'jx_GetNodeNameAsPath');
   node pointer value;
   delimiter char(1) value;
 End-PR;
