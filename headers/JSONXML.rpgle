@@ -3,7 +3,7 @@
 /if defined( JX_DEF)
 /eof
 /endif
-/define  JX_DEF
+/define JX_DEF
 
 ///
 // noxDB : JSON and XML processing
@@ -224,7 +224,7 @@ End-PR;
 // @param CCSID of the passed string
 // @return Pointer to the root node of the noxDB object tree
 ///
-Dcl-PR jx_ParseStringCcsid pointer extproc(*CWIDEN : 'jx_parseStringCcsid');
+Dcl-PR jx_parseStringCcsid pointer extproc(*CWIDEN : 'jx_parseStringCcsid');
   string pointer value options(*string);
   ccsid int(10) value;
 End-PR;
@@ -427,7 +427,7 @@ End-PR;
 // @param Node
 // @param New node name
 ///
-Dcl-PR jx_nodeRename ind extproc(*CWIDEN : 'jx_NodeRename');
+Dcl-PR jx_nodeRename extproc(*CWIDEN : 'jx_NodeRename');
   node pointer value;
   newNodeName pointer value options(*string);
 End-PR;
@@ -683,6 +683,7 @@ End-PR;
 // this function an does not need to exist.
 //
 // @param noxDB object tree (output parameter)
+// @return Procedure pointer of the data-gen generator function
 //
 // @info The noxDB object tree returned by this procedure through the output
 //       parameter needs to be freed by calling <em>jx_close(node)</em> by the
@@ -824,9 +825,9 @@ Dcl-C JX_FORMAT_CDATA const(1);
 // @param Node
 // @param Format option (JX_FORMAT_DEFAULT, JX_FORMAT_CDATA)
 ///
-Dcl-PR jx_SetNodeOptions pointer extproc(*CWIDEN : 'jx_SetNodeOptions');
+Dcl-PR jx_setNodeOptions pointer extproc(*CWIDEN : 'jx_SetNodeOptions');
   node pointer value;
-  format int(5) value ;
+  format int(5) value;
 End-PR;
 
 /// 
@@ -981,9 +982,9 @@ End-PR;
 // @param Destination node path expression
 // @param Source node
 // @param Source node path expression
-// @return New node or *null if the operation could not be executed
+// @return New node or <code>*null</code> if the operation could not be executed
 ///
-Dcl-PR jx_CopyValue Pointer extproc(*CWIDEN : 'jx_CopyValue');
+Dcl-PR jx_copyValue pointer extproc(*CWIDEN : 'jx_CopyValue');
   destNode pointer value;
   destName pointer value options(*string);
   sourceNode pointer value;
@@ -1039,6 +1040,7 @@ Dcl-C JX_AFTER_SIBLING const(4);
 // Deep clone of the passed node.
 //
 // @param Node
+// @return Clone of the passed node
 //
 // @info The caller of this procedure needs to take care of freeing the resources 
 //       of the returned noxDB object tree by calling <em>jx_close(node)</em>.
@@ -1050,7 +1052,7 @@ End-PR;
 ///
 // Add node
 //
-// Adds new node to object tree.wwww
+// Adds new node to object tree.
 //
 // @param Node
 // @param Reference location (see Node Copy - Reference locations)
@@ -1445,6 +1447,7 @@ End-PR;
 // @param Node
 // @param Buffer
 // @param Buffer length (in bytes)
+// @return Length of the serialized JSON string
 //
 // @info If no buffer length is passed the procedure will assume the default
 //       buffer size which is about 2GB, see MEMMAX defined in memUtil.h.
@@ -1504,7 +1507,8 @@ End-PR;
 //
 // @param Node
 // @param Buffer
-// 
+// @return Length of the serialized XML string
+//
 // @warning Buffer length is not checked.
 ///
 Dcl-PR jx_asXmlTextMem uns(10) extproc(*CWIDEN : 'jx_AsXmlTextMem');
@@ -1614,7 +1618,7 @@ End-DS;
 // @param Node path expression to the node which child elements will be iterated
 // @return Iterator instance
 //
-// @param This iterator should be used with the function <em>jx_forEach</em>
+// @info This iterator should be used with the function <em>jx_forEach</em>
 ///
 Dcl-PR jx_setIterator likeds(jx_iterator) extproc(*CWIDEN : 'jx_SetIterator');
   node pointer value;
@@ -1881,7 +1885,7 @@ End-PR;
 // 
 // @param Trace procedure
 ///
-Dcl-PR jx_SetTraceProc extproc(*CWIDEN : 'jx_SetTraceProc');
+Dcl-PR jx_setTraceProc extproc(*CWIDEN : 'jx_SetTraceProc');
   procedure pointer(*proc) value;
 End-PR;
 
