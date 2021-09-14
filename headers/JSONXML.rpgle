@@ -1620,7 +1620,7 @@ End-DS;
 //
 // @info This iterator should be used with the function <em>jx_forEach</em>
 ///
-Dcl-PR jx_setIterator likeds(jx_iterator) extproc(*CWIDEN : 'jx_SetIterator');
+Dcl-PR jx_setIterator likeds( jx_iterator) extproc(*CWIDEN : 'jx_SetIterator');
   node pointer value;
   nodePath pointer value options(*string : *nopass);
 End-PR;
@@ -1636,7 +1636,7 @@ End-PR;
 // @param Node path expression to the node which child elements will be iterated
 // @return Iterator instance
 ///
-Dcl-PR jx_setRecursiveIterator likeds(jx_iterator) 
+Dcl-PR jx_setRecursiveIterator likeds( jx_iterator) 
     extproc(*CWIDEN : 'jx_SetRecursiveIterator');
   node pointer value;
   nodePath pointer value options(*string : *nopass);
@@ -1659,7 +1659,7 @@ End-PR;
 // @return *on if there is another entry , *off if the iteration ended
 ///
 Dcl-PR jx_forEach ind extproc(*CWIDEN : 'jx_ForEach');
-  iterator likeds(jx_iterator);
+  iterator likeds( jx_iterator);
 End-PR;
 
 
