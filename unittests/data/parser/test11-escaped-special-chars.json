@@ -1,0 +1,7 @@
+{
+  "quote" : "\"",
+  "text" : "multi\r\nline\r\ntext",
+  "solidus" : "\/",
+  "backslash" : "\\",
+  "tab" : "\tindented text"
+}

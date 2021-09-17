@@ -1,0 +1,11 @@
+{
+  "integer" : 123,
+  "negative_integer" : -123,
+  "decimal" : 123.45,
+  "float_wo_exponent" : 1.2345,
+  "float_wo_sign" : 1.2345E3,
+  "float_exp_UC" : 1.2345E+3,
+  "float_exp_lc" : 1.2345e+3,
+  "float_exp_minus" : 123.45e-2,
+  "negative_float" : -1234.567e-1
+}
