@@ -28,6 +28,11 @@ is in the library list. You can specify the library for it with the parameter
 RU_LIB.
 
     make BIN_LIB=NOXDBUT NOXDB_LIB=JXLIB RU_LIB=IRPGUNIT
+    
+Before executing the tests the current working directory of the job needs to 
+be set to the noxDB folder.
+
+    CHGCURDIR '/path/to/noxDB'
 
 [iru]: https://irpgunit.sourceforge.net
 [ru]: https://rpgunit.sourceforge.net
