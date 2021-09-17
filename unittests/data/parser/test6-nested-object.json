@@ -1,0 +1,9 @@
+{
+  "id" : 358,
+  "name" : "Michael",
+  "height" : 6.4,
+  "car" : null,
+  "glasses" : true,
+  "employed" : false,
+  "address" : { "street" : "Long Road 123" , "city" : "Nowhere" }
+}
