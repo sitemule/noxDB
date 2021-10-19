@@ -29,7 +29,7 @@ Dcl-S c                  VarChar(256);
     // u00b5 is "Micro sign" and exists in ebcdic
     // u2318 is "sight of interest" icon and have no equvalent in ebedic so
     // \u2318 will be untouched in the input string
-    // The backslash, newline and double quote has to be escaped and stored in therir hex presentation 
+    // The backslash, newline and double quote has to be escaped and stored in their hex presentation 
 
     pJson = json_ParseString (
         '{  +
