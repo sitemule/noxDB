@@ -5,7 +5,7 @@
     "tasks": [
         {
             "label": "Compile current file",
-            "command": "ssh -t dksrv206  'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake ${relativeFile} --always-make '",
+            "command": "ssh -t myibmi  'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake ${relativeFile} --always-make '",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -37,7 +37,7 @@
         },
         {
             "label": "Compile Service program",
-            "command": "ssh dksrv206 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake all'",
+            "command": "ssh myibmi 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake all'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -49,7 +49,7 @@
         },
         {
             "label": "Compile Test modules for noxDB",
-            "command": "ssh dksrv206 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/test/;gmake'",
+            "command": "ssh myibmi 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/test/;gmake'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -61,7 +61,7 @@
         },
         {
             "label": "Compile current example file",
-            "command": "ssh -t dksrv206 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
+            "command": "ssh -t myibmi 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
             "type": "shell",
             "group": {
                 "kind": "build",

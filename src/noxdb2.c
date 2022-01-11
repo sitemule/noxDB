@@ -2893,6 +2893,17 @@ PNOXNODE  nox_SetEvalByNameVC (PNOXNODE pNode, PLVARCHAR Name, PLVARCHAR pValue)
 	return nox_SetValueByName(pNode , plvc2str(Name) , plvc2str(pValue) , PARSE_STRING );
 }
 /* -------------------------------------------------------------
+	 Set null values - set by name
+	 ------------------------------------------------------------- */
+PNOXNODE  nox_SetNullByName (PNOXNODE pNode, PUCHAR Name)
+{
+   return nox_SetValueByName(pNode , Name , NULL , LITERAL );
+}
+PNOXNODE  nox_SetNullByNameVC (PNOXNODE pNode, PLVARCHAR Name)
+{
+   return nox_SetNullByName(pNode , plvc2str(Name) , NULL , LITERAL );
+}
+/* -------------------------------------------------------------
 	 Set pointer by name
 	 ------------------------------------------------------------- */
 PNOXNODE  nox_SetPtrByNameVC (PNOXNODE pNode, PLVARCHAR pName, PUCHAR Value, LGL isStringP)
