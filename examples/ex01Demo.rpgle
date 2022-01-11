@@ -9,7 +9,7 @@
         // Project: Sitemule.com
         //
         // try/build:
-        // cd '/prj/noxdbutf8' 
+        // cd '/prj/noxdb2' 
         // addlible noxdb2 
         // call 
         // ------------------------------------------------------------- 
