@@ -200,6 +200,21 @@
           pNode          Pointer    value;
         End-PR;
 
+
+        // Set node with null value
+        //
+        // Creates a node at the passed path with the value <code>*null</code>.
+        // Any existing node will be replaced by this new node.
+        //
+        // @param Node
+        // @param Node path expression
+        // @return New node
+        ///
+        Dcl-PR nox_SetNull pointer extproc(*CWIDEN : 'nox_SetNullByNameVC');
+          node pointer value;
+          Expresion      Like(UTF8) const options(*varsize);
+        End-PR;
+
         Dcl-PR nox_SetEval pointer extproc(*CWIDEN:'nox_SetEvalByNameVC');
           pNode          Pointer    value;
           Expresion      Like(UTF8) const options(*varsize);
@@ -209,7 +224,7 @@
         Dcl-PR nox_SetStr Pointer extproc(*CWIDEN: 'nox_SetStrByNameVC');
           // Pointer to nox_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Like(UTF8) const options(*varsize);
@@ -218,7 +233,7 @@
         Dcl-PR nox_SetInt Pointer extproc(*CWIDEN: 'nox_SetIntByNameVC');
           // Pointer to nox_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Int(10)    value;
@@ -227,7 +242,7 @@
         Dcl-PR nox_SetDate Pointer extproc(*CWIDEN: 'nox_SetDateByNameVC');
           // Pointer to nox_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          date    value;
@@ -237,7 +252,7 @@
         Dcl-PR nox_SetNum Pointer extproc(*CWIDEN: 'nox_SetDecByNameVC');
           // Pointer to nox_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Packed(30:15) value;
@@ -246,7 +261,7 @@
         Dcl-PR nox_SetBool Pointer extproc(*CWIDEN: 'nox_SetBoolByNameVC');
           // Pointer to nox_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Ind        value;
@@ -255,7 +270,7 @@
         Dcl-PR nox_SetPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByNameVC');
           // Pointer to nox_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // Pointer to anything - You do the cleanup
           Value          Pointer    value;
@@ -265,7 +280,7 @@
 
         Dcl-PR nox_SetProcPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByNameVC');
           pNode          Pointer    value; // Pointer to nox_ tree
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           Proc           Pointer(*Proc); // Pointer to a procedure
         End-PR;
