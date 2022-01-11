@@ -123,7 +123,7 @@ release: cleanup
 	@echo ""
 	@echo "To install the release, run:"
 	@echo "  > CRTLIB $(BIN_LIB)"
-	@echo "  > CPYFRMSTMF FROMSTMF('./release/release.savf') TOMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') MBROPT(*REPLACE) CVTDTA(*NONE)"
+	@echo "  > CPYFRMSTMF FROMSTMF('./release/release-noxDB2.savf') TOMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') MBROPT(*REPLACE) CVTDTA(*NONE)"
 	@echo "  > RSTLIB SAVLIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE)"
 	@echo ""
 	@echo "Or restore into existing application library"
