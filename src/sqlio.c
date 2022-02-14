@@ -783,6 +783,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
    int i;
    PJXNODE pRow;
    SQLINTEGER buflen, datatype;
+   PUCHAR buf = memAlloc (1073741824L); // TODO - Perhaps, dynamic by row size
 
    if ( pSQL->rc == SQL_SUCCESS
    ||   pSQL->rc == SQL_SUCCESS_WITH_INFO ) {
@@ -793,7 +794,6 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
       for (i = 0; i < pSQL->nresultcols; i++) {
 
          PJXCOL pCol = &pSQL->cols[i];
-         UCHAR buf [1048576]; // one meg
 
          // TODO - Work arround !!! first get the length - if null, the dont try the get data
          // If it has a pointer value, the API will fail..
@@ -807,10 +807,10 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
             case SQL_WVARCHAR:
             case SQL_GRAPHIC:
             case SQL_VARGRAPHIC:
-               SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , sizeof(buf), &buflen);
+               SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , memSize(buf), &buflen);
                break;
             default:
-               SQLGetCol (pSQL->pstmt->hstmt, i+1, SQL_CHAR, buf , sizeof(buf), &buflen);
+               SQLGetCol (pSQL->pstmt->hstmt, i+1, SQL_CHAR, buf , memSize(buf), &buflen);
          }
 
 
@@ -904,6 +904,8 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
             }
          }
       }
+      memFree(&buf);
+
       return pRow; // Found
 
    } else {
@@ -913,6 +915,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
       }
    }
 
+   memFree(&buf);
    return NULL; // not found
 }
 /* ------------------------------------------------------------- */

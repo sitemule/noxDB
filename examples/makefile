@@ -19,6 +19,7 @@ all: compile
 compile: 
 	qsh <<EOF 
 	liblist -a $(BIN_LIB)
+	liblist -a ICEBREAK
 	touch error.txt
 	setccsid 1208 error.txt
 	setccsid 1208 $(SRC)
