@@ -170,6 +170,7 @@ void  jx_SkipChars(PJXCOM pJxCom , int skip)
    }
 }
 // ---------------------------------------------------------------------------
+/* Old implementation with file support 
 PUCHAR jx_GetChar(PJXCOM pJxCom)
 {
    int i;
@@ -180,50 +181,73 @@ PUCHAR jx_GetChar(PJXCOM pJxCom)
    if (dbgStep > 8170 ) { //       8179)
       int q = 1;
    }
-   */
+   * /
 
    if (pJxCom->State == XML_EXIT_ERROR) {
-     return (pJxCom->pFileBuf == NULL ? "" : pJxCom->pFileBuf );
+     return (pJxCom->pWorkBuf == NULL ? "" : pJxCom->pWorkBuf );
    }
 
    if (pJxCom->File == NULL) {
-     if (pJxCom->pFileBuf == NULL) {
-       pJxCom->pFileBuf =  pJxCom->StreamBuf;
+     if (pJxCom->pWorkBuf == NULL) {
+       pJxCom->pWorkBuf =  pJxCom->pStreamBuf;
      } else {
-       pJxCom->pFileBuf ++;
+       pJxCom->pWorkBuf ++;
      }
    }
    else {
 
-      if (pJxCom->pFileBuf == NULL) {
+      if (pJxCom->pWorkBuf == NULL) {
          len = readBlock(pJxCom , pJxCom->FileBuf, sizeof(pJxCom->FileBuf));
          // printf("\nlen: %d\n" , len);
-         pJxCom->pFileBuf = pJxCom->FileBuf;
+         pJxCom->pWorkBuf = pJxCom->FileBuf;
       } else {
       // Increment the buffer pointer
          treshold = pJxCom->FileBuf + len - LOOK_AHEAD_SIZE;
-         pJxCom->pFileBuf ++;
-         if (pJxCom->pFileBuf > treshold && ! feof(pJxCom->File)) {
+         pJxCom->pWorkBuf ++;
+         if (pJxCom->pWorkBuf > treshold && ! feof(pJxCom->File)) {
             PUCHAR temp = pJxCom->FileBuf + LOOK_AHEAD_SIZE;
             memcpy(pJxCom->FileBuf , treshold , LOOK_AHEAD_SIZE);
             len = readBlock(pJxCom , temp, sizeof(pJxCom->FileBuf) - LOOK_AHEAD_SIZE);
             len += LOOK_AHEAD_SIZE;
             //+1 because the first is allready processed and allow us to LOOK-BACK
-            pJxCom->pFileBuf = pJxCom->FileBuf +1;
+            pJxCom->pWorkBuf = pJxCom->FileBuf +1;
          }
       }
    }
-   if (*pJxCom->pFileBuf == '\0') {
+   if (*pJxCom->pWorkBuf == '\0') {
        pJxCom->State = XML_EXIT;
    }
-   if (*pJxCom->pFileBuf == CR) {
+   if (*pJxCom->pWorkBuf == CR) {
      pJxCom->LineCount ++;
      pJxCom->ColCount = 0;
    } else {
      pJxCom->ColCount ++;
    }
    dbgStep++;
-   return (pJxCom->pFileBuf);
+   return (pJxCom->pWorkBuf);
+}
+*/
+// ---------------------------------------------------------------------------
+PUCHAR jx_GetChar(PJXCOM pJxCom)
+{
+
+   if (pJxCom->pWorkBuf == NULL) {
+      return "";
+   } else if (*pJxCom->pWorkBuf == '\0') {
+      pJxCom->State = XML_EXIT;
+   } else if (pJxCom->LineCount != 1 || pJxCom->ColCount != 0) {
+      pJxCom->pWorkBuf ++;
+   } 
+
+   if (*pJxCom->pWorkBuf == CR) {
+     pJxCom->LineCount ++;
+     pJxCom->ColCount = 0;
+   } else {
+     pJxCom->ColCount ++;
+   }
+ 
+   return pJxCom->pWorkBuf;
+
 }
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
@@ -238,7 +262,7 @@ UCHAR SkipBlanks (PJXCOM pJxCom)
          return '\0';
       }
       if (c > Blank) {
-         pJxCom->pFileBuf --; // step back one...
+         pJxCom->pWorkBuf --; // step back one...
          return c;
       }
    }
@@ -256,7 +280,7 @@ void CheckBufSize(PJXCOM pJxCom)
    --------------------------------------------------------------------------- */
 void jx_CheckEnd(PJXCOM pJxCom)
 {
-   if (*pJxCom->pFileBuf == GT) {
+   if (*pJxCom->pWorkBuf == GT) {
       pJxCom->State = XML_COLLECT_DATA;
       if (skipBlanks) {
         SkipBlanks(pJxCom);
@@ -265,7 +289,7 @@ void jx_CheckEnd(PJXCOM pJxCom)
       pJxCom->Data[0]='\0';
       return;
    }
-   if (BeginsWith (pJxCom->pFileBuf ,SlashGT))  {  // Check for short form   />
+   if (BeginsWith (pJxCom->pWorkBuf ,SlashGT))  {  // Check for short form   />
       pJxCom->pNodeWorkRoot = pJxCom->pNodeWorkRoot->pNodeParent;
       pJxCom->Level --;
       pJxCom->State = XML_FIND_START_TOKEN;
@@ -274,6 +298,7 @@ void jx_CheckEnd(PJXCOM pJxCom)
 
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
+/*   
 int readBlock(PJXCOM pJxCom , PUCHAR buf, int size)
 {
   int len, rlen, j;
@@ -317,4 +342,4 @@ int readBlock(PJXCOM pJxCom , PUCHAR buf, int size)
   buf[(len > 0 ) ? len:0] = '\0';
   return len;
 }
-
+*/

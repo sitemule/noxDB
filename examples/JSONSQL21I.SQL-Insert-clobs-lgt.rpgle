@@ -36,45 +36,62 @@
 
        //  http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.html
        // ------------------------------------------------------------- *
-       Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+       Ctl-Opt BndDir('NOXDB') dftactgrp(*NO);
+       Ctl-Opt actgrp('QTERASPACE') stgmdl(*TERASPACE); 
+       
       /include qrpgleRef,noxdb
-       Dcl-S err                    Ind;
-       Dcl-S pRow               Pointer;
-       Dcl-S pRow2              Pointer;
-       Dcl-S pProp              Pointer;
-       Dcl-S id                 int(10);
-       Dcl-S pNote              Pointer;
-       Dcl-S text                  Char(660000) based(pNote);
+       Dcl-S err              Ind;
+       Dcl-S pRow             pointer;
+       Dcl-S id               int(20);
+       Dcl-S i                int(20);
+       Dcl-S mem              int(20);
+       Dcl-s pRes             pointer;
+       Dcl-s pPayload         pointer;
+       Dcl-s pPayWork         pointer;
+       Dcl-S payload          Char(1000) based(pPayWork);
+       Dcl-S payloadChar      Char(1)    based(pPayWork);
+       
+         // Example of storing 1G clob data
+       
+         json_sqlExec ('-
+            create or replace table noxdbdemo.clobs ( -
+               id       int generated always as Identity primary key, -
+               payload  clob (1G) -
+            ) -
+         ');
+         json_sqlExec ('truncate  noxdbdemo.clobs');
+         
+         pRow     = json_newObject();
 
-          pRow  = json_newObject();
-          pNote  = %alloc(660000);
-          text  = *all'y';
-          %subst (text     :  660000: 1 )  = x'00';
+         // Get 1G of memory ( its hard to work on that size with 7.2)
+         mem = 1000000000;
+         pPayload  = %alloc(mem);
+         for i= 1 to mem by 1000;
+            pPayWork = pPayload + (i -1);
+            payload = *All'x';
+         endfor; 
+         pPayWork = pPayload + (mem -1);
+         payloadChar = x'00';
 
-          %subst (text     : 1 : 15    )  = 'SENTENCES    ';
-          json_setStr(pRow:  'SENTENCES'    : pNote );
+         json_setStr   (pRow   :'payload': pPayload);
 
-          %subst (text     : 1 : 15    )  = 'TABLES       ';
-          json_setStr(pRow:  'TABLES'       : pNote );
+         err = json_sqlInsert  (
+            'noxdbdemo.clobs'
+            :pRow
+         );
 
-          %subst (text     : 1 : 15    )  = 'DIGITS       ';
-          json_setStr(pRow:  'DIGITS'       : pNote );
+         pRes = json_sqlResultRow ('-
+            Select id, length(payload) length_of_clob -
+            from noxdbdemo.clobs -
+         ');
 
-          // json_setstr   (pRow   :'TITLE': 'John'           );
-          // json_setInt   (pRow   :'INDEX':  1               );
-          // json_setStr   (pRow   :'FOOTER':'Nein'             );
-          json_setNum   (pRow   :'PAGEWIDTH': 3.456);
-          json_setNum   (pRow   :'PAGEHEIGHT': 2.567);
+         json_joblog(pRes);
 
+         // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
+         DeAlloc pPayload  ;
+         json_delete(pRow);
+         json_delete(pRes);
+         json_sqlDisconnect();
 
-          err = json_sqlInsert  (
-             'LGT_PAGES'
-             :pRow
-          );
-          // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
-          json_delete(pRow);
-          json_sqlDisconnect();
-
-          DeAlloc(e)  pNote;
-          // That's it..
-          *inlr = *on;
+         // That's it..
+         *inlr = *on;

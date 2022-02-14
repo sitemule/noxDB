@@ -124,7 +124,7 @@ static void jx_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 void jx_AppendName (PJXCOM pJxCom)
 {
    PJXNODE pNode;
-   UCHAR c = *pJxCom->pFileBuf;
+   UCHAR c = *pJxCom->pWorkBuf;
 
    if (*pJxCom->pNameIx > sizeof(pJxCom->StartName)) {
       jx_SetMessage( "Name to long at (%d:%d)", pJxCom->LineCount, pJxCom->ColCount);
@@ -192,7 +192,7 @@ void jx_AppendName (PJXCOM pJxCom)
 static void jx_AttrAppendName  (PJXCOM pJxCom)
 {
    PXMLATTR pAttr;
-   UCHAR c = *pJxCom->pFileBuf;
+   UCHAR c = *pJxCom->pWorkBuf;
 
 /*
    {
@@ -254,16 +254,16 @@ void jx_CopyCdata (PJXCOM pJxCom)
 void jx_AppendData (PJXCOM pJxCom)
 {
    UCHAR lookahead;
-   UCHAR c = *pJxCom->pFileBuf;
+   UCHAR c = *pJxCom->pWorkBuf;
 
-/* Still a valid name § */
+/* Still a valid name ï¿½ */
    if (c == LT ) {
    // Check for CDATA stream ... copy until ]]>
-      if (BeginsWith(pJxCom->pFileBuf , Cdata )) {   // the "<![CDATA["
+      if (BeginsWith(pJxCom->pWorkBuf , Cdata )) {   // the "<![CDATA["
          jx_CopyCdata (pJxCom);
          return;
       }
-      lookahead = *(pJxCom->pFileBuf+1);
+      lookahead = *(pJxCom->pWorkBuf+1);
       if (lookahead == EQ
       ||  lookahead == GT
       ||  lookahead == Apos
@@ -298,7 +298,7 @@ void jx_AppendData (PJXCOM pJxCom)
 static void jx_AttrAppendValue  (PJXCOM pJxCom)
 {
    PXMLATTR pAttr;
-   UCHAR c = *pJxCom->pFileBuf;
+   UCHAR c = *pJxCom->pWorkBuf;
 
 /* Find wich kind of quote  */
    if (pJxCom->fnyt == '\0') {

@@ -123,9 +123,7 @@ typedef struct {
 	FILE *  File;
 	PUCHAR  FileName;
 	XMLSTATE State;
-	UCHAR   FileBuf[65535];
-	UCHAR   dummy[32]; // Extra space after buffer for swapping
-	PUCHAR  pFileBuf;
+	PUCHAR  pWorkBuf;
 	PUCHAR  Data;
 	LONG    DataIx;
 	LONG    DataSize;
@@ -143,7 +141,8 @@ typedef struct {
 	UCHAR   fnyt;
 	LONG    LineCount;
 	LONG    ColCount;
-	PUCHAR  StreamBuf;
+	PUCHAR  pStreamBuf;
+	PUCHAR  pNextBuf;
 	UCHAR   e2aTbl[256];
 	BOOL    UseIconv;
 	iconv_t Iconv;

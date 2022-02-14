@@ -3451,7 +3451,7 @@ End-PR;
 /// 
 // Get boolean value by expression
 //
-// This is equivalent to <em>jx_isTrue<em> but with additional support 
+// This is equivalent to <em>jx_isTrue</em> but with additional support 
 // for a default value.
 //
 // @param Node
@@ -4292,8 +4292,8 @@ End-PR;
 // conjunction with the function <em>jx_getAttrNext</em>.
 // 
 // @param Node
-// @param First attribute or <code>*null</code> if the node has no
-//        attributes.
+// @return First attribute or <code>*null</code> if the node has no
+//         attributes.
 ///
 Dcl-PR xml_getAttrFirst pointer extproc(*CWIDEN : 'jx_GetAttrFirst');
   node pointer value;

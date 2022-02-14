@@ -1162,7 +1162,7 @@ static PJXNODE  SelectParser (PJXCOM pJxCom)
    PJXNODE pRoot;
    CheckBufSize(pJxCom);
    pJxCom->pNodeRoot = pRoot = NewNode (NULL, NULL, OBJECT);
-   pJxCom->pFileBuf = NULL;
+   pJxCom->pWorkBuf = pJxCom->pStreamBuf;
    pJxCom->State = XML_FIND_START_TOKEN;
    pJxCom->LineCount = 1;
    pJxCom->pNodeWorkRoot = pJxCom->pNodeRoot;
@@ -1775,13 +1775,13 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
      } else {
        templen = xlate(pJxCom, temp , Buf , inlen);
      }
-     pJxCom->StreamBuf = temp;
-     pJxCom->StreamBuf [templen] = '\0';
+     pJxCom->pStreamBuf = temp;
+     pJxCom->pStreamBuf [templen] = '\0';
      pRoot = SelectParser (pJxCom);
      memFree (&temp);
 
    } else {
-     pJxCom->StreamBuf =  Buf;
+     pJxCom->pStreamBuf =  Buf;
      pRoot = SelectParser (pJxCom);
    }
 
@@ -1903,7 +1903,7 @@ PJXNODE jx_ParseFile(PUCHAR FileName, PUCHAR pOptions)
                    ||  pParms->OpDescList->NbrOfParms == 0
                    ||  pParms->OpDescList->NbrOfParms >= 2 && pOptions) ? pOptions : "";
 
-   PUCHAR  streamBuf;
+   PUCHAR  pStreamBuf;
    PJXNODE pRoot;
    PUCHAR  pFirstChar;
    LONG    fileSize;
@@ -1930,23 +1930,23 @@ PJXNODE jx_ParseFile(PUCHAR FileName, PUCHAR pOptions)
    fseek( f , 0L, SEEK_SET);
 
    // read it all
-   streamBuf = memAlloc (fileSize+1);
-   len = fread(streamBuf, 1 , fileSize  , f );
+   pStreamBuf = memAlloc (fileSize+1);
+   len = fread(pStreamBuf, 1 , fileSize  , f );
    fclose(f);
 
    if (len != fileSize) {
       jx_SetMessage( "File %s was not read", FileName);
       jxError = true;
-      memFree (&streamBuf);
+      memFree (&pStreamBuf);
       return NULL;
    }
 
    // make it a string
-   streamBuf[len] = '\0';
-   pFirstChar = streamBuf;
+   pStreamBuf[len] = '\0';
+   pFirstChar = pStreamBuf;
    
    pRoot = jx_parseStringCcsid(pFirstChar,0);
-   memFree (&streamBuf);
+   memFree (&pStreamBuf);
 
    return (pRoot);
 }
