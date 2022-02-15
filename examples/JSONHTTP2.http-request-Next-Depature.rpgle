@@ -21,8 +21,7 @@ ctl-opt bndDir('NOXDB' );
 /include qrpgleRef,noxdb
 
 // --------------------------------------------------------------
-// translate text using watson API:
-// https://watson-api-explorer.mybluemix.net/
+// Next departure from Mols Linien
 // --------------------------------------------------------------
 dcl-proc main;
 

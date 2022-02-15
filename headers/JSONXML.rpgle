@@ -1857,6 +1857,7 @@ End-PR;
 // @param URL
 // @param HTTP request payload (object tree)
 // @param Extra cURL options
+// @param Format of the request. XML, JSON or TEXT (defaults to JSON). TEXT requires you to set the headers  
 // @return JSON object
 //
 // @info This function uses the curl command.
@@ -1865,6 +1866,7 @@ Dcl-PR jx_httpRequest Pointer extproc(*CWIDEN : 'jx_httpRequest');
   url pointer value options(*string);
   payload pointer value options(*string : *nopass);
   options pointer value options(*string : *nopass); 
+  format  pointer value options(*string : *nopass);  
 End-PR;
 
 ///

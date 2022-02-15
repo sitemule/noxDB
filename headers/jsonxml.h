@@ -76,6 +76,12 @@ typedef enum {
 	MO_MERGE_REPLACE  =  1024   // Merge all: replace if it exists and append new nodes if not exists
 } MERGEOPTION , *PMERGEOPTION;
 
+typedef enum {
+	FMT_JSON,
+	FMT_XML,
+	FMT_TEXT
+} DATAFORMAT , *PDATAFORMAT;
+
 #define NODESIG  0x02
 typedef struct _JXNODE {
 	UCHAR  signature; // always hex 02

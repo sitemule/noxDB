@@ -1666,6 +1666,15 @@ void jx_NodeDelete(PJXNODE pNode)
 
    if (pNode == NULL) return;
 
+   // Perhaps a basic memory chunk ( not a node?) 
+   if (pNode->signature != NODESIG) {
+      PMEMHDR mem = (PMEMHDR) ((PUCHAR) pNode - sizeof(MEMHDR)) ;
+      if (mem->signature == MEMSIG ) {
+         memFree (&pNode);
+      }
+      return;
+   }   
+
    jx_NodeUnlink (pNode);
    jx_FreeChildren (pNode);
    jx_NodeFree(pNode);

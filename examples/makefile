@@ -18,8 +18,8 @@ all: compile
 .ONESHELL:
 compile: 
 	qsh <<EOF 
+	liblist -a ICEBREAK # Only for the ICEBREAK sample
 	liblist -a $(BIN_LIB)
-	liblist -a ICEBREAK
 	touch error.txt
 	setccsid 1208 error.txt
 	setccsid 1208 $(SRC)
