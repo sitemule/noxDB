@@ -72,6 +72,7 @@ dcl-proc xmlRequest;
 
    // Do the http request to get exchangerates from the Danish National bank
    // Use YUM to install curl, which is the tool used by httpRequest
+   // The request object with XML and JSON has to be a NoxDb node or *null
    pResponse = json_httpRequest (url: pReq:*null:'XML');
 
    json_WriteXmlStmf(pResponse:'/prj/noxdb/testout/httpdump.xml':1208:*OFF);
@@ -95,9 +96,10 @@ dcl-proc textGetRequest;
    // Do the http request to get simple text response
    // Use YUM to install curl, which is the tool used by httpRequest
    // It is: Url is given, No request = GET , No options = simple get
+   // The request object with XML and JSON has to be a NoxDb node or *null
    pResponse = json_httpRequest (url: *null : *null :'TEXT');
 
-   // Note: When using 'TEXT' mode, then tre response is not a node, but a string.
+   // Note: When using 'TEXT' mode, then the response is not a node, but a string.
    // After use, the correct way to dispose the memory is with json_delete()
    text = %str(pResponse);
    
@@ -121,7 +123,8 @@ dcl-proc textPostRequest;
    // The URL to the text resource:
    url = 'https://www.w3schools.com/action_page.php';
 
-   // Note: This is a form request  
+   // Note: This is a form request.
+   // For "TEXT" mode this have to be a string  
    req = 'fname=John&lname=Doe';
 
    options = ('-

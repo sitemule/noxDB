@@ -1116,6 +1116,81 @@ PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
 
 }
 /* ------------------------------------------------------------- */
+static BOOL buildCountStatement (PUCHAR countStmt, PUCHAR sqlStmt)
+{
+
+   PUCHAR  pCountStmt = countStmt; 
+   PUCHAR  end; 
+   int len;
+
+   // quick trim
+   for  (;*sqlStmt <= ' ' && *sqlStmt > '\0'; sqlStmt++);;  
+
+   // find the active part of the select statment ( i.e. up until with ur is exists)
+   end  =  stristr(sqlStmt  , "with ur");
+   len = end == NULL ? strlen (sqlStmt) : end - sqlStmt;
+
+   // CTE - diffrent syntax
+   if (BeginsWith(sqlStmt, "with")) {
+      PUCHAR w = sqlStmt;
+      int para = 0;
+      for(;;) {
+         switch (*w) {
+            case '(':
+               para++;
+               break;
+            case ')':
+               para--;
+               if (para == 0) {
+                  for (w++; *w == ' '; w++);
+                  if ( *w != ',') {
+                     int firstPartLength = w - sqlStmt;
+                     int nextPartLength = len - firstPartLength;
+                     substr (pCountStmt, sqlStmt , firstPartLength);
+                     pCountStmt += firstPartLength;
+                     pCountStmt += sprintf(pCountStmt, "select count(*) counter from (");
+                     substr (pCountStmt, w , nextPartLength);
+                     pCountStmt += nextPartLength;
+                     pCountStmt += sprintf(pCountStmt ,")");
+                     return true;
+                  }
+               }
+            break;
+         }
+         w++;
+      }
+
+   } else {
+      pCountStmt += sprintf(pCountStmt , "select count(*) counter from (");
+      substr (pCountStmt, sqlStmt , len);
+      pCountStmt += len; 
+      pCountStmt += sprintf(pCountStmt , ")");
+      return true;
+   }
+   return false; // Not build
+}
+/* ------------------------------------------------------------- */
+LONG jx_sqlNumberOfRows(PUCHAR sqlStmt)
+{
+
+   LONG    rowCount;
+   PJXNODE pRow;
+   UCHAR   countStmt [32766];
+   
+   if (buildCountStatement (countStmt , sqlStmt)) {
+      // Get that only row
+      pRow = jx_sqlResultRow(countStmt, NULL, 0);
+      rowCount = atoi(jx_GetValuePtr(pRow, "counter", "-1"));
+      jx_NodeDelete (pRow);
+      return rowCount;
+
+   } else {
+      return -1; // not able to produce a count statement 
+   } 
+
+}
+/* ------------------------------------------------------------- */
+/****************  OLD VERSION
 LONG jx_sqlNumberOfRows(PUCHAR sqlstmt)
 {
 
@@ -1189,6 +1264,7 @@ LONG jx_sqlNumberOfRows(PUCHAR sqlstmt)
 
    return rowCount;
 }
+************/
 /* ------------------------------------------------------------- */
 
 /***********
@@ -1878,7 +1954,6 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
          //rc=SQLGetDiagField(SQL_HANDLE_STMT,pSQL->pstmt->hstmt, 0 ,SQL_DIAG_ROW_COUNT,&rowCount,SQL_INTEGER,&strLen);
          // pSQL->rowcount = rowCount;
 
-         jx_SetIntByName(pResult , "totalRows" , pSQL->rowcount );
       }
 
       jx_NodeMoveInto (pResult , "metaData" , pMeta);

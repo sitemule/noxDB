@@ -89,12 +89,14 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options , PUCHAR forma
 
 
    if ( pParms->OpDescList->NbrOfParms < 2 )  pNode = NULL;
-   if ( pParms->OpDescList->NbrOfParms < 3 )  options = NULL;
+   if ( pParms->OpDescList->NbrOfParms < 3 || options == NULL) options = "";
 
+   // Temporary names for input, output and error stream files
    tmpnam(temp1);
    tmpnam(temp2);
    tmpnam(error);
 
+   // Build the cur command, note: ignore sertificate error due to IBM i implementation
    p += sprintf( p , "curl -s -k -o %s", temp2);
    
    if (pNode) {
@@ -110,20 +112,25 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options , PUCHAR forma
             saveText (temp1 , (PUCHAR) pNode);
             break;
       }
-      p += sprintf( p , " -X POST --data %c%s " , at , temp1);
+      // Default to post in not given in options
+      if (strstr(options, "-X ") == NULL) {
+         p += sprintf( p , " -X POST ");
+      }
+      p += sprintf( p , " --data %c%s " , at , temp1);
    }
 
+   // "Content-type" and "Accept" defaults can be overwritten by the "options" if given, 
    switch (dataFormat) {
       case FMT_JSON:
-         p += sprintf( p ,  " %s ",
-            "-H 'Content-Type: application/json' "
-            "-H 'Accept: application/json' "
+         p += sprintf( p ,  " %s %s ",
+            (stristr(options, "-H 'Content-Type:") == NULL) ? "-H 'Content-Type: application/json' " :"",
+            (stristr(options, "-H 'Accept:") == NULL) ? "-H 'Accept: application/json' ":""
          );
          break;
       case FMT_XML:
-         p += sprintf( p ,  " %s ",
-            "-H 'Content-Type: application/soap+xml' "
-            "-H 'Accept: application/soap+xml' "
+         p += sprintf( p ,  " %s %s ",
+            (stristr(options, "-H 'Content-Type:") == NULL) ? "-H 'Content-Type: application/soap+xml' " :"",
+            (stristr(options, "-H 'Accept:") == NULL) ? "-H 'Accept: application/soap+xml,application/xml' ":""
          );
          break;
       case FMT_TEXT:
