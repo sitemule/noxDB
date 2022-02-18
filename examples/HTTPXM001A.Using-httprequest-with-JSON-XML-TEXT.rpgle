@@ -12,7 +12,7 @@
 //  Look at the header source file "QRPGLEREF" member "NOXDB"
 //  for a complete description of the functionality
 //
-//  Talk to watson
+//  HTTP request examples
 //
 //  -------------------------------------------------------------
 ctl-opt copyright('System & Method (C), 2018');
