@@ -1,5 +1,7 @@
 #include "ostypes.h"
 
+// Invocation record interface - giving pointer to the parmlist 
+
 typedef _Packed struct _OPDESC {
   SHORT DescType;
   SHORT DataType;
