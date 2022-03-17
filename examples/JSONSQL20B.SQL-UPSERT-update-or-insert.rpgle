@@ -40,7 +40,7 @@
         // upsert is a combination of "update" and if not found then "insert"
           row = json_newObject();
           json_setInt(row : 'prodkey' : 12345);
-          json_setStr(row : 'desc'    : 'Demo');
+          json_setStr(row : 'description'    : 'Demo');
 
           // update or insert using object as the row
           err = json_sqlUpsert (
@@ -53,7 +53,7 @@
           id = json_sqlGetInsertId();
 
           json_setInt(row : 'prodkey' : 23456);
-          json_setStr(row : 'desc'    : 'Next Demo');
+          json_setStr(row : 'description'    : 'Next Demo');
 
           // update or insert using object as the row
           err = json_sqlUpsert (

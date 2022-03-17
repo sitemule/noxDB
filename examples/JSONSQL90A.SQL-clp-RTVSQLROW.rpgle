@@ -28,7 +28,7 @@ Pgm ()
 
    rtvSqlRow  sqlcmd('-
         Select PRODID, DESC       -
-        from product              -
+        from icproduct              -
         where prodKey = 100       -
         fetch first 1 row only    -
    ') found(&found)   -
@@ -36,7 +36,7 @@ Pgm ()
       into02(&desc  ) -
 
    if (&found)  then(-
-     sndpgmmsg ('Prod:' !> &prodid !> 'desc' !> &desc) -
+     sndpgmmsg ('Prod:' !> &prodid !> 'description' !> &desc) -
    )
    else (-
      sndpgmmsg ('Prod 100 was not found')              -

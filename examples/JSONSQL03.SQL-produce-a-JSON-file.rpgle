@@ -33,7 +33,7 @@
    rows    = json_newArray ();
 
    // Open our SQL cursor. Use a simple select
-   sql = 'Select * from product';
+   sql = 'Select * from icproduct';
    sqlhnd  = json_sqlOpen(sql);
 
    // Now iterate on each row in the resultset

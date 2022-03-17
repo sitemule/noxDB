@@ -28,7 +28,7 @@
         // return one object with one row
           sql   = ('-
                Select *                  -
-                     from product              -
+                     from icproduct              -
                      where prodKey = $prodKey  -
                      fetch first 1 row only    -
                   ');

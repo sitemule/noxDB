@@ -27,7 +27,7 @@
          *inlr = *on;
 
          // Set the delimiters used to access the graph selector
-         json_setDelimiters ('/\@[] .{}''"$');
+         json_setDelimitersByCcsid();
 
          buildTestData();
 

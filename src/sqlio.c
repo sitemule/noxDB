@@ -25,6 +25,8 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #include <ctype.h>
 #include <recio.h>
 #include <errno.h>
+#include <limits.h>
+
 
 #include "ostypes.h"
 #include "xlate.h"
@@ -38,6 +40,9 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 
 #define NOXDB_UNKNOWN_SQL_DATATYPE -99
 #define NOXDB_MAX_PARMS  4096
+#define NOXDB_FIRST_ROW -1
+#define NOXDB_ALL_ROWS  -1
+
 
 // Globlas: TODO !!! remove to make code reintrant
 extern UCHAR jxMessage[512];
@@ -461,8 +466,8 @@ static PJXSQL jx_sqlNewStatement(PJXNODE pSqlParms, BOOL exec, BOOL scroll)
    // allocate  and initialize with defaults
    rc = SQLAllocStmt(pConnection->hdbc, &pSQL->pstmt->hstmt);
    if (rc != SQL_SUCCESS ) {
-     check_error (pSQL);
-     return NULL; // we have an error
+      check_error (pSQL);
+      return NULL; // we have an error
    }
 
    if (exec) {
@@ -470,46 +475,42 @@ static PJXSQL jx_sqlNewStatement(PJXNODE pSqlParms, BOOL exec, BOOL scroll)
       attrParm = SQL_INSENSITIVE;
       rc = SQLSetStmtAttr  (pSQL->pstmt->hstmt, SQL_ATTR_CURSOR_SENSITIVITY , &attrParm  , 0);
       if (rc != SQL_SUCCESS ) {
-        check_error (pSQL);
-        return NULL; // we have an error
+         check_error (pSQL);
+         return NULL; // we have an error
       }
 
    } else {
+
       if (scroll) {
          attrParm = SQL_TRUE;
          rc = SQLSetStmtAttr  (pSQL->pstmt->hstmt, SQL_ATTR_CURSOR_SCROLLABLE , &attrParm  , 0);
          if (rc != SQL_SUCCESS ) {
-           check_error (pSQL);
-           return NULL; // we have an error
+            check_error (pSQL);
+            return NULL; // we have an error
          }
       }
 
       attrParm = SQL_TRUE;
       rc = SQLSetStmtAttr  (pSQL->pstmt->hstmt, SQL_ATTR_EXTENDED_COL_INFO , &attrParm  , 0);
       if (rc != SQL_SUCCESS ) {
-        check_error (pSQL);
-        return NULL; // we have an error
+         check_error (pSQL);
+         return NULL; // we have an error
       }
-
 
       attrParm = SQL_CONCUR_READ_ONLY;
       rc = SQLSetStmtAttr  (pSQL->pstmt->hstmt, SQL_ATTR_CONCURRENCY , &attrParm  , 0);
       if (rc != SQL_SUCCESS ) {
-        check_error (pSQL);
-        return NULL; // we have an error
+         check_error (pSQL);
+         return NULL; // we have an error
       }
 
-
       // TODO !!! SQL_ATTR_MAX_ROWS
-
-
 
    }
 
    return pSQL;
 
 }
-/* ------------------------------------------------------------- */
 // ------------------------------------------------------------------
 // https://www.ibm.com/docs/en/i/7.4?topic=program-null-capable-fields
 // ------------------------------------------------------------------
@@ -588,26 +589,28 @@ static PUCHAR  getSysNameForColumn ( PUCHAR sysColumnName, SQLHSTMT hstmt , SQLS
 }
 
 /* ------------------------------------------------------------- */
-PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP)
+PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG startP , LONG limitP )
 {
 
    UCHAR sqlTempStmt[32766];
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    PJXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 2 ) ? pSqlParmsP : NULL;
    LONG   format      =  (pParms->OpDescList->NbrOfParms >= 3 ) ? formatP : 0;
+   LONG   start       =  (pParms->OpDescList->NbrOfParms >= 4 ) ? startP : NOXDB_FIRST_ROW; // begining
+   LONG   limit       =  (pParms->OpDescList->NbrOfParms >= 5 ) ? limitP : NOXDB_ALL_ROWS; // all rows
    LONG   attrParm;
    LONG   i;
    //   PJXSQL pSQL = jx_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
    PJXSQL pSQL;
    SQLINTEGER  dummyInt , isTrue,descLen;
    SQLSMALLINT len , dummyShort;
+   BOOL scroll = pParms->OpDescList->NbrOfParms <= 2; // Typicall from CALL from RPG 
 
    int rc;
 
    // quick trim - advance the pointer until data:
    for  (;*sqlstmt > '\0' && *sqlstmt <= ' '; sqlstmt++);
 
-   if (pParms->OpDescList->NbrOfParms <= 2 ) scroll = true;
    jxError = false; // Assume OK
 
    pSQL = jx_sqlNewStatement (NULL, false, scroll);
@@ -624,11 +627,18 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, BOOL scroll, LONG formatP
 
 
    //// huxi !! need uncomitted read for blob fields
-   // and IBMi does not support statement attribute to set the pr statement. :/
-   // so we simply append the "ur" uncommited read options
-   if (0 != memicmp ( sqlTempStmt , "call", 4)
-   && pConnection->transaction == false ) {
-      strcat ( sqlTempStmt , " with ur");
+   // and IBM i does not support statement attribute to set the pr statement. :/
+   // so we simply append the "with ur" uncommited read options
+   if (0 != memicmp ( sqlTempStmt , "call", 4)) {
+      if (start > 1) {
+         sprintf (sqlTempStmt + strlen(sqlTempStmt)," offset %ld ", start);
+      }
+      if (limit > 0 ) {
+         sprintf (sqlTempStmt + strlen(sqlTempStmt)," fetch first %ld rows only ", limit);
+      }
+      if (pConnection->transaction == false ) {
+         strcat ( sqlTempStmt , " with ur");
+      }
    }
    pSQL->sqlstmt = strdup(sqlTempStmt);
 
@@ -795,6 +805,8 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
 
          PJXCOL pCol = &pSQL->cols[i];
 
+         
+
          // TODO - Work arround !!! first get the length - if null, the dont try the get data
          // If it has a pointer value, the API will fail..
          // For now BLOB and CLOB does not support "not null with default"
@@ -807,6 +819,8 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
             case SQL_WVARCHAR:
             case SQL_GRAPHIC:
             case SQL_VARGRAPHIC:
+               // fix !! UNICODE tends to leave uninitialized data behind
+               memset( buf, '\0' , pCol->collen);
                SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , memSize(buf), &buflen);
                break;
             default:
@@ -938,6 +952,7 @@ PJXNODE jx_sqlFetchNext (PJXSQL pSQL)
    return jx_sqlFormatRow(pSQL);
 }
 /* ------------------------------------------------------------- */
+/****** not used
 PJXNODE jx_sqlFetchFirst (PJXSQL pSQL, LONG fromRow)
 {
    int rc;
@@ -950,6 +965,7 @@ PJXNODE jx_sqlFetchFirst (PJXSQL pSQL, LONG fromRow)
    }
    return jx_sqlFormatRow(pSQL);
 }
+***/
 /* ------------------------------------------------------------- */
 void jx_sqlClose (PJXSQL * ppSQL)
 {
@@ -1896,8 +1912,8 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
 {
 
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   LONG    start     = (pParms->OpDescList->NbrOfParms >= 2) ? startP     : 1;  // From first row
-   LONG    limit     = (pParms->OpDescList->NbrOfParms >= 3) ? limitP     : -1; // All row
+   LONG    start     = (pParms->OpDescList->NbrOfParms >= 2) ? startP     : NOXDB_FIRST_ROW; // From first row
+   LONG    limit     = (pParms->OpDescList->NbrOfParms >= 3) ? limitP     : NOXDB_ALL_ROWS; // All row
    LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;  // Arrray only
    PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 5) ? pSqlParmsP : NULL;
    PJXNODE pRows     = jx_NewArray(NULL);
@@ -1910,12 +1926,12 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
 
    start = start < 1 ? 1 : start;
 
-   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, start > 1, format);
+   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, format , start , limit );
    if ( pSQL == NULL) {
         return NULL;
    }
 
-   pRow  = jx_sqlFetchFirst (pSQL, start);
+   pRow  = jx_sqlFetchNext (pSQL);
    for (rowCount = 1; pRow && (rowCount <=limit || limit == -1); rowCount ++) {
       jx_ArrayPush (pRows , pRow, FALSE);
       pRow  = jx_sqlFetchNext (pSQL);
@@ -1974,14 +1990,14 @@ PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startP, PJXNODE pSqlParmsP , LO
 {
 
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   LONG    start     = (pParms->OpDescList->NbrOfParms >= 2) ? startP     : 1;  // From first row
+   LONG    start     = (pParms->OpDescList->NbrOfParms >= 2) ? startP     : NOXDB_FIRST_ROW;  // From first row
    PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
    LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0; 
    PJXNODE pRow;
    PJXSQL  pSQL;
 
-   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, start > 1 , format);
-   pRow  = jx_sqlFetchFirst (pSQL, start);
+   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, format , start , 1 ); 
+   pRow  = jx_sqlFetchNext (pSQL);
    jx_sqlClose (&pSQL);
    return pRow;
 
@@ -1990,7 +2006,7 @@ PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startP, PJXNODE pSqlParmsP , LO
 PJXNODE jx_sqlGetMeta (PUCHAR sqlstmt)
 {
    int i;
-   PJXSQL  pSQL  = jx_sqlOpen(sqlstmt , NULL, false, 0);
+   PJXSQL  pSQL  = jx_sqlOpen(sqlstmt , NULL, 0, NOXDB_FIRST_ROW, NOXDB_ALL_ROWS );
    PJXNODE pMeta = jx_buildMetaFields ( pSQL );
    jx_sqlClose (&pSQL);
    return pMeta;
@@ -2005,7 +2021,7 @@ PJXNODE jx_sqlResultRow ( PUCHAR sqlstmt, PJXNODE pSqlParmsP , LONG formatP)
    PJXNODE pRow;
    PJXSQL  pSQL;
 
-   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, false, format);
+   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, format , NOXDB_FIRST_ROW, 1 );
    pRow  = jx_sqlFetchNext (pSQL);
    jx_sqlClose (&pSQL);
    return pRow;
@@ -2020,7 +2036,7 @@ LGL jx_sqlExec(PUCHAR sqlstmt , PJXNODE pSqlParms)
    LONG   i;
    int rc;
    //   PJXSQL pSQL = jx_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
-   PJXSQL pSQL = jx_sqlNewStatement (NULL, true, false);
+   PJXSQL pSQL = jx_sqlNewStatement (NULL, true , false);
 
    // run  the  statement in "sqlstr"
    if (pParms->OpDescList->NbrOfParms >= 2) {
@@ -2692,7 +2708,7 @@ static PJXSQL buildMetaStmt (PUCHAR table, PJXNODE pRow)
    PJXNODE   pNode;
    PUCHAR    comma = "";
    SQLRETURN rc;
-   PJXSQL    pSQLmeta = jx_sqlNewStatement (NULL, false, false);
+   PJXSQL    pSQLmeta = jx_sqlNewStatement (NULL, false , false);
 
    stmt += sprintf (stmt , "select ");
 
@@ -2735,7 +2751,7 @@ LGL jx_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PJXNODE pRowP , PUCHAR wh
 
    SQLSMALLINT   length;
    SQLRETURN     rc;
-   PJXSQL        pSQL     = jx_sqlNewStatement (NULL, true, false);
+   PJXSQL        pSQL     = jx_sqlNewStatement (NULL, true , false);
    PJXSQL        pSQLmeta;
    SQLCHUNK      sqlChunk[32];
    SHORT         sqlChunkIx =0;

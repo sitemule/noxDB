@@ -47,7 +47,7 @@
        //json_setStr(pRow:  'SDTCTS'   : '2018-07-31-15.25.34.724244');
        //json_setStr(pRow:  'SDTCTS'   : '2018-07-31-15.25.34');
        json_setStr(pRow:  'SDTCTS'   : '2018-07-31');
-       json_setStr(pRow:  'SDTDSC'   : 'Desc');
+       json_setStr(pRow:  'SDTDSC'   : 'description');
        json_setStr(pRow:  'SDTTXT'   : text );
        json_setStr(pRow:  'SDTFPPDF' : '' );
 

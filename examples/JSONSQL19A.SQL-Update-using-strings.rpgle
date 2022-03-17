@@ -40,7 +40,7 @@
          *inlr = *on;
 
          // Set the delimiters used to access the graph selector
-         json_setDelimiters ('/\@[] .{}''"$');
+         json_setDelimitersByCcsid();
 
          // Run a "normal SQL " to create the test case 
          err = json_sqlExec('-

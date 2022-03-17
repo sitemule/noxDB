@@ -89,7 +89,7 @@
 
         // Or in one go - with deafults if not found
         id    = json_GetInt(pJson: 'id'  : -1 );
-        text  = json_GetStr(pJson: 'desc': 'N/A');
+        text  = json_GetStr(pJson: 'description': 'N/A');
 
         // Use either / or . as you like. It is the same..
         country1   = json_GetStr(pJson: 'anObject/country': 'N/A');

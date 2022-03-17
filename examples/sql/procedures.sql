@@ -1,4 +1,8 @@
-﻿create or replace procedure qgpl.inc (
+﻿create schema noxdbdemo;
+set schema noxdbdemo;
+
+
+create or replace procedure noxdbdemo.inc (
     inout a int
 ) 
 begin 
@@ -8,8 +12,8 @@ call inc (a=>123);
 
 
 
-drop procedure qgpl.common_types;
-create or replace procedure qgpl.common_types  (
+drop procedure noxdbdemo.common_types;
+create or replace procedure noxdbdemo.common_types  (
     in ismallint smallint default null,
     in iinteger integer default null,
     in ibigint bigint default null,
@@ -115,7 +119,7 @@ begin
     end if;
 end;
          
-call  qgpl.common_types  (
+call  noxdbdemo.common_types  (
     ismallint => 123,
     osmallint =>?,
     ointeger =>?,
@@ -132,7 +136,7 @@ call  qgpl.common_types  (
     otimestamp =>?
 );
 
-call  qgpl.common_types  (
+call  noxdbdemo.common_types  (
     ismallint => null,
     osmallint =>?,
     ointeger =>?,

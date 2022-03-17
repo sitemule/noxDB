@@ -2028,6 +2028,9 @@ Dcl-PR jx_sqlOpen pointer extproc(*CWIDEN :'jx_sqlOpen');
   statement pointer value options(*string);
   templateValues pointer value options(*string : *nopass);
   formatOptions int(10) value options(*nopass);
+  startRow   int(10) value options(*nopass);
+  limitRows  int(10) value options(*nopass);
+
 End-PR;
 
 ///

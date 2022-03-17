@@ -26,7 +26,7 @@
 
 
         // return an simple array with all rows
-          sql   = 'Select desc as "prodDesc" , 1 as t  from product';
+          sql   = 'Select desc as "prodDesc" , 1 as t  from icproduct';
           pRows = json_sqlResultSet(sql);
 
           // Produce a JSON stream file in the root of the IFS

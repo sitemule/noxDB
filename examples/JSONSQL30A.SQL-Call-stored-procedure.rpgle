@@ -44,7 +44,7 @@ Dcl-s i          int(10);
 // Use case of  in, in and out parameter
 // Create the procedure from ACS. Maybe change the schema location 
 //
-// create or replace procedure qgpl.add (
+// create or replace procedure noxdbdemo.add (
 //     in  a int,
 //     in  b int,
 //     out c dec(5,2)
@@ -63,7 +63,7 @@ dcl-proc add;
 
 
     // Call the procedure
-    pOut = json_sqlCall ('qgpl.add' : pIn);
+    pOut = json_sqlCall ('noxdbdemo.add' : pIn);
 
     If json_Error(pOut) ;
         msg = json_Message(pOut);
@@ -85,7 +85,7 @@ end-proc;
 // 
 // Create the procedure from ACS. Maybe change the schema location 
 // 
-// create or replace procedure qgpl.inc (
+// create or replace procedure noxdbdemo.inc (
 //     inout a int
 // ) 
 // begin 
@@ -100,7 +100,7 @@ dcl-proc inc;
     json_SetInt(pIn: 'a': 123);
 
     // Call the procedure
-    pOut = json_sqlCall ('qgpl.inc' : pIn);
+    pOut = json_sqlCall ('noxdbdemo.inc' : pIn);
 
     If json_Error(pOut) ;
       msg = json_Message(pOut);
@@ -124,8 +124,8 @@ end-proc;
 // 
 // Create the procedure from ACS. Maybe change the schema location 
 // 
-// drop procedure qgpl.common_types;
-// create or replace procedure qgpl.common_types  (
+// drop procedure noxdbdemo.common_types;
+// create or replace procedure noxdbdemo.common_types  (
 //     in ismallint smallint default null,
 //     in iinteger integer default null,
 //     in ibigint bigint default null,
@@ -209,7 +209,7 @@ end-proc;
 //     set iotimestamp = now();
 // end;
          
-// call  qgpl.common_types  (
+// call  noxdbdemo.common_types  (
 //     ismallint => 123,
 //     osmallint =>?,
 //     ointeger =>?,
@@ -259,7 +259,7 @@ dcl-proc commonTypes;
     json_SetStr(pIn: 'iotimestamp' :   %char(%timestamp()));
   
     // Call the procedure
-    pOut = json_sqlCall ('qgpl.common_types' : pIn);
+    pOut = json_sqlCall ('noxdbdemo.common_types' : pIn);
 
     If json_Error(pOut) ;
       msg = json_Message(pOut);
@@ -282,7 +282,7 @@ dcl-proc commonTypesNegative;
     json_SetInt(pIn: 'ismallint' :   -1);
   
     // Call the procedure
-    pOut = json_sqlCall ('qgpl.common_types' : pIn);
+    pOut = json_sqlCall ('noxdbdemo.common_types' : pIn);
 
     If json_Error(pOut) ;
       msg = json_Message(pOut);
@@ -305,7 +305,7 @@ dcl-proc commonTypesNull;
     json_SetNull(pIn: 'ismallint' );
   
     // Call the procedure
-    pOut = json_sqlCall ('qgpl.common_types' : pIn);
+    pOut = json_sqlCall ('noxdbdemo.common_types' : pIn);
 
     If json_Error(pOut) ;
       msg = json_Message(pOut);
@@ -326,7 +326,7 @@ end-proc;
 // 
 // Create the procedure from ACS. Maybe change the schema location 
 // 
-// create or replace procedure qgpl.inc (
+// create or replace procedure noxdbdemo.inc (
 //     inout a int
 // ) 
 // begin 
@@ -350,7 +350,7 @@ dcl-proc performance;
     iterations = 1000;
 
     for i = 1 to iterations;
-        pOut = json_sqlCall ('qgpl.inc' : pIn);
+        pOut = json_sqlCall ('noxdbdemo.inc' : pIn);
 
         If json_Error(pOut) ;
             msg = json_Message(pOut);

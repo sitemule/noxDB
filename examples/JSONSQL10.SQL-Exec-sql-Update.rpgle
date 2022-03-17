@@ -27,24 +27,24 @@
 
 
          // Set the delimiters used to access the graph selector
-         json_setDelimiters ('/\@[] .{}''"$');
+         json_setDelimitersByCcsid();
          
          // Simple update
          err = json_sqlExec(
-            'update product set price = price * 1.01'
+            'update icproduct set price = price * 1.01'
          );
 
          // update using json string used in template
          priceJsStr  = '{ newprice : 1.03 }';
          err = json_sqlExec(
-            'update product set price = price * $newprice'
+            'update icproduct set price = price * $newprice'
             :priceJsStr
          );
 
          // update using json object used in template
          priceObj    = json_parseString ('{ newprice : 1.04 }');
          err = json_sqlExec(
-            'update product set price = price * $newprice'
+            'update icproduct set price = price * $newprice'
             :priceObj
          );
 

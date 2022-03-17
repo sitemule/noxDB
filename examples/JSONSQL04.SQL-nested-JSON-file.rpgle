@@ -43,7 +43,7 @@ Dcl-S sql                VarChar(512);
    manuRow = json_sqlFetchNext(manuHnd);
    DoW (manuRow <> *NULL);
       // Note: the SQL can be a template, we fill with values from a json row
-      sql = 'Select * from product where manuid = $manuid' ;
+      sql = 'Select * from icproduct where manuid = $manuid' ;
       prodArray  = json_sqlResultSet(sql: 1 : 9999 : 0 : manuRow);
       // Append the row to the end of the result array.
       json_MoveObjectInto (manuRow   : 'products' : prodArray );

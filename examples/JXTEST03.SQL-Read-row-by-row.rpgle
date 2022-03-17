@@ -31,7 +31,7 @@
 
         // Open our SQL cursor. Use a simple select
           sqlhnd  = json_sqlOpen(
-               'Select * from product'
+               'Select * from icproduct'
             );
 
           // Was there a problem ?
@@ -46,7 +46,7 @@
           DoW (pRow <> *NULL );
              ints    = json_getNum (pRow : 'PRODKEY');
              text    = json_getStr (pRow : 'PRODID');
-             text    = json_getStr (pRow : 'DESC');
+             text    = json_getStr (pRow : 'description');
              text    = json_getStr (pRow : 'MANUID');
              numbers = json_getNum (pRow : 'PRICE');
              ints    = json_getNum (pRow : 'STOCKCNT');

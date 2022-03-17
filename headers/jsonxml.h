@@ -593,7 +593,7 @@ PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startAt , PJXNODE pSqlParmsP , 
 PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PJXNODE pSqlParmsP );
 #pragma descriptor ( void jx_sqlResultSet   (void))
 
-PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParms, BOOL scroll, LONG format);
+PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG startP , LONG limitP );
 #pragma descriptor ( void jx_sqlOpen        (void))
 
 LGL jx_sqlUpdate (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParmsP  );
