@@ -587,7 +587,6 @@ static PUCHAR  getSysNameForColumn ( PUCHAR sysColumnName, SQLHSTMT hstmt , SQLS
    
    return  getSystemColumnName ( sysColumnName, schema , table , column);
 }
-
 /* ------------------------------------------------------------- */
 PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG startP , LONG limitP )
 {
@@ -631,7 +630,7 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    // so we simply append the "with ur" uncommited read options
    if (0 != memicmp ( sqlTempStmt , "call", 4)) {
       if (start > 1) {
-         sprintf (sqlTempStmt + strlen(sqlTempStmt)," offset %ld ", start);
+         sprintf (sqlTempStmt + strlen(sqlTempStmt)," offset %ld rows ", start);
       }
       if (limit > 0 ) {
          sprintf (sqlTempStmt + strlen(sqlTempStmt)," fetch first %ld rows only ", limit);
@@ -696,6 +695,8 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
          if (!(format & (JX_UPPERCASE))) {
             str2lower  (pCol->colname , pCol->colname);
          } 
+      } else if (format & (JX_CAMEL_CASE)) {
+         camelCase(pCol->colname, pCol->colname);
       } else if (format & (JX_UPPERCASE)) {
          // It is upper NOW
          // jx_sqlUpperCaseNames(pSQL);

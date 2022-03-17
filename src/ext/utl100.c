@@ -61,18 +61,18 @@ int memIcmp (PUCHAR s1, PUCHAR s2 , int len)
 UCHAR toUpper(UCHAR c)
 {
    switch(c) {
-      case 'æ' : return 'Æ';
-      case 'ø' : return 'Ø';
-      case 'å' : return 'Å';
+      case 0xc0 : return 0x7b;
+      case 0x6a : return 0x7c;
+      case 0xd0 : return 0x5b;
       default  : return toupper(c);
    }
 }
 UCHAR toLower(UCHAR c)
 {
    switch(c) {
-      case 'Æ' : return 'æ';
-      case 'Ø' : return 'ø';
-      case 'Å' : return 'å';
+      case 0x7b : return 0xc0;
+      case 0x7c : return 0x6a;
+      case 0x5b : return 0xd0;
       default  : return tolower(c);
    }
 }
@@ -626,6 +626,28 @@ PUCHAR str2lower (PUCHAR out, PUCHAR in )
    *r= '\0';
    return out;
 }
+/* ------------------------------------------------------------- */
+PUCHAR camelCase (PUCHAR out , PUCHAR in)
+{
+   PUCHAR ret = out;
+   BOOL upperNext = false;
+
+   for (;*in;in++) {
+      if (*in == '_') {
+         upperNext = true;
+      } else {
+         if (upperNext) {
+            *(out++) = toUpper(*in);
+            upperNext = false;
+         } else {
+            *(out++) = toLower (*in);
+         }
+      }
+   }
+   *(out) = '\0';
+   return ret;
+}
+
 /* -----------------------------------------------------------------
    Locate the file name portion only from a complete string
    ----------------------------------------------------------------- */

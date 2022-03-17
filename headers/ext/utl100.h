@@ -10,6 +10,7 @@ UCHAR  toLower(UCHAR c);
 UCHAR  toUpper(UCHAR c);
 UCHAR  toupperascii(UCHAR c);
 UCHAR  tolowerascii(UCHAR c);
+PUCHAR camelCase (PUCHAR out , PUCHAR in);
 LONG   strTrimLen(PUCHAR str);
 LONG   strtrim(PUCHAR str);
 PUCHAR strchrreplace(PUCHAR out , PUCHAR in , PUCHAR from , PUCHAR to );
