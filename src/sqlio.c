@@ -26,6 +26,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #include <recio.h>
 #include <errno.h>
 #include <limits.h>
+#include <regex.h>
 
 
 #include "ostypes.h"
@@ -587,6 +588,29 @@ static PUCHAR  getSysNameForColumn ( PUCHAR sysColumnName, SQLHSTMT hstmt , SQLS
    
    return  getSystemColumnName ( sysColumnName, schema , table , column);
 }
+/* ------------------------------------------------------------- 
+   Locates the part after rgw last pareparenthesis
+   ------------------------------------------------------------- */
+PUCHAR finalSQLPart (PUCHAR stmt)
+{
+   PUCHAR p   = stmt;
+   PUCHAR ret = stmt;
+   int level =0;
+   for (;*p;p++) {
+      switch (*p) {
+         case '(' : 
+            level ++;
+            break;
+         case ')' : 
+            level --;
+            if (level =0) {
+               ret = p +1;
+            }
+            break;
+      }
+   }
+   return ret; 
+}
 /* ------------------------------------------------------------- */
 PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG startP , LONG limitP )
 {
@@ -629,10 +653,31 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    // and IBM i does not support statement attribute to set the pr statement. :/
    // so we simply append the "with ur" uncommited read options
    if (0 != memicmp ( sqlTempStmt , "call", 4)) {
-      if (start > 1) {
+      PUCHAR lookFrom = finalSQLPart (sqlTempStmt);
+      static BOOL compilereg = true;
+      static regex_t hasLimitReg;
+      static regex_t hasOffsetReg;
+      static regex_t hasFetchReg;
+      BOOL hasLimit  ;
+      BOOL hasOffset ;
+      BOOL hasFetch  ;
+      if (compilereg) {
+         int rc;
+         ULONG options =  REG_NOSUB + REG_EXTENDED + REG_ICASE;
+         rc = regcomp(&hasLimitReg, "limit[ ]*[0-9]"  , options );
+         rc = regcomp(&hasOffsetReg, "offset[ ]*[0-9]"  , options );
+         rc = regcomp(&hasFetchReg, "fetch[ ]*first[ ]*[0-9]"  , options );
+         compilereg = false;
+      }
+
+      hasLimit  = 0 == (rc= regexec(&hasLimitReg  , lookFrom , 0, NULL, 0));
+      hasOffset = 0 == (rc= regexec(&hasOffsetReg , lookFrom , 0, NULL, 0));
+      hasFetch  = 0 == (rc= regexec(&hasFetchReg  , lookFrom , 0, NULL, 0));
+      
+      if (start > 1 && ! hasOffset) {
          sprintf (sqlTempStmt + strlen(sqlTempStmt)," offset %ld rows ", start);
       }
-      if (limit > 0 ) {
+      if (limit > 0 && ! hasFetch && ! hasLimit) {
          sprintf (sqlTempStmt + strlen(sqlTempStmt)," fetch first %ld rows only ", limit);
       }
       if (pConnection->transaction == false ) {

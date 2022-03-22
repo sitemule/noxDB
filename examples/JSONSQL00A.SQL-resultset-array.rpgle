@@ -26,16 +26,95 @@ Dcl-S pRows              Pointer;
 
    // return an simple array with all rows
    pRows = json_sqlResultSet(
-      'Select * from noxdbdemo.product'
+      'Select * from noxdbdemo.icproduct'
    );
 
-   // Produce a JSON stream file in the root of the IFS
+   // Produce a JSON stream file in the IFS
    json_writeJsonStmf(pRows  :
-      '/prj/noxdb/testout/resultset-array.json' : 1208 :*OFF
+      '/prj/noxdb/testout/resultset-array1.json' : 1208 :*OFF
    );
 
-   // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
+   // Cleanup: dispose the rows in the array
    json_delete(pRows);
+
+   // Next - Number of rows and limit
+   // Given by parameters 
+   // -------------------------------
+
+   // return an simple array with all rows
+   pRows = json_sqlResultSet(
+      'Select * from noxdbdemo.icproduct':
+      10: // from and including row 10 
+      5   // max 5 rows
+   );
+
+   // Produce a JSON stream file in the IFS
+   json_writeJsonStmf(pRows  :
+      '/prj/noxdb/testout/resultset-array2.json' : 1208 :*OFF
+   );
+
+   // Cleanup: dispose the rows in the array
+   json_delete(pRows);
+
+   // Next - Number of rows and limit
+   // given by the SQL statement 
+   // -------------------------------
+
+   // return an simple array with all rows
+   pRows = json_sqlResultSet(
+      'Select * from noxdbdemo.icproduct -
+      offset 10 rows fetch first 5 rows only'
+   );
+
+   // Produce a JSON stream file in the IFS
+   json_writeJsonStmf(pRows  :
+      '/prj/noxdb/testout/resultset-array3.json' : 1208 :*OFF
+   );
+
+   // Cleanup: dispose the rows in the array
+   json_delete(pRows);
+
+   // Next - Number of rows and limit
+   // Given by parameters 
+   // -------------------------------
+
+   // return an simple array with all rows
+   pRows = json_sqlResultSet(
+      'Select * from noxdbdemo.icproduct':
+      10: // from the tenth row
+      5  // max 5 rows
+   );
+
+   // Produce a JSON stream file in the IFS
+   json_writeJsonStmf(pRows  :
+      '/prj/noxdb/testout/resultset-array4.json' : 1208 :*OFF
+   );
+
+   // Cleanup: dispose the rows in the array
+   json_delete(pRows);
+
+   // Next - Number of rows and limit
+   // precedence 
+   // given by the SQL statement ignors the parameters 
+   // ------------------------------------------------
+
+   // return an simple array with all rows
+   pRows = json_sqlResultSet(
+      'Select * from noxdbdemo.icproduct -
+      offset 10 rows fetch first 5 rows only':
+      1 :  // from row  !! will be ignored since given in the sql statement
+      100 // numberof rows !! will be ignored since given in the sql statement
+   );
+
+   // Produce a JSON stream file in the IFS
+   json_writeJsonStmf(pRows  :
+      '/prj/noxdb/testout/resultset-array5.json' : 1208 :*OFF
+   );
+
+   // Cleanup: dispose the rows in the array
+   json_delete(pRows);
+
+   // Final Cleanup: Close the SQL cursor and disconnect
    json_sqlDisconnect();
 
    // That's it..
