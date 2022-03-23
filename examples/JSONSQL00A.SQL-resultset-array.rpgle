@@ -1,5 +1,5 @@
 **free
-// ------------------------------------------------------------- *
+// ------------------------------------------------------------------------------------
 // noxDB - Not only XML. JSON, SQL and XML made easy for RPG
 
 // Company . . . : System & Method A/S - Sitemule
@@ -16,15 +16,34 @@
 //  A: Bind you program with "NOXDB" Bind directory
 //  B: Include the noxDB prototypes from QRPGLEREF member NOXDB
 
-// ------------------------------------------------------------- *
-// Using SQL resultset
-
-// ------------------------------------------------------------- *
+// ------------------------------------------------------------------------------------
+// Using SQL resultset rturning simple array
+// This also demonstrate the use of limit and position in the resultset 
+// ------------------------------------------------------------------------------------
 Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
 /include qrpgleRef,noxdb
-Dcl-S pRows              Pointer;
 
-   // return an simple array with all rows
+   // Run the examples
+   example1();
+   example2();
+   example3();
+   example4();
+   example5();
+
+   // Final Cleanup: Close the SQL cursors and disconnect
+   json_sqlDisconnect();
+
+   // That's it..
+   *inlr = *on;
+
+// ------------------------------------------------------------------------------------
+// example1 all rows
+// ------------------------------------------------------------------------------------
+dcl-proc example1;
+
+   Dcl-S pRows              Pointer;
+
+   // return an simple array with rows
    pRows = json_sqlResultSet(
       'Select * from noxdbdemo.icproduct'
    );
@@ -37,11 +56,17 @@ Dcl-S pRows              Pointer;
    // Cleanup: dispose the rows in the array
    json_delete(pRows);
 
-   // Next - Number of rows and limit
-   // Given by parameters 
-   // -------------------------------
+end-proc;
+// ------------------------------------------------------------------------------------
+// example2
+// Number of rows and limit
+// Given by parameters 
+// ------------------------------------------------------------------------------------
+dcl-proc example2;
 
-   // return an simple array with all rows
+   Dcl-S pRows              Pointer;
+
+   // return an simple array with rows
    pRows = json_sqlResultSet(
       'Select * from noxdbdemo.icproduct':
       10: // from and including row 10 
@@ -56,11 +81,17 @@ Dcl-S pRows              Pointer;
    // Cleanup: dispose the rows in the array
    json_delete(pRows);
 
-   // Next - Number of rows and limit
-   // given by the SQL statement 
-   // -------------------------------
+end-proc;
+// ------------------------------------------------------------------------------------
+// example3
+// Number of rows and limit
+// given by the SQL statement 
+// ------------------------------------------------------------------------------------
+dcl-proc example3;
 
-   // return an simple array with all rows
+   Dcl-S pRows              Pointer;
+
+   // return an simple array with rows
    pRows = json_sqlResultSet(
       'Select * from noxdbdemo.icproduct -
       offset 10 rows fetch first 5 rows only'
@@ -74,15 +105,21 @@ Dcl-S pRows              Pointer;
    // Cleanup: dispose the rows in the array
    json_delete(pRows);
 
-   // Next - Number of rows and limit
-   // Given by parameters 
-   // -------------------------------
+end-proc;
+// ------------------------------------------------------------------------------------
+// example4
+// Number of rows and limit
+// given by the SQL statement alternive syntax 
+// Note!! Then spcial syntax of combined LIMIT X,Y is not supported !!
+// ------------------------------------------------------------------------------------
+dcl-proc example4;
 
-   // return an simple array with all rows
+   Dcl-S pRows              Pointer;
+
+   // return an simple array with rows
    pRows = json_sqlResultSet(
-      'Select * from noxdbdemo.icproduct':
-      10: // from the tenth row
-      5  // max 5 rows
+      'Select * from noxdbdemo.icproduct -
+      limit 5 offset 10 '
    );
 
    // Produce a JSON stream file in the IFS
@@ -93,12 +130,19 @@ Dcl-S pRows              Pointer;
    // Cleanup: dispose the rows in the array
    json_delete(pRows);
 
-   // Next - Number of rows and limit
-   // precedence 
-   // given by the SQL statement ignors the parameters 
-   // ------------------------------------------------
+end-proc;
 
-   // return an simple array with all rows
+// ------------------------------------------------------------------------------------
+// example5
+// Number of rows and limit
+// precedence 
+// given by the SQL statement ignors the parameters 
+// ------------------------------------------------------------------------------------
+dcl-proc example5;
+
+   Dcl-S pRows              Pointer;
+
+   // return an simple array with rows
    pRows = json_sqlResultSet(
       'Select * from noxdbdemo.icproduct -
       offset 10 rows fetch first 5 rows only':
@@ -114,8 +158,4 @@ Dcl-S pRows              Pointer;
    // Cleanup: dispose the rows in the array
    json_delete(pRows);
 
-   // Final Cleanup: Close the SQL cursor and disconnect
-   json_sqlDisconnect();
-
-   // That's it..
-   *inlr = *on;
+end-proc;

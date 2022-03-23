@@ -664,9 +664,9 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       if (compilereg) {
          int rc;
          ULONG options =  REG_NOSUB + REG_EXTENDED + REG_ICASE;
-         rc = regcomp(&hasLimitReg, "limit[ ]*[0-9]"  , options );
+         rc = regcomp(&hasLimitReg , "limit[ ]*[0-9]"   , options );
          rc = regcomp(&hasOffsetReg, "offset[ ]*[0-9]"  , options );
-         rc = regcomp(&hasFetchReg, "fetch[ ]*first[ ]*[0-9]"  , options );
+         rc = regcomp(&hasFetchReg , "fetch[ ]*first"   , options );
          compilereg = false;
       }
 
@@ -674,11 +674,11 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       hasOffset = 0 == (rc= regexec(&hasOffsetReg , lookFrom , 0, NULL, 0));
       hasFetch  = 0 == (rc= regexec(&hasFetchReg  , lookFrom , 0, NULL, 0));
       
-      if (start > 1 && ! hasOffset) {
-         sprintf (sqlTempStmt + strlen(sqlTempStmt)," offset %ld rows ", start);
-      }
       if (limit > 0 && ! hasFetch && ! hasLimit) {
-         sprintf (sqlTempStmt + strlen(sqlTempStmt)," fetch first %ld rows only ", limit);
+         sprintf (sqlTempStmt + strlen(sqlTempStmt)," limit %ld ", limit);
+      }
+      if (start > 1 && ! hasOffset) {
+         sprintf (sqlTempStmt + strlen(sqlTempStmt)," offset %ld ", start);
       }
       if (pConnection->transaction == false ) {
          strcat ( sqlTempStmt , " with ur");
