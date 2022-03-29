@@ -820,10 +820,11 @@ Dcl-C JX_FORMAT_CDATA const(1);
 // Set node options
 //
 // Sets the node format options which will among other things affect how the
-// nodes will be output by the serializers.
+// node will be output by the serializers.
 //
 // @param Node
 // @param Format option (JX_FORMAT_DEFAULT, JX_FORMAT_CDATA)
+// @return Passed node (first parameter)
 ///
 Dcl-PR jx_setNodeOptions pointer extproc(*CWIDEN : 'jx_SetNodeOptions');
   node pointer value;
