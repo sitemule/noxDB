@@ -1,69 +1,140 @@
-       // ------------------------------------------------------------- *
-       // noxDB - Not only XML. JSON, SQL and XML made easy for RPG
+**free
+// ------------------------------------------------------------- *
+// noxDB - Not only XML. JSON, SQL and XML made easy for RPG
 
-       // Company . . . : System & Method A/S - Sitemule
-       // Design  . . . : Niels Liisberg
+// Company . . . : System & Method A/S - Sitemule
+// Design  . . . : Niels Liisberg
 
-       // Unless required by applicable law or agreed to in writing, software
-       // distributed under the License is distributed on an "AS IS" BASIS,
-       // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
-       // Look at the header source file "QRPGLEREF" member "NOXDB"
-       // for a complete description of the functionality
+// Look at the header source file "QRPGLEREF" member "NOXDB"
+// for a complete description of the functionality
 
-       // When using noxDB you need two things:
-       //  A: Bind you program with "NOXDB" Bind directory
-       //  B: Include the noxDB prototypes from QRPGLEREF member NOXDB
+// When using noxDB you need two things:
+//  A: Bind you program with "NOXDB" Bind directory
+//  B: Include the noxDB prototypes from QRPGLEREF member NOXDB
 
-       // Parse Strings
+// Parse Strings
 
-       // ------------------------------------------------------------- *
-       Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
-      /include qrpgleRef,noxdb
-       Dcl-S pJson              Pointer;
-       Dcl-S p                  Pointer;
-       Dcl-S msg                VarChar(50);
-       Dcl-S s                  VarChar(50);
-       Dcl-S n                  VarChar(50);
-       Dcl-S i                      Int(10:0);
+// ------------------------------------------------------------- *
+Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+/include qrpgleRef,noxdb
 
-        // First demo: find attribues which contains objects where attibutes has a value
-          pJson = json_ParseString ('{e:{ -
-              "a": { "x":1 , "y":"11"}, -
-              "b": { "x":2 , "y":"22"}, -
-              "c": { "x":3 , "y":"33"}  -
-            }}');
 
-          If json_Error(pJson) ;
-             msg = json_Message(pJson);
-             json_dump(pJson);
-             json_delete(pJson);
-             Return;
-          EndIf;
+    example1();
+    example2();
+    example3();
+    *inlr = *on;
+    
+// ------------------------------------------------------------------------------------
+// example1
+// ------------------------------------------------------------------------------------
+dcl-proc example1;
 
-          // Get the object in the array where the "x" attribute has the value of 2
-          p = json_locate  (pJson : '/e[x=2]');
-          n = json_getName(p); // the is the "b" object
-          s = json_getStr      (p : 'y' );
+    Dcl-S pJson              Pointer;
+    Dcl-S p                  Pointer;
+    Dcl-S msg                VarChar(50);
+    Dcl-S s                  VarChar(50);
+    Dcl-S n                  VarChar(50);
+    Dcl-S i                  Int(10:0);
 
-          json_delete(pJson);
-          // Next demo: find attribues in arrays where attibutes has a value
-          pJson = json_ParseString ('{e:[ -
-            { "x":1 , "y":"11"}, -
-            { "x":2 , "y":"22"}, -
-            { "x":3 , "y":"33"}  -
-          ]}');
 
-          If json_Error(pJson) ;
-             msg = json_Message(pJson);
-             json_dump(pJson);
-             json_delete(pJson);
-             Return;
-          EndIf;
+    // First demo: find attribues which contains objects where attibutes has a value
+    pJson = json_ParseString ('{e:{ -
+        "a": { "x":1 , "y":"11"}, -
+        "b": { "x":2 , "y":"22"}, -
+        "c": { "x":3 , "y":"33"}  -
+      }}');
 
-          // Get the object in the array where the "x" attribute has the value of 2
-          p = json_locate  (pJson : '/e[x=2]');
-          n = json_getName(p); // This object has no name since it is an element of an array
-          s = json_getStr      (p : 'y' );
+    If json_Error(pJson) ;
+        msg = json_Message(pJson);
+        json_dump(pJson);
+        json_delete(pJson);
+        Return;
+    EndIf;
 
-          *inlr = *on;
+    // Get the object in the array where the "x" attribute has the value of 2
+    p = json_locate  (pJson : '/e[x=2]');
+    n = json_getName(p); // the is the "b" object
+    s = json_getStr      (p : 'y' );
+    json_joblog(s); 
+
+    json_delete(pJson);
+
+end-proc;
+// ------------------------------------------------------------------------------------
+// example2
+// ------------------------------------------------------------------------------------
+dcl-proc example2;
+
+    Dcl-S pJson              Pointer;
+    Dcl-S p                  Pointer;
+    Dcl-S msg                VarChar(50);
+    Dcl-S s                  VarChar(50);
+    Dcl-S n                  VarChar(50);
+    Dcl-S i                  Int(10:0);
+
+    // Next demo: find attribues in arrays where attibutes has a value
+    pJson = json_ParseString ('{e:[ -
+      { "x":1 , "y":"11"}, -
+      { "x":2 , "y":"22"}, -
+      { "x":3 , "y":"33"}  -
+    ]}');
+
+    If json_Error(pJson) ;
+        msg = json_Message(pJson);
+        json_dump(pJson);
+        json_delete(pJson);
+        Return;
+    EndIf;
+
+    // Get the object in the array where the "x" attribute has the value of 2
+    p = json_locate  (pJson : '/e[x=2]');
+    n = json_getName(p); // This object has no name since it is an element of an array
+    s = json_getStr      (p : 'y' );
+    json_joblog(s); 
+    json_delete(pJson);
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// example3, only the array
+// ------------------------------------------------------------------------------------
+dcl-proc example3;
+
+    Dcl-S pJson              Pointer;
+    Dcl-S p                  Pointer;
+    Dcl-S msg                VarChar(50);
+    Dcl-S s                  VarChar(50);
+    Dcl-S n                  VarChar(50);
+    Dcl-S i                  Int(10:0);
+
+    // Next demo: find attribues in arrays where attibutes has a value
+    pJson = json_ParseString ('[ -
+      { "x":1 , "y":"11"}, -
+      { "x":2 , "y":"22"}, -
+      { "x":3 , "y":"33"}  -
+    ]');
+
+    If json_Error(pJson) ;
+        msg = json_Message(pJson);
+        json_dump(pJson);
+        json_delete(pJson);
+        Return;
+    EndIf;
+
+    // does the array contains any objects; 
+    if json_nodeType(json_getChild(pJson)) = JSON_OBJECT;
+        json_joblog('First child node is an object');
+    endif; 
+
+
+    // Get the object in the array where the "x" attribute has the value of 2
+    p = json_locate  (pJson : '[x=2]');
+    s = json_getStr      (p : 'y' );
+    json_joblog(s); 
+    json_delete(pJson);
+end-proc;
+
+
