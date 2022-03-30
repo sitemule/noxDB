@@ -26,7 +26,8 @@ dcl-proc main;
    jsonRequest();
    xmlRequest();
    textGetRequest();
-   textPostRequest();   
+   textPostRequest();  
+   jsonPutRequest(); 
 
 end-proc;
 
@@ -142,4 +143,38 @@ dcl-proc textPostRequest;
    json_delete(pResponse);
 
 end-proc;
+
+// --------------------------------------------------------------
+// json PUT request
+// --------------------------------------------------------------
+dcl-proc jsonPutRequest;
+
+   dcl-s  url  	  	varchar(1024);
+   dcl-s  pReq   	  	pointer;
+   dcl-s  options    varchar(2048);
+   dcl-s  pResponse 	pointer;
+
+   // the service URL
+   url = 'http://www.icebreak.org/services/appstore/getrows';
+
+   // Build a JSON object for the request
+   pReq = json_newObject(); 
+   json_setStr (pReq:'search': '*ALL');
+
+   // This service expect a PUT method
+   options = ('-
+     -X PUT    -
+   '); 
+
+   // Do the http request to get next depature
+   // Use YUM to install curl, which is the tool used by httpRequest
+   pResponse = json_httpRequest (url: pReq: options :'JSON');
+
+   json_WriteJsonStmf(pResponse:'/prj/noxdb/testout/jsonPutRequest.json':1208:*OFF);
+
+   json_delete(pReq);
+   json_delete(pResponse);
+
+end-proc;
+
 
