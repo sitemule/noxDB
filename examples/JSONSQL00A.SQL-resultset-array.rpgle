@@ -29,6 +29,8 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
    example3();
    example4();
    example5();
+   example6();
+
 
    // Final Cleanup: Close the SQL cursors and disconnect
    json_sqlDisconnect();
@@ -153,6 +155,33 @@ dcl-proc example5;
    // Produce a JSON stream file in the IFS
    json_writeJsonStmf(pRows  :
       '/prj/noxdb/testout/resultset-array5.json' : 1208 :*OFF
+   );
+
+   // Cleanup: dispose the rows in the array
+   json_delete(pRows);
+
+end-proc;
+// ------------------------------------------------------------------------------------
+// example6
+// Gracefull errors
+// the SQL is invalide, so the resultset will be an error object
+// ------------------------------------------------------------------------------------
+dcl-proc example6;
+
+   Dcl-S pRows              Pointer;
+
+   // return an simple array with rows
+   pRows = json_sqlResultSet(
+      'Select * from noxdbdemo.THISISMISSING  -
+      offset 10 rows fetch first 5 rows only':
+      1 :  // from row  !! will be ignored since given in the sql statement
+      100: // numberof rows !! will be ignored since given in the sql statement
+      JSON_GRACEFUL_ERRROR
+   );
+
+   // Produce a JSON stream file in the IFS
+   json_writeJsonStmf(pRows  :
+      '/prj/noxdb/testout/resultset-gracefull-error.json' : 1208 :*OFF
    );
 
    // Cleanup: dispose the rows in the array

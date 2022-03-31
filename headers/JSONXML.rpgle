@@ -2014,6 +2014,15 @@ Dcl-C JX_SYSTEM_NAMES  const(32);
 Dcl-C JX_CAMEL_CASE   const(64); 
 
 ///
+// For SQL resultset
+// If set: resultSets will return a success:false 
+// and set the message to the apropiate SQL error text
+// If not set:  a *NULL pointer is returned and 
+// you have to handle the error manually
+///
+Dcl-C JX_GRACEFUL_ERRROR   const(128); 
+
+///
 // SQL : Open SQL cursor
 //
 // Opens a cursor for processing the SQL data row by row.

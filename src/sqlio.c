@@ -1953,6 +1953,16 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    return (pResult);
 
 }*/
+PJXNODE sqlErrorObject(PUCHAR sqlstmt) 
+{
+   PJXNODE pError = jx_NewObject(NULL);
+   jx_SetBoolByName (pError , "success" ,  OFF);
+   jx_SetStrByName  (pError , "msg"     ,  jxMessage);
+   jx_SetStrByName  (pError , "stmt"    ,  sqlstmt);
+
+   return pError;
+
+}
 /* ------------------------------------------------------------- */
 PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PJXNODE pSqlParmsP  )
 {
@@ -1974,7 +1984,11 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
 
    pSQL = jx_sqlOpen(sqlstmt , pSqlParms, format , start , limit );
    if ( pSQL == NULL) {
+      if (format & JX_GRACEFUL_ERROR) {
+         return sqlErrorObject(sqlstmt);
+      } else {
         return NULL;
+      }
    }
 
    pRow  = jx_sqlFetchNext (pSQL);
@@ -2042,7 +2056,15 @@ PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startP, PJXNODE pSqlParmsP , LO
    PJXNODE pRow;
    PJXSQL  pSQL;
 
-   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, format , start , 1 ); 
+   pSQL = jx_sqlOpen(sqlstmt , pSqlParms, format , start , 1 );
+   if ( pSQL == NULL) {
+      if (format & JX_GRACEFUL_ERROR) {
+         return sqlErrorObject(sqlstmt);
+      } else {
+        return NULL;
+      }
+   }
+
    pRow  = jx_sqlFetchNext (pSQL);
    jx_sqlClose (&pSQL);
    return pRow;
@@ -2068,6 +2090,14 @@ PJXNODE jx_sqlResultRow ( PUCHAR sqlstmt, PJXNODE pSqlParmsP , LONG formatP)
    PJXSQL  pSQL;
 
    pSQL = jx_sqlOpen(sqlstmt , pSqlParms, format , NOXDB_FIRST_ROW, 1 );
+   if ( pSQL == NULL) {
+      if (format & JX_GRACEFUL_ERROR) {
+         return sqlErrorObject(sqlstmt);
+      } else {
+        return NULL;
+      }
+   }
+
    pRow  = jx_sqlFetchNext (pSQL);
    jx_sqlClose (&pSQL);
    return pRow;

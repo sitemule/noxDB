@@ -820,10 +820,11 @@ Dcl-C json_FORMAT_CDATA const(1);
 // Set node options
 //
 // Sets the node format options which will among other things affect how the
-// nodes will be output by the serializers.
+// node will be output by the serializers.
 //
 // @param Node
 // @param Format option (JX_FORMAT_DEFAULT, json_FORMAT_CDATA)
+// @return Passed node (first parameter)
 ///
 Dcl-PR json_setNodeOptions pointer extproc(*CWIDEN : 'jx_SetNodeOptions');
   node pointer value;
@@ -2011,6 +2012,15 @@ Dcl-C json_SYSTEM_NAMES  const(32);
 // "THE_COLUMN_NAME" will be returned as "theColumnName".
 ///
 Dcl-C json_CAMEL_CASE   const(64); 
+
+///
+// For SQL resultset
+// If set: resultSets will return a success:false 
+// and set the message to the apropiate SQL error text
+// If not set:  a *NULL pointer is returned and 
+// you have to handle the error manually
+///
+Dcl-C json_GRACEFUL_ERRROR   const(128); 
 
 ///
 // SQL : Open SQL cursor

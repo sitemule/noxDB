@@ -820,10 +820,11 @@ Dcl-C xml_FORMAT_CDATA const(1);
 // Set node options
 //
 // Sets the node format options which will among other things affect how the
-// nodes will be output by the serializers.
+// node will be output by the serializers.
 //
 // @param Node
 // @param Format option (JX_FORMAT_DEFAULT, xml_FORMAT_CDATA)
+// @return Passed node (first parameter)
 ///
 Dcl-PR xml_setNodeOptions pointer extproc(*CWIDEN : 'jx_SetNodeOptions');
   node pointer value;
@@ -2011,6 +2012,15 @@ Dcl-C xml_SYSTEM_NAMES  const(32);
 // "THE_COLUMN_NAME" will be returned as "theColumnName".
 ///
 Dcl-C xml_CAMEL_CASE   const(64); 
+
+///
+// For SQL resultset
+// If set: resultSets will return a success:false 
+// and set the message to the apropiate SQL error text
+// If not set:  a *NULL pointer is returned and 
+// you have to handle the error manually
+///
+Dcl-C xml_GRACEFUL_ERRROR   const(128); 
 
 ///
 // SQL : Open SQL cursor
