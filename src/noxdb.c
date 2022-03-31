@@ -1997,6 +1997,63 @@ PJXNODE  jx_GetRoot (PJXNODE pNode)
    return ( pNode);
 }
 /* --------------------------------------------------------------------------- */
+void splitNameAndAttribute (PUCHAR nodeName , PUCHAR attributeName ,PUCHAR keyName)
+{
+   PUCHAR p;
+
+   for (p = keyName ; *p ;p++ ) {
+      if (*p == Masterspace )  {
+         substr(nodeName  , keyName , p -  keyName);
+         substr(attributeName , p+ 1 , strlen(p+1));
+         return;
+      }
+   } 
+   strcpy ( nodeName , keyName );
+   *attributeName = '\0';
+
+} 
+
+/* --------------------------------------------------------------------------- */
+PJXNODE static queryXmlElements ( PJXNODE pRootNode , PUCHAR keyName , PUCHAR compVal , int compLen, int comp)
+{
+   UCHAR nodeName  [256];
+   UCHAR attributeName [256];
+   PJXNODE pNodeTemp;
+   PUCHAR pValue; 
+
+   splitNameAndAttribute (nodeName , attributeName , keyName); 
+
+   pNodeTemp = pRootNode;
+   while (pNodeTemp && pNodeTemp->signature == NODESIG) {
+      // Note: XML can mix the order of elements 
+      if (stricmp (pRootNode->Name , jx_NodeName (pNodeTemp ,false)) == 0) {
+         PJXNODE pNode = jx_GetNode  (pNodeTemp, nodeName);
+         if (pNode) {
+            if (*attributeName) {
+               PXMLATTR pAtr = jx_AttributeLookup  (pNode, attributeName);
+               if (pAtr) {
+                  pValue = pAtr->Value;
+               } else {
+                  pValue = NULL;
+               } 
+            } else {
+               pValue = pNode->Value;
+            }
+
+            if (pValue) {
+               // Does the value match
+               if (memicmp(compVal , pValue, compLen) == comp
+               &&  pValue[compLen] == '\0') {
+                  return pNodeTemp;
+               }
+            }
+         }
+      }
+      pNodeTemp=pNodeTemp->pNodeSibling;
+   }
+   return NULL;
+}
+/* --------------------------------------------------------------------------- */
 PJXNODE jx_lookupByXpath (PJXNODE pRootNode, PUCHAR * ppName)
 {
    PUCHAR  Name = * ppName;
@@ -2042,19 +2099,26 @@ PJXNODE jx_lookupByXpath (PJXNODE pRootNode, PUCHAR * ppName)
       }
 
    } else {
-      // Find by value
-      PJXNODE pNodeTemp = pRootNode == NULL? NULL:pRootNode->pNodeChildHead;
-      while (pNodeTemp && pNodeTemp->signature == NODESIG) {
-         PJXNODE pNode = jx_GetNode  (pNodeTemp, keyName);
-         if (pNode && pNode->Value) {
+      PJXNODE pNodeTemp;
 
-           // Does the value match
-           if (memicmp(compVal , pNode->Value, compLen) == comp
-           &&  pNode->Value[compLen] == '\0') {
-             return pNodeTemp;
-           }
+      // Is it from the XML parser? Then names can jump  
+      if (pRootNode && pRootNode->type == UNKNOWN) {
+         return queryXmlElements (pRootNode , keyName ,compVal , compLen , comp); 
+      } else {
+         pNodeTemp = pRootNode == NULL? NULL:pRootNode->pNodeChildHead;
+
+         while (pNodeTemp && pNodeTemp->signature == NODESIG) {
+            PJXNODE pNode = jx_GetNode  (pNodeTemp, keyName);
+            if (pNode && pNode->Value) {
+
+               // Does the value match
+               if (memicmp(compVal , pNode->Value, compLen) == comp
+               &&  pNode->Value[compLen] == '\0') {
+                  return pNodeTemp;
+               }
+            }
+            pNodeTemp=pNodeTemp->pNodeSibling;
          }
-         pNodeTemp=pNodeTemp->pNodeSibling;
       }
    }
    return NULL;

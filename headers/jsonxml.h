@@ -451,6 +451,7 @@ typedef void (*JX_DATAINTO)();
 
 
 /* Internals */
+PUCHAR jx_NodeName (PJXNODE pNode,BOOL SkipNameSpace);
 void     jx_SkipBlanks(BOOL skip);
 BOOL    JSON_Parse(PJXCOM pJxCom);
 BOOL    jsonParseNode(PJXCOM pJxCom, JSTATE state,  PUCHAR name , PJXNODE pCurNode) ;
