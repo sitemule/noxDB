@@ -96,6 +96,7 @@ void          jx_sqlDisconnect (void);
 PJXSQLCONNECT jx_sqlNewConnection(void);
 void jx_traceOpen (PJXSQLCONNECT pCon);
 void jx_traceInsert (PJXSQL pSQL, PUCHAR stmt , PUCHAR sqlState);
+PJXNODE static sqlErrorObject(PUCHAR sqlstmt); 
 
 /* ------------------------------------------------------------- */
 SQLINTEGER jx_sqlCode(void)
@@ -1953,7 +1954,8 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    return (pResult);
 
 }*/
-PJXNODE sqlErrorObject(PUCHAR sqlstmt) 
+/* ------------------------------------------------------------- */
+PJXNODE static sqlErrorObject(PUCHAR sqlstmt) 
 {
    PJXNODE pError = jx_NewObject(NULL);
    jx_SetBoolByName (pError , "success" ,  OFF);
@@ -1961,7 +1963,6 @@ PJXNODE sqlErrorObject(PUCHAR sqlstmt)
    jx_SetStrByName  (pError , "stmt"    ,  sqlstmt);
 
    return pError;
-
 }
 /* ------------------------------------------------------------- */
 PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PJXNODE pSqlParmsP  )

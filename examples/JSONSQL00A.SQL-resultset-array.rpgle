@@ -181,7 +181,7 @@ dcl-proc example6;
 
    // Produce a JSON stream file in the IFS
    json_writeJsonStmf(pRows  :
-      '/prj/noxdb/testout/resultset-gracefull-error.json' : 1208 :*OFF
+      '/prj/noxdb/testout/resultset-graceful-error.json' : 1208 :*OFF
    );
 
    // Cleanup: dispose the rows in the array
