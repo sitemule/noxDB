@@ -32,6 +32,10 @@ dcl-proc main;
    dcl-s  text 	  	  	varchar(4096);
    dcl-s  dsp     	  	char   (52);
 
+   // Always set your ccsid for constants: 
+   json_setDelimitersByCcsid(500);
+
+
    pReq = json_newObject();
    json_setStr (pReq : 'source'   : 'en');
    json_setStr (pReq : 'target'   : 'es');

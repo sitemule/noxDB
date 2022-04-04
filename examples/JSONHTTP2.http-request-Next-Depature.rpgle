@@ -29,6 +29,9 @@ dcl-proc main;
    dcl-s  pResponse 		pointer;
    dcl-s  url  	  	  	varchar(1024);
 
+   // Always set your ccsid for constants: 
+   json_setDelimitersByCcsid(500);
+
    // parameters on URL
    url = 'https://www.molslinjen.dk/umbraco/api/departure/getnextdepartures?departureRegionId=JYL';
 

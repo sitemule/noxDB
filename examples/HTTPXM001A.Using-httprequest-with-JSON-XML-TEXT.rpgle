@@ -1,4 +1,4 @@
-**FREE
+**free
 //  -------------------------------------------------------------
 //  noxDB - Not only XML. JSON, SQL and XML made easy for RPG
 //
@@ -22,6 +22,9 @@ ctl-opt bndDir('NOXDB' );
 
 // --------------------------------------------------------------
 dcl-proc main;
+
+   // Always set your ccsid for constants: 
+   json_setDelimitersByCcsid(500);
 
    jsonRequest();
    xmlRequest();
