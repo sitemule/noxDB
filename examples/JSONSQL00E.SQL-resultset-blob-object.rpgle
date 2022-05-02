@@ -21,27 +21,77 @@
 // and produce a metatag with column info
 
 // ------------------------------------------------------------- *
-Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') main(main);
 /include qrpgleRef,noxdb
 
-Dcl-S pRows              Pointer;
+// ------------------------------------------------------------------------------------
+// main
+// ------------------------------------------------------------------------------------
+dcl-proc main;
 
-// return a object with all rows
-pRows = json_sqlResultSet(
-  'Select * from noxdbdemo.blobs':
-  1: // Starting from row
-  JSON_ALLROWS: // Number of rows to read
-  JSON_META+JSON_FIELDS // Embed the rows array in an object and produce a metatag with column info
-);
+  clobs();
+  blobs();
+  json_sqlDisconnect();
+  return;
+end-proc;
 
-// Produce a JSON stream file in the root of the IFS
-json_writeJsonStmf(pRows  :
-    '/prj/noxdb/testout/resultset-object-blob.json' : 1208 : *ON
-);
 
-// Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
-json_delete(pRows);
-json_sqlDisconnect();
+// ------------------------------------------------------------------------------------
+// blobs
+// ------------------------------------------------------------------------------------
+dcl-proc blobs;
 
-// That's it..
-*inlr = *on;
+  dcl-s pRows              Pointer;
+
+  // return a object with all rows
+  pRows = json_sqlResultSet(
+    'Select * from noxdbdemo.blobs':
+    1: // Starting from row
+    JSON_ALLROWS: // Number of rows to read
+    JSON_META+JSON_FIELDS // Embed the rows array in an object and produce a metatag with column info
+  );
+
+  // Produce a JSON stream file in the root of the IFS
+  json_writeJsonStmf(pRows  :
+      '/prj/noxdb/testout/resultset-object-blob.json' : 1208 : *ON
+  );
+
+  return; // Always remeber the return - otherwise the on-exit wil not be run
+
+on-exit;
+
+  // Cleanup: Close the SQL cursor, dispose the rows, arrays etc;
+  json_delete(pRows);
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// clobs
+// ------------------------------------------------------------------------------------
+dcl-proc clobs;
+
+  dcl-s pRows              Pointer;
+
+  // return a object with all rows
+  pRows = json_sqlResultSet(
+    'Select * from noxdbdemo.clobs':
+    1: // Starting from row
+    JSON_ALLROWS: // Number of rows to read
+    JSON_META+JSON_FIELDS // Embed the rows array in an object and produce a metatag with column info
+  );
+
+  // Produce a JSON stream file in the root of the IFS
+  json_writeJsonStmf(pRows  :
+      '/prj/noxdb/testout/resultset-object-clob.json' : 1208 : *ON
+  );
+
+  return; // Always remeber the return - otherwise the on-exit wil not be run
+
+on-exit;
+
+  // Cleanup: Close the SQL cursor, dispose the rows, arrays etc;
+  json_delete(pRows);
+
+end-proc;
+
+
