@@ -727,7 +727,7 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
          sizeof (pCol->colname),
          &pCol->colnamelen, 
          &pCol->coltype, 
-         &pCol->collen, 
+         (SQLINTEGER *) &pCol->collen, 
          &pCol->scale, 
          &pCol->nullable
       );
@@ -795,7 +795,11 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
          case SQL_CLOB:
  //           pCol->collen = pCol->displaysize * 2;
  //           pCol->data = (SQLCHAR *) malloc (pCol->collen);
-            pCol->collen = 1048576;  // 1MEGABYTES
+            pCol->collen = pCol->displaysize * 2;  // minimum  1MEGABYTES
+            // NOTE min and max has odd behaviour !!
+            if (pCol->collen  < 1048576L) {
+               pCol->collen = 1048576L;
+            }
 //            pCol->data = (SQLCHAR *) malloc (pCol->collen);  // 1MEGABYTES
 //            rc = SQLBindCol (pSQL->pstmt->hstmt, i+1, SQL_C_BINARY , pCol->data, pCol->collen, &pCol->outlen);
             break;
@@ -824,6 +828,10 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    //         rc = SQLBindCol (pSQL->pstmt->hstmt, i+1, SQL_C_CHAR, pCol->data, pCol->collen, &pCol->outlen);
             break;
       }
+      if (pSQL->maxColSize < pCol->collen) {
+          pSQL->maxColSize = pCol->collen;
+      } 
+
       if (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE) {
          pCol->nodeType = JX_LITERAL;
       } else {
@@ -840,8 +848,8 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
    int i;
    PJXNODE pRow;
    SQLINTEGER buflen, datatype;
-   PUCHAR buf = memAlloc (1073741824L); // TODO - Perhaps, dynamic by row size
-
+   PUCHAR buf = memAlloc (pSQL->maxColSize); 
+ 
    if ( pSQL->rc == SQL_SUCCESS
    ||   pSQL->rc == SQL_SUCCESS_WITH_INFO ) {
       jxError = false;
@@ -851,8 +859,6 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
       for (i = 0; i < pSQL->nresultcols; i++) {
 
          PJXCOL pCol = &pSQL->cols[i];
-
-         
 
          // TODO - Work arround !!! first get the length - if null, the dont try the get data
          // If it has a pointer value, the API will fail..
@@ -868,10 +874,14 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
             case SQL_VARGRAPHIC:
                // fix !! UNICODE tends to leave uninitialized data behind
                memset( buf, '\0' , pCol->collen);
-               SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , memSize(buf), &buflen);
+               // Note: SQLCLI only supports LONG_MAX size of data to be transfered
+               // SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , memSize(buf), &buflen);
+               SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , LONG_MAX, &buflen);
                break;
             default:
-               SQLGetCol (pSQL->pstmt->hstmt, i+1, SQL_CHAR, buf , memSize(buf), &buflen);
+               // Note: SQLCLI only supports LONG_MAX size of data to be transfered
+               // SQLGetCol (pSQL->pstmt->hstmt, i+1, SQL_CHAR, buf , memSize(buf), &buflen);
+               SQLGetCol (pSQL->pstmt->hstmt, i+1, SQL_CHAR, buf , LONG_MAX, &buflen);
          }
 
 

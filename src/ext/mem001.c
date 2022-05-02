@@ -36,13 +36,13 @@ static INT64 limit   = (5.0 * 1000.0 * 1000.0);
 static BOOL  debug   = true;
 
 // -------------------------------------------------------------
-PVOID memAlloc (ULONG len)
+PVOID memAlloc (UINT64 len)
 {
-    ULONG totlen = len + sizeof(MEMHDR);
-    ULONG used;
+    UINT64 totlen = len + sizeof(MEMHDR);
+    UINT64 used;
     _C_mallinfo_t info;
     int           rc;
-    PMEMHDR mem =  _C_TS_malloc(totlen);
+    PMEMHDR mem =  _C_TS_malloc64(totlen);
 
     #ifdef MEMDEBUG
     if (debug) {
@@ -81,7 +81,7 @@ void memFree (PVOID * pp)
 {
    PUCHAR p;
    PMEMHDR mem;
-   LONG totlen;
+   UINT64 totlen;
 
    if (pp == NULL) {
       #ifdef MEMDEBUG
@@ -113,7 +113,7 @@ void memFree (PVOID * pp)
 PUCHAR memStrDup(PUCHAR s)
 {
     PUCHAR p;
-    LONG len;
+    UINT64 len;
 
     if (s == NULL) return NULL;
     len = strlen(s) + 1;  // Len including the zero term.
@@ -126,7 +126,7 @@ PUCHAR memStrTrimDup(PUCHAR s)
 {
     PUCHAR p;
     PUCHAR t;
-    LONG len = 0;
+    UINT64 len = 0;
 
     if (s == NULL) return NULL;
 
@@ -139,13 +139,14 @@ PUCHAR memStrTrimDup(PUCHAR s)
     return p;
 }
 // -------------------------------------------------------------
-PVOID memRealloc (PVOID * p, ULONG len)
+PVOID memRealloc (PVOID * p, UINT64 len)
 {
     PUCHAR oldMem = *p;
     if (oldMem)  {
        PMEMHDR mem = (PMEMHDR) (oldMem - sizeof(MEMHDR)) ;
-       LONG newSize  =  len+ sizeof(MEMHDR);
-       // PMEMHDR newMem = realloc(mem , newSize);   // Preserve space for the signature
+       UINT64 newSize  =  len+ sizeof(MEMHDR);
+       // _C_TS_realloc64 does not exists !! reacclo only work up to 2G
+       //PMEMHDR newMem =  _C_TS_realloc64(mem , newSize);   // Preserve space for the signature
        PMEMHDR newMem =  _C_TS_realloc(mem , newSize);   // Preserve space for the signature
        balance += newSize - newMem->size;
        newMem->size = newSize;
@@ -156,7 +157,7 @@ PVOID memRealloc (PVOID * p, ULONG len)
     return *p;
 }
 // -------------------------------------------------------------
-ULONG memSize (PVOID p)
+UINT64 memSize (PVOID p)
 {
    PMEMHDR mem;
 
@@ -173,7 +174,7 @@ ULONG memSize (PVOID p)
    return mem->size;
 }
 // -------------------------------------------------------------
-PVOID memShare (PUCHAR path, ULONG len)
+PVOID memShare (PUCHAR path, UINT64 len)
 {
    LONG     fd;
    LONG     result;
@@ -239,7 +240,7 @@ BOOL memLeak (void)
    return (balance != 0) ;
 }
 // -------------------------------------------------------------
-INT64 memUse (void)
+UINT64 memUse (void)
 {
    return balance;
 }

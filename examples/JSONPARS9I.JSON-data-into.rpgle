@@ -30,7 +30,7 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
     json_SetTraceProc (%paddr(myTrace));
 
     // Set the delimiters used to access the graph selector
-    json_setDelimitersByCcsid();
+    json_setDelimitersByCcsid(500);
  
     example1();
     example2();

@@ -502,11 +502,10 @@ typedef struct  {
 	 SQLSMALLINT   coltype;
 	 SQLSMALLINT   colnamelen;
 	 SQLSMALLINT   nullable;
-	 SQLINTEGER    collen;
+	 ULONG    	   collen;
 	 SQLSMALLINT   scale;
-	 SQLINTEGER    outlen;
 	 SQLCHAR *     data;
-	 SQLINTEGER    displaysize;
+	 ULONG    	   displaysize;
 	 NODETYPE      nodeType;
 	 SQLCHAR       header[128];
 	 BOOL          isId;
@@ -555,6 +554,7 @@ typedef _Packed struct  {
 // PJXNODE       pOptions;
 // BOOL          deleteOptions;
 	 PJXCOL        cols;
+	 ULONG         maxColSize;
 } JXSQL, * PJXSQL;
 
 typedef _Packed struct  {

@@ -1,11 +1,11 @@
--- Table using blob
+﻿-- Table using blob
 
 create schema noxdbdemo;
 set schema noxdbdemo;
 
-create table noxdbdemo.blobs (
+create or replace table noxdbdemo.blobs (
   id  bigint not null generated always as identity primary key,
-  myblob blob 
+  myblob blob (1G)
 );
 
 label on column noxdbdemo.blobs  (
