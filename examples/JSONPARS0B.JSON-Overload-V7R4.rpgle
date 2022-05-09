@@ -56,7 +56,7 @@ dcl-proc main;
     //json_set(pJson: 'birthDate' : d'1997-02-16');
     json_set(pJson: 'income' : 2345.67);
     json_set(pJson: 'updated' : %timestamp());
-    json_set(pJson: 'isMale' : *ON);
+    json_set(pJson: 'isMale' : 1=1);
 
     // Write to the IFS, 
     json_WriteJsonStmf(pJson:'/prj/noxdb/testout/simple0.json':1208:*OFF);

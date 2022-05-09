@@ -2530,8 +2530,8 @@ Dcl-PR xml_WriteStmf  extproc(*CWIDEN : 'jx_WriteXmlStmf');
 End-PR;
 /endif
 
-
-/if defined(JX_OVERLOAD)
+// Need Space arround the json_OVERLOAD , else the prototype generattor will not work
+/if defined( json_OVERLOAD )
 ///
 // Set value
 //
@@ -2557,7 +2557,7 @@ End-PR;
 Dcl-PR json_set pointer overload ( 
     json_setBool: 
     json_setNum : 
-    json_setInt :
+//    json_setInt :
     json_setDate:
     json_setTime:
     json_setTimeStamp:
