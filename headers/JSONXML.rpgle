@@ -2548,16 +2548,18 @@ End-PR;
 //   <li>jx_setTimestamp</li>
 //   <li>jx_setStr</li>
 // </ul>
-//
+// Note: setBool will have same signature as setStr and setInt will have same
+// signature that setNum so they are omitted for now
+//  
 // @param Node
 // @param Node path expression
 // @param New value 
 // @return Changed node
 ///
 Dcl-PR jx_set pointer overload ( 
-    jx_setBool: 
+//  jx_setBool: 
     jx_setNum : 
-//    jx_setInt :
+//  jx_setInt :
     jx_setDate:
     jx_setTime:
     jx_setTimeStamp:
