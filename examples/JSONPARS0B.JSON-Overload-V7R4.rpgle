@@ -53,13 +53,14 @@ dcl-proc main;
     // The "Set" procedure is "overloaded" to all types:
     json_set(pJson: 'name' : 'John');
     json_set(pJson: 'age' : 23);
-    //json_set(pJson: 'birthDate' : d'1997-02-16');
+    json_set(pJson: 'birthDate' : d'1997-02-16');
     json_set(pJson: 'income' : 2345.67);
     json_set(pJson: 'updated' : %timestamp());
+    json_set(pJson: 'at' : %time());
     json_set(pJson: 'isMale' : 1=1);
 
     // Write to the IFS, 
-    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/simple0.json':1208:*OFF);
+    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/overload.json':1208:*OFF);
 
     // And always remember to cleanup
     json_delete (pJson);

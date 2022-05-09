@@ -2530,7 +2530,7 @@ Dcl-PR xml_WriteStmf  extproc(*CWIDEN : 'jx_WriteXmlStmf');
 End-PR;
 /endif
 
-// Need Space arround the json_OVERLOAD , else the prototype generattor will not work
+// Need Space arround the json_OVERLOAD , else the prototype generator will not work
 /if defined( json_OVERLOAD )
 ///
 // Set value
@@ -2548,16 +2548,18 @@ End-PR;
 //   <li>jx_setTimestamp</li>
 //   <li>jx_setStr</li>
 // </ul>
-//
+// Note: setBool wil have same signature as setStr and setInt will have same
+// signature that setNum so they are omitted for now
+//  
 // @param Node
 // @param Node path expression
 // @param New value 
 // @return Changed node
 ///
 Dcl-PR json_set pointer overload ( 
-    json_setBool: 
+//  json_setBool: 
     json_setNum : 
-//    json_setInt :
+//  json_setInt :
     json_setDate:
     json_setTime:
     json_setTimeStamp:
