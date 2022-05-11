@@ -678,8 +678,9 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       if (limit > 0 && ! hasFetch && ! hasLimit) {
          sprintf (sqlTempStmt + strlen(sqlTempStmt)," limit %ld ", limit);
       }
+      // Note !! Offset is "Number if rows to skip" therefor the -1 from the "start"
       if (start > 1 && ! hasOffset) {
-         sprintf (sqlTempStmt + strlen(sqlTempStmt)," offset %ld ", start);
+         sprintf (sqlTempStmt + strlen(sqlTempStmt)," offset %ld ", start - 1);
       }
       if (pConnection->transaction == false ) {
          strcat ( sqlTempStmt , " with ur");
