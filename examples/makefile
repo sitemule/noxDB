@@ -17,6 +17,7 @@ all: compile
 compile: 
 	qsh << EOF 
 	liblist -a $(BIN_LIB)
+	system "chgatr obj('$(SRC)') atr(*ccsid) value(1252)"
 	system "crtbndrpg  pgm($(BIN_LIB)/$(OBJ)) srcstmf('$(SRC)') $(RPG_OPT)"
 	EOF
 ##system -i "$(SYSCMD)" $(FILTER1)

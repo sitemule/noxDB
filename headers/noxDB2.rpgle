@@ -285,7 +285,7 @@
           Proc           Pointer(*Proc); // Pointer to a procedure
         End-PR;
 
-        Dcl-PR nox_GetValueStr Like(UTF8) 
+        Dcl-PR nox_GetValueStr Like(UTF8) rtnparm
                               extproc(*CWIDEN : 'nox_GetNodeValueVC');
           // Pointer to node
           pNode          Pointer    value;
@@ -314,13 +314,13 @@
           Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
         End-PR;
 
-        Dcl-PR nox_GetName Like(UTF8) 
+        Dcl-PR nox_GetName Like(UTF8)  rtnparm
                           extproc(*CWIDEN : 'nox_GetNodeNameVC');
           // Pointer to node
           pNode          Pointer    value;
         End-PR;
 
-        Dcl-PR nox_GetNameAsPath Like(UTF8)
+        Dcl-PR nox_GetNameAsPath Like(UTF8) rtnparm
                                 extproc(*CWIDEN : 'nox_GetNodeNameAsPath');
           // Pointer to node
           pNode          Pointer    value;
