@@ -508,6 +508,7 @@ typedef struct  {
 	 ULONG    	   displaysize;
 	 NODETYPE      nodeType;
 	 SQLCHAR       header[128];
+	 SQLCHAR       text[128];
 	 BOOL          isId;
 } JXCOL, * PJXCOL;
 
@@ -574,14 +575,15 @@ typedef _Packed struct  {
 } JXSQLCONNECT , * PJXSQLCONNECT;
 
 typedef enum _JX_RESULTSET {
-	 JX_META       = 1,
-	 JX_FIELDS     = 2,
-	 JX_TOTALROWS  = 4,
-	 JX_UPPERCASE  = 8,
-	 JX_APROXIMATE_TOTALROWS = 16,
-	 JX_SYSTEM_NAMES = 32,
-	 JX_CAMEL_CASE = 64,
-	 JX_GRACEFUL_ERROR = 128
+	 JX_META       			= 1,
+	 JX_FIELDS     			= 2,
+	 JX_TOTALROWS  			= 4,
+	 JX_UPPERCASE  			= 8,
+	 JX_APROXIMATE_TOTALROWS= 16,
+	 JX_SYSTEM_NAMES 		= 32,
+	 JX_CAMEL_CASE 			= 64,
+	 JX_GRACEFUL_ERROR 		= 128,
+	 JX_COLUMN_TEXT   		= 256
 } JX_RESULTSET, *PJX_RESULTSET;
 
 VOID TRACE ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);

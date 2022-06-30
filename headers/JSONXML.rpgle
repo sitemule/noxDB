@@ -2023,6 +2023,12 @@ Dcl-C JX_CAMEL_CASE   const(64);
 Dcl-C JX_GRACEFUL_ERRROR   const(128); 
 
 ///
+// Result set format option to return extra column text label  
+///
+Dcl-C JX_COLUMN_TEXT   const(256); 
+
+
+///
 // SQL : Open SQL cursor
 //
 // Opens a cursor for processing the SQL data row by row.

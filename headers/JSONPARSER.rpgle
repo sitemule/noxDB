@@ -2023,6 +2023,12 @@ Dcl-C json_CAMEL_CASE   const(64);
 Dcl-C json_GRACEFUL_ERRROR   const(128); 
 
 ///
+// Result set format option to return extra column text label  
+///
+Dcl-C json_COLUMN_TEXT   const(256); 
+
+
+///
 // SQL : Open SQL cursor
 //
 // Opens a cursor for processing the SQL data row by row.
@@ -2548,7 +2554,7 @@ End-PR;
 //   <li>jx_setTimestamp</li>
 //   <li>jx_setStr</li>
 // </ul>
-// Note: setBool wil have same signature as setStr and setInt will have same
+// Note: setBool will have same signature as setStr and setInt will have same
 // signature that setNum so they are omitted for now
 //  
 // @param Node
