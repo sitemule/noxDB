@@ -26,11 +26,15 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt
 
 dcl-proc main;
 
-    // Run the examples
+    // Run the examples - resultsets
     example1();
     example2();
     example3();
     example4();
+    // Run the examples - meta data
+    example5();
+    example6();
+    example7();
 
     // Cleanup: disconnect from database
     json_sqlDisconnect();
@@ -55,7 +59,7 @@ dcl-proc example1;
 
     // Produce a JSON stream file in the IFS
     json_writeJsonStmf(pRows  :
-        '/prj/noxdb/testout/resultset-object-fields.json' : 1208 : *ON
+        '/prj/noxdb/testout/resultset-object-fields.json' : 1208 : *off
     );
 
     // Cleanup: Dispose the rows, arrays
@@ -82,7 +86,7 @@ dcl-proc example2;
 
     // Produce a JSON stream file in the IFS
     json_writeJsonStmf(pRows  :
-        '/prj/noxdb/testout/resultset-object-sysnames.json' : 1208 : *ON
+        '/prj/noxdb/testout/resultset-object-sysnames.json' : 1208 : *off
     );
 
     // Cleanup: Dispose the rows, arrays
@@ -103,13 +107,14 @@ dcl-proc example3;
         JSON_ALLROWS:       // Limit   : Number of rows to read
         JSON_META +         // Option  : Produce a result object with a "meta" object   
         JSON_FIELDS +       // Option  : The "meta" object will contain column atributes 
-        JSON_COLUMN_TEXT    // Option  : the "meta" will also contain the extra text/label info
+        JSON_COLUMN_TEXT +   // Option  : the "meta" will also contain the extra text/label info
+        JSON_CAMEL_CASE     // Option  : name of the data will be cammel cased
     );         
 
 
     // Produce a JSON stream file in the IFS
     json_writeJsonStmf(pRows  :
-        '/prj/noxdb/testout/resultset-object-column-text.json' : 1208 : *ON
+        '/prj/noxdb/testout/resultset-object-column-text.json' : 1208 : *off
     );
 
     // Cleanup: Dispose the rows, arrays
@@ -136,10 +141,80 @@ dcl-proc example4;
 
     // Produce a JSON stream file in the IFS
     json_writeJsonStmf(pRows  :
-        '/prj/noxdb/testout/resultset-object-sysnames-column-text.json' : 1208 : *ON
+        '/prj/noxdb/testout/resultset-object-sysnames-column-text.json' : 1208 : *off
     );
 
     // Cleanup: Dispose the rows, arrays
     json_delete(pRows);
+
+end-proc;
+
+
+// ------------------------------------------------------------------------------------
+// example5 - Metadata only: Meta info only
+// ------------------------------------------------------------------------------------
+dcl-proc example5;
+
+    Dcl-S pMeta              Pointer;
+
+    // return a object with all rows
+    pMeta = json_sqlGetMeta (
+        'Select * from noxdbdemo.sysnames'
+    );         
+
+    // Produce a JSON metadata file 
+    json_writeJsonStmf(pMeta  :
+        '/prj/noxdb/testout/table-metadata.json' : 1208 : *off
+    );
+
+    // Cleanup: Dispose the rows, arrays
+    json_delete(pMeta);
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// example6 - Metadata only: Meta info only + camel case
+// ------------------------------------------------------------------------------------
+dcl-proc example6;
+
+    Dcl-S pMeta              Pointer;
+
+    // return a object with all rows
+    pMeta = json_sqlGetMeta (
+        'Select * from noxdbdemo.sysnames':
+        JSON_CAMEL_CASE     // Option  : name of the data will be cammel cased
+    );         
+
+    // Produce a JSON metadata file 
+    json_writeJsonStmf(pMeta  :
+        '/prj/noxdb/testout/table-metadata-camel-case.json' : 1208 : *off
+    );
+
+    // Cleanup: Dispose the rows, arrays
+    json_delete(pMeta);
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// example7 - Metadata only: Meta tag with fields,  system names AND column text 
+// ------------------------------------------------------------------------------------
+dcl-proc example7;
+
+    Dcl-S pMeta              Pointer;
+
+    // return a object with all rows
+    pMeta = json_sqlGetMeta (
+        'Select * from noxdbdemo.sysnames':
+        JSON_SYSTEM_NAMES + // Option  : the names will be "for column" system name 
+        JSON_COLUMN_TEXT    // Option  : the "meta" will also contain the extra text/label info
+    );         
+
+    // Produce a JSON metadata file 
+    json_writeJsonStmf(pMeta  :
+        '/prj/noxdb/testout/table-metadata-sysname-text.json' : 1208 : *off
+    );
+
+    // Cleanup: Dispose the rows, arrays
+    json_delete(pMeta);
 
 end-proc;

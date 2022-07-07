@@ -719,7 +719,6 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    for (i = 0; i < pSQL->nresultcols; i++) {
 
       int labelRc; 
-      UCHAR sysColName [64];
       UCHAR colText  [128];
 
       PJXCOL pCol = &pSQL->cols[i];
@@ -737,9 +736,12 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       );
 
       pCol->colname[pCol->colnamelen] = '\0';
+      strcpy (pCol->realname , pCol->colname);
 
       if (format & (JX_SYSTEM_NAMES | JX_COLUMN_TEXT)) {
-         getSysNameForColumn ( sysColName , colText , pSQL->pstmt->hstmt , i+1);
+         getSysNameForColumn ( pCol->sysname , colText , pSQL->pstmt->hstmt , i+1);
+      } else {
+         *pCol->sysname = '\0';
       }
 
       if (format & (JX_COLUMN_TEXT)) {    
@@ -751,10 +753,9 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       // If all uppsercase ( not given name by .. AS "newName") then lowercase
       if (format & (JX_SYSTEM_NAMES)) {
          if (!(format & (JX_UPPERCASE))) {
-            str2lower  (pCol->colname , sysColName);
+            str2lower  (pCol->colname , pCol->sysname);
          }  else {
-            strcpy  (pCol->colname , sysColName);
-
+            strcpy  (pCol->colname , pCol->sysname);
          }
       } else if (format & (JX_CAMEL_CASE)) {
          camelCase(pCol->colname, pCol->colname);
@@ -1145,7 +1146,12 @@ PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
       SQLINTEGER descNo;
 
       // Add name
-      jx_NodeAdd (pField  , RL_LAST_CHILD, "name" , pCol->colname,  VALUE );
+      jx_NodeAdd (pField  , RL_LAST_CHILD, "name"     , pCol->colname,  VALUE );
+      jx_NodeAdd (pField  , RL_LAST_CHILD, "colname"  , pCol->realname, VALUE  );
+
+      if (*pCol->sysname  > ' ') {
+         jx_NodeAdd (pField, RL_LAST_CHILD, "sysname", pCol->sysname, VALUE  );
+      }
 
       // Add type
       switch( pCol->coltype) {
@@ -2101,10 +2107,12 @@ PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startP, PJXNODE pSqlParmsP , LO
 
 }
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlGetMeta (PUCHAR sqlstmt)
+PJXNODE jx_sqlGetMeta (PUCHAR sqlstmt , LONG formatP)
 {
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   LONG    format    = (pParms->OpDescList->NbrOfParms >= 2) ? formatP : 0;
    int i;
-   PJXSQL  pSQL  = jx_sqlOpen(sqlstmt , NULL, 0, NOXDB_FIRST_ROW, NOXDB_ALL_ROWS );
+   PJXSQL  pSQL  = jx_sqlOpen(sqlstmt , NULL, format, NOXDB_FIRST_ROW, NOXDB_ALL_ROWS );
    PJXNODE pMeta = jx_buildMetaFields ( pSQL );
    jx_sqlClose (&pSQL);
    return pMeta;

@@ -498,7 +498,9 @@ typedef _Packed struct  {
 } JXSQLSTMT, * PJXSQLSTMT;
 
 typedef struct  {
-	 SQLCHAR       colname[64]; // !!!! TODO !!! set len to 32!!
+	 SQLCHAR       colname  [64]; // !!!! TODO !!! set len to 32!!
+	 SQLCHAR       sysname  [13]; 
+	 SQLCHAR       realname [64]; 
 	 SQLSMALLINT   coltype;
 	 SQLSMALLINT   colnamelen;
 	 SQLSMALLINT   nullable;
@@ -615,7 +617,7 @@ PJXNODE jx_sqlFetchNext (PJXSQL pSQL);
 
 void jx_sqlClose (PJXSQL * ppSQL);
 void jx_sqlKeepConnection (BOOL keep);
-PJXNODE jx_sqlGetMeta (PUCHAR sqlstmt);
+PJXNODE jx_sqlGetMeta (PUCHAR sqlstmt, LONG formatP);
 
 
 LGL    jx_sqlExec (PUCHAR sqlstmt , PJXNODE pSqlParms  );

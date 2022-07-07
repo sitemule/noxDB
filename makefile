@@ -101,10 +101,12 @@ clean:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/XMLPARS*) OBJTYPE(*PGM)"
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/JSONPARS*) OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/JXTEST*) OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/JSONSQL*) OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/HTTPX*) OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/ISSUE*) OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/JXTEST*) 	 OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/JSONSQL*)  OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/HTTPX*)    OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/ISSUE*)    OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/EVFEVENT)  OBJTYPE(*file)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/RELEASE)   OBJTYPE(*file)"
 
 	
 release: clean
