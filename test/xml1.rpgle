@@ -1,5 +1,5 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
 
         /include 'headers/XMLPARSER.rpgle'
 
@@ -34,7 +34,7 @@
            enddo;
         endif;
 
-        xml_Close(pXml);
+        xml_delete(pXml);
 
         pResult = Result;
 

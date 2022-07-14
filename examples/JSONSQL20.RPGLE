@@ -1,14 +1,14 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 <<<<<<< HEAD
 
         /include 'headers/JSONPARSER.rpgle'
 =======
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
 >>>>>>> 29b6dd90e3b0e98eb4661a4449c52f995845c4a1
         Dcl-S err          Ind;
         Dcl-S priceJsStr   Varchar(256);

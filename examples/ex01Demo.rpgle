@@ -14,7 +14,7 @@
         // call 
         // ------------------------------------------------------------- 
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE'); //  CCSID(*EXACT) ; // CCSID(*CHAR:*JOBRUN) ; // CCSID(*CHAR:*UTF8);
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE'); //  CCSID(*EXACT) ; // CCSID(*CHAR:*JOBRUN) ; // CCSID(*CHAR:*UTF8);
 
 
         //------------------------------------------------------------- *

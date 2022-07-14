@@ -476,7 +476,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 
 			// Null data is the same for all types
 			if (buflen  ==  SQL_NULL_DATA) {
-				nox_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , NULL,  NOX_LITERAL );
+				nox_NodeInsert (pRow , RL_LAST_CHILD, pCol->colname , NULL,  NOX_LITERAL );
 			} else {
 
 				buf[buflen] = '\0';
@@ -502,7 +502,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 						OutLen = XlateXdBuf  (pSQL->pCon->pCd, temp , pInBuf, inbytesleft);
 						temp[OutLen] = '\0';
 
-						nox_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , temp,  pCol->nodeType );
+						nox_NodeInsert (pRow , RL_LAST_CHILD, pCol->colname , temp,  pCol->nodeType );
 
 						break;
 					}
@@ -531,7 +531,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 
 						} 
 
-						nox_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
+						nox_NodeInsert (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
 						break ;
 					}
 
@@ -552,13 +552,13 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 							PNOXNODE pNode = nox_ParseString(p);
 							if (pNode) {
 								nox_NodeRename(pNode, pCol->colname);
-								nox_NodeAddChildTail (pRow, pNode);
+								nox_NodeInsertChildTail (pRow, pNode);
 								break;
 							}
 							}
 						}
 
-						nox_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
+						nox_NodeInsert (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
 						break;
 					}
 				}
@@ -710,7 +710,7 @@ PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
 		SQLINTEGER descNo;
 
 		// Add name
-		nox_NodeAdd (pField  , RL_LAST_CHILD, "name" , pCol->colname,  VALUE );
+		nox_NodeInsert (pField  , RL_LAST_CHILD, "name" , pCol->colname,  VALUE );
 
 		// Add type
 		switch( pCol->coltype) {
@@ -739,23 +739,23 @@ PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
 				}
 			}
 		}
-		nox_NodeAdd (pField  , RL_LAST_CHILD, "datatype" , type,  VALUE );
+		nox_NodeInsert (pField  , RL_LAST_CHILD, "datatype" , type,  VALUE );
 
 		asprintf(temp , "%d" ,  pCol->coltype);
-		nox_NodeAdd (pField  , RL_LAST_CHILD, "sqltype" , temp ,  LITERAL);
+		nox_NodeInsert (pField  , RL_LAST_CHILD, "sqltype" , temp ,  LITERAL);
 
 		// Add size
 		asprintf(temp , "%d" , pCol->displaysize);
-		nox_NodeAdd (pField  , RL_LAST_CHILD, "size"     , temp,  LITERAL  );
+		nox_NodeInsert (pField  , RL_LAST_CHILD, "size"     , temp,  LITERAL  );
 
 		// Add decimal precission
 		if  (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE
 		&&   pCol->scale > 0) {
 			asprintf(temp , "%d" , pCol->scale);
-			nox_NodeAdd (pField  , RL_LAST_CHILD, "prec"     , temp,  LITERAL  );
+			nox_NodeInsert (pField  , RL_LAST_CHILD, "prec"     , temp,  LITERAL  );
 		}
 
-		nox_NodeAdd (pField  , RL_LAST_CHILD, "header" , pCol->header, VALUE  );
+		nox_NodeInsert (pField  , RL_LAST_CHILD, "header" , pCol->header, VALUE  );
 
 		// Push to array
 		nox_ArrayPush (pFields , pField, FALSE);

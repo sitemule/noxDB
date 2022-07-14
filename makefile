@@ -76,7 +76,7 @@ all:  $(BIN_LIB).lib hdr $(EXTERNALS) $(SOURCE) noxdb2.srvpgm noxdb2.bnddir rele
 $(EXTERNALS) $(SOURCE): FORCE
 	$(CC)
 
-noxdb2.srvpgm: hdr src/noxDB2.c src/sqlio.c src/csv.c src/xmlparser.c src/jsonparser.c src/serializer.c src/reader.c src/iterator.c src/http.c src/generic.c src/trace.clle ext/src/memUtil.c ext/src/parms.c ext/src/sndpgmmsg.c ext/src/stream.c ext/src/timestamp.c ext/src/trycatch.c ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c 
+noxdb2.srvpgm: hdr src/noxDB2.c src/sqlio.c src/csv.c src/xmlparser.c src/jsonparser.c src/jsonserial.c src/xmlserial.c src/reader.c src/iterator.c src/http.c src/generic.c src/trace.clle ext/src/memUtil.c ext/src/parms.c ext/src/sndpgmmsg.c ext/src/stream.c ext/src/timestamp.c ext/src/trycatch.c ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c 
 	@# You may be wondering what this ugly string is. It's a list of objects created from the dep list that end with .c or .clle.
 	$(eval MODULES = $(notdir $(basename $(filter %.c %.clle , $^))))
 	compile.py --stmf="src/$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" \
@@ -113,7 +113,7 @@ release: cleanup
 	@echo " -- Creating noxdb2 release. --"
 	@echo " -- Creating save file. --"
 	system "CRTSAVF FILE($(BIN_LIB)/RELEASE)"
-	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) OMITOBJ((RELEASE *FILE))"
+	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) DTACPR(*HIGH) OMITOBJ((RELEASE *FILE))"
 	-rm -r release
 	-mkdir release
 	system "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release-noxDB2.savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"

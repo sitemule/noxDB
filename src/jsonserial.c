@@ -206,7 +206,7 @@ void  nox_AsJsonStream (PNOXNODE pNode, PSTREAM pStream)
 }
 #pragma convert(0)
 // ----------------------------------------------------------------------------
-static LONG nox_memWriter  (PSTREAM p , PUCHAR buf , ULONG len)
+LONG nox_memWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 {
 	PJWRITE pjWrite = p->handle;
 	ULONG newLen =  pjWrite->bufLen + len;
@@ -244,7 +244,7 @@ static LONG nox_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 }
 */
 // ----------------------------------------------------------------------------
-static LONG nox_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
+LONG nox_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 {
 	PJWRITE pjWrite = p->handle;
 	LONG rc = fwrite (buf, 1, len , pjWrite->outFile);

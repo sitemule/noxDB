@@ -8,7 +8,7 @@
  * NL     02.06.03 0000000 New program                           *
  * NL     27.02.08 0000510 Allow also no namespace for *:tag     *
  * NL     27.02.08 0000510 nox_NodeCopy                           *
- * NL     13.05.08 0000577 nox_NodeAdd / WriteNote                *
+ * NL     13.05.08 0000577 nox_NodeInsert / WriteNote                *
  * NL     13.05.08 0000577 Support for refference location       *
  * ------------------------------------------------------------- */
 #include <stdio.h>
@@ -144,6 +144,13 @@ void nox_AppendName (PNOXCOM pJxCom)
 		}
 	} else {
 
+		if (pJxCom->pNodeWorkRoot == NULL 
+		|| pJxCom->pNodeWorkRoot->Name == NULL) {
+			nox_SetMessage( "No end for start tag <%s> at (%d:%d)" ,
+				pJxCom->pName , pJxCom->LineCount, pJxCom->ColCount);
+			pJxCom->State = XML_EXIT_ERROR;
+			return;
+		} 
 		if (stricmp(pJxCom->pName , pJxCom->pNodeWorkRoot->Name) != 0) {
 			nox_SetMessage( "Invalid end tag </%s> for start tag <%s> at (%d:%d)" ,
 				pJxCom->pName , pJxCom->pNodeWorkRoot->Name, pJxCom->LineCount, pJxCom->ColCount);
@@ -405,76 +412,4 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 				return true;
 		}
 	}
-}
-// ---------------------------------------------------------------------------
-void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int CcsidP, LGL trimOutP , PNOXNODE optionsP)
-{
-	FILE * f;
-	iconv_t Iconv;
-	UCHAR mode[32];
-	PUCHAR enc;
-	PUCHAR sig;
-	UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
-	UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PUCHAR  value;
-	PUCHAR  dft;
-	VARCHAR res;
-
-	int      Ccsid   = pParms->OpDescList->NbrOfParms >= 3 ? CcsidP : 1208; 
-	LGL      trimOut = pParms->OpDescList->NbrOfParms >= 4 ? trimOutP: ON; 
-	PNOXNODE options = pParms->OpDescList->NbrOfParms >= 5 ? optionsP : NULL;
-	
-
-	if (pNode == NULL) return;
-
-	if (pNode->pNodeParent == NULL
-	&&  pNode->Name       == NULL) {
-		if (pNode->pNodeChildHead != NULL) {
-			// TODO!! This root Nodeens empty in some case; the first child is actually the root
-			pNode = pNode->pNodeChildHead;
-		}
-	}
-	if (pNode == NULL) return;
-
-	// TODO!! need unlink to replace !!
-	sprintf(mode , "wb,codepage=%d", Ccsid);
-	f = fopen ( strTrim(FileName) , mode );
-	if (f == NULL) return;
-
-	Iconv = XlateOpen (1208 , Ccsid );
-
-	#pragma convert(1252)
-	switch(Ccsid) {
-		case 1252 :
-			enc = "WINDOWS-1252";
-			sig = "";
-			break;
-		case 1208 :
-			enc = "UTF-8";
-			sig = sigUtf8;
-			break;
-		case 1200 :
-			enc = "UTF-16";
-			sig = sigUtf16;
-			break;
-		case 819  :
-			enc = "ISO-8859-1";
-			sig = "";
-			break;
-		default   :
-			enc = "windows-1252";
-			sig = "";
-	}
-
-	fputs (sig , f);
-	fputs ("<?xml version=\"1.0\" encoding=\"", f);
-	fputs (enc, f);
-	fputs ("\" ?>", f);
-
-
-	#pragma convert(0)
-	nox_WriteXmlStmfNodeList (f , &Iconv , pNode);
-	fclose(f);
-	iconv_close(Iconv);
 }

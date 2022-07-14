@@ -3,7 +3,7 @@
       //  addlible noxdb2
       //  cd  '/prj/noxdb2'   
       //  CRTBNDRPG PGM(NOXDB2/JSONSQL1) SRCSTMF('/prj/noxdb2/test/jsonsql1.rpgle') dbgview(*ALL)  
-      Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+      Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
 
       /include 'headers/JSONPARSER.rpgle'
 

@@ -56,7 +56,7 @@
      14         // call                                                                                                      000014
      15         // -------------------------------------------------------------                                             000015
      16                                                                                                                      000016
-     17         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');                                                       000017
+     17         Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');                                                       000017
      18                                                                                                                      000018
      19         //------------------------------------------------------------- *                                            000019
      20                                                                                                                      000020
@@ -76,7 +76,7 @@
      25+        // Use the NOXDB binddir when creating your program and include this                                        1000004
      26+        // prototypes like:                                                                                         1000005
      27+                                                                                                                    1000006
-     28+        //     Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');                                               1000007
+     28+        //     Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');                                               1000007
   5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/EX01DEMO          DKSRV133   28-11-18 18:24:37        Page      3
  Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
  Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number

@@ -1,5 +1,5 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
 
         /include 'headers/XMLPARSER.rpgle'
 
@@ -30,7 +30,7 @@
         pXml = xml_ParseFile('./test/documents/manifest.xml');
         if Xml_Error(pXml) ;
            pResult = xml_Message(pXml);
-           xml_Close(pXml);
+           xml_delete(pXml);
            return;
         endif;
 
@@ -40,7 +40,7 @@
         if (pVisit =  *NULL);
            // If we did not found the "visit" element we die - remember to close the xml to avoid a leak
            pResult = 'null';
-           xml_Close(pXml);
+           xml_delete(pXml);
            return;
         endif;
 

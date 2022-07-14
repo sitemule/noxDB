@@ -69,6 +69,11 @@ a \
 #pragma convert(0)
 
 
+typedef enum {
+	NOX_FORMAT_DEFAULT     = 0,
+	NOX_FORMAT_CDATA       = 1
+} FORMAT_OPTION , *PFORMAT_OPTION;
+
 #define ATTRSIG 0x03
 typedef struct _NOXATTR {
 	UCHAR  signature; // always hex 03
@@ -129,6 +134,7 @@ typedef struct _NOXNODE {
 	LONG     lineNo;
 	BOOL     isLiteral;
 	SHORT    ccsid;
+	FORMAT_OPTION options;
 } NOXNODE, *PNOXNODE;
 
 typedef struct _NOXSEGMENT {
@@ -217,6 +223,7 @@ typedef _Packed struct  _JWRITE      {
 	ULONG   bufLen;
 	ULONG   maxSize;
 	BOOL    wasHere;
+	PUCHAR  scratchPad;
 } JWRITE, * PJWRITE;
 
 typedef _Packed struct  _NOXITERATOR {
@@ -290,10 +297,10 @@ void nox_SetMessage (PUCHAR Ctlstr , ... );
 void nox_NodeFreeNodeOnly(PNOXNODE pNode);
 
 // Prototypes  - main  - exports
-void nox_NodeAddChildHead( PNOXNODE pRoot, PNOXNODE pChild);
-void nox_NodeAddChildTail( PNOXNODE pRoot, PNOXNODE pChild);
-void nox_NodeAddSiblingBefore( PNOXNODE pRef, PNOXNODE pSibling);
-void nox_NodeAddSiblingAfter( PNOXNODE pRef, PNOXNODE pSibling);
+void nox_NodeInsertChildHead( PNOXNODE pRoot, PNOXNODE pChild);
+void nox_NodeInsertChildTail( PNOXNODE pRoot, PNOXNODE pChild);
+void nox_NodeInsertSiblingBefore( PNOXNODE pRef, PNOXNODE pSibling);
+void nox_NodeInsertSiblingAfter( PNOXNODE pRef, PNOXNODE pSibling);
 
 LGL nox_ParseStmfFile (PNOXNODE  * ppRoot , PUCHAR FileName , PUCHAR Mode);
 #pragma descriptor ( void nox_ParseStmfFile                     (void))
@@ -374,7 +381,7 @@ PNOXNODE  nox_GetNodeChildNo (PNOXNODE pNode, int childNo);
 PNOXNODE  nox_GetNodeNext (PNOXNODE pNode);
 PNOXNODE  nox_GetNodeParent  (PNOXNODE pNode);
 PNOXATTR nox_AttributeLookup   (PNOXNODE pNode, PUCHAR Name);
-PNOXATTR nox_NodeAddAttributeValue  (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Value);
+PNOXATTR nox_NodeInsertAttributeValue  (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Value);
 PNOXNODE  nox_GetNodeByName   (PNOXNODE pNode, PUCHAR Ctlstr , ... );
 
 PUCHAR   nox_GetNodeValuePtr (PNOXNODE pNode, PUCHAR DefaultValue);
@@ -390,7 +397,7 @@ FIXEDDEC nox_GetNodeValueNum (PNOXNODE pNode , FIXEDDEC DefaultValue);
 PUCHAR   nox_GetNodeNamePtr  (PNOXNODE pNode);
 void    nox_GetNodeNameVC   (PLVARCHAR name, PNOXNODE pNode);
 
-PNOXNODE  nox_NodeAdd (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type) ;
+PNOXNODE  nox_NodeInsert (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type) ;
 void     nox_NodeSet (PNOXNODE pNode , PUCHAR Value);
 void     nox_NodeDelete(PNOXNODE pRoot);
 void     nox_NodeReplace (PNOXNODE  pDest, PNOXNODE pSource);

@@ -2,7 +2,7 @@
 
 BIN_LIB=NOXDB2
 # NOTE - UTF is not allowed for ILE source (yet) - so convert to WIN-1252
-RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb2')
+RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb2') OPTION(*NOXREF *NOSHOWCPY *NODEBUGIO *NOUNREF *EVENTF *NOEXT *NOEXPDDS)
 FILTER2=| grep '*RNF' | grep -v '*RNF7031' | grep -v '*RNF5409' | sed  "s!*!$(SRC): &!"
 FILTER1=> /prj/noxdb2/examples/error.txt  
 SYSCMD=execlist cmd(\

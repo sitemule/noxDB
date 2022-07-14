@@ -1,5 +1,5 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
 
         /include 'headers/JSONPARSER.rpgle'
 
@@ -24,10 +24,10 @@
         // Note : pB is now dangerling since it is a empty object
         // atfer the move it is allone in the world,
         // So we need to delete it by hand
-        json_close(pB);
+        json_delete(pB);
 
         pResult = json_asJsonText(pObj);
-        json_close(pObj);
+        json_delete(pObj);
 
         *Inlr = *on;
         return;
