@@ -223,7 +223,7 @@ typedef _Packed struct  _JWRITE      {
 	ULONG   bufLen;
 	ULONG   maxSize;
 	BOOL    wasHere;
-	PUCHAR  scratchPad;
+	PVOID   scratchPad; // Pointer to any user data
 } JWRITE, * PJWRITE;
 
 typedef _Packed struct  _NOXITERATOR {

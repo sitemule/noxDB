@@ -56,78 +56,20 @@ static void deleteWriter (PJWRITE  pjWrite)
 	free(pjWrite);
 }
 /* ---------------------------------------------------------------------------
-   Write using the stream system to disk
-   --------------------------------------------------------------------------- */
-void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options)
-{
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PSTREAM pStream;
-	PJWRITE pjWrite;
-	UCHAR   mode[32];
-   PUCHAR  enc; 
-
-	if (pNode == NULL) return;
-
-	pjWrite = newWriter();
-	pStream = stream_new (4096);
-	pStream->writer = nox_fileWriter;
-
-	sprintf(mode , "wb,o_ccsid=%d", Ccsid);
-	unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
-	pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
-	if (pjWrite->outFile == NULL) {
-		deleteWriter(pjWrite);
-		return;
-	}
-
-
-
-	pStream->handle = pjWrite;
-
-	pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
-	pjWrite->iconv  = XlateOpen(1208 , Ccsid );
-
-   #pragma convert(1252)
-   switch(Ccsid) {
-     case 1252 :
-       enc = "WINDOWS-1252";
-       break;
-     case 1208 :
-       enc = "UTF-8";
-       break;
-     case 1200 :
-       enc = "UTF-16";
-       break;
-     case 819  :
-       enc = "ISO-8859-1";
-       break;
-     default   :
-       enc = "windows-1252";
-   }
-
-   stream_puts (pStream , "<?xml version=\"1.0\" encoding=\"");
-   stream_puts (pStream , enc);
-   stream_puts (pStream ,"\" ?>");
-
-   #pragma convert(0)
-
-	xmlStream ( pNode,pStream, FALSE , 0);
-
-
-	stream_delete (pStream);
-	fclose(pjWrite->outFile);
-	iconv_close(pjWrite->iconv);
-	deleteWriter(pjWrite);
-}   
-/* ---------------------------------------------------------------------------
    Put newline and tabs accoringly to the indention level
    --------------------------------------------------------------------------- */
-static tab(	PSTREAM pStream , SHORT cdatamode, SHORT level)
+static void indentXml (	PSTREAM pStream , SHORT cdatamode, SHORT level)
 {
    PJWRITE pjWrite = (PJWRITE) pStream->handle;
-	if (! pjWrite->doTrim && ! cdatamode && level > 0) {
-      stream_putc (pStream,0x0d);
-      stream_putc (pStream,0x0a);
+	if (! pjWrite->doTrim && ! cdatamode) {
+
+  	   if(!pjWrite->wasHere) {
+	      pjWrite->wasHere = true;
+	   } else {
+         stream_putc (pStream,0x0d);
+         stream_putc (pStream,0x0a);
+   	}
+    
       while (level-- > 0) {
          stream_putc (pStream,0x09);
       } 
@@ -160,7 +102,6 @@ void putEscape (PSTREAM pStream , PUCHAR str , BOOL doEscape)
    Stream out the XML
    --------------------------------------------------------------------------- */
 #pragma convert(1252)
-
 static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT level)
 {
    PNOXNODE    pNodeTemp, pNodeNext;
@@ -169,8 +110,6 @@ static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT 
    PUCHAR     CdataBegin = "";
    PUCHAR     CdataEnd   = "";
    BOOL       doEscape;
-
-   
 
    // Recurse if we are the annonumus root
    if (pNode 
@@ -183,10 +122,11 @@ static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT 
       return;
    }
 
+   // Iterate through each sibling
    while (pNode) {
 
       if (pNode->Comment) {
-         tab ( pStream, cdatamode , level);
+         indentXml ( pStream, cdatamode , level);
          stream_puts (pStream , "<!--");
          stream_puts (pStream , pNode->Comment);
          stream_puts (pStream , "-->");
@@ -206,13 +146,13 @@ static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT 
          cdatamode = level;
       }
   
-      tab ( pStream, cdatamode , level);
+      indentXml ( pStream, cdatamode , level);
       stream_puts (pStream , "<");
       stream_puts (pStream , pNode->Name );
       
       for (pAttrTemp = pNode->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
          if (pNode->newlineInAttrList) {
-            tab ( pStream, cdatamode , level);
+            indentXml ( pStream, cdatamode , level);
          }
          stream_puts (pStream , " "); // TODO - only next time
          stream_puts (pStream , pAttrTemp->Name);
@@ -243,12 +183,12 @@ static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT 
 
       if (shortform) {
          if (pNode->newlineInAttrList) {
-            tab ( pStream, cdatamode , level);
+            indentXml ( pStream, cdatamode , level);
          }
          stream_puts (pStream , "/>");
       } else {
          if (pNode->pNodeChildHead) {
-            tab ( pStream, cdatamode , level);
+            indentXml ( pStream, cdatamode , level);
          }
 
          stream_puts (pStream , CdataEnd);
@@ -267,12 +207,17 @@ static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT 
    }
 
 }
-
-VOID nox_AsXmlText (PLVARCHAR res , PNOXNODE pNode)
+#pragma convert(0)
+// ----------------------------------------------------------------------------
+static void  xmlStreamRunner   (PSTREAM pStream)
 {
-	res->Length = nox_AsXmlTextMem (pNode , res->String, MEMMAX);
+	PNOXNODE  pNode = pStream->context;
+   xmlStream (pNode , pStream , FALSE , 0);
 }
 
+/* ---------------------------------------------------------------------------
+   exported function 
+   --------------------------------------------------------------------------- */
 LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -304,3 +249,89 @@ LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
 	return  len;
 
 }
+// ---------------------------------------------------------------------------
+VOID nox_AsXmlText (PLVARCHAR res , PNOXNODE pNode)
+{
+	res->Length = nox_AsXmlTextMem (pNode , res->String, MEMMAX);
+}
+// ----------------------------------------------------------------------------
+PSTREAM nox_StreamXml  (PNOXNODE pNode)
+{
+	PSTREAM  pStream;
+	LONG     len;
+	JWRITE   jWrite;
+	PJWRITE  pjWrite = &jWrite;
+	memset(pjWrite , 0 , sizeof(jWrite));
+
+	pStream = stream_new (4096);
+	pStream->handle  = pjWrite;
+	pjWrite->doTrim  = true;
+	pjWrite->maxSize = MEMMAX;
+	pStream->runner  = xmlStreamRunner;
+	pStream->context = pNode;
+	return  pStream;
+}
+
+/* ---------------------------------------------------------------------------
+   Write using the stream system to disk
+   --------------------------------------------------------------------------- */
+void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options)
+{
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PSTREAM pStream;
+	PJWRITE pjWrite;
+	UCHAR   mode[32];
+   PUCHAR  enc; 
+
+	if (pNode == NULL) return;
+
+	pjWrite = newWriter();
+	pStream = stream_new (4096);
+	pStream->writer = nox_fileWriter;
+
+	sprintf(mode , "wb,o_ccsid=%d", Ccsid);
+	unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
+	pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
+	if (pjWrite->outFile == NULL) {
+		deleteWriter(pjWrite);
+		return;
+	}
+
+	pStream->handle = pjWrite;
+
+	pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
+	pjWrite->iconv  = XlateOpen(1208 , Ccsid );
+
+   #pragma convert(1252)
+   switch(Ccsid) {
+     case 1252 :
+       enc = "WINDOWS-1252";
+       break;
+     case 1208 :
+       enc = "UTF-8";
+       break;
+     case 1200 :
+       enc = "UTF-16";
+       break;
+     case 819  :
+       enc = "ISO-8859-1";
+       break;
+     default   :
+       enc = "windows-1252";
+   }
+
+   stream_puts (pStream , "<?xml version=\"1.0\" encoding=\"");
+   stream_puts (pStream , enc);
+   stream_puts (pStream ,"\" ?>");
+   indentXml      (pStream , 0, 0);
+
+   #pragma convert(0)
+
+	xmlStream ( pNode, pStream, FALSE , 0);
+
+	stream_delete (pStream);
+	fclose(pjWrite->outFile);
+	iconv_close(pjWrite->iconv);
+	deleteWriter(pjWrite);
+}   
+

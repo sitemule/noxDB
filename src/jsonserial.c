@@ -288,7 +288,7 @@ static void  nox_AsJsonStreamRunner   (PSTREAM pStream)
 	nox_AsJsonStream (pNode , pStream);
 }
 // ----------------------------------------------------------------------------
-PSTREAM nox_Stream  (PNOXNODE pNode)
+PSTREAM nox_StreamJson  (PNOXNODE pNode)
 {
 	PSTREAM  pStream;
 	LONG     len;

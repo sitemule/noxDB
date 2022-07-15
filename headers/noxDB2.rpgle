@@ -656,7 +656,13 @@
         End-PR;
 
         // Return a streamer object to be used in own serialisers 
-        Dcl-PR nox_Stream pointer extproc(*CWIDEN : 'nox_Stream');
+        Dcl-PR nox_StreamJson pointer extproc(*CWIDEN : 'nox_StreamJson');
+          // node. Retrive from Locate()
+          pNode          Pointer    value;
+        End-PR;
+
+        // Return a streamer object to be used in own serialisers 
+        Dcl-PR nox_StreamXml pointer extproc(*CWIDEN : 'nox_StreamXml');
           // node. Retrive from Locate()
           pNode          Pointer    value;
         End-PR;
