@@ -1,6 +1,6 @@
 Command is > CRTCMOD SRCSTMF('src/csv.c') MODULE(NOXDB2/csv) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) DBGVIEW(*ALL) TGTRLS(V7R1M0) OPTION(*EVENTF) OUTPUT(*PRINT) INCDIR('/QIBM/include' 'include' 'ext/include')  <
-CZS0607: Module CSV was created in library NOXDB2 on 15-07-22 at 16:12:17.
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    15-07-22 16:12:17 Page           1
+CZS0607: Module CSV was created in library NOXDB2 on 19-07-22 at 10:41:05.
+5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    19-07-22 10:41:05 Page           1
                                                 * * * * *   P R O L O G   * * * * *
  Module  . . . . . . . . . . . . :   CSV
    Library . . . . . . . . . . . :      NOXDB2
@@ -47,7 +47,7 @@ CZS0607: Module CSV was created in library NOXDB2 on 15-07-22 at 16:12:17.
  Include directory . . . . . . . :   /QIBM/include
                                      include
                                      ext/include
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    15-07-22 16:12:17 Page           2
+5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    19-07-22 10:41:05 Page           2
  Pack structure  . . . . . . . . :   *NATURAL
  Enum size . . . . . . . . . . . :   *INT
  Dependency information  . . . . :   *NONE
@@ -56,11 +56,11 @@ CZS0607: Module CSV was created in library NOXDB2 on 15-07-22 at 16:12:17.
  Licensed internal code options  :   *BLANK
  Target CCSID  . . . . . . . . . :   *SOURCE
  Decimal float round mode  . . . :   *HALFEVEN
- Last change . . . . . . . . . . :   14-07-22 17:51:17
+ Last change . . . . . . . . . . :   19-07-22 10:17:33
  Source description  . . . . . . :
  Compiler  . . . . . . . . . . . :   IBM ILE C compiler
                                          * * * * *   E N D   O F   P R O L O G   * * * * *
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    15-07-22 16:12:17 Page           3
+5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    19-07-22 10:41:05 Page           3
                                                 * * * * *   S O U R C E   * * * * *
  LINE  STMT                                                                                                       SEQNBR INCNO
              *...+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9........
@@ -107,7 +107,7 @@ CZS0607: Module CSV was created in library NOXDB2 on 15-07-22 at 16:12:17.
    41     1 | for(;*in; in++) {                                                                                |     41
    42     2 |  *out++ = (*in == '.') ? decpoint: *in;                                                          |     42
    43       | }                                                                                                |     43
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    15-07-22 16:12:17 Page           4
+5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    19-07-22 10:41:05 Page           4
    44     3 | *out = '\0';                                                                                     |     44
    45       |}                                                                                                 |     45
    46       |// ---------------------------------------------------------------------------                    |     46
@@ -154,7 +154,7 @@ CZS0607: Module CSV was created in library NOXDB2 on 15-07-22 at 16:12:17.
    86    28 |  if (pOptions != options) nox_Close(&pOptions); // It was already a josn object , then don't clo\|     86
    86       |se                                                                                                |     86
    87       | }                                                                                                |     87
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    15-07-22 16:12:17 Page           5
+5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    19-07-22 10:41:05 Page           5
    88       |                                                                                                  |     88
    89    30 | pjWrite->buf    = wTemp;                                                                         |     89
    90    31 | pjWrite->iconv  = XlateOpen(1208 , Ccsid );                                                      |     90
@@ -201,7 +201,7 @@ CZS0607: Module CSV was created in library NOXDB2 on 15-07-22 at 16:12:17.
   131    56 |      csvReplaceDecpoint (temp , pCol->Value , decpoint);                                         |    131
   132    57 |      iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);                                 |    132
   133       |     }                                                                                            |    133
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    15-07-22 16:12:17 Page           6
+5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    19-07-22 10:41:05 Page           6
   134       |    } else {                                                                                      |    134
   135    58 |     csvStringEscape (temp , pCol->Value);                                                        |    135
   136    59 |     iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);                                  |    136
@@ -219,8 +219,15 @@ CZS0607: Module CSV was created in library NOXDB2 on 15-07-22 at 16:12:17.
   148    65 | fclose(pjWrite->outFile);                                                                        |    148
   149    66 | iconv_close(pjWrite->iconv);                                                                     |    149
   150       |}                                                                                                 |    150
+  151       |                                                                                                  |    151
+  152       |void  csvStreamRunner   (PSTREAM pStream)                                                         |    152
+  153       |{                                                                                                 |    153
+  154     1 | PNOXNODE  pNode = pStream->context;                                                              |    154
+  155       |    // csvStream (pNode , pStream , FALSE , 0);                                                   |    155
+  156       |}                                                                                                 |    156
+  157       |                                                                                                  |    157
                                          * * * * *   E N D   O F   S O U R C E   * * * * *
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    15-07-22 16:12:17 Page           7
+5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    19-07-22 10:41:05 Page           7
                                               * * * * *   I N C L U D E S   * * * * *
 INCNBR  Include Name                     Last change        Actual Include Name
     1   stdio.h                          04-10-15 09:42:48  /QIBM/include/stdio.h
@@ -255,7 +262,7 @@ INCNBR  Include Name                     Last change        Actual Include Name
    30   strUtil.h                        22-01-19 13:07:41  /prj/noxDB2/ext/include/strUtil.h
    31   memUtil.h                        21-11-18 22:42:38  /prj/noxDB2/ext/include/memUtil.h
    32   streamer.h                       12-11-18 18:09:21  /prj/noxDB2/ext/include/streamer.h
-   33   noxdb2.h                         15-07-22 15:48:34  /prj/noxDB2/include/noxdb2.h
+   33   noxdb2.h                         19-07-22 10:17:06  /prj/noxDB2/include/noxdb2.h
    34   sqlcli.h                         04-10-15 09:42:26  /QIBM/include/sqlcli.h
    35   sql.h                            20-11-15 13:00:45  /QIBM/include/sql.h
    36   sqlsystm.h                       04-10-15 09:42:08  /QIBM/include/sqlsystm.h
@@ -263,10 +270,10 @@ INCNBR  Include Name                     Last change        Actual Include Name
    38   math.h                           04-10-15 09:42:22  /QIBM/include/math.h
    39   apierr.h                         12-11-18 18:09:21  /prj/noxDB2/ext/include/apierr.h
                                       * * * * *   E N D   O F   I N C L U D E S   * * * * *
-5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    15-07-22 16:12:17 Page           8
+5770WDS V7R3M0  160422   IBM ILE C compiler      csv.c                              DKSRV133    19-07-22 10:41:05 Page           8
                                        * * * * *   M E S S A G E   S U M M A R Y   * * * * *
       Total      Informational(00)      Warning(10)      Error(20)      Severe Error(30)      Unrecoverable Error(40)
         0              0                    0               0                  0                        0
                                * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
-Module CSV was created in library NOXDB2 on 15-07-22 at 16:12:17.
+Module CSV was created in library NOXDB2 on 19-07-22 at 10:41:05.
                                    * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *

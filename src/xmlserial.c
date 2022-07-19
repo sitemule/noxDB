@@ -33,7 +33,6 @@
 
 static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT level);
 LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP);
-LONG nox_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len);
 
 
 /* ---------------------------------------------------------------------------
@@ -209,7 +208,7 @@ static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT 
 }
 #pragma convert(0)
 // ----------------------------------------------------------------------------
-static void  xmlStreamRunner   (PSTREAM pStream)
+void  xmlStreamRunner   (PSTREAM pStream)
 {
 	PNOXNODE  pNode = pStream->context;
    xmlStream (pNode , pStream , FALSE , 0);
@@ -254,24 +253,6 @@ VOID nox_AsXmlText (PLVARCHAR res , PNOXNODE pNode)
 {
 	res->Length = nox_AsXmlTextMem (pNode , res->String, MEMMAX);
 }
-// ----------------------------------------------------------------------------
-PSTREAM nox_StreamXml  (PNOXNODE pNode)
-{
-	PSTREAM  pStream;
-	LONG     len;
-	JWRITE   jWrite;
-	PJWRITE  pjWrite = &jWrite;
-	memset(pjWrite , 0 , sizeof(jWrite));
-
-	pStream = stream_new (4096);
-	pStream->handle  = pjWrite;
-	pjWrite->doTrim  = true;
-	pjWrite->maxSize = MEMMAX;
-	pStream->runner  = xmlStreamRunner;
-	pStream->context = pNode;
-	return  pStream;
-}
-
 /* ---------------------------------------------------------------------------
    Write using the stream system to disk
    --------------------------------------------------------------------------- */

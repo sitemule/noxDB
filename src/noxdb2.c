@@ -3289,4 +3289,9 @@ INT64 nox_MemUse(VOID)
 {
 	return memUse();
 }
+// ---------------------------------------------------------------------------
+// Empty placeholder for the export vector in the binder source;
+// Please replace with your code anytime 
+// ---------------------------------------------------------------------------
+void dummy001 (VOID) {}
 

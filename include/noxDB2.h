@@ -74,6 +74,13 @@ typedef enum {
 	NOX_FORMAT_CDATA       = 1
 } FORMAT_OPTION , *PFORMAT_OPTION;
 
+typedef enum {
+	NOX_STREAM_JSON     = 0,
+	NOX_STREAM_XML      = 1,
+	NOX_STREAM_CSV      = 2
+} STREAM_OPTION , *PSTREAM_OPTION;
+
+
 #define ATTRSIG 0x03
 typedef struct _NOXATTR {
 	UCHAR  signature; // always hex 03
@@ -254,6 +261,17 @@ void nox_AsJsonTextList (PNOXNODE pNode, PJWRITE pJwrite);
 void nox_AsJsonStream (PNOXNODE pNode, PSTREAM pStream);
 LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP);
 #pragma descriptor ( void nox_AsJsonTextMem                     (void))
+
+
+LONG nox_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len);
+LONG nox_memWriter   (PSTREAM p , PUCHAR buf , ULONG len);
+
+
+void  csvStreamRunner   (PSTREAM pStream);
+void  xmlStreamRunner   (PSTREAM pStream);
+void  jsonStreamRunner   (PSTREAM pStream);
+
+
 
 LONG nox_fileWriter  (PSTREAM pStream , PUCHAR buf , ULONG len);
 LONG nox_memWriter  (PSTREAM pStream, PUCHAR buf , ULONG len);

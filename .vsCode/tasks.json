@@ -48,6 +48,18 @@
             ]
         },
         {
+            "label": "Build release",
+            "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake release'",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
             "label": "Compile Test modules for noxDB",
             "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/test/;gmake'",
             "type": "shell",
@@ -67,7 +79,25 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": []
+            "problemMatcher": {
+                "owner": "c",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+
+                "pattern": {
+                    "regexp": "^(.*):(.*):(.*):(.*):(.*):(.*)$",
+                    "code" : 1,
+                    "message": 2,
+                    "line": 3,
+                    "column": 4,
+                    "severity": 5,
+                    "file": 6
+
+                }
+            }
+
         },
         {
             "label": "Compile current test file",

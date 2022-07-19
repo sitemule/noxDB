@@ -655,17 +655,23 @@
           pBuffer        Pointer    value;
         End-PR;
 
-        // Return a streamer object to be used in own serialisers 
-        Dcl-PR xml_StreamJson pointer extproc(*CWIDEN : 'nox_StreamJson');
-          // node. Retrive from Locate()
-          pNode          Pointer    value;
-        End-PR;
+
+        ///
+        // Stream format options 
+        ///
+        Dcl-C XML_STREAM_JSON const(0);
+        Dcl-C XML_STREAM_XML  const(1);
+        Dcl-C XML_STREAM_CSV  const(2);
+
+
 
         // Return a streamer object to be used in own serialisers 
-        Dcl-PR xml_StreamXml pointer extproc(*CWIDEN : 'nox_StreamXml');
+        Dcl-PR xml_Stream pointer extproc(*CWIDEN : 'nox_Stream');
           // node. Retrive from Locate()
           pNode          Pointer    value;
+          format         int(10)    value; 
         End-PR;
+
 
         // **  CSV  renderes ***
         Dcl-PR xml_WriteCsvStmf  extproc(*CWIDEN : 'nox_WriteCsvStmf');

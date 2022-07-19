@@ -148,3 +148,10 @@ void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
 	fclose(pjWrite->outFile);
 	iconv_close(pjWrite->iconv);
 }
+
+void  csvStreamRunner   (PSTREAM pStream)
+{
+	PNOXNODE  pNode = pStream->context;
+    // csvStream (pNode , pStream , FALSE , 0);
+}
+
