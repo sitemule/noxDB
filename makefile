@@ -101,19 +101,20 @@ clean:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/XMLPARS*) OBJTYPE(*PGM)"
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/JSONPARS*) OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/JXTEST*) OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/JSONSQL*) OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/HTTPX*) OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/ISSUE*) OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/JXTEST*) 	 OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/JSONSQL*)  OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/HTTPX*)    OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/ISSUE*)    OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/EVFEVENT)  OBJTYPE(*file)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/RELEASE)   OBJTYPE(*file)"
 
 	
 release: clean
 	@echo " -- Creating noxdb release. --"
 	@echo " -- Creating save file. --"
 	system "CRTSAVF FILE($(BIN_LIB)/RELEASE)"
-	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) OMITOBJ((RELEASE *FILE))"
-	-rm -r release
-	-mkdir release
+	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) DTACPR(*HIGH) OMITOBJ((RELEASE *FILE))"
+	-mkdir -p release
 	system "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release.savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"
 	@echo " -- Cleaning up... --"
 	system "DLTOBJ OBJ($(BIN_LIB)/RELEASE) OBJTYPE(*FILE)"

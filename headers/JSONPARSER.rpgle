@@ -686,7 +686,7 @@ End-PR;
 // @return Procedure pointer of the data-gen generator function
 //
 // @info The noxDB object tree returned by this procedure through the output
-//       parameter needs to be freed by calling <em>jx_close(node)</em> by the
+//       parameter needs to be freed by calling <em>jx_delete(node)</em> by the
 //       user of this function.
 ///
 Dcl-PR json_dataGen pointer(*proc) extproc(*CWIDEN : 'jx_dataGen');
@@ -1044,7 +1044,7 @@ Dcl-C json_AFTER_SIBLING const(4);
 // @return Clone of the passed node
 //
 // @info The caller of this procedure needs to take care of freeing the resources 
-//       of the returned noxDB object tree by calling <em>jx_close(node)</em>.
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
 ///
 Dcl-PR json_nodeClone pointer extproc(*CWIDEN : 'jx_NodeClone');
   node pointer value;
@@ -1145,7 +1145,7 @@ End-PR;
 // @return New object tree or new node if the destination is passed
 //
 // @info The caller of this procedure needs to take care of freeing the resources 
-//       of the returned noxDB object tree by calling <em>jx_close(node)</em>.
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
 ///
 Dcl-PR json_newObject pointer extproc(*CWIDEN : 'jx_NewObject');
   destination pointer value options(*nopass);
@@ -1160,7 +1160,7 @@ End-PR;
 // @return New array or new node if the destination is passed
 //
 // @info The caller of this procedure needs to take care of freeing the resources 
-//       of the returned noxDB object tree by calling <em>jx_close(node)</em>.
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
 ///
 Dcl-PR json_newArray pointer extproc(*CWIDEN : 'jx_NewArray');
   node pointer value options(*nopass);
@@ -2023,6 +2023,12 @@ Dcl-C json_CAMEL_CASE   const(64);
 Dcl-C json_GRACEFUL_ERRROR   const(128); 
 
 ///
+// Result set format option to return extra column text label  
+///
+Dcl-C json_COLUMN_TEXT   const(256); 
+
+
+///
 // SQL : Open SQL cursor
 //
 // Opens a cursor for processing the SQL data row by row.
@@ -2134,7 +2140,7 @@ End-PR;
 // @return noxDB object tree with output parameters
 //
 // @info The caller of this procedure needs to take care of freeing the resources
-//       of the returned noxDB object tree by calling <em>jx_close(node)</em>.
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
 ///
 Dcl-PR json_sqlCall pointer extproc(*CWIDEN : 'jx_sqlCall');
   procedureName pointer value options(*string);
@@ -2164,7 +2170,7 @@ End-PR;
 // @return <code>*on</code> if an error occured else <code>*off</code>
 //
 // @info The caller of this procedure needs to take care of freeing the resources
-//       of the returned noxDB object tree by calling <em>jx_close(node)</em>.
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
 ///
 Dcl-PR json_sqlCallNode ind extproc(*CWIDEN : 'jx_sqlCallNode');
   procedureName pointer value options(*string);
@@ -2260,17 +2266,19 @@ End-PR;
 //  <li>datatype : SQL datatype name (like int, varchar, timestamp)</li>
 //  <li>sqltype : SQL datatype id (like 4 for int)</li>
 //  <li>size : max. number of characters (not bytes)</li>
-//  <li>header : column label</li>
+//  <li>header : column label (column header)</li>
+//  <li>text   : column text label. If'text' is set in format option </li>
 // </ul>
 //
 // @param SQL SELECT statement with the columns to be queried
 // @return Object tree (array) with column meta data
 //
 // @info The caller of this procedure needs to take care of freeing the resources
-//       of the returned noxDB object tree by calling <em>jx_close(node)</em>.
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
 ///
 Dcl-PR json_sqlGetMeta pointer extproc(*CWIDEN : 'jx_sqlGetMeta');
   statement pointer value options(*string);
+  formatOptions int(10) value options(*nopass);
 End-PR;
 
 ///
