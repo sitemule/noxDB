@@ -2560,7 +2560,8 @@ SHORT  doInsertOrUpdate(
          // Blob's need binary data - !!TODO check all binary types.
          if (pColData->isUTF8) {
             fCType = SQL_UTF8_CHAR;
-         }  else if (pColData->coltype == SQL_BLOB ) {
+         }  else if (pColData->coltype == SQL_BLOB) { 
+         //|| pColData->coltype == SQL_CLOB ) {
             fCType = SQL_C_BINARY;
          } else {
             fCType = SQL_C_CHAR;

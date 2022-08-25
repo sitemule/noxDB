@@ -2548,7 +2548,7 @@ End-PR;
 //   <li>jx_setTimestamp</li>
 //   <li>jx_setStr</li>
 // </ul>
-// Note: setBool wil have same signature as setStr and setInt will have same
+// Note: setBool will have same signature as setStr and setInt will have same
 // signature that setNum so they are omitted for now
 //  
 // @param Node
