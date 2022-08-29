@@ -30,7 +30,7 @@ Dcl-S sqlcode             Packed(10:0);
    // return one object with one row
    sql   = ('-
       Select *                  -
-      from icproduct              -
+      from noxdbdemo.icproduct              -
       where prodKey = -12       -
       fetch first 1 row only    -
    ');
@@ -44,7 +44,7 @@ Dcl-S sqlcode             Packed(10:0);
    // return one object with one row
    sql   = ('-
       Select *                  -
-      from icproduct              -
+      from noxdbdemo.icproduct              -
       where prodKey = 100       -
       fetch first 1 row only    -
    ');

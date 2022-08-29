@@ -28,7 +28,7 @@
         // return one object with one row
           sql   = ('-
                Select *                  -
-                     from icproduct              -
+                     from noxdbdemo.icproduct              -
                      where prodKey = $prodKey  -
                      fetch first 1 row only    -
                   ');

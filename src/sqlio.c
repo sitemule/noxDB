@@ -663,6 +663,14 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       BOOL hasLimit  ;
       BOOL hasOffset ;
       BOOL hasFetch  ;
+      PUCHAR end; 
+
+      // Before we begin adding to the statement  - ensure is does not end with a ; 
+      for (end = sqlTempStmt + strlen(sqlTempStmt) -1  ; end > sqlTempStmt; end--) {
+         if (*end == ';') *end = ' ';
+         if (*end > ' ') break;
+      }
+
       if (compilereg) {
          int rc;
          ULONG options =  REG_NOSUB + REG_EXTENDED + REG_ICASE;

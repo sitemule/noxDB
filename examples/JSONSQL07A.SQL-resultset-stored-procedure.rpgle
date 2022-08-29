@@ -16,7 +16,7 @@
    //  A: Bind you program with "NOXDB" Bind directory
    //  B: Include the noxDB prototypes from QRPGLEREF member NOXDB
    
-   // Run the SQL script icproduct.sql and icproduce_procedure.sql 
+   // Run the SQL script noxdbdemo.icproduct.sql and icproduce_procedure.sql 
    // from the examples/sql in ACS before,
    // to have some test data
 

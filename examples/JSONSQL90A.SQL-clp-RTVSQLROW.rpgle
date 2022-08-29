@@ -28,7 +28,7 @@ Pgm ()
 
    rtvSqlRow  sqlcmd('-
         Select PRODID, DESC       -
-        from icproduct              -
+        from noxdbdemo.icproduct              -
         where prodKey = 100       -
         fetch first 1 row only    -
    ') found(&found)   -

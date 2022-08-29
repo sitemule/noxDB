@@ -30,7 +30,7 @@ Dcl-S limit                  Int(10:0);
 
 
    // return a object with all rows
-   sql   = 'Select * from icproduct';
+   sql   = 'Select * from noxdbdemo.icproduct';
    start = 1;
    limit = 10; // Give me the 10 first rows
 
@@ -41,7 +41,7 @@ Dcl-S limit                  Int(10:0);
    );
 
    // Produce an other result set - like a selected dropdownbox
-   sql   = 'Select * from icproduct where prodkey  = 160';
+   sql   = 'Select * from noxdbdemo.icproduct where prodkey  = 160';
    pSelected = json_sqlResultRow(sql);
    json_MoveObjectInto (pResult : 'selected' : pSelected);
 
