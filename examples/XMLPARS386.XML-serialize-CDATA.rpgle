@@ -3,8 +3,8 @@
    Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
    /include qrpgleRef,noxdb
 
-   // Set the delimiters used to access the graph selector
-   // xml_setDelimiters ('/\@[] .{}''"$');
+   // Always set your ccsid for constants: 
+   xml_setDelimitersByCcsid(500);
 
    test1();
    test2();

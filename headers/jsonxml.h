@@ -34,6 +34,11 @@ typedef enum {
 	JX_FORMAT_CDATA       = 1
 } FORMAT_OPTION , *PFORMAT_OPTION;
 
+typedef enum {
+	ESCAPE_ENCODE_XML = 0,
+	ESCAPE_ENCODE_JSON = 1
+} ESCAPE_ENCODE , *PESCAPE_ENCODE;
+
 
 #define ATTRSIG 0x03
 typedef struct _XMLATTR {
@@ -334,7 +339,7 @@ SHORT jx_GetNodeType (PJXNODE pNode);
 VARCHAR jx_GetNodeNameAsPath (PJXNODE pNode, UCHAR Delimiter);
 #pragma descriptor ( void jx_GetNodeNameAsPath                 (void))
 
-void jx_CopyValueByNameVC (PVARCHAR pRes, PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Default , BOOL joinString);
+void jx_CopyValueByNameVC (PVARCHAR pRes, PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Default , BOOL joinString , PUCHAR delimiter);
 #pragma descriptor ( void  jx_CopyValueByNameVC                (void))
 
 void jx_WriteXmlStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , PJXNODE options);

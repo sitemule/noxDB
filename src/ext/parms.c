@@ -101,38 +101,7 @@ BOOL RtvXlateTbl  (PUCHAR e2a , PUCHAR a2e , int AsciiCcsid, int EbcdicCcsid)
   }
   return (cd.return_value == -1);
 }
-/* ------------------------------------------------------------- */
-iconv_t OpenXlate (int FromCcsid, int ToCcsid)
-{
 
-   QtqCode_T * tocode;
-   QtqCode_T * fromcode;
-   QtqCode_T fromccsid;
-   QtqCode_T toccsid;
-   iconv_t cd;
-   int i;
-
-   memset(&toccsid , 0, sizeof(toccsid));
-   toccsid.CCSID = ToCcsid;
-   toccsid.cnv_alternative = 0;
-   toccsid.subs_alternative = 0 ;
-   toccsid.shift_alternative = 0;
-   toccsid.length_option = 0;
-   toccsid.mx_error_option = 0;
-
-   memset(&fromccsid , 0, sizeof(fromccsid));
-   fromccsid.CCSID = FromCcsid;
-   fromccsid.cnv_alternative = 0;
-   fromccsid.subs_alternative = 0;
-   fromccsid.shift_alternative = 0;
-   fromccsid.length_option = 0;
-   fromccsid.mx_error_option = 0;
-
-   tocode = &toccsid;
-   fromcode = &fromccsid;
-   cd = QtqIconvOpen( tocode, fromcode);
-   return cd;
-}
 /* ------------------------------------------------------------- */
 #ifdef TESTMAIN
 void main(void) {

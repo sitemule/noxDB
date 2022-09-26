@@ -9,6 +9,7 @@ typedef _Packed struct _XLATEDESC   {
    int     ToCCSID;
 } XLATEDESC , * PXLATEDESC;
 PXLATEDESC XlateXdOpen ( int FromCCSID, int ToCCSID);
+PXLATEDESC XlateXdOpenStrict ( int FromCCSID, int ToCCSID, int reportError);
 ULONG      XlateXdBuf(PXLATEDESC xd , PUCHAR OutBuf, PUCHAR InBuf , ULONG Len);
 VARCHAR    XlateXdStr(PXLATEDESC xd , PVARCHAR InBuf);
 LONG       XlateXdSprintf (PXLATEDESC pxd, PUCHAR out , PUCHAR Ctlstr,...);
@@ -17,4 +18,9 @@ ULONG      XlateBuf(PUCHAR OutBuf, PUCHAR InBuf , ULONG Len, int FromCCSID, int 
 VARCHAR    XlateStr (PVARCHAR In ,  int FromCCSID, int ToCCSID);
 PUCHAR     Xlatestr (PUCHAR out, PUCHAR in , int FromCCSID, int ToCCSID);
 PUCHAR     XlateFromAnyAscii2ebcdic (PUCHAR outStr, PUCHAR inStr);
+iconv_t    OpenXlateDescriptor (int FromCcsid, int ToCcsid, int reportError);
+iconv_t    OpenXlate (int FromCcsid, int ToCcsid);
+LONG       XlateUtf8ToSbcs (PUCHAR outBuf , PUCHAR inBuf , LONG inBufLen , int toCcsid);
+
+
 #endif

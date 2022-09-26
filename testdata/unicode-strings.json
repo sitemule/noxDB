@@ -1,4 +1,5 @@
-﻿{ 
-  "a": "A valid unicode µ string",
-  "b": "An invalid unicode \u2318 string",
-  "c": "Escaped \\ string \"  data "}
+﻿{
+	"a":"A native unicode µ string",
+	"b":"A not native unicode АБВГДЕ string",
+	"c":"Escaped: Backslash \\ newline \n double quote  \"  will be stored in their hex value"
+}

@@ -858,12 +858,14 @@ End-PR;
 // @param Node
 // @param Node path expression to the array node (default: current node)
 // @param Default value
+// @param Delimiter variable length string 
 // @return String with all values from the array nodes
 ///
 Dcl-PR jx_getStrJoin varchar(32767) extproc(*CWIDEN : 'jx_GetStrJoinVC');
   node pointer value;
   nodePath pointer value options(*string : *nopass);
   defaultValue pointer value options(*string : *nopass);
+  delimiter pointer value options(*string : *nopass);
 End-PR;
 
 /// 
