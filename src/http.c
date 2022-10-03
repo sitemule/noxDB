@@ -84,7 +84,7 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options , PUCHAR forma
 
    // Need a runtime version of the @ char
    #pragma convert(1252)
-	XlateBuf(&at  , "@" , 1, 1252 ,0 ); ;
+	XlateBufferQ(&at  , "@" , 1, 1252 ,0 ); ;
 	#pragma convert(0)
 
 

@@ -313,7 +313,7 @@ PJWRITE jx_newWriter ()
 	PJWRITE pjWrite = malloc (sizeof(JWRITE)); 
 	memset(pjWrite , 0 , sizeof(JWRITE) - sizeof(pjWrite->filler));
 	#pragma convert(1252)
-	XlateBuf(&pjWrite->braBeg , "[]{}\\\"" , 6, 1252 ,0 ); ;
+	XlateBufferQ(&pjWrite->braBeg , "[]{}\\\"" , 6, 1252 ,0 ); ;
 	#pragma convert(0)
 	return pjWrite; 
 }
@@ -358,7 +358,7 @@ void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, P
 	pStream->handle = pjWrite;
 
 	pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
-	pjWrite->iconv  = OpenXlate(OutputCcsid , Ccsid );
+	pjWrite->iconv  = XlateOpenDescriptor(OutputCcsid , Ccsid , false);
 
 	if (makeBomCode) {
 		switch(Ccsid) {
@@ -374,7 +374,7 @@ void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, P
 	// Any ascii will use basic ascii chars for building the document
 	if (Ccsid = 1208 || Ccsid== 1252) {
 		#pragma convert(1252)
-		XlateBuf(&pjWrite->braBeg , "[]{}\\\"" , 6, 1252 ,0 ); ;
+		XlateBufferQ(&pjWrite->braBeg , "[]{}\\\"" , 6, 1252 ,0 ); ;
 		#pragma convert(0)
 	}
 

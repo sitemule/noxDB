@@ -43,8 +43,8 @@ extern iconv_t xlate1208toE;
 void ensureOpenXlate(void) {
    static BOOL isOpen = false;
    if (isOpen) return;
-   xlateEto1208 = OpenXlate(0, 1208);
-   xlate1208toE = OpenXlate(1208, 0);
+   xlateEto1208 = XlateOpenDescriptor(0   , 1208, false);
+   xlate1208toE = XlateOpenDescriptor(1208, 0   , false);
    isOpen = true;
 }
 
@@ -284,7 +284,7 @@ UCHAR unicode2ebcdic (USHORT c)
    static iconv_t ic;
    // if  (ic.cd  == NULL) ic = OpenXlate (13488, 0);
    if (doOpen) {
-      ic = OpenXlate (1200  , 0 );
+      ic = XlateOpenDescriptor (1200  , 0 , false);
       doOpen = FALSE;
    }
    outbytesleft = 1  ;

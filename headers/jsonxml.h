@@ -571,7 +571,7 @@ typedef _Packed struct  {
 	 PJXNODE       pOptions;
 	 BOOL          pOptionsCleanup;
 	 SQLOPTIONS    options;
-	 PXLATEDESC    pCd;
+	 iconv_t       pCd;
 	 UCHAR         sqlState[5];
 	 LONG          sqlCode;
 	 UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];

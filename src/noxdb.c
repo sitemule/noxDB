@@ -660,7 +660,7 @@ void jx_WriteCsvStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJ
    }
 
    pjWrite->buf    = wTemp;
-   pjWrite->iconv  = OpenXlate(OutputCcsid , Ccsid );
+   pjWrite->iconv  = XlateOpenDescriptor(OutputCcsid , Ccsid , false);
 
    switch(Ccsid) {
      case 1208 :
@@ -1150,7 +1150,7 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
   pJxCom->UseIconv = (InputCcsid != OutputCcsid);
 
   if ( pJxCom->UseIconv) {
-    pJxCom->Iconv = OpenXlateDescriptor (InputCcsid  , OutputCcsid, 1);
+    pJxCom->Iconv = XlateOpenDescriptor (InputCcsid  , OutputCcsid, 1);
   }
 
   // printf("\n iccs: %d, occs: 5d\n ", InputCcsid  , OutputCcsid);
@@ -1781,10 +1781,10 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
          templen = XlateUtf8ToSbcs (temp , Buf , inlen , 0);
       } else if (pJxCom->LittleEndian) {
          swapEndian(Buf , inlen);
-         templen  = XlateBuf(temp , Buf , inlen , InputCcsid , 0);
+         templen  = XlateBufferQ(temp , Buf , inlen , InputCcsid , 0);
          swapEndian(Buf , inlen);
       } else {
-         templen  = XlateBuf(temp , Buf , inlen , InputCcsid , 0);
+         templen  = XlateBufferQ(temp , Buf , inlen , InputCcsid , 0);
       }
       pJxCom->pStreamBuf = temp;
       pJxCom->pStreamBuf [templen] = '\0';

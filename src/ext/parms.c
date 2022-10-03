@@ -4,13 +4,13 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#include <limits.h>
 #include <qwcrsval.h>
 #include <qlgrtvdc.h>
-#include <iconv.h>
-#include <QTQICONV.h>
 #include <ctype.h>
 #include "ostypes.h"
 #include "apierr.h"
+#include "xlate.h"
 #include "rtvsysval.h"
 
 /* ------------------------------------------------------------- */
@@ -24,6 +24,8 @@ int RtvDftCCSID (void)
    return ccsid;
 }
 /* ------------------------------------------------------------- */
+/* Not used; but can be put into to the debug flow               */
+/* ------------------------------------------------------------- */
 BOOL ChkUniqueTbl(PUCHAR tbl)
 {
    int i, j;
@@ -36,71 +38,7 @@ BOOL ChkUniqueTbl(PUCHAR tbl)
    }
    return TRUE;
 }
-/* ------------------------------------------------------------- */
-BOOL RtvXlateTbl  (PUCHAR e2a , PUCHAR a2e , int AsciiCcsid, int EbcdicCcsid)
-{
-
-   PUCHAR pe2a = e2a;
-   PUCHAR pa2e = a2e;
-   QtqCode_T * tocode;
-   QtqCode_T * fromcode;
-   QtqCode_T ascii;
-   QtqCode_T ebcdic;
-   UCHAR  tbl[256];
-   PUCHAR ptbl;
-   iconv_t cd;
-   int i;
-   size_t inbytesleft, outbytesleft;
-
-   for (i=0;i<256;i++) {
-      tbl[i] = i;
-   }
-   memset(&ebcdic , 0, sizeof(ebcdic));
-   ebcdic.CCSID = EbcdicCcsid;
-   ebcdic.cnv_alternative = 0 ;
-   ebcdic.subs_alternative = 0 ;
-   ebcdic.shift_alternative = 0;
-   ebcdic.length_option = 0;
-   ebcdic.mx_error_option = 0;
-
-   memset(&ascii , 0, sizeof(ascii));
-   ascii.CCSID = AsciiCcsid;
-   ascii.cnv_alternative = 0;
-   ascii.subs_alternative = 0;
-   ascii.shift_alternative = 0;
-   ascii.length_option = 0;
-   ascii.mx_error_option = 0;
-
-   inbytesleft = 256;
-   outbytesleft = 256;
-   fromcode = &ebcdic;
-   tocode = &ascii;
-   ptbl = tbl;
-   cd = QtqIconvOpen( tocode, fromcode);
-   iconv (cd, &ptbl, &inbytesleft, &pe2a, &outbytesleft);
-   iconv_close (cd);
-
-   if (ChkUniqueTbl(e2a)) {
-      for(i=0;i<256; i++) {
-         a2e[e2a[i]] = i;
-      }
-   } else {
-     inbytesleft = 256;
-     outbytesleft = 256;
-     fromcode = &ascii;
-     tocode =  &ebcdic;
-     ptbl = tbl;
-     cd = QtqIconvOpen( tocode, fromcode);
-     iconv (cd, &ptbl, &inbytesleft, &pa2e, &outbytesleft);
-     iconv_close (cd);
-     if (ChkUniqueTbl(a2e)) {
-        for(i=0;i<256; i++) {
-           e2a[a2e[i]] = i;
-        }
-     }
-  }
-  return (cd.return_value == -1);
-}
+ 
 
 /* ------------------------------------------------------------- */
 #ifdef TESTMAIN
@@ -130,16 +68,16 @@ void main(void) {
   printf("\n%s%s", RtvSysVal(buf, "QDAYOFWEEK" ),  RtvSysVal(buf, "QDAYOFWEEK" ));
   printf("\nDefault CCSID: %ld" , RtvDftCCSID());
   printf("\n");
-  RtvXlateTbl  (e2a , a2e , 1252 , 277);
+  XlateGetStaticConversionTables  (e2a , a2e , 1252 , 277);
   printf (ChkUniqueTbl(e2a) ? "\nUnique" : "\nNot Unique");
   printf (ChkUniqueTbl(a2e) ? "\nUnique" : "\nNot Unique");
-  RtvXlateTbl  (e2a , a2e , 1252 , 1252);
+  XlateGetStaticConversionTables  (e2a , a2e , 1252 , 1252);
   printf (ChkUniqueTbl(e2a) ? "\nUnique" : "\nNot Unique");
   printf (ChkUniqueTbl(a2e) ? "\nUnique" : "\nNot Unique");
-  RtvXlateTbl  (e2a , a2e , 1252 , 37);
+  XlateGetStaticConversionTables  (e2a , a2e , 1252 , 37);
   printf (ChkUniqueTbl(e2a) ? "\nUnique" : "\nNot Unique");
   printf (ChkUniqueTbl(a2e) ? "\nUnique" : "\nNot Unique");
-  RtvXlateTbl  (e2a , a2e , 1252 , 850);
+  XlateGetStaticConversionTables  (e2a , a2e , 1252 , 850);
   printf (ChkUniqueTbl(e2a) ? "\nUnique" : "\nNot Unique");
   printf (ChkUniqueTbl(a2e) ? "\nUnique" : "\nNot Unique");
   */

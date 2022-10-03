@@ -181,7 +181,7 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
    pConnection = memAlloc(sizeof(JXSQLCONNECT));
    memset(pConnection , 0 , sizeof(JXSQLCONNECT));
    pConnection->sqlTrace.handle = -1;
-   pConnection->pCd = XlateXdOpen (13488, 0);
+   pConnection->pCd = XlateOpenDescriptor (13488, 0, false);
    po = &pConnection->options;
    po->upperCaseColName = OFF;
    po->autoParseContent = ON;
@@ -934,7 +934,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
                         if ( * (PSHORT) (pInBuf + inbytesleft - 2) > 0x0020) break;
                      }
                   }
-                  OutLen = XlateXdBuf  (pConnection->pCd, temp , pInBuf, inbytesleft);
+                  OutLen = XlateBuffer  (pConnection->pCd, temp , pInBuf, inbytesleft);
                   temp[OutLen] = '\0';
 
                   jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , temp,  pCol->nodeType );
@@ -1099,7 +1099,7 @@ void jx_sqlDisconnect (void)
 
    if (pConnection == NULL) return;
 
-   XlateXdClose(pConnection->pCd) ;
+   iconv_close (pConnection->pCd) ;
 
    if (pConnection->sqlTrace.handle != -1) {
       rc = SQLFreeHandle (SQL_HANDLE_STMT, pConnection->sqlTrace.handle);
@@ -2420,7 +2420,7 @@ PUCHAR convertAndUnescapeUTF8 ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
 
    // first convert from job to UTF-8
    valout = memAlloc ( (*plbytes) * 4);
-   newLen =  XlateBuf(valout, value , *plbytes, FromCCSID, ToCCSID);
+   newLen =  XlateBufferQ(valout, value , *plbytes, FromCCSID, ToCCSID);
    valout[newLen] = '\0'; // Use it as as zero term string later in this logic
    
    if (*pfreeme) {
@@ -2435,7 +2435,7 @@ PUCHAR convertAndUnescapeUTF8 ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
       if (*pIn == '\\' && *(pIn+1) == 'u') {
          UCHAR temp [4];
          ULONG skip;
-         skip = XlateBuf(pOut, asciihex2BinMem (temp , pIn+2 , 2)  , 2 , 1200 , 1208);
+         skip = XlateBufferQ(pOut, asciihex2BinMem (temp , pIn+2 , 2)  , 2 , 1200 , 1208);
          pIn += 6; // skip the \uFFFF sequence
          pOut += skip;
       } else {
