@@ -1,7 +1,7 @@
         // ------------------------------------------------------------------------- 
         // noxDB samples - Handeling of Dangling  pointers to Dangling  objects
         // ------------------------------------------------------------------------- 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
 
         /include 'headers/JSONPARSER.rpgle'
 

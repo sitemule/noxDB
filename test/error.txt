@@ -1,0 +1,135 @@
+RNS9304: Program XML6 placed in library NOXDB2. 00 highest severity. Created on 14-07-22 at 10:57:17.
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/XML6              DKSRV133   14-07-22 10:57:16        Page      1
+  Command  . . . . . . . . . . . . :   CRTBNDRPG
+    Issued by  . . . . . . . . . . :     NLI
+  Program  . . . . . . . . . . . . :   XML6
+    Library  . . . . . . . . . . . :     NOXDB2
+  Text 'description' . . . . . . . :   *SRCMBRTXT
+  Source stream file   . . . . . . :   xml6.rpgle
+    CCSID  . . . . . . . . . . . . :     500
+  Text 'description' . . . . . . . :
+  Last Change  . . . . . . . . . . :   14-07-22  10:56:50
+  Generation severity level  . . . :   10
+  Default activation group . . . . :   *YES
+  Compiler options . . . . . . . . :   *NOXREF    *GEN       *NOSECLVL  *NOSHOWCPY
+                                       *NOEXPDDS  *NOEXT     *NOSHOWSKP *NOSRCSTMT
+                                       *NODEBUGIO *NOUNREF   *EVENTF
+  Debugging views  . . . . . . . . :   *LIST
+  Debug encryption key . . . . . . :   *NONE
+  Output . . . . . . . . . . . . . :   *PRINT
+  Optimization level . . . . . . . :   *NONE
+  Source listing indentation . . . :   *NONE
+  Type conversion options  . . . . :   *NONE
+  Sort sequence  . . . . . . . . . :   *HEX
+  Language identifier  . . . . . . :   *JOBRUN
+  Replace program  . . . . . . . . :   *YES
+  User profile . . . . . . . . . . :   *USER
+  Authority  . . . . . . . . . . . :   *LIBCRTAUT
+  Truncate numeric . . . . . . . . :   *YES
+  Fix numeric  . . . . . . . . . . :   *NONE
+  Target release . . . . . . . . . :   *CURRENT
+  Allow null values  . . . . . . . :   *NO
+  Define condition names . . . . . :   *NONE
+  Enable performance collection  . :   *PEP
+  Profiling data . . . . . . . . . :   *NOCOL
+  Licensed Internal Code options . :
+  Generate program interface . . . :   *NO
+  Include directory  . . . . . . . :   ./..
+                                   :   /prj/noxdb2
+  Preprocessor options . . . . . . :   *NONE
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/XML6              DKSRV133   14-07-22 10:57:16        Page      2
+Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+                          S o u r c e   L i s t i n g
+     1 **free                                                                                                               000001
+     2 Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' ) main(main);                                                  000002
+     3                                                                                                                      000003
+     4 /include 'headers/noxDb2.rpgle'                                                                                      000004
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+            LINES EXCLUDED: 0
+        *--------------------------------------------------------------------*
+        * Compiler Options in Effect:                                        *
+        *--------------------------------------------------------------------*
+        *  Text 'description' . . . . . . . :                                *
+        *  Generation severity level  . . . :   10                           *
+        *  Default activation group . . . . :   *NO                          *
+        *  Compiler options . . . . . . . . :   *NOXREF    *GEN              *
+        *                                       *NOSECLVL  *NOSHOWCPY        *
+        *                                       *NOEXPDDS  *NOEXT            *
+        *                                       *NOSHOWSKP *NOSRCSTMT        *
+        *                                       *NODEBUGIO *NOUNREF          *
+        *                                       *EVENTF                      *
+        *  Optimization level . . . . . . . :   *NONE                        *
+        *  Source listing indentation . . . :   *NONE                        *
+        *  Type conversion options  . . . . :   *NONE                        *
+        *  Sort sequence  . . . . . . . . . :   *HEX                         *
+        *  Language identifier  . . . . . . :   *JOBRUN                      *
+        *  User profile . . . . . . . . . . :   *USER                        *
+        *  Authority  . . . . . . . . . . . :   *LIBCRTAUT                   *
+        *  Truncate numeric . . . . . . . . :   *YES                         *
+        *  Fix numeric  . . . . . . . . . . :   *NONE                        *
+        *  Allow null values  . . . . . . . :   *NO                          *
+        *  Storage model . . .  . . . . . . :   *SNGLVL                      *
+        *  Binding directory from Command . :   *NONE                        *
+        *  Binding directory from Source  . :   NOXDB2                       *
+        *    Library  . . . . . . . . . . . :     *LIBL                      *
+        *  Activation group . . . . . . . . :   QILE                         *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/XML6              DKSRV133   14-07-22 10:57:16        Page      3
+Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+        *  Enable performance collection  . :   *PEP                         *
+        *  Profiling data . . . . . . . . . :   *NOCOL                       *
+        *  Generate program interface . . . :   *NO                          *
+        *  REQUIRE PROTOTYPE FOR EXPORT . . :                                *
+        *--------------------------------------------------------------------*
+   984                                                                                                                      000005
+   985 dcl-proc main;                                                                                                       000006
+   986    dcl-s xml pointer;                                                                                                000007
+   987    dcl-s value varchar(200) ccsid(*utf8);                                                                            000008
+   988    dcl-s message char(50);                                                                                           000009
+   989                                                                                                                      000010
+   990    xml = nox_parseString('<httpHeader includeErrorMsg="true"><headername="X-COUNT" value="111" />+                   000011
+   991               </httpHeader>');                                                                                       000012
+   992                                                                                                                      000013
+   993    value = nox_asXmlText(xml);                                                                                       000014
+   994    message = value;                                                                                                  000015
+   995    dsply message;                                                                                                    000016
+   996                                                                                                                      000017
+   997    on-exit;                                                                                                          000018
+   998      nox_delete(xml);                                                                                                 000019
+   999 end-proc;                                                                                                            000020
+       * * * * *   E N D   O F   S O U R C E   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/XML6              DKSRV133   14-07-22 10:57:16        Page      4
+          A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s
+ Msg id  Sv Number Seq     Message text
+ * * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C   M E S S A G E S   * * * * *
+                            / C o p y   M e m b e r s
+Line   Src  RPG name   <-------- External name -------> CCSID  <- Last change ->
+Number Id              Library    File       Member            Date     Time
+     4    1 noxDb2.rp+ ./../headers/noxDb2.rpgle          819  14-07-22 10:56:50
+         * * * * *   E N D   O F   / C O P Y   M E M B E R S   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/XML6              DKSRV133   14-07-22 10:57:16        Page      5
+                          M e s s a g e   S u m m a r y
+ Msg id  Sv Number Message text
+*RNF7031 00    151 The name or indicator is not referenced.
+       * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDB2/XML6              DKSRV133   14-07-22 10:57:16        Page      6
+                            F i n a l   S u m m a r y
+  Message Totals:
+    Information  (00) . . . . . . . :      151
+    Warning      (10) . . . . . . . :        0
+    Error        (20) . . . . . . . :        0
+    Severe Error (30+)  . . . . . . :        0
+    ---------------------------------  -------
+    Total . . . . . . . . . . . . . :      151
+  Source Totals:
+    Records . . . . . . . . . . . . :       20
+    Specifications  . . . . . . . . :       11
+    Data records  . . . . . . . . . :        0
+    Comments  . . . . . . . . . . . :        5
+         * * * * *   E N D   O F   F I N A L   S U M M A R Y   * * * * *
+Program XML6 placed in library NOXDB2. 00 highest severity. Created on 14-07-22 at 10:57:17.
+          * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *

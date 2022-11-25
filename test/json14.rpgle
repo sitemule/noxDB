@@ -1,5 +1,5 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
 
         /include 'headers/JSONPARSER.rpgle'
 
@@ -33,7 +33,7 @@
         if JSON_Error(pJson) ;
            pResult = JSON_Message(pJson);
            JSON_dump(pJson);
-           JSON_Close(pJson);
+           JSON_delete(pJson);
            return;
         endif;
 
@@ -46,5 +46,5 @@
 
         pResult = Result;
 
-        JSON_Close(pJSON);
+        JSON_delete(pJSON);
         *inlr = *on;

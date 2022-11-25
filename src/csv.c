@@ -8,7 +8,7 @@
  * NL     02.06.03 0000000 New program                           *
  * NL     27.02.08 0000510 Allow also no namespace for *:tag     *
  * NL     27.02.08 0000510 nox_NodeCopy                           *
- * NL     13.05.08 0000577 nox_NodeAdd / WriteNote                *
+ * NL     13.05.08 0000577 nox_NodeInsert / WriteNote                *
  * NL     13.05.08 0000577 Support for refference location       *
  * ------------------------------------------------------------- */
 #include <stdio.h>
@@ -148,3 +148,10 @@ void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
 	fclose(pjWrite->outFile);
 	iconv_close(pjWrite->iconv);
 }
+
+void  csvStreamRunner   (PSTREAM pStream)
+{
+	PNOXNODE  pNode = pStream->context;
+    // csvStream (pNode , pStream , FALSE , 0);
+}
+

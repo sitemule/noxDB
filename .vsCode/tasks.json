@@ -38,6 +38,21 @@
         {
             "label": "Compile Service program",
             "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake all'",
+<<<<<<< HEAD
+=======
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Build release",
+            "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake release'",
+>>>>>>> ab0f46cc8de7978cebb70145d65b2f9c449c1c28
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -62,6 +77,37 @@
         {
             "label": "Compile current example file",
             "command": "ssh -t my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
+<<<<<<< HEAD
+=======
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "c",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+
+                "pattern": {
+                    "regexp": "^(.*):(.*):(.*):(.*):(.*):(.*)$",
+                    "code" : 1,
+                    "message": 2,
+                    "line": 3,
+                    "column": 4,
+                    "severity": 5,
+                    "file": 6
+
+                }
+            }
+
+        },
+        {
+            "label": "Compile current test file",
+            "command": "ssh -t my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/test/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
+>>>>>>> ab0f46cc8de7978cebb70145d65b2f9c449c1c28
             "type": "shell",
             "group": {
                 "kind": "build",

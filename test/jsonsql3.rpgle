@@ -1,5 +1,5 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
         
         /include 'headers/JSONPARSER.rpgle'
         
@@ -48,7 +48,7 @@
         pResult = json;
 
         // Cleanup: Close the SQL cursor, dispose the row and the array
-        json_close(resultArray);
+        json_delete(resultArray);
         json_sqlClose(manuHnd);
         json_sqlDisconnect();
 

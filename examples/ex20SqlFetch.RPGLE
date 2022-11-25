@@ -4,7 +4,7 @@
         //Using SQL cursors
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
         Dcl-S pRow         Pointer;
         Dcl-S sqlHnd       Pointer;
         Dcl-S sql          Varchar(512);

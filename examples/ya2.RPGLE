@@ -17,7 +17,7 @@
 
         //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
 
         Dcl-S err          Ind;
         Dcl-S row          Varchar(32766);

@@ -196,7 +196,7 @@ static void  jsonStreamPrintNode (PNOXNODE pNode, PSTREAM pStream, SHORT level)
 }
 /* --------------------------------------------------------------------------- */
 #pragma convert(1252)
-void  nox_AsJsonStream (PNOXNODE pNode, PSTREAM pStream)
+void  jsonStream (PNOXNODE pNode, PSTREAM pStream)
 {
 	if (pNode == NULL) {
 		stream_puts (pStream, NULLSTR);
@@ -205,51 +205,7 @@ void  nox_AsJsonStream (PNOXNODE pNode, PSTREAM pStream)
 	}
 }
 #pragma convert(0)
-// ----------------------------------------------------------------------------
-static LONG nox_memWriter  (PSTREAM p , PUCHAR buf , ULONG len)
-{
-	PJWRITE pjWrite = p->handle;
-	ULONG newLen =  pjWrite->bufLen + len;
-	if ( newLen  > pjWrite->maxSize) {
-		ULONG restlen = pjWrite->maxSize - pjWrite->bufLen;
-		memcpy ( pjWrite->buf +  pjWrite->bufLen , buf , restlen  );
-		pjWrite->bufLen = pjWrite->maxSize;
-		return pjWrite->bufLen;
-	}
-	memcpy ( pjWrite->buf +  pjWrite->bufLen , buf , len);
-	pjWrite->bufLen += len;
-	return pjWrite->bufLen;
-}
 
-// ----------------------------------------------------------------------------
-/*
-static LONG nox_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
-{
-	PJWRITE pjWrite = p->handle;
-	int outlen = 4 * len;
-	size_t inbytesleft, outbytesleft, rc;
-	PUCHAR temp , input , output ;
-
-	input = buf;
-	inbytesleft  = len;
-
-	output = temp = malloc   (outlen);
-	outbytesleft = outlen;
-
-	rc = iconv ( pjWrite->iconv , &input , &inbytesleft, &output , &outbytesleft);
-	outlen = output - temp;
-	fwrite (temp  , 1 , outlen , pjWrite->outFile);
-	free (temp);
-	return rc;
-}
-*/
-// ----------------------------------------------------------------------------
-static LONG nox_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
-{
-	PJWRITE pjWrite = p->handle;
-	LONG rc = fwrite (buf, 1, len , pjWrite->outFile);
-	return rc;
-}
 // ----------------------------------------------------------------------------
 LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
 {
@@ -274,7 +230,7 @@ LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
 	pjWrite->maxSize =   pParms->OpDescList == NULL
 		|| (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3) ? maxLenP : MEMMAX;
 
-	nox_AsJsonStream (pNode , pStream);
+	jsonStream (pNode , pStream);
 	len = pStream->totalSize;
 	stream_putc   (pStream,'\0');
 	stream_delete (pStream);
@@ -282,27 +238,10 @@ LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
 
 }
 // ----------------------------------------------------------------------------
-static void  nox_AsJsonStreamRunner   (PSTREAM pStream)
+void  jsonStreamRunner   (PSTREAM pStream)
 {
 	PNOXNODE  pNode = pStream->context;
-	nox_AsJsonStream (pNode , pStream);
-}
-// ----------------------------------------------------------------------------
-PSTREAM nox_Stream  (PNOXNODE pNode)
-{
-	PSTREAM  pStream;
-	LONG     len;
-	JWRITE   jWrite;
-	PJWRITE  pjWrite = &jWrite;
-	memset(pjWrite , 0 , sizeof(jWrite));
-
-	pStream = stream_new (4096);
-	pStream->handle  = pjWrite;
-	pjWrite->doTrim  = true;
-	pjWrite->maxSize = MEMMAX;
-	pStream->runner  = nox_AsJsonStreamRunner;
-	pStream->context = pNode;
-	return  pStream;
+	jsonStream (pNode , pStream);
 }
 // ----------------------------------------------------------------------------
 VOID nox_AsJsonText (PLVARCHAR res, PNOXNODE pNode)
@@ -352,7 +291,7 @@ void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut,
 		}
 	}
 
-	nox_AsJsonStream (pNode , pStream);
+	jsonStream (pNode , pStream);
 
 	stream_delete (pStream);
 	fclose(pjWrite->outFile);

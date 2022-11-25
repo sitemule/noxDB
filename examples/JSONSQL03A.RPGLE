@@ -2,7 +2,7 @@
         //------------------------------------------------------------- *
 
         Ctl-Opt dftactgrp(*NO) ACTGRP('QILE' );
-        Ctl-Opt BndDir('NOXDB');
+        Ctl-Opt BndDir('NOXDB2');
         Ctl-Opt BndDir('ICEBREAK');
 
         //------------------------------------------------------------- *

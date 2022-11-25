@@ -9,7 +9,7 @@
  * NL     02.06.03 0000000 New program                          
  * NL     27.02.08 0000510 Allow also no namespace for *:tag    
  * NL     27.02.08 0000510 nox_NodeCopy                         
- * NL     13.05.08 0000577 nox_NodeAdd / WriteNote              
+ * NL     13.05.08 0000577 nox_NodeInsert / WriteNote              
  * NL     13.05.08 0000577 Support for refference location      
  * NL     01.06.18 0001000 noxdb2 version 2 implementation
  * 
@@ -525,7 +525,7 @@ ULONG nox_NodeCheckSum (PNOXNODE pNode)
 }
 // ---------------------------------------------------------------------------
 #pragma convert(1252)
-void nox_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PNOXNODE pNode)
+void writeXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PNOXNODE pNode)
 {
 	PNOXNODE  pNodeTemp, pNodeNext;
 	PNOXATTR pAttrTemp;
@@ -588,7 +588,7 @@ void nox_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PNOXNODE pNode)
 			} else {
 				fputs(">", f);
 			}
-			nox_WriteXmlStmfNodeList (f, pIconv, pNode->pNodeChildHead);
+			writeXmlStmfNodeList (f, pIconv, pNode->pNodeChildHead);
 		}
 
 		if (shortform) {
@@ -616,6 +616,8 @@ void nox_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PNOXNODE pNode)
 }
 #pragma convert(0)
 // ---------------------------------------------------------------------------
+/*
+#pragma convert(1252)
 LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf)
 {
 	PNOXNODE    pNodeTemp, pNodeNext;
@@ -627,6 +629,7 @@ LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf)
 	level++;
 
 	while (pNode) {
+
 
 		temp +=  sprintf(temp , "<%s", pNode->Name ? pNode->Name : "row");
 		for (pAttrTemp = pNode->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
@@ -667,11 +670,9 @@ LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf)
 	return temp - buf;
 
 }
+#pragma convert(0)
+*/
 // ---------------------------------------------------------------------------
-VOID nox_AsXmlText (PLVARCHAR res , PNOXNODE pNode)
-{
-	res->Length = nox_AsXmlTextMem (pNode , res->String);
-}
 // ---------------------------------------------------------------------------
 // Traverse up the tree and build the name  like: "root/tree/node"
 // --------------------------------------------------------------------------- 
@@ -710,6 +711,13 @@ SHORT nox_GetNodeType (PNOXNODE pNode)
 {
 	return (pNode) ? pNode->type : 0;
 }
+/* --------------------------------------------------------------------------- */
+PNOXNODE nox_SetNodeOptions (PNOXNODE pNode, SHORT options)
+{
+   if (pNode) pNode->options = options;
+   return pNode;
+}
+
 // ---------------------------------------------------------------------------
 void nox_NodeCloneAndReplace (PNOXNODE pDest , PNOXNODE pSource)
 {
@@ -1167,7 +1175,7 @@ static PNOXNODE DupNode(PNOXNODE pSource)
 	return (pNode);
 }
 // ---------------------------------------------------------------------------
-void nox_NodeAddChildTail( PNOXNODE pRoot, PNOXNODE pChild)
+void nox_NodeInsertChildTail( PNOXNODE pRoot, PNOXNODE pChild)
 {
 	if (pChild == NULL || pRoot == NULL) return;
 
@@ -1281,7 +1289,7 @@ PNOXNODE nox_NodeMoveInto (PNOXNODE  pDest, PUCHAR name , PNOXNODE pSource)
 	//    nox_NodeDelete (pSource);
 	//    return pDest;
 	// }
-		nox_NodeAddChildTail (pDest, pSource);
+		nox_NodeInsertChildTail (pDest, pSource);
 
 		// Since we have a name - we must be an object
 		// required if we were a value i.e. produce by
@@ -1293,7 +1301,7 @@ PNOXNODE nox_NodeMoveInto (PNOXNODE  pDest, PUCHAR name , PNOXNODE pSource)
 
 	} else {
 		// replace, by adding a new with same name and the remove the original. Will keep the same position
-		nox_NodeAddSiblingAfter(pTempNode, pSource);
+		nox_NodeInsertSiblingAfter(pTempNode, pSource);
 		nox_NodeDelete (pTempNode);
 	}
 
@@ -1317,11 +1325,11 @@ void nox_NodeMoveAndReplace (PNOXNODE  pDest, PNOXNODE pSource)
 	nox_NodeRename(pSource , pDest->Name);  // I need the same name of the node i gonna replace
 
 	// replace, by adding a new with same name and the remove the original. Will keep the same position
-	nox_NodeAddSiblingAfter(pDest, pSource);
+	nox_NodeInsertSiblingAfter(pDest, pSource);
 	nox_NodeDelete (pDest);
 }
 // ---------------------------------------------------------------------------
-void nox_NodeAddChildHead( PNOXNODE pRoot, PNOXNODE pChild)
+void nox_NodeInsertChildHead( PNOXNODE pRoot, PNOXNODE pChild)
 {
 	pChild->pNodeParent = pRoot;
 
@@ -1341,12 +1349,12 @@ void nox_NodeAddChildHead( PNOXNODE pRoot, PNOXNODE pChild)
 	}
 }
 // ---------------------------------------------------------------------------
-void nox_NodeAddSiblingBefore( PNOXNODE pRef, PNOXNODE pSibling)
+void nox_NodeInsertSiblingBefore( PNOXNODE pRef, PNOXNODE pSibling)
 {
 	PNOXNODE pPrev = previousSibling(pRef);
 
 	if (pPrev == NULL) {
-		nox_NodeAddChildHead( pRef->pNodeParent, pSibling);
+		nox_NodeInsertChildHead( pRef->pNodeParent, pSibling);
 		return;
 	}
 	pSibling->pNodeParent  = pRef->pNodeParent;
@@ -1354,10 +1362,10 @@ void nox_NodeAddSiblingBefore( PNOXNODE pRef, PNOXNODE pSibling)
 	pPrev->pNodeSibling    = pSibling;
 }
 // ---------------------------------------------------------------------------
-void nox_NodeAddSiblingAfter( PNOXNODE pRef, PNOXNODE pSibling)
+void nox_NodeInsertSiblingAfter( PNOXNODE pRef, PNOXNODE pSibling)
 {
 	if (pRef->pNodeSibling == NULL) {
-		nox_NodeAddChildTail ( pRef->pNodeParent, pSibling);
+		nox_NodeInsertChildTail ( pRef->pNodeParent, pSibling);
 		return;
 	}
 	pSibling->pNodeParent  = pRef->pNodeParent;
@@ -1371,18 +1379,71 @@ void AddNode(PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc)
 
 	switch ( refloc) {
 		case RL_LAST_CHILD:
-			nox_NodeAddChildTail (pDest, pSource);
+			nox_NodeInsertChildTail (pDest, pSource);
 			break;
 		case RL_FIRST_CHILD:
-			nox_NodeAddChildHead (pDest, pSource);
+			nox_NodeInsertChildHead (pDest, pSource);
 			break;
 		case RL_BEFORE_SIBLING:
-			nox_NodeAddSiblingBefore(pDest, pSource);
+			nox_NodeInsertSiblingBefore(pDest, pSource);
 			break;
 		case RL_AFTER_SIBLING:
-			nox_NodeAddSiblingAfter(pDest, pSource);
+			nox_NodeInsertSiblingAfter(pDest, pSource);
 			break;
 	}
+}
+// ---------------------------------------------------------------------------
+// XML documents has a anonymus root node. Each child from the 
+// root is added  
+// ---------------------------------------------------------------------------
+PNOXNODE nox_documentInsert(PNOXNODE pDest, PNOXNODE * ppSource, REFLOC refloc)
+{
+   PNOXNODE pTemp;
+   PNOXNODE * pNodes;
+   LONG len, i;
+   PNOXNODE pSource = * ppSource;
+   if (pDest == NULL || pSource == NULL ) return NULL;
+
+   // find length of source nodes:
+   for (len =0, pTemp = pSource->pNodeChildHead ; pTemp != NULL; len++, pTemp = pTemp->pNodeSibling);
+   
+   if (len == 0) return pDest;
+
+   // Store the list of nodes and make each of them them roots;
+   pNodes = malloc( len * sizeof(PNOXNODE));
+   for (i =0, pTemp = pSource->pNodeChildHead ; pTemp != NULL;pTemp = pTemp->pNodeSibling) {
+       pNodes[i++] = pTemp;
+      nox_NodeUnlink (pTemp);
+   }
+
+   pTemp = pNodes[0];
+
+   switch ( refloc) {
+   case RL_LAST_CHILD:
+     nox_NodeInsertChildTail (pDest, pTemp);
+     break;
+   case RL_FIRST_CHILD:
+     nox_NodeInsertChildHead (pDest, pTemp);
+     break;
+   case RL_BEFORE_SIBLING:
+     nox_NodeInsertSiblingBefore(pDest, pTemp);
+     break;
+   case RL_AFTER_SIBLING:
+     nox_NodeInsertSiblingAfter(pDest, pTemp);
+     break;
+   }
+
+   // Following siblings are just added as new siblings;
+   for ( i = 1; i < len ; i++) {
+      nox_NodeInsertSiblingAfter(pTemp, pNodes[i]);
+   }
+
+   free(pNodes);
+
+   nox_NodeDelete (pSource);
+   * ppSource = NULL;
+   return pDest;
+
 }
 // ---------------------------------------------------------------------------
 PNOXNODE nox_NodeClone  (PNOXNODE pSource)
@@ -1396,7 +1457,7 @@ PNOXNODE nox_NodeClone  (PNOXNODE pSource)
 	pNext = pSource->pNodeChildHead;
 	while (pNext) {
 		PNOXNODE  pNewChild = nox_NodeClone (pNext);
-		nox_NodeAddChildTail (pNewNode , pNewChild);
+		nox_NodeInsertChildTail (pNewNode , pNewChild);
 		pNext=pNext->pNodeSibling;
 	}
 	return pNewNode;
@@ -1436,17 +1497,17 @@ PNOXNODE NewNode  (PUCHAR Name , PUCHAR Value, NODETYPE type)
 	return pNode;
 }
 // ---------------------------------------------------------------------------
-PNOXNODE nox_NodeAdd (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type)
+PNOXNODE nox_NodeInsert (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type)
 {
     PNOXNODE  pNewNode  = NewNode  (Name , Value, type);
 	AddNode(pDest, pNewNode, refloc);
 	return pNewNode;
 }
-PNOXNODE nox_NodeAddVC (PNOXNODE pDest, REFLOC refloc, PLVARCHAR Name , PLVARCHAR Value, NODETYPE typeP)
+PNOXNODE nox_NodeInsertVC (PNOXNODE pDest, REFLOC refloc, PLVARCHAR Name , PLVARCHAR Value, NODETYPE typeP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	NODETYPE type =  pParms->OpDescList->NbrOfParms >= 5 ? typeP : VALUE;
-	return  nox_NodeAdd  (pDest, refloc , plvc2str(Name) , plvc2str(Value), type);
+	return  nox_NodeInsert  (pDest, refloc , plvc2str(Name) , plvc2str(Value), type);
 }
 // ---------------------------------------------------------------------------
 PNOXNODE nox_NewObject ()
@@ -1714,7 +1775,7 @@ PNOXNODE nox_lookupByXpath (PNOXNODE pRootNode, PUCHAR * ppName)
 			PNOXATTR pAtr = nox_AttributeLookup  (pNodeTemp, keyName);
 			if (pAtr && pAtr->Value) {
 				// Does the value match
-				if (memicmp(compVal , pAtr->Value, compLen) == comp
+				if (amemIcmp(compVal , pAtr->Value, compLen) == comp
 				&&  pAtr->Value[compLen] == '\0') {
 					return pNodeTemp;
 				}
@@ -1730,7 +1791,7 @@ PNOXNODE nox_lookupByXpath (PNOXNODE pRootNode, PUCHAR * ppName)
 			if (pNode && pNode->Value) {
 
 				// Does the value match
-				if (memicmp(compVal , pNode->Value, compLen) == comp
+				if (amemIcmp(compVal , pNode->Value, compLen) == comp
 				&&  pNode->Value[compLen] == '\0') {
 					return pNodeTemp;
 				}
@@ -1822,7 +1883,7 @@ static BOOL isNextDelimiter(UCHAR c)
 #pragma convert(1252)
 BOOL nox_isUbound (PUCHAR name)
 {
-	return (memicmp(name  , "[UBOUND]" , 8) == 0);
+	return (amemIcmp(name  , "[UBOUND]" , 8) == 0);
 }
 #pragma convert(0)
 /* ---------------------------------------------------------------------------
@@ -1874,7 +1935,7 @@ static PNOXNODE nox_lookUpSiblingByName(PNOXNODE pNode , PUCHAR keyName)
 		}
 
 		// Name Match ? Go one step deeper
-		if (stricmp(keyName, curName) == 0) {  // Found
+		if (astrIcmp(keyName, curName) == 0) {  // Found
 			return pNode;  // This level found, setup for itterarion
 		}
 		// No ! try next
@@ -2051,7 +2112,7 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
 			nox_GetKeyFromName (tempKey , &SkipNameSpace , refName);
 
 			#pragma convert(1252)
-			if (memicmp (pName , UBOUND , 6) == 0) {
+			if (amemIcmp (pName , UBOUND , 6) == 0) {
 				return nox_CalculateUbound(refNode, tempKey, SkipNameSpace);
 			}
 			#pragma convert(0)
@@ -2178,7 +2239,7 @@ PNOXATTR nox_AttributeLookup   (PNOXNODE pNode, PUCHAR Name)
 	pAttr = pNode->pAttrList;
 
 	while (pAttr) {
-		if (memicmp (Name ,pAttr->Name , NameLen ) == 0
+		if (amemIcmp (Name ,pAttr->Name , NameLen ) == 0
 		&&  pAttr->Name[NameLen] == '\0') {
 			return (pAttr);
 		}
@@ -2239,7 +2300,7 @@ PUCHAR  nox_GetNodeAttrValuePtr  (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Defau
 /* -------------------------------------------------------------
 	 Add a attribute to the end of the attribute list for an Nodeent
 	 ------------------------------------------------------------- */
-PNOXATTR nox_NodeAddAttributeValue  (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Value)
+PNOXATTR nox_NodeInsertAttributeValue  (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Value)
 {
 
 	PNOXATTR pAttrTemp;
@@ -2266,7 +2327,7 @@ VOID nox_SetNodeAttrValue  (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Value)
 
 	pAttr = nox_AttributeLookup   (pNode, AttrName);
 	if (pAttr == NULL) {
-		nox_NodeAddAttributeValue( pNode , AttrName, Value);
+		nox_NodeInsertAttributeValue( pNode , AttrName, Value);
 		return;
 	} else {
 		memFree(&pAttr->Value);
@@ -2421,7 +2482,7 @@ void nox_NodeMerge(PNOXNODE pDest, PNOXNODE pSource, SHORT replace)
   }
   memset(&jWrite , 0 , sizeof(jWrite));
   if (pDest == NULL || pSource == NULL  || pSource->pNodeChildHead == NULL) return;
-  // jx_MergeList(pDest, pSource->pNodeChildHead, &jWrite, "", pSource, merge);
+  // nox_MergeList(pDest, pSource->pNodeChildHead, &jWrite, "", pSource, merge);
   nox_MergeObj (pDest, pSource, &jWrite, merge);
 }
 /* ---------------------------------------------------------------------------
@@ -2493,7 +2554,7 @@ PNOXNODE  nox_ArrayPush (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
 		pNewNode = nox_NodeUnlink  (pSource);
 	}
 
-	nox_NodeAddChildTail (pDest, pNewNode);
+	nox_NodeInsertChildTail (pDest, pNewNode);
 
 }
 #pragma convert(0)
@@ -2648,7 +2709,7 @@ PNOXNODE nox_CreateSubNodes  (PNOXNODE pNodeRoot , PUCHAR Path )
 	if  (pName[0] == BRABEG && pName[1] == BRAEND) {   // the empty array: []
 		pName += 2;
 		pNodeRoot->type = ARRAY;
-		pParentNode = nox_NodeAdd (pNodeRoot, RL_LAST_CHILD, NULL , NULL, VALUE);
+		pParentNode = nox_NodeInsert (pNodeRoot, RL_LAST_CHILD, NULL , NULL, VALUE);
 		isNewArray = true;
 	} else if  (*pName == BRABEG) {
 		pName ++ ;
@@ -2684,14 +2745,14 @@ PNOXNODE nox_CreateSubNodes  (PNOXNODE pNodeRoot , PUCHAR Path )
 				if (pParentNode->type != ARRAY) {
 					pParentNode->type = OBJECT;
 				}
-				pNodeTemp = nox_NodeAdd (pParentNode, RL_LAST_CHILD, pName , NULL, isNewArray ? ARRAY : nodeType);
+				pNodeTemp = nox_NodeInsert (pParentNode, RL_LAST_CHILD, pName , NULL, isNewArray ? ARRAY : nodeType);
 			}
 
 			// The [] syntax  - Add the new entry to the array
 			if (isNewArray) {
 				freeNodeValue(pNodeTemp);     // Can not have values if we have childrens
 				pNodeTemp->type = ARRAY ;     // When i have childrne then i must be an object or array
-				pNodeTemp = nox_NodeAdd (pNodeTemp, RL_LAST_CHILD, NULL , NULL, nodeType);
+				pNodeTemp = nox_NodeInsert (pNodeTemp, RL_LAST_CHILD, NULL , NULL, nodeType);
 				pName = pEnd + 2;
 				if (isNextDelimiter(*pName))  pName++;
 				isNewArray = false; // Done with array chekking
@@ -2893,7 +2954,8 @@ PNOXNODE  nox_SetEvalByNameVC (PNOXNODE pNode, PLVARCHAR Name, PLVARCHAR pValue)
 	return nox_SetValueByName(pNode , plvc2str(Name) , plvc2str(pValue) , PARSE_STRING );
 }
 /* -------------------------------------------------------------
-	 Set null values - set by name
+	 Set null values - set by name, simple wrappers to 
+	 nox_SetValueByName
 	 ------------------------------------------------------------- */
 PNOXNODE  nox_SetNullByName (PNOXNODE pNode, PUCHAR Name)
 {
@@ -2901,7 +2963,7 @@ PNOXNODE  nox_SetNullByName (PNOXNODE pNode, PUCHAR Name)
 }
 PNOXNODE  nox_SetNullByNameVC (PNOXNODE pNode, PLVARCHAR Name)
 {
-   return nox_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
+   return nox_SetValueByName(pNode , plvc2str(Name));
 }
 /* -------------------------------------------------------------
 	 Set pointer by name
@@ -3134,19 +3196,19 @@ LGL  nox_Error (PNOXNODE  pNode)
     return ( jxError || pNode == NULL) ? ON : OFF;
 }
 // -------------------------------------------------------------
-PUCHAR nox_ErrStr (PNOXNODE pJxNode)
+PUCHAR nox_ErrStr (PNOXNODE PNOXNODE)
 {
 	return jxMessage;
 }
 // -------------------------------------------------------------
-VARCHAR1024 nox_MessageVC  (PNOXNODE pJxNode)
+VARCHAR1024 nox_MessageVC  (PNOXNODE PNOXNODE)
 {
 	VARCHAR1024 res;
 	str2vc (&res ,  jxMessage);
 	return res;
 }
 // -------------------------------------------------------------
-VOID nox_SetApiErr (PNOXNODE pJxNode, PAPIERR pApiErr)
+VOID nox_SetApiErr (PNOXNODE PNOXNODE, PAPIERR pApiErr)
 {
 	strcpy (pApiErr->msgid , "CPF9898");
 	substr  (pApiErr->msgdta , jxMessage ,pApiErr->size - 25 );  // not inc. the header
@@ -3197,7 +3259,7 @@ void nox_Clear  (PNOXNODE pNode)
 		nox_FreeChildren(pNode);
 	}
 }
-// ------------------------------------------------------Ã‹-------
+// ------------------------------------------------------Ë-------
 void nox_Free  (PNOXNODE pNode)
 {
 	nox_FreeSiblings(pNode);
@@ -3227,4 +3289,9 @@ INT64 nox_MemUse(VOID)
 {
 	return memUse();
 }
+// ---------------------------------------------------------------------------
+// Empty placeholder for the export vector in the binder source;
+// Please replace with your code anytime 
+// ---------------------------------------------------------------------------
+void dummy001 (VOID) {}
 
