@@ -2963,7 +2963,7 @@ PNOXNODE  nox_SetNullByName (PNOXNODE pNode, PUCHAR Name)
 }
 PNOXNODE  nox_SetNullByNameVC (PNOXNODE pNode, PLVARCHAR Name)
 {
-   return nox_SetValueByName(pNode , plvc2str(Name));
+   return nox_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
 }
 /* -------------------------------------------------------------
 	 Set pointer by name

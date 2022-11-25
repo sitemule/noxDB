@@ -1,5 +1,6 @@
 *.DS_Store
-headers/XMLPARSER.rpgle
-headers/JSONPARSER.rpgle
+headers/noxDB2.rpgle
+headers/noxDB2JSON.rpgle
+headers/noxDB2XML.rpgle
 postlist.txt
 test/out/*

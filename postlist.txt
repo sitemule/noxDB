@@ -1,9 +1,9 @@
-Command > CRTCMOD SRCSTMF('src/csv.c') MODULE(NOXDB2/csv) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) DBGVIEW(*ALL) TGTRLS(V7R1M0) OPTION(*EVENTF) OUTPUT(*PRINT) INCDIR('/QIBM/include' 'include' 'ext/include') <
- 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    25-11-22 14:19:50 Page           1
+Command > CRTCMOD SRCSTMF('src/xmlserial.c') MODULE(NOXDB2/xmlserial) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) DBGVIEW(*ALL) TGTRLS(V7R1M0) OPTION(*EVENTF) OUTPUT(*PRINT) INCDIR('/QIBM/include' 'include' 'ext/include') <
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page           1
                                                  * * * * *   P R O L O G   * * * * *
-  Module  . . . . . . . . . . . . :   CSV
+  Module  . . . . . . . . . . . . :   XMLSERIAL
     Library . . . . . . . . . . . :      NOXDB2
-  Source stream file  . . . . . . :   src/csv.c
+  Source stream file  . . . . . . :   src/xmlserial.c
   Text description  . . . . . . . :
   Output options:
     Output file . . . . . . . . . :   *PRINT
@@ -46,7 +46,7 @@ Command > CRTCMOD SRCSTMF('src/csv.c') MODULE(NOXDB2/csv) OPTIMIZE(10) ENUM(*INT
   Include directory . . . . . . . :   /QIBM/include
                                       include
                                       ext/include
- 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    25-11-22 14:19:50 Page           2
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page           2
   Pack structure  . . . . . . . . :   *NATURAL
   Enum size . . . . . . . . . . . :   *INT
   Dependency information  . . . . :   *NONE
@@ -55,11 +55,11 @@ Command > CRTCMOD SRCSTMF('src/csv.c') MODULE(NOXDB2/csv) OPTIMIZE(10) ENUM(*INT
   Licensed internal code options  :   *BLANK
   Target CCSID  . . . . . . . . . :   *SOURCE
   Decimal float round mode  . . . :   *HALFEVEN
-  Last change . . . . . . . . . . :   09-04-20 03:14:45
+  Last change . . . . . . . . . . :   25-11-22 14:33:56
   Source description  . . . . . . :
   Compiler  . . . . . . . . . . . :   IBM ILE C compiler
                                           * * * * *   E N D   O F   P R O L O G   * * * * *
- 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    25-11-22 14:19:50 Page           3
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page           3
                                                  * * * * *   S O U R C E   * * * * *
   LINE  STMT                                                                                                       SEQNBR INCNO
               *...+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9........
@@ -67,159 +67,330 @@ Command > CRTCMOD SRCSTMF('src/csv.c') MODULE(NOXDB2/csv) OPTIMIZE(10) ENUM(*INT
      2       |/* ------------------------------------------------------------- *                                |      2
      3       | * Company . . . : System & Method A/S                           *                                |      3
      4       | * Design  . . . : Niels Liisberg                                *                                |      4
-     5       | * Function  . . : NOX - main service program API exports        *                                |      5
+     5       | * Function  . . : NOX - XML serializer - refactored             *                                |      5
      6       | *                                                               *                                |      6
-     7       | * By     Date     Task    Description                           *                                |      7
-     8       | * NL     02.06.03 0000000 New program                           *                                |      8
-     9       | * NL     27.02.08 0000510 Allow also no namespace for *:tag     *                                |      9
-    10       | * NL     27.02.08 0000510 nox_NodeCopy                           *                               |     10
-    11       | * NL     13.05.08 0000577 nox_NodeAdd / WriteNote                *                               |     11
-    12       | * NL     13.05.08 0000577 Support for refference location       *                                |     12
-    13       | * ------------------------------------------------------------- */                               |     13
-    14       |#include <stdio.h>                                                                                |     14
-    15       |#include <string.h>                                                                               |     15
-    16       |#include <stdlib.h>                                                                               |     16
-    17       |#include <stdarg.h>                                                                               |     17
-    18       |#include <ctype.h>                                                                                |     18
-    19       |#include <leod.h>                                                                                 |     19
-    20       |#include <decimal.h>                                                                              |     20
-    21       |#include <wchar.h>                                                                                |     21
-    22       |// #include <errno.h>                                                                             |     22
-    23       |                                                                                                  |     23
-    24       |#include <sys/stat.h>                                                                             |     24
-    25       |#include "ostypes.h"                                                                              |     25
-    26       |#include "varchar.h"                                                                              |     26
-    27       |#include "xlate.h"                                                                                |     27
-    28       |#include "parms.h"                                                                                |     28
-    29       |// #include "rtvsysval.h"                                                                         |     29
-    30       |#include "strUtil.h"                                                                              |     30
-    31       |#include "memUtil.h"                                                                              |     31
-    32       |#include "streamer.h"                                                                             |     32
-    33       |#include "noxdb2.h"                                                                               |     33
-    34       |                                                                                                  |     34
-    35       |                                                                                                  |     35
-    36       |// ---------------------------------------------------------------------------                    |     36
-    37       |// CSV Helpers                                                                                    |     37
-    38       |// ---------------------------------------------------------------------------                    |     38
-    39       |void csvReplaceDecpoint ( PUCHAR out , PUCHAR in , UCHAR decpoint)                                |     39
-    40       |{                                                                                                 |     40
-    41     1 | for(;*in; in++) {                                                                                |     41
-    42     2 |  *out++ = (*in == '.') ? decpoint: *in;                                                          |     42
-    43       | }                                                                                                |     43
- 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    25-11-22 14:19:50 Page           4
-    44     3 | *out = '\0';                                                                                     |     44
-    45       |}                                                                                                 |     45
-    46       |// ---------------------------------------------------------------------------                    |     46
-    47       |void csvStringEscape (PUCHAR out, PUCHAR in)                                                      |     47
-    48       |{                                                                                                 |     48
-    49       |                                                                                                  |     49
-    50     1 | *out++ = '"';                                                                                    |     50
-    51     2 | while(*in) {                                                                                     |     51
-    52     3 |  if (*in == '"') *out++ = '"';                                                                   |     52
-    53     5 |  *out++ = *in++;                                                                                 |     53
-    54       | }                                                                                                |     54
-    55     6 | *out++ = '"';                                                                                    |     55
-    56     7 | *out = '\0';                                                                                     |     56
-    57       |}                                                                                                 |     57
-    58       |// ---------------------------------------------------------------------------                    |     58
-    59       |void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options) |     59
-    60       |{                                                                                                 |     60
-    61     1 | PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();                                                   |     61
-    62       | JWRITE jWrite;                                                                                   |     62
-    63     2 | PJWRITE pjWrite = &jWrite;                                                                       |     63
-    64       | UCHAR  mode[32];                                                                                 |     64
-    65     3 | UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};                                                |     65
-    66     7 | UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};                                                       |     66
-    67    10 | UCHAR  CrLf []= {0x0d, 0x0a , 0x00};                                                             |     67
-    68       | UCHAR  wTemp[100000];                                                                            |     68
-    69       | UCHAR  temp [32766];                                                                             |     69
-    70    13 | UCHAR  comma    = ';';                                                                           |     70
-    71    14 | UCHAR  decpoint = '.';                                                                           |     71
-    72    15 | BOOL   headers  = false;                                                                         |     72
-    73       |                                                                                                  |     73
-    74    16 | if (pNode == NULL) return;                                                                       |     74
-    75    18 | memset(pjWrite , 0 , sizeof(jWrite));                                                            |     75
-    76       |                                                                                                  |     76
-    77    19 | sprintf(mode , "wb,codepage=%d", Ccsid);                                                         |     77
-    78    20 | pjWrite->outFile  = fopen ( strTrim(FileName) , mode );                                          |     78
-    79    21 | if (pjWrite->outFile == NULL) return;                                                            |     79
-    80       |                                                                                                  |     80
-    81    23 | if (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 5) {                         |     81
-    82    24 |  PNOXNODE  pOptions  = nox_ParseString((PUCHAR) options ); // When already a object: simply retu\|     82
-    82       |rns that                                                                                          |     82
-    83    25 |  comma    = *nox_GetValuePtr    (pOptions , "delimiter" , &comma );                              |     83
-    84    26 |  decpoint = *nox_GetValuePtr    (pOptions , "decPoint"  , &decpoint );                           |     84
-    85    27 |  headers  = (ON == nox_IsTrue   (pOptions , "headers"));                                         |     85
-    86    28 |  if (pOptions != options) nox_Close(&pOptions); // It was already a josn object , then don't clo\|     86
-    86       |se                                                                                                |     86
-    87       | }                                                                                                |     87
- 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    25-11-22 14:19:50 Page           5
-    88       |                                                                                                  |     88
-    89    30 | pjWrite->buf    = wTemp;                                                                         |     89
-    90    31 | pjWrite->iconv  = XlateOpen(1208 , Ccsid );                                                      |     90
-    91       |                                                                                                  |     91
-    92    32 | switch(Ccsid) {                                                                                  |     92
-    93       |  case 1208 :                                                                                     |     93
-    94    33 |   fputs (sigUtf8 , pjWrite->outFile);                                                            |     94
-    95    34 |   break;                                                                                         |     95
-    96       |  case 1200 :                                                                                     |     96
-    97    35 |   fputs (sigUtf16 , pjWrite->outFile);                                                           |     97
-    98    36 |   break;                                                                                         |     98
-    99       | }                                                                                                |     99
-   100       |                                                                                                  |    100
-   101    37 | if ( pNode == NULL || pNode->pNodeChildHead  == NULL) return;                                    |    101
-   102       |                                                                                                  |    102
-   103       | // Arrays - need first child;                                                                    |    103
-   104    39 | pNode = pNode->pNodeChildHead;                                                                   |    104
-   105       |                                                                                                  |    105
-   106       | // Need the headers as first row;                                                                |    106
-   107    40 | if (headers) {                                                                                   |    107
-   108    41 |  PNOXNODE pHead  = pNode->pNodeChildHead;                                                        |    108
-   109    42 |  while (pHead) {                                                                                 |    109
-   110    43 |   csvStringEscape (temp , pHead->Name);                                                          |    110
-   111    44 |   iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);                                    |    111
-   112    45 |   pHead  = pHead->pNodeSibling;                                                                  |    112
-   113    46 |   if (pHead) iconvPutc(pjWrite->outFile , &pjWrite->iconv, comma);                               |    113
-   114       |  }                                                                                               |    114
-   115       |  // newline                                                                                      |    115
-   116    48 |  fwrite (CrLf , 1 , 2 , pjWrite->outFile);                                                       |    116
-   117       | }                                                                                                |    117
-   118       |                                                                                                  |    118
-   119    49 | while (pNode) {                                                                                  |    119
-   120       |                                                                                                  |    120
-   121    50 |  PNOXNODE pCol  = pNode->pNodeChildHead;                                                         |    121
-   122       |                                                                                                  |    122
-   123    51 |  while (pCol) {                                                                                  |    123
-   124       |                                                                                                  |    124
-   125    52 |   if (pCol->Value) {                                                                             |    125
+     7       | * By     Date       Task    Description                         *                                |      7
+     8       | * NL     22.07.2021 0000000 New module                          *                                |      8
+     9       | * ------------------------------------------------------------- */                               |      9
+    10       |#include <stdio.h>                                                                                |     10
+    11       |#include <string.h>                                                                               |     11
+    12       |#include <stdlib.h>                                                                               |     12
+    13       |#include <stdarg.h>                                                                               |     13
+    14       |#include <ctype.h>                                                                                |     14
+    15       |#include <leod.h>                                                                                 |     15
+    16       |#include <decimal.h>                                                                              |     16
+    17       |#include <wchar.h>                                                                                |     17
+    18       |#include <errno.h>                                                                                |     18
+    19       |                                                                                                  |     19
+    20       |#include <sys/stat.h>                                                                             |     20
+    21       |#include "ostypes.h"                                                                              |     21
+    22       |#include "varchar.h"                                                                              |     22
+    23       |#include "xlate.h"                                                                                |     23
+    24       |#include "parms.h"                                                                                |     24
+    25       |// #include "rtvsysval.h"                                                                         |     25
+    26       |#include "strUtil.h"                                                                              |     26
+    27       |#include "memUtil.h"                                                                              |     27
+    28       |#include "streamer.h"                                                                             |     28
+    29       |#include "noxdb2.h"                                                                               |     29
+    30       |#include "e2aa2e.h"                                                                               |     30
+    31       |                                                                                                  |     31
+    32       |                                                                                                  |     32
+    33       |                                                                                                  |     33
+    34       |static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT level);           |     34
+    35       |LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP);                               |     35
+    36       |                                                                                                  |     36
+    37       |                                                                                                  |     37
+    38       |/* ---------------------------------------------------------------------------                    |     38
+    39       |   Local write implementation                                                                     |     39
+    40       | --------------------------------------------------------------------------- */                   |     40
+    41       |static PJWRITE newWriter ()                                                                       |     41
+    42       |{                                                                                                 |     42
+    43     1 | PJWRITE pjWrite = malloc (sizeof(JWRITE));                                                       |     43
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page           4
+    44     2 | memset(pjWrite , 0 , sizeof(JWRITE));                                                            |     44
+    45       | #pragma convert(1252)                                                                            |     45
+    46       | // XlateBuf(&pjWrite->braBeg , "[]{}\\\"" , 6, 1252 ,0 ); ;                                      |     46
+    47       | #pragma convert(0)                                                                               |     47
+    48     3 | return pjWrite;                                                                                  |     48
+    49       |}                                                                                                 |     49
+    50       |/* ---------------------------------------------------------------------------                    |     50
+    51       |   Local write implementation                                                                     |     51
+    52       | --------------------------------------------------------------------------- */                   |     52
+    53       |static void deleteWriter (PJWRITE  pjWrite)                                                       |     53
+    54       |{                                                                                                 |     54
+    55     1 | free(pjWrite);                                                                                   |     55
+    56       |}                                                                                                 |     56
+    57       |/* ---------------------------------------------------------------------------                    |     57
+    58       |   Put newline and tabs accoringly to the indention level                                         |     58
+    59       |   --------------------------------------------------------------------------- */                 |     59
+    60       |static void indentXml ( PSTREAM pStream , SHORT cdatamode, SHORT level)                           |     60
+    61       |{                                                                                                 |     61
+    62     1 |   PJWRITE pjWrite = (PJWRITE) pStream->handle;                                                   |     62
+    63     2 | if (! pjWrite->doTrim && ! cdatamode) {                                                          |     63
+    64       |                                                                                                  |     64
+    65     3 |      if(!pjWrite->wasHere) {                                                                     |     65
+    66     4 |       pjWrite->wasHere = true;                                                                   |     66
+    67       |    } else {                                                                                      |     67
+    68     5 |         stream_putc (pStream,0x0d);                                                              |     68
+    69     6 |         stream_putc (pStream,0x0a);                                                              |     69
+    70       |    }                                                                                             |     70
+    71       |                                                                                                  |     71
+    72     7 |      while (level-- > 0) {                                                                       |     72
+    73     8 |         stream_putc (pStream,0x09);                                                              |     73
+    74       |      }                                                                                           |     74
+    75       |   }                                                                                              |     75
+    76       |}                                                                                                 |     76
+    77       |/* ---------------------------------------------------------------------------                    |     77
+    78       |   XML escape data to the stream                                                                  |     78
+    79       |   --------------------------------------------------------------------------- */                 |     79
+    80       |#pragma convert(1252)                                                                             |     80
+    81       |void putEscape (PSTREAM pStream , PUCHAR str , BOOL doEscape)                                     |     81
+    82       |{                                                                                                 |     82
+    83       |                                                                                                  |     83
+    84     1 |   if (doEscape) {                                                                                |     84
+    85     2 |      for (;*str;str++) {                                                                         |     85
+    86     3 |         switch(*str) {                                                                           |     86
+    87     4 |            case '<' : stream_puts (pStream , "&lt;")   ; break;                                  |     87
+    88     6 |            case '>' : stream_puts (pStream , "&gt;")   ; break;                                  |     88
+    89     8 |            case '&' : stream_puts (pStream , "&amp;")  ; break;                                  |     89
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page           5
+    90    10 |            case '\'': stream_puts (pStream , "&apos;") ; break;                                  |     90
+    91    12 |            case '\"': stream_puts (pStream , "&quot;") ; break;                                  |     91
+    92    14 |            default  : stream_putc (pStream , *str);                                              |     92
+    93       |         }                                                                                        |     93
+    94       |      }                                                                                           |     94
+    95       |   } else {                                                                                       |     95
+    96    15 |      stream_puts (pStream , str);                                                                |     96
+    97       |   }                                                                                              |     97
+    98       |}                                                                                                 |     98
+    99       |#pragma convert(0)                                                                                |     99
+   100       |/* ---------------------------------------------------------------------------                    |    100
+   101       |   Stream out the XML                                                                             |    101
+   102       |   --------------------------------------------------------------------------- */                 |    102
+   103       |#pragma convert(1252)                                                                             |    103
+   104       |static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT level)            |    104
+   105       |{                                                                                                 |    105
+   106       |   PNOXNODE    pNodeTemp, pNodeNext;                                                              |    106
+   107       |   PNOXATTR   pAttrTemp;                                                                          |    107
+   108       |   BOOL       shortform;                                                                          |    108
+   109     1 |   PUCHAR     CdataBegin = "";                                                                    |    109
+   110     2 |   PUCHAR     CdataEnd   = "";                                                                    |    110
+   111       |   BOOL       doEscape;                                                                           |    111
+   112       |                                                                                                  |    112
+   113       |   // Recurse if we are the annonumus root                                                        |    113
+   114       |   if (pNode                                                                                      |    114
+   115       |   &&  pNode->pNodeParent == NULL                                                                 |    115
+   116     3 |   &&  pNode->Name        == NULL) {                                                              |    116
+   117       |      PNOXNODE pTemp;                                                                             |    117
+   118     4 |      for ( pTemp = pNode ; pTemp; pTemp= pTemp->pNodeSibling) {                                  |    118
+   119     5 |       xmlStream (pTemp->pNodeChildHead ,pStream , FALSE, level);                                 |    119
+   120       |      }                                                                                           |    120
+   121     6 |      return;                                                                                     |    121
+   122       |   }                                                                                              |    122
+   123       |                                                                                                  |    123
+   124       |   // Iterate through each sibling                                                                |    124
+   125     7 |   while (pNode) {                                                                                |    125
    126       |                                                                                                  |    126
-   127    53 |    if (pCol->isLiteral) {                                                                        |    127
-   128    54 |     if (decpoint == '.') {                                                                       |    128
-   129    55 |      iconvWrite(pjWrite->outFile ,&pjWrite->iconv, pCol->Value, FALSE);                          |    129
-   130       |     } else {                                                                                     |    130
-   131    56 |      csvReplaceDecpoint (temp , pCol->Value , decpoint);                                         |    131
-   132    57 |      iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);                                 |    132
-   133       |     }                                                                                            |    133
- 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    25-11-22 14:19:50 Page           6
-   134       |    } else {                                                                                      |    134
-   135    58 |     csvStringEscape (temp , pCol->Value);                                                        |    135
-   136    59 |     iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);                                  |    136
-   137       |    }                                                                                             |    137
-   138       |   }                                                                                              |    138
-   139    60 |   pCol  = pCol->pNodeSibling;                                                                    |    139
-   140    61 |   if ( pCol) iconvPutc(pjWrite->outFile , &pjWrite->iconv, comma);                               |    140
-   141       |  }                                                                                               |    141
-   142       |  // newline                                                                                      |    142
-   143    63 |  fwrite (CrLf , 1 , 2 , pjWrite->outFile);                                                       |    143
-   144    64 |  pNode = pNode->pNodeSibling;                                                                    |    144
-   145       |                                                                                                  |    145
-   146       | }                                                                                                |    146
+   127     8 |      if (pNode->Comment) {                                                                       |    127
+   128     9 |         indentXml ( pStream, cdatamode , level);                                                 |    128
+   129    10 |         stream_puts (pStream , "<!--");                                                          |    129
+   130    11 |         stream_puts (pStream , pNode->Comment);                                                  |    130
+   131    12 |         stream_puts (pStream , "-->");                                                           |    131
+   132       |      }                                                                                           |    132
+   133       |                                                                                                  |    133
+   134       |                                                                                                  |    134
+   135       |      // For current node and children                                                            |    135
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page           6
+   136    13 |      if (pNode->options & NOX_FORMAT_CDATA && cdatamode == 0) {                                  |    136
+   137    14 |         cdatamode  = level;                                                                      |    137
+   138    15 |         CdataBegin = "<![CDATA[";                                                                |    138
+   139    16 |         CdataEnd   = "]]>";                                                                      |    139
+   140       |      }                                                                                           |    140
+   141    17 |      doEscape = cdatamode ? FALSE : TRUE;                                                        |    141
+   142       |                                                                                                  |    142
+   143       |      // For current node and children                                                            |    143
+   144    18 |      if (pNode->options & NOX_FORMAT_CDATA && cdatamode == 0) {                                  |    144
+   145    19 |         cdatamode = level;                                                                       |    145
+   146       |      }                                                                                           |    146
    147       |                                                                                                  |    147
-   148    65 | fclose(pjWrite->outFile);                                                                        |    148
-   149    66 | iconv_close(pjWrite->iconv);                                                                     |    149
-   150       |}                                                                                                 |    150
+   148    20 |      indentXml ( pStream, cdatamode , level);                                                    |    148
+   149    21 |      stream_puts (pStream , "<");                                                                |    149
+   150    22 |      stream_puts (pStream , pNode->Name );                                                       |    150
+   151       |                                                                                                  |    151
+   152    23 |      for (pAttrTemp = pNode->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){        |    152
+   153    24 |         if (pNode->newlineInAttrList) {                                                          |    153
+   154    25 |            indentXml ( pStream, cdatamode , level);                                              |    154
+   155       |         }                                                                                        |    155
+   156    26 |         stream_puts (pStream , " "); // TODO - only next time                                    |    156
+   157    27 |         stream_puts (pStream , pAttrTemp->Name);                                                 |    157
+   158    28 |         stream_puts (pStream , "=\"");                                                           |    158
+   159    29 |         putEscape   (pStream , pAttrTemp->Value , doEscape); // TODO - ENCODE                    |    159
+   160    30 |         stream_puts (pStream , "\"");                                                            |    160
+   161       |      }                                                                                           |    161
+   162       |                                                                                                  |    162
+   163    31 |      shortform = TRUE;                                                                           |    163
+   164       |                                                                                                  |    164
+   165    32 |      if (pNode->Value != NULL && pNode->Value[0] > '\0') {                                       |    165
+   166    33 |         shortform = FALSE;                                                                       |    166
+   167    34 |         stream_puts (pStream , ">");                                                             |    167
+   168    35 |         stream_puts (pStream , CdataBegin);                                                      |    168
+   169    36 |         putEscape   (pStream , pNode->Value, doEscape);                                          |    169
+   170       |      }                                                                                           |    170
+   171       |                                                                                                  |    171
+   172    37 |      if (pNode->pNodeChildHead) {                                                                |    172
+   173    38 |         shortform = FALSE;                                                                       |    173
+   174    39 |         if (pNode->Value != NULL && pNode->Value[0] > '\0') {                                    |    174
+   175       |         // Already put - in the above                                                            |    175
+   176       |         } else {                                                                                 |    176
+   177    40 |            stream_puts (pStream , ">");                                                          |    177
+   178    41 |            stream_puts (pStream , CdataBegin);                                                   |    178
+   179       |         }                                                                                        |    179
+   180    42 |         xmlStream (pNode->pNodeChildHead , pStream, cdatamode, level + 1);                       |    180
+   181       |      }                                                                                           |    181
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page           7
+   182       |                                                                                                  |    182
+   183    43 |      if (shortform) {                                                                            |    183
+   184    44 |         if (pNode->newlineInAttrList) {                                                          |    184
+   185    45 |            indentXml ( pStream, cdatamode , level);                                              |    185
+   186       |         }                                                                                        |    186
+   187    46 |         stream_puts (pStream , "/>");                                                            |    187
+   188       |      } else {                                                                                    |    188
+   189    47 |         if (pNode->pNodeChildHead) {                                                             |    189
+   190    48 |            indentXml ( pStream, cdatamode , level);                                              |    190
+   191       |         }                                                                                        |    191
+   192       |                                                                                                  |    192
+   193    49 |         stream_puts (pStream , CdataEnd);                                                        |    193
+   194    50 |         stream_puts (pStream , "</");                                                            |    194
+   195    51 |         stream_puts (pStream , pNode->Name);                                                     |    195
+   196    52 |         stream_puts (pStream , ">");                                                             |    196
+   197       |      }                                                                                           |    197
+   198       |                                                                                                  |    198
+   199    53 |      if (cdatamode == level) {                                                                   |    199
+   200    54 |         cdatamode = 0;                                                                           |    200
+   201       |      }                                                                                           |    201
+   202    55 |      CdataBegin = "";                                                                            |    202
+   203    56 |      CdataEnd   = "";                                                                            |    203
+   204       |                                                                                                  |    204
+   205    57 |      pNode = pNode->pNodeSibling;                                                                |    205
+   206       |   }                                                                                              |    206
+   207       |                                                                                                  |    207
+   208       |}                                                                                                 |    208
+   209       |#pragma convert(0)                                                                                |    209
+   210       |// ----------------------------------------------------------------------------                   |    210
+   211       |void  xmlStreamRunner   (PSTREAM pStream)                                                         |    211
+   212       |{                                                                                                 |    212
+   213     1 | PNOXNODE  pNode = pStream->context;                                                              |    213
+   214     2 |   xmlStream (pNode , pStream , FALSE , 0);                                                       |    214
+   215       |}                                                                                                 |    215
+   216       |                                                                                                  |    216
+   217       |/* ---------------------------------------------------------------------------                    |    217
+   218       |   exported function                                                                              |    218
+   219       |   --------------------------------------------------------------------------- */                 |    219
+   220       |LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)                                |    220
+   221       |{                                                                                                 |    221
+   222     1 | PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();                                                   |    222
+   223       | PSTREAM  pStream;                                                                                |    223
+   224       | LONG     len;                                                                                    |    224
+   225       | PJWRITE  pjWrite;                                                                                |    225
+   226       |                                                                                                  |    226
+   227       |                                                                                                  |    227
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page           8
+   228     2 | if (pNode == NULL) return 0;                                                                     |    228
+   229     4 | if (pNode->signature != NODESIG) {                                                               |    229
+   230     5 |  strcpy (buf, (PUCHAR) pNode);                                                                   |    230
+   231     6 |  return strlen(buf);                                                                             |    231
+   232       | }                                                                                                |    232
+   233       |                                                                                                  |    233
+   234     7 | pStream = stream_new (4096);                                                                     |    234
+   235     8 | pStream->writer  = nox_memWriter;                                                                |    235
+   236     9 | pStream->handle = pjWrite = newWriter();                                                         |    236
+   237    10 | pjWrite->buf = buf;                                                                              |    237
+   238    11 | pjWrite->doTrim = true;                                                                          |    238
+   239       |   pjWrite->maxSize =                                                                             |    239
+   240       |          pParms->OpDescList == NULL                                                              |    240
+   241    12 |  || (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3 ) ? maxLenP : MEMMAX;             |    241
+   242       |                                                                                                  |    242
+   243    13 | xmlStream (pNode , pStream , FALSE , 0);                                                         |    243
+   244    14 | len = pStream->totalSize;                                                                        |    244
+   245    15 | stream_putc   (pStream,'\0');                                                                    |    245
+   246    16 | stream_delete (pStream);                                                                         |    246
+   247    17 | deleteWriter(pjWrite);                                                                           |    247
+   248    18 | return  len;                                                                                     |    248
+   249       |                                                                                                  |    249
+   250       |}                                                                                                 |    250
+   251       |// ---------------------------------------------------------------------------                    |    251
+   252       |VOID nox_AsXmlText (PLVARCHAR res , PNOXNODE pNode)                                               |    252
+   253       |{                                                                                                 |    253
+   254     1 | res->Length = nox_AsXmlTextMem (pNode , res->String, MEMMAX);                                    |    254
+   255       |}                                                                                                 |    255
+   256       |/* ---------------------------------------------------------------------------                    |    256
+   257       |   Write using the stream system to disk                                                          |    257
+   258       |   --------------------------------------------------------------------------- */                 |    258
+   259       |void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options) |    259
+   260       |{                                                                                                 |    260
+   261     1 | PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();                                                   |    261
+   262       | PSTREAM pStream;                                                                                 |    262
+   263       | PJWRITE pjWrite;                                                                                 |    263
+   264       | UCHAR   mode[32];                                                                                |    264
+   265       |   PUCHAR  enc;                                                                                   |    265
+   266       |                                                                                                  |    266
+   267     2 | if (pNode == NULL) return;                                                                       |    267
+   268       |                                                                                                  |    268
+   269     4 | pjWrite = newWriter();                                                                           |    269
+   270     5 | pStream = stream_new (4096);                                                                     |    270
+   271     6 | pStream->writer = nox_fileWriter;                                                                |    271
+   272       |                                                                                                  |    272
+   273     7 | sprintf(mode , "wb,o_ccsid=%d", Ccsid);                                                          |    273
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page           9
+   274     8 | unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists    |    274
+   275     9 | pjWrite->outFile  = fopen ( strTrim(FileName) , mode );                                          |    275
+   276    10 | if (pjWrite->outFile == NULL) {                                                                  |    276
+   277    11 |  deleteWriter(pjWrite);                                                                          |    277
+   278    12 |  return;                                                                                         |    278
+   279       | }                                                                                                |    279
+   280       |                                                                                                  |    280
+   281    13 | pStream->handle = pjWrite;                                                                       |    281
+   282       |                                                                                                  |    282
+   283    14 | pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) \|    283
+   283       |? FALSE : TRUE;                                                                                   |    283
+   284    15 | pjWrite->iconv  = XlateOpen(1208 , Ccsid );                                                      |    284
+   285       |                                                                                                  |    285
+   286       |   #pragma convert(1252)                                                                          |    286
+   287    16 |   switch(Ccsid) {                                                                                |    287
+   288       |     case 1252 :                                                                                  |    288
+   289    17 |       enc = "WINDOWS-1252";                                                                      |    289
+   290    18 |       break;                                                                                     |    290
+   291       |     case 1208 :                                                                                  |    291
+   292    19 |       enc = "UTF-8";                                                                             |    292
+   293    20 |       break;                                                                                     |    293
+   294       |     case 1200 :                                                                                  |    294
+   295    21 |       enc = "UTF-16";                                                                            |    295
+   296    22 |       break;                                                                                     |    296
+   297       |     case 819  :                                                                                  |    297
+   298    23 |       enc = "ISO-8859-1";                                                                        |    298
+   299    24 |       break;                                                                                     |    299
+   300       |     default   :                                                                                  |    300
+   301    25 |       enc = "windows-1252";                                                                      |    301
+   302       |   }                                                                                              |    302
+   303       |                                                                                                  |    303
+   304    26 |   stream_puts (pStream , "<?xml version=\"1.0\" encoding=\"");                                   |    304
+   305    27 |   stream_puts (pStream , enc);                                                                   |    305
+   306    28 |   stream_puts (pStream ,"\" ?>");                                                                |    306
+   307    29 |   indentXml      (pStream , 0, 0);                                                               |    307
+   308       |                                                                                                  |    308
+   309       |   #pragma convert(0)                                                                             |    309
+   310       |                                                                                                  |    310
+   311    30 | xmlStream ( pNode, pStream, FALSE , 0);                                                          |    311
+   312       |                                                                                                  |    312
+   313    31 | stream_delete (pStream);                                                                         |    313
+   314    32 | fclose(pjWrite->outFile);                                                                        |    314
+   315    33 | iconv_close(pjWrite->iconv);                                                                     |    315
+   316    34 | deleteWriter(pjWrite);                                                                           |    316
+   317       |}                                                                                                 |    317
+   318       |                                                                                                  |    318
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page          10
                                           * * * * *   E N D   O F   S O U R C E   * * * * *
- 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    25-11-22 14:19:50 Page           7
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page          11
                                                * * * * *   I N C L U D E S   * * * * *
  INCNBR  Include Name                     Last change        Actual Include Name
      1   stdio.h                          06-10-13 12:50:02  /QIBM/include/stdio.h
@@ -242,30 +413,32 @@ Command > CRTCMOD SRCSTMF('src/csv.c') MODULE(NOXDB2/csv) OPTIMIZE(10) ENUM(*INT
     18   decimal.h                        06-10-13 12:49:40  /QIBM/include/decimal.h
     19   wchar.h                          06-10-13 12:50:09  /QIBM/include/wchar.h
     20   wcstr.h                          06-10-13 12:50:00  /QIBM/include/wcstr.h
-    21   sys/stat.h                       06-10-13 13:01:10  /QIBM/include/sys/stat.h
-    22   sys/types.h                      06-10-13 13:01:08  /QIBM/include/sys/types.h
-    23   ostypes.h                        06-12-18 23:20:34  /prj/noxDB2/ext/include/ostypes.h
-    24   varchar.h                        21-11-18 23:22:55  /prj/noxDB2/ext/include/varchar.h
-    25   xlate.h                          22-11-18 00:12:01  /prj/noxDB2/ext/include/xlate.h
-    26   iconv.h                          06-10-13 12:49:21  /QIBM/include/iconv.h
-    27   stddef.h                         06-10-13 12:50:05  /QIBM/include/stddef.h
-    28   QTQICONV.h                       06-10-13 12:57:24  /QIBM/include/QTQICONV.h
-    29   parms.h                          12-11-18 18:09:21  /prj/noxDB2/ext/include/parms.h
-    30   strUtil.h                        25-11-22 13:20:13  /prj/noxDB2/ext/include/strUtil.h
-    31   memUtil.h                        21-11-18 22:42:38  /prj/noxDB2/ext/include/memUtil.h
-    32   streamer.h                       12-11-18 18:09:21  /prj/noxDB2/ext/include/streamer.h
-    33   noxdb2.h                         25-11-22 14:18:20  /prj/noxDB2/include/noxdb2.h
-    34   sqlcli.h                         04-02-14 17:01:23  /QIBM/include/sqlcli.h
-    35   sql.h                            06-10-13 13:02:23  /QIBM/include/sql.h
-    36   sqlsystm.h                       06-10-13 12:50:06  /QIBM/include/sqlsystm.h
-    37   sqludf.h                         06-10-13 12:50:02  /QIBM/include/sqludf.h
-    38   math.h                           06-10-13 12:50:00  /QIBM/include/math.h
-    39   apierr.h                         12-11-18 18:09:21  /prj/noxDB2/ext/include/apierr.h
+    21   errno.h                          06-10-13 12:50:02  /QIBM/include/errno.h
+    22   sys/stat.h                       06-10-13 13:01:10  /QIBM/include/sys/stat.h
+    23   sys/types.h                      06-10-13 13:01:08  /QIBM/include/sys/types.h
+    24   ostypes.h                        06-12-18 23:20:34  /prj/noxDB2/ext/include/ostypes.h
+    25   varchar.h                        21-11-18 23:22:55  /prj/noxDB2/ext/include/varchar.h
+    26   xlate.h                          22-11-18 00:12:01  /prj/noxDB2/ext/include/xlate.h
+    27   iconv.h                          06-10-13 12:49:21  /QIBM/include/iconv.h
+    28   stddef.h                         06-10-13 12:50:05  /QIBM/include/stddef.h
+    29   QTQICONV.h                       06-10-13 12:57:24  /QIBM/include/QTQICONV.h
+    30   parms.h                          12-11-18 18:09:21  /prj/noxDB2/ext/include/parms.h
+    31   strUtil.h                        25-11-22 13:20:13  /prj/noxDB2/ext/include/strUtil.h
+    32   memUtil.h                        21-11-18 22:42:38  /prj/noxDB2/ext/include/memUtil.h
+    33   streamer.h                       12-11-18 18:09:21  /prj/noxDB2/ext/include/streamer.h
+    34   noxdb2.h                         25-11-22 14:33:55  /prj/noxDB2/include/noxdb2.h
+    35   sqlcli.h                         04-02-14 17:01:23  /QIBM/include/sqlcli.h
+    36   sql.h                            06-10-13 13:02:23  /QIBM/include/sql.h
+    37   sqlsystm.h                       06-10-13 12:50:06  /QIBM/include/sqlsystm.h
+    38   sqludf.h                         06-10-13 12:50:02  /QIBM/include/sqludf.h
+    39   math.h                           06-10-13 12:50:00  /QIBM/include/math.h
+    40   apierr.h                         12-11-18 18:09:21  /prj/noxDB2/ext/include/apierr.h
+    41   e2aa2e.h                         21-11-18 19:08:01  /prj/noxDB2/ext/include/e2aa2e.h
                                        * * * * *   E N D   O F   I N C L U D E S   * * * * *
- 5770WDS V7R2M0  140418   IBM ILE C compiler      csv.c                              DKSRV206    25-11-22 14:19:50 Page           8
+ 5770WDS V7R2M0  140418   IBM ILE C compiler      xmlserial.c                        DKSRV206    25-11-22 15:00:40 Page          12
                                         * * * * *   M E S S A G E   S U M M A R Y   * * * * *
        Total      Informational(00)      Warning(10)      Error(20)      Severe Error(30)      Unrecoverable Error(40)
          0              0                    0               0                  0                        0
                                 * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
- Module CSV was created in library NOXDB2 on 25-11-22 at 14:19:50.
+ Module XMLSERIAL was created in library NOXDB2 on 25-11-22 at 15:00:40.
                                     * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *
