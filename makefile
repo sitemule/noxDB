@@ -95,6 +95,7 @@ hdr:
 	-system -i "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(132)"
 	-system -i "CRTSRCPF FILE($(BIN_LIB)/H) RCDLEN(132)"
   
+	system "CPYFRMSTMF FROMSTMF('headers/noxDB2.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDB2.mbr') MBROPT(*REPLACE)"
 	system "CPYFRMSTMF FROMSTMF('headers/noxDB2JSON.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDB2JSON.mbr') MBROPT(*REPLACE)"
 	system "CPYFRMSTMF FROMSTMF('headers/noxDB2XML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDB2XML.mbr') MBROPT(*REPLACE)"
 	system "CPYFRMSTMF FROMSTMF('include/noxDB2.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/noxDB2.mbr') MBROPT(*REPLACE)"

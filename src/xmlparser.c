@@ -144,7 +144,7 @@ void nox_AppendName (PNOXCOM pJxCom)
 		}
 	} else {
 
-		if (stricmp(pJxCom->pName , pJxCom->pNodeWorkRoot->Name) != 0) {
+		if (astrIcmp(pJxCom->pName , pJxCom->pNodeWorkRoot->Name) != 0) {
 			nox_SetMessage( "Invalid end tag </%s> for start tag <%s> at (%d:%d)" ,
 				pJxCom->pName , pJxCom->pNodeWorkRoot->Name, pJxCom->LineCount, pJxCom->ColCount);
 			pJxCom->State = XML_EXIT_ERROR;

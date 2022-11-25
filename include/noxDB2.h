@@ -328,7 +328,7 @@ LGL nox_ForEach (PNOXITERATOR pIter);
 PNOXNODE nox_GetParent(PNOXNODE pNode);
 SHORT nox_GetNodeType (PNOXNODE pNode);
 
-VARCHAR nox_GetNodeNameAsPath (PNOXNODE pNode, UCHAR Delimiter);
+void nox_GetNodeNameAsPath (PLVARCHAR pRes, PNOXNODE pNode, UCHAR Delimiter);
 #pragma descriptor ( void nox_GetNodeNameAsPath                 (void))
 
 void nox_CopyValueByNameVC (PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR pName, PLVARCHAR pDefault , BOOL joinString);

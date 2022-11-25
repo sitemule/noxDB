@@ -200,6 +200,21 @@
           pNode          Pointer    value;
         End-PR;
 
+
+        // Set node with null value
+        //
+        // Creates a node at the passed path with the value <code>*null</code>.
+        // Any existing node will be replaced by this new node.
+        //
+        // @param Node
+        // @param Node path expression
+        // @return New node
+        ///
+        Dcl-PR json_SetNull pointer extproc(*CWIDEN : 'nox_SetNullByNameVC');
+          node pointer value;
+          Expresion      Like(UTF8) const options(*varsize);
+        End-PR;
+
         Dcl-PR json_SetEval pointer extproc(*CWIDEN:'nox_SetEvalByNameVC');
           pNode          Pointer    value;
           Expresion      Like(UTF8) const options(*varsize);
@@ -209,7 +224,7 @@
         Dcl-PR json_SetStr Pointer extproc(*CWIDEN: 'nox_SetStrByNameVC');
           // Pointer to json_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Like(UTF8) const options(*varsize);
@@ -218,7 +233,7 @@
         Dcl-PR json_SetInt Pointer extproc(*CWIDEN: 'nox_SetIntByNameVC');
           // Pointer to json_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Int(10)    value;
@@ -227,7 +242,7 @@
         Dcl-PR json_SetDate Pointer extproc(*CWIDEN: 'nox_SetDateByNameVC');
           // Pointer to json_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          date    value;
@@ -237,7 +252,7 @@
         Dcl-PR json_SetNum Pointer extproc(*CWIDEN: 'nox_SetDecByNameVC');
           // Pointer to json_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Packed(30:15) value;
@@ -246,7 +261,7 @@
         Dcl-PR json_SetBool Pointer extproc(*CWIDEN: 'nox_SetBoolByNameVC');
           // Pointer to json_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // New value to set / pointer to object
           Value          Ind        value;
@@ -255,7 +270,7 @@
         Dcl-PR json_SetPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByNameVC');
           // Pointer to json_ tree
           pNode          Pointer    value;
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           // Pointer to anything - You do the cleanup
           Value          Pointer    value;
@@ -265,7 +280,7 @@
 
         Dcl-PR json_SetProcPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByNameVC');
           pNode          Pointer    value; // Pointer to json_ tree
-          // X-path locations to node or attributes
+          // Path locations to node or attributes
           Expresion      Like(UTF8) const options(*varsize);
           Proc           Pointer(*Proc); // Pointer to a procedure
         End-PR;
@@ -299,13 +314,13 @@
           Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
         End-PR;
 
-        Dcl-PR json_GetName Like(UTF8) 
+        Dcl-PR json_GetName Like(UTF8)  rtnparm
                           extproc(*CWIDEN : 'nox_GetNodeNameVC');
           // Pointer to node
           pNode          Pointer    value;
         End-PR;
 
-        Dcl-PR json_GetNameAsPath Like(UTF8)
+        Dcl-PR json_GetNameAsPath Like(UTF8) rtnparm
                                 extproc(*CWIDEN : 'nox_GetNodeNameAsPath');
           // Pointer to node
           pNode          Pointer    value;

@@ -675,16 +675,15 @@ VOID nox_AsXmlText (PLVARCHAR res , PNOXNODE pNode)
 // ---------------------------------------------------------------------------
 // Traverse up the tree and build the name  like: "root/tree/node"
 // --------------------------------------------------------------------------- 
-VARCHAR nox_GetNodeNameAsPath (PNOXNODE pNode, UCHAR Delimiter)
+VOID nox_GetNodeNameAsPath (PLVARCHAR res ,PNOXNODE pNode, UCHAR Delimiter)
 {
 	PNOXNODE  p;
-	VARCHAR  res;
 	UCHAR    buf  [4096];
 	PUCHAR   pBuf, pBufEnd;
 	int len , i =0;
 
-	res.Length = 0;
-	if ( pNode == NULL) return res;
+	res->Length = 0;
+	if ( pNode == NULL) return;
 	pBuf = pBufEnd = buf + sizeof(buf) -1;
 
 	p = pNode;
@@ -703,9 +702,8 @@ VARCHAR nox_GetNodeNameAsPath (PNOXNODE pNode, UCHAR Delimiter)
 		p = p->pNodeParent;
 	}
 
-	res.Length = pBufEnd - pBuf;
-	substr(res.String , pBuf , res.Length );
-	return res;
+	res->Length = pBufEnd - pBuf;
+	substr(res->String , pBuf , res->Length );
 }
 /* --------------------------------------------------------------------------- */
 SHORT nox_GetNodeType (PNOXNODE pNode)
@@ -1745,6 +1743,7 @@ PNOXNODE nox_lookupByXpath (PNOXNODE pRootNode, PUCHAR * ppName)
 }
 #pragma convert(0)
 /* --------------------------------------------------------------------------- */
+#pragma convert(1252)
 PUCHAR nox_NodeName (PNOXNODE pNode,BOOL SkipNameSpace)
 {
 	PUCHAR p;
@@ -1762,6 +1761,7 @@ PUCHAR nox_NodeName (PNOXNODE pNode,BOOL SkipNameSpace)
 	}
 	return p;
 }
+#pragma convert(0)
 /* --------------------------------------------------------------------------- */
 nox_NodeNameVC (PLVARCHAR name, PNOXNODE pNode,BOOL SkipNameSpace)
 {
@@ -1777,7 +1777,7 @@ PNOXNODE  nox_FindNodeAtIndex(PNOXNODE pNode , PUCHAR Key , int index , BOOL Ski
 	while (pNode) {
 
 		CurName = nox_NodeName (pNode, SkipNameSpace);
-		if (CurName && stricmp(Key , CurName) == 0) {
+		if (CurName && astrIcmp(Key , CurName) == 0) {
 			if (index == i) return (pNode); // Found :)
 			i++;
 		}
@@ -1905,7 +1905,7 @@ static PNOXNODE nox_CalculateUbound(PNOXNODE pNode , PUCHAR key , BOOL SkipNameS
 	while (pNodeTemp) {
 		// Skip namespace ? - when namespace is a *:
 		PUCHAR CurName = nox_NodeName (pNodeTemp, SkipNameSpace);
-		if (CurName && stricmp(key , CurName) == 0) {
+		if (CurName && astrIcmp(key , CurName) == 0) {
 			pNode->Count ++;
 		}
 		pNodeTemp=pNodeTemp->pNodeSibling;
@@ -2589,7 +2589,7 @@ PNOXNODE  nox_lookupValue (PNOXNODE pNode, PUCHAR expr, BOOL16 ignorecaseP)
 
 	// Dynamic set the compare function
 	int (*pComp) (PUCHAR s1 , PUCHAR s2);
-	pComp = ignorecase ? stricmp : strcmp ;
+	pComp = ignorecase ? astrIcmp : strcmp ;
 
 	// Works for array and objects
 	if (pNode == NULL || ( pNode->type != ARRAY && pNode->type != OBJECT)) return NULL;
@@ -2901,7 +2901,7 @@ PNOXNODE  nox_SetNullByName (PNOXNODE pNode, PUCHAR Name)
 }
 PNOXNODE  nox_SetNullByNameVC (PNOXNODE pNode, PLVARCHAR Name)
 {
-   return nox_SetNullByName(pNode , plvc2str(Name) , NULL , LITERAL );
+   return nox_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
 }
 /* -------------------------------------------------------------
 	 Set pointer by name

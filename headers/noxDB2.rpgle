@@ -314,13 +314,13 @@
           Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
         End-PR;
 
-        Dcl-PR nox_GetName Like(UTF8) 
+        Dcl-PR nox_GetName Like(UTF8)  rtnparm
                           extproc(*CWIDEN : 'nox_GetNodeNameVC');
           // Pointer to node
           pNode          Pointer    value;
         End-PR;
 
-        Dcl-PR nox_GetNameAsPath Like(UTF8)
+        Dcl-PR nox_GetNameAsPath Like(UTF8) rtnparm
                                 extproc(*CWIDEN : 'nox_GetNodeNameAsPath');
           // Pointer to node
           pNode          Pointer    value;
