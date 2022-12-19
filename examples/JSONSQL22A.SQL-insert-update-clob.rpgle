@@ -52,7 +52,7 @@
        json_setStr(pRow:  'SDTFPPDF' : '' );
 
        err = json_sqlInsert  (
-          'qgpl.samples'
+          'noxdbdemo.samples'
           :pRow
        );
        If err;
@@ -72,7 +72,7 @@
 
        json_setStr(pRow:  'sdttxt'   : text );
        err = json_sqlUpdate  (
-          'qgpl.samples'
+          'noxdbdemo.samples'
           :pRow
           :'SDTTKN = ' + %char(id)
        );

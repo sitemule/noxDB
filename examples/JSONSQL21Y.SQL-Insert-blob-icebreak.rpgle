@@ -20,7 +20,7 @@
 
        //  This is an IceBreak ILOB examples . requires IceBreak sot compile
        //  on a table like this:
-       //    create table QGPL/NOTES (
+       //    create table noxdbdemo/NOTES (
        //       id     int generated always as Identity unique,
        //       title  varchar(256)     not null with default,
        //       text1  clob             not null with default,

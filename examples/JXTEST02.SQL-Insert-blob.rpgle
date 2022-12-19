@@ -15,7 +15,7 @@
        // Using SQL cursors
        //
        //  on a table like this:
-       //    create table QGPL/NOTES (
+       //    create table noxdbdemo/NOTES (
        //       id     int generated always as Identity,
        //       title  varchar(256)     not null with default,
        //       text1  blob             not null with default,
@@ -45,7 +45,7 @@
           json_setStr(pRow:  'text1'    : '{a:123}');
 
           err = json_sqlInsert  (
-             'qgpl/notes'
+             'noxdbdemo/notes'
              :pRow
           );
           id = json_sqlGetInsertId();

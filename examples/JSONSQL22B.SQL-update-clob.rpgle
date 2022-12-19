@@ -56,7 +56,7 @@
        json_setStr(pRow:  'SDTTXT'   : text );
 
        err = json_sqlUpdate  (
-          'qgpl.samples'
+          'noxdbdemo.samples'
           :pRow
           :'SDTTKN = ' + %char(id)
        );

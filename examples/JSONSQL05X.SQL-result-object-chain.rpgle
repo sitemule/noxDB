@@ -29,7 +29,7 @@
         // return one object with one row
           sql   = ('-
                Select *                  -
-                     from qgpl/varchar         -
+                     from noxdbdemo/varchar         -
                      fetch first 1 row only    -
                   ');
 

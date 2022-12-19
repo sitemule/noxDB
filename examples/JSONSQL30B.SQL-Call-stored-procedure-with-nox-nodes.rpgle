@@ -34,18 +34,18 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
 // 
 // Create the procedure from ACS. Maybe change the schema location 
 // 
-// create or replace table noxdb.customer  ( 
+// create or replace table noxdbdemo.customer  ( 
 //   id  int generated always as identity primary key,
 //   name varchar(30),
 //   age  int
 // ); 
 
 
-// insert into noxdb.customer (name) values ('john'); 
-// select * from noxdb.customer;
+// insert into noxdbdemo.customer (name) values ('john'); 
+// select * from noxdbdemo.customer;
 
-// drop procedure   qgpl.noxtest;
-// create or replace procedure qgpl.noxtest (
+// drop procedure   noxdbdemo.noxtest;
+// create or replace procedure noxdbdemo.noxtest (
 //   in noxinobj  bigint,
 //   in noxoutobj bigint
 // ) 
@@ -55,7 +55,7 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
 //     declare sqlcode int;
 //     declare tempnode bigint;
     
-//     insert into noxdb.customer (name , age) values (
+//     insert into noxdbdemo.customer (name , age) values (
 //         nox_getStr(noxinobj, 'name' , 'N/A'),
 //         nox_getNum(noxinobj, 'age'  , 0 )
 //     );
@@ -85,7 +85,7 @@ dcl-proc callUsingNoxNodes ;
 
     // Caling procedures using nox nodes 
     // Let you use the noxDb object graph in SQL procedures 
-    err = json_sqlCallNode ('qgpl.noxtest' : p1: p2);
+    err = json_sqlCallNode ('noxdbdemo.noxtest' : p1: p2);
 
     If err;
         msg = json_Message();

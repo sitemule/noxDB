@@ -36,6 +36,9 @@ dcl-proc main;
     example6();
     example7();
 
+    // Run the examples - views
+    example8();
+    
     // Cleanup: disconnect from database
     json_sqlDisconnect();
 
@@ -218,3 +221,30 @@ dcl-proc example7;
     json_delete(pMeta);
 
 end-proc;
+
+// ------------------------------------------------------------------------------------
+// example8 - Meta tag with fields and system names fro views
+// ------------------------------------------------------------------------------------
+dcl-proc example8;
+
+    Dcl-S pRows              Pointer;
+
+    // return a object with all rows
+    pRows = json_sqlResultSet(
+        'Select * from qsys2.asp_info':
+        1:                  // Position: Starting from row
+        JSON_ALLROWS:       // Limit   : Number of rows to read
+        JSON_META +         // Option  : Produce a result object with a "meta" object   
+        JSON_FIELDS +       // Option  : The "meta" object will contain column atributes 
+        JSON_SYSTEM_NAMES   // Option  : the names will be "for column" system name 
+    );         
+
+    // Produce a JSON stream file in the IFS
+    json_writeJsonStmf(pRows  :
+        '/prj/noxdb/testout/resultset-sysnames-example8.json' : 1208 : *off
+    );
+
+    // Cleanup: Dispose the rows, arrays
+    json_delete(pRows);
+
+end-proc;  

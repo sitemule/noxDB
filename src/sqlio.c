@@ -548,8 +548,7 @@ static PUCHAR getSystemColumnName ( PUCHAR sysColumnName, PUCHAR columnText, PUC
    fb = _Rreadk (fSysCol  ,&sysColR , sizeof(SYSCOLR) ,
                  __KEY_EQ | __NULL_KEY_MAP  , &sysColK , keylen);
    if (fb->num_bytes == 0) {
-      strcpy (sysColumnName , column);
-      return sysColumnName;
+      return NULL;
    }
    // Now have the format and part no
    // now move the format and part into key
@@ -560,8 +559,7 @@ static PUCHAR getSystemColumnName ( PUCHAR sysColumnName, PUCHAR columnText, PUC
    // We have the complete key -  get the name for column
    fb = _Rreadk (fSysCol  ,&sysColR , sizeof(SYSCOLR) , __KEY_EQ  , &sysColK , sizeof(SYSCOLK));
    if (fb->num_bytes == 0) {
-      strcpy (sysColumnName , column);
-      return sysColumnName;
+      return NULL;
    }
    strtrimncpy ( sysColumnName , sysColR.DBIINT , sizeof(sysColR.DBIINT));
    substr ( columnText ,  sysColR.DBITXT.data , sysColR.DBITXT.len);
@@ -577,17 +575,21 @@ static PUCHAR  getSysNameForColumn ( PUCHAR sysColumnName, PUCHAR columnText, SQ
    SQLINTEGER    numlen;
 
    UCHAR column [256];
-   UCHAR table [256];
-   UCHAR schema[256];
+   UCHAR table  [256];
+   UCHAR schema [256];
 
-   // We simply ignore the errors, and let getSystemColumnName handle the error if any 
    rc = SQLColAttribute (hstmt, columnNo , SQL_DESC_BASE_SCHEMA , schema, sizeof(schema), &len1 , &numlen);
    rc = SQLColAttribute (hstmt, columnNo , SQL_DESC_BASE_TABLE  , table , sizeof(table) , &len2 , &numlen);
    rc = SQLColAttribute (hstmt, columnNo , SQL_DESC_BASE_COLUMN , column, sizeof(column), &len3 , &numlen);
+
+   if (len1 == 0 || len2 == 0 || len3 == 0 ) {
+      return NULL;
+   }
+
    schema [len1] = '\0';
    table  [len2] = '\0';
    column [len3] = '\0';
-   
+
    return  getSystemColumnName ( sysColumnName, columnText, schema , table , column);
 }
 /* ------------------------------------------------------------- 
@@ -727,7 +729,7 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    for (i = 0; i < pSQL->nresultcols; i++) {
 
       int labelRc; 
-      UCHAR colText  [128];
+      UCHAR colText  [256];
 
       PJXCOL pCol = &pSQL->cols[i];
 
@@ -747,7 +749,10 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       strcpy (pCol->realname , pCol->colname);
 
       if (format & (JX_SYSTEM_NAMES | JX_COLUMN_TEXT)) {
-         getSysNameForColumn ( pCol->sysname , colText , pSQL->pstmt->hstmt , i+1);
+         if (NULL == getSysNameForColumn ( pCol->sysname , colText , pSQL->pstmt->hstmt , i+1)) {
+            strcpy (pCol->sysname , pCol->colname);
+            strcpy (colText       , pCol->colname);
+         }
       } else {
          *pCol->sysname = '\0';
       }
@@ -897,10 +902,16 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
             case SQL_GRAPHIC:
             case SQL_VARGRAPHIC:
                // fix !! UNICODE tends to leave uninitialized data behind
-               memset( buf, '\0' , pCol->collen);
+               if ( 0 == (pCol->collen & 0xF0000000 )) {
+                   memset( buf, '\0' , pCol->collen);
+               } 
                // Note: SQLCLI only supports LONG_MAX size of data to be transfered
                // SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , memSize(buf), &buflen);
                SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , LONG_MAX, &buflen);
+               // Note: collen will contain xFFFFFFFF for  type 14 = CLOB 
+               memset ( buf + buflen, 0 , 2); // Zero term - also UNICODE
+
+
                break;
             default:
                // Note: SQLCLI only supports LONG_MAX size of data to be transfered
@@ -914,7 +925,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
             jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , NULL,  JX_LITERAL );
          } else {
 
-            buf[buflen] = '\0';
+            memset ( buf + buflen, 0 , 2); // Zero term - also UNICODE
 
             switch( pCol->coltype) {
                case SQL_WCHAR:
@@ -926,6 +937,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
                   size_t OutLen;
                   size_t inbytesleft;
 
+                  // fix  - even bound to a c-buffer, it returns the length
                   if (pCol->coltype ==  SQL_WVARCHAR) {
                     inbytesleft = (* (PSHORT) pInBuf) * 2; // Peak the length, and unicode uses two bytes
                     pInBuf += 2; // skip len

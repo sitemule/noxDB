@@ -504,7 +504,7 @@ typedef _Packed struct  {
 
 typedef struct  {
 	 SQLCHAR       colname  [64]; // !!!! TODO !!! set len to 32!!
-	 SQLCHAR       sysname  [13]; 
+	 SQLCHAR       sysname  [64]; 
 	 SQLCHAR       realname [64]; 
 	 SQLSMALLINT   coltype;
 	 SQLSMALLINT   colnamelen;
