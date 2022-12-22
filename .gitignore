@@ -3,5 +3,6 @@
 error.txt
 *.bin
 *.ipch
+/src/githash.c
 /headers/qoar/*
 /testout/*

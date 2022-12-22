@@ -32,9 +32,9 @@ CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*print) $(CCFLAGS)
 
 # Dependency list
 
-all:  $(BIN_LIB).lib link jsonxml.srvpgm  hdr
+all:  $(BIN_LIB).lib link githash jsonxml.srvpgm  hdr
 
-jsonxml.srvpgm: initialize.cpp noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlserial.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c trace.clle ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
+jsonxml.srvpgm: initialize.cpp noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlserial.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c trace.clle githash.c ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
 jsonxml.bnddir: jsonxml.entry
 noxdb.bnddir: jsonxml.entry
 
@@ -49,6 +49,11 @@ link:
 	-ln -s  /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./headers/qoar/h/qrntypes
 	-ln -s  /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./headers/qoar/h/qrndtagen
 	-ln -s  /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./headers/qoar/h/qrndtainto
+
+# get the git hash and put it into the version file so it becomes part of the copyright notice in the service program
+githash:	
+	-$(eval GITHASH := $(shell git rev-parse --verify HEAD))
+	-echo "#pragma comment(copyright,\"git hash: $(GITHASH)\")" > src/githash.c 
 
 %.bnddir:
 	-system -q "DLTBNDDIR BNDDIR($(BIN_LIB)/$*)"
