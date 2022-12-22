@@ -54,7 +54,7 @@ link:
 githash:	
 	-$(eval GITSHORT := $(shell git rev-parse --short HEAD))
 	-$(eval GITHASH := $(shell git rev-parse --verify HEAD))
-	-echo "#pragma comment(copyright,\"git checkout $(GITSHORT) (hash: $(GITHASH) )\")" > src/githash.c 
+	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(GITSHORT) (hash: $(GITHASH) )\")" > src/githash.c 
 
 %.bnddir:
 	-system -q "DLTBNDDIR BNDDIR($(BIN_LIB)/$*)"
@@ -141,14 +141,16 @@ release: clean
 # For vsCode / single file then i.e.: gmake current sqlio.c  
 ifeq "$(suffix $(SRC))" ".c"
 current:
-	system -i "CRTCMOD MODULE($(BIN_LIB)/$(basename $(notdir ($(SRC))))) SRCSTMF('$(SRC)') $(CCFLAGS2) "
-	system -i "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/*ALL)"  
+	-$(eval MODULE := $(basename $(notdir ($(SRC)))))
+	system -i "CRTCMOD MODULE($(BIN_LIB)/$(MODULE)) SRCSTMF('$(SRC)') $(CCFLAGS2) "
+	system -i "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/$(MODULE))"  
 endif
 
 ifeq "$(suffix $(SRC))" ".cpp"
 current:
-	system "CRTCPPMOD MODULE($(BIN_LIB)/$(basename $(notdir ($(SRC))))) SRCSTMF('$(SRC)') $(CCFLAGS2) "
-	system "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/*ALL)"  
+	-$(eval MODULE := $(basename $(notdir ($(SRC)))))
+	system "CRTCPPMOD MODULE($(BIN_LIB)/$(MODULE)) SRCSTMF('$(SRC)') $(CCFLAGS2) "
+	system "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/$(MODULE))"  
 endif
 
 
