@@ -67,7 +67,7 @@ dcl-proc test1;
    showme = xml_AsXmlText(pXmlEnvelope); 
 
    // now even add an extra delivery node from a file 
-   pXmlPayloadFromFile = xml_ParseFile ('/prj/noxdb/testdata/Deliverynote.xml' : 'singleroot=true');  
+   pXmlPayloadFromFile = xml_ParseFile ('/prj/noxdb/testdata/Deliverynote.xml');  
    showme = xml_AsXmlText(pXmlPayloadFromFile); 
 
    xml_documentInsert   (pEnvelopeElement : pXmlPayloadFromFile : XML_LAST_CHILD);
