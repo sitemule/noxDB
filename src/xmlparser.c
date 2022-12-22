@@ -102,7 +102,7 @@ static void jx_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
            *(p++) = a2eTbl[n];
         // Unicode chars ...
         } else {
-           int l = XlateBuf(p  , (PUCHAR) &n , 2 , 13488, 0 );
+           int l = XlateBufferQ(p  , (PUCHAR) &n , 2 , 13488, 0 );
            if (l==0 || *p <= ' ') { // Invalid char or replacement char ..
              *p = '.';
            }

@@ -64,7 +64,7 @@ void main(void) {
   size_t  l1 , l2;
   UCHAR buf1[10] , buf2[10];
   PUCHAR p1, p2;
-  iconv_t cd = OpenXlate (1208 , 0 );
+  iconv_t cd = XlateOpenDescriptor (1208 , 0 , false);
   p1 = buf1; p2 = buf2;
   l1 = 3 ;  l2 =10;
   #pragma convert(1252)
@@ -83,16 +83,16 @@ void main(void) {
   printf("\n%s%s", RtvSysVal(buf, "QDAYOFWEEK" ),  RtvSysVal(buf, "QDAYOFWEEK" ));
   printf("\nDefault CCSID: %ld" , RtvDftCCSID());
   printf("\n");
-  RtvXlateTbl  (e2a , a2e , 1252 , 277);
+  XlateGetStaticConversionTables  (e2a , a2e , 1252 , 277);
   printf (ChkUniqueTbl(e2a) ? "\nUnique" : "\nNot Unique");
   printf (ChkUniqueTbl(a2e) ? "\nUnique" : "\nNot Unique");
-  RtvXlateTbl  (e2a , a2e , 1252 , 1252);
+  XlateGetStaticConversionTables  (e2a , a2e , 1252 , 1252);
   printf (ChkUniqueTbl(e2a) ? "\nUnique" : "\nNot Unique");
   printf (ChkUniqueTbl(a2e) ? "\nUnique" : "\nNot Unique");
-  RtvXlateTbl  (e2a , a2e , 1252 , 37);
+  XlateGetStaticConversionTables  (e2a , a2e , 1252 , 37);
   printf (ChkUniqueTbl(e2a) ? "\nUnique" : "\nNot Unique");
   printf (ChkUniqueTbl(a2e) ? "\nUnique" : "\nNot Unique");
-  RtvXlateTbl  (e2a , a2e , 1252 , 850);
+  XlateGetStaticConversionTables  (e2a , a2e , 1252 , 850);
   printf (ChkUniqueTbl(e2a) ? "\nUnique" : "\nNot Unique");
   printf (ChkUniqueTbl(a2e) ? "\nUnique" : "\nNot Unique");
   */

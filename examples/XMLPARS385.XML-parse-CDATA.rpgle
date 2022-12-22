@@ -11,8 +11,8 @@
    Dcl-S v                  VarChar(4096);
    /include qrpgleRef,noxdb
 
-   // Set the delimiters used to access the graph selector
-   // xml_setDelimiters ('/\@[] .{}''"$');
+   // Always set your ccsid for constants: 
+   xml_setDelimitersByCcsid(500);
 
 
    pxml  = xml_ParseString (
@@ -70,8 +70,8 @@
        Dcl-S v                  VarChar(4096);
       /include qrpgleRef,noxdb
 
-         // Set the delimiters used to access the graph selector
-         // xml_setDelimiters ('/\@[] .{}''"$');
+         // Always set your ccsid for constants: 
+         xml_setDelimitersByCcsid(500);
 
 
           pxml  = xml_ParseString (

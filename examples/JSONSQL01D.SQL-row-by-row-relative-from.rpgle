@@ -34,7 +34,7 @@
 
    // Open our SQL cursor. Use a simple select
    sqlhnd  = json_sqlOpen(
-      'Select * from icproduct'
+      'Select * from noxdbdemo.icproduct'
    );
 
    // Was there a problem ?

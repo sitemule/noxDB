@@ -46,7 +46,7 @@
              prodArray  = json_newArray ();
 
              // Note: the SQL can be a template, we fill with values from a json row
-             sql = 'Select * from icproduct where manuid = $manuid' ;
+             sql = 'Select * from noxdbdemo.icproduct where manuid = $manuid' ;
              prodHnd  = json_sqlOpen(sql : manuRow);
              prodRow = json_sqlFetchNext(prodHnd);
              DoW ( prodRow <>  *NULL);

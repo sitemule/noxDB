@@ -39,7 +39,7 @@
           '}');
 
           pResult = json_sqlResultSet(
-             'Select * from icproduct':    // The sql stmt
+             'Select * from noxdbdemo.icproduct':    // The sql stmt
              1:                          // from row number
              json_ALLROWS:               // Max number of rows to fetch
              json_META                   // return a obect and not an array

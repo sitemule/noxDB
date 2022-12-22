@@ -88,7 +88,7 @@ static BOOL  skipBlanks = TRUE;
 
 void jx_setDelimitersByCcsid (int ccsid)
 {
-   RtvXlateTbl  (e2aTbl , a2eTbl , 1252 , ccsid);  // 0=Current job CCSID
+   XlateGetStaticConversionTables  (e2aTbl , a2eTbl , 1252 , ccsid);  // 0=Current job CCSID
 
    #pragma convert(1252)
    Apos       = a2eTbl['\''];

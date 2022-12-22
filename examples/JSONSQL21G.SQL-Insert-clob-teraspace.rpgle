@@ -19,7 +19,7 @@
        // Using SQL. Resultsets
 
        //  on a table like this:
-       //    create table QGPL.NOTES(
+       //    create table noxdbdemo.NOTES(
        //       id     int generated always as Identity unique,
        //       title  varchar(256)     not null with default,
        //       text1  clob             not null with default,
@@ -69,7 +69,7 @@
           json_setPtr(pRow:  'text2'    : pNote2);
 
           err = json_sqlInsert  (
-             'qgpl/notes'
+             'noxdbdemo/notes'
              :pRow
           );
           id = json_sqlGetInsertId();

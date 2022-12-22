@@ -161,7 +161,7 @@ void jx_WriteXmlStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , P
    f = fopen ( strTrim(FileName) , mode );
    if (f == NULL) return;
 
-   Iconv = OpenXlate(OutputCcsid , Ccsid );
+   Iconv = XlateOpenDescriptor(OutputCcsid , Ccsid , false);
 
    #pragma convert(1252)
    switch(Ccsid) {

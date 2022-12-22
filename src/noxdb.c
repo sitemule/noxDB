@@ -660,7 +660,7 @@ void jx_WriteCsvStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJ
    }
 
    pjWrite->buf    = wTemp;
-   pjWrite->iconv  = OpenXlate(OutputCcsid , Ccsid );
+   pjWrite->iconv  = XlateOpenDescriptor(OutputCcsid , Ccsid , false);
 
    switch(Ccsid) {
      case 1208 :
@@ -1143,14 +1143,14 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
     pJxCom->State = XML_EXIT_ERROR;
     return outbuf;
   }
-
+  
   // Convert const to current ccsid
-  initconst( OutputCcsid);  // Init const freom 1252 to current output ccsid
+  initconst( OutputCcsid);  // Init const from 1252 to current output ccsid
 
   pJxCom->UseIconv = (InputCcsid != OutputCcsid);
 
   if ( pJxCom->UseIconv) {
-    pJxCom->Iconv = OpenXlate(InputCcsid  , OutputCcsid);
+    pJxCom->Iconv = XlateOpenDescriptor (InputCcsid  , OutputCcsid, 1);
   }
 
   // printf("\n iccs: %d, occs: 5d\n ", InputCcsid  , OutputCcsid);
@@ -1770,24 +1770,26 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
    pJxCom = memAlloc (sizeof(JXCOM));
    memset(pJxCom , 0, sizeof(JXCOM));
 
-   // Peek the first, tp detect the encoding
+   // Peek the first, t0 detect the encoding
    Buf = detectEncoding(pJxCom, Buf);
    if (pJxCom->UseIconv) {
-     int inlen = strlen(Buf);
-     int templen;
-     PUCHAR temp = memAlloc(inlen + 1); // Need room for zerotermination 
+      int inlen = strlen(Buf);
+      int templen;
+      PUCHAR temp = memAlloc(inlen * 4); // Need room for unicode  
 
-     if (pJxCom->LittleEndian) {
-       swapEndian(Buf , inlen);
-       templen = xlate(pJxCom, temp , Buf , inlen);
-       swapEndian(Buf , inlen);
-     } else {
-       templen = xlate(pJxCom, temp , Buf , inlen);
-     }
-     pJxCom->pStreamBuf = temp;
-     pJxCom->pStreamBuf [templen] = '\0';
-     pRoot = SelectParser (pJxCom);
-     memFree (&temp);
+      if (InputCcsid == 1208) {
+         templen = XlateUtf8ToSbcs (temp , Buf , inlen , 0);
+      } else if (pJxCom->LittleEndian) {
+         swapEndian(Buf , inlen);
+         templen  = XlateBufferQ(temp , Buf , inlen , InputCcsid , 0);
+         swapEndian(Buf , inlen);
+      } else {
+         templen  = XlateBufferQ(temp , Buf , inlen , InputCcsid , 0);
+      }
+      pJxCom->pStreamBuf = temp;
+      pJxCom->pStreamBuf [templen] = '\0';
+      pRoot = SelectParser (pJxCom);
+      memFree (&temp);
 
    } else {
      pJxCom->pStreamBuf =  Buf;
@@ -2354,7 +2356,7 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
 
    if (pNode == NULL
    ||  pNode->signature != NODESIG) {
-   	return NULL;
+      return NULL;
    }
 
    // You can change the "debug" in a debugsession to dump the source node
@@ -2394,11 +2396,11 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
 
    for (;;) {
 
-		// No node or dead node
-		if (pNode == NULL
-		||  pNode->signature != NODESIG) {
-			return NULL;
-		}
+      // No node or dead node
+      if (pNode == NULL
+      ||  pNode->signature != NODESIG) {
+         return NULL;
+      }
 
       // Find delimiter, find the end of this token
       if (*pEnd == BraBeg) {
@@ -2469,11 +2471,11 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
       if (*pEnd > '\0') { // Otherwise past end of string
          if (*pEnd != BraBeg) {
 
-				// Found but empty or dead
-				if (pNode == NULL
-   			||  pNode->signature != NODESIG) {
-   				return NULL;
-   			}
+            // Found but empty or dead
+            if (pNode == NULL
+            ||  pNode->signature != NODESIG) {
+               return NULL;
+            }
 
             pNode = pNode->pNodeChildHead;
          }
@@ -2684,18 +2686,24 @@ PUCHAR jx_GetValuePtr (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Default)
    }
 }
 /* --------------------------------------------------------------------------- */
-static void jx_joinArray2vc (PVARCHAR pRes , PJXNODE pNode)
+static void jx_joinArray2vc (PVARCHAR pRes , PJXNODE pNode , PUCHAR delimiter)
 {
-    PJXNODE p = pNode->pNodeChildHead;
-    int len;
-    pRes->Length = 0;
-    while (p) {
-       PUCHAR v = p->Value;
-       if (v  && *v) {
-          vccatstr(pRes , v);
-       }
-       p = p->pNodeSibling;
-    }
+   PJXNODE p = pNode->pNodeChildHead;
+   int len;
+   BOOL first = TRUE;
+   pRes->Length = 0;
+   while (p) {
+      PUCHAR v = p->Value;
+      if (v  && *v) {
+         if (first) {
+            first = FALSE;
+         } else {
+            vccatstr(pRes , delimiter);
+         }
+         vccatstr(pRes , v);
+      }
+      p = p->pNodeSibling;
+   }
 }
 /* --------------------------------------------------------------------------- */
 static void str2vcXlate (PJXNODE pNode , PVARCHAR pRes , PUCHAR str)
@@ -2737,7 +2745,7 @@ PUCHAR jx_splitAtrFromName (PUCHAR name)
    X-path: Find node by name, by parsing a name string and traverse the tree
    It can be relative by giging either a Nodeent or a XML-common pointer
    --------------------------------------------------------------------------- */
-void jx_CopyValueByNameVC (PVARCHAR pRes, PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Default , BOOL joinString)
+void jx_CopyValueByNameVC (PVARCHAR pRes, PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Default , BOOL joinString , PUCHAR delimiter)
 {
    PUCHAR    pNodeKey, pAtrKey;
    PXMLATTR  pAtr;
@@ -2763,7 +2771,7 @@ void jx_CopyValueByNameVC (PVARCHAR pRes, PJXNODE pNodeRoot, PUCHAR Name, PUCHAR
       vcprintf( pRes, "%ld" , pNode->Count);
 
    } else if (joinString &&  pNode->type == ARRAY) {
-      jx_joinArray2vc (pRes , pNode);
+      jx_joinArray2vc (pRes , pNode , delimiter);
       if (pRes->Length == 0) { // No data found when joining arrays as string - Now serialize it as usual
          pRes->Length  = jx_AsJsonTextMem (pNode , pRes->String , 32760);
       }
@@ -3273,20 +3281,21 @@ LGL jx_ParseStmfFile (PJXNODE  * ppRoot , PUCHAR FileName , PUCHAR Mode)
 VARCHAR jx_GetValueVC(PJXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PUCHAR  Default = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultP : "";
    PUCHAR  Name    = (pParms->OpDescList->NbrOfParms >= 2) ? NameP    : "";
+   PUCHAR  Default = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultP : "";
    VARCHAR res;
-   jx_CopyValueByNameVC ( &res , pNodeRoot, Name , Default , false) ;
+   jx_CopyValueByNameVC ( &res , pNodeRoot, Name , Default , false , "") ;
    return (res);
 }
 // -------------------------------------------------------------
-VARCHAR jx_GetStrJoinVC(PJXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP)
+VARCHAR jx_GetStrJoinVC(PJXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP , PUCHAR delimiterP)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PUCHAR  Default = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultP : "";
    PUCHAR  Name    = (pParms->OpDescList->NbrOfParms >= 2) ? NameP    : "";
+   PUCHAR  Default = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultP : "";
+   PUCHAR  delimiter = (pParms->OpDescList->NbrOfParms >= 4) ? delimiterP : "";
    VARCHAR res;
-   jx_CopyValueByNameVC ( &res , pNodeRoot, Name , Default , true ) ;
+   jx_CopyValueByNameVC ( &res , pNodeRoot, Name , Default , true , delimiter) ;
    return (res);
 }
 
@@ -3331,7 +3340,7 @@ DATE jx_GetValueDate (PJXNODE pNode , PUCHAR Name  , DATE dftParm)
 
    value = jx_GetValuePtr    (pNode , path , NULL ) ;
    if (value == NULL) {
-       return  dft;
+      return  dft;
    }
    return *(DATE*) value;
 }
@@ -3346,7 +3355,7 @@ TIME jx_GetValueTime (PJXNODE pNode , PUCHAR Name  , TIME dftParm)
 
    value = jx_GetValuePtr    (pNode , path , NULL ) ;
    if (value == NULL) {
-       return  dft;
+      return  dft;
    }
    return *(TIME*) value;
 }
@@ -3361,7 +3370,7 @@ TIMESTAMP jx_GetValueTimeStamp (PJXNODE pNode , PUCHAR Name  , TIMESTAMP dftParm
 
    value = jx_GetValuePtr    (pNode , path , NULL ) ;
    if (value == NULL) {
-       return  dft;
+      return  dft;
    }
    return *(TIMESTAMP*) value;
 }
@@ -3378,10 +3387,10 @@ LGL jx_GetValueBool  (PJXNODE pNode , PUCHAR Name  , LGL  dftParm)
    PJXNODE  p = jx_GetNode  (pNode, Name);
    if (p == NULL) return dft;
    if (p->type == VALUE) {
-     if (p->Value == NULL)  return dft;
-     if (p->Value[0] == 0 ) return OFF;
-     if (p->Value[0] == '0' && p->Value[1] == 0 )  return OFF;
-     if (p->isLiteral && BeginsWith(p->Value, "false")) return OFF;
+      if (p->Value == NULL)  return dft;
+      if (p->Value[0] == 0 ) return OFF;
+      if (p->Value[0] == '0' && p->Value[1] == 0 )  return OFF;
+      if (p->isLiteral && BeginsWith(p->Value, "false")) return OFF;
    }
    return (ON );
 }
@@ -3404,7 +3413,7 @@ FIXEDDEC jx_GetNodeValueNum (PJXNODE pNode , FIXEDDEC DefaultValue)
    FIXEDDEC dft = (pParms->OpDescList->NbrOfParms >= 2) ? DefaultValue : 0;
    PUCHAR value =  jx_GetNodeValuePtr  (pNode , NULL  );
    if (value == NULL) {
-     return dft;
+      return dft;
    } else {
       return jx_Num(value);
    }
@@ -3561,9 +3570,9 @@ PUCHAR jx_ErrStr (PJXNODE pJxNode)
 // -------------------------------------------------------------
 VOID jx_SetApiErr (PJXNODE pJxNode, PAPIERR pApiErr)
 {
-     strcpy (pApiErr->msgid , "CPF9898");
-     substr  (pApiErr->msgdta , jxMessage ,pApiErr->size - 25 );  // not inc. the header
-     pApiErr->avail  = strlen(pApiErr->msgdta);
+   strcpy (pApiErr->msgid , "CPF9898");
+   substr  (pApiErr->msgdta , jxMessage ,pApiErr->size - 25 );  // not inc. the header
+   pApiErr->avail  = strlen(pApiErr->msgdta);
 }
 // -------------------------------------------------------------
 VARCHAR1024 jx_Message  (PJXNODE pJxNode)
@@ -3579,11 +3588,11 @@ PJXNODE jx_GetMessageObject (PUCHAR msgId , PUCHAR msgDta)
    PJXNODE pMsg = jx_NewObject(NULL);
    jx_SetBoolByName (pMsg , "success" ,  OFF);
    if (pParms->OpDescList->NbrOfParms > 0)  {
-     jx_SetStrByName (pMsg , "msgId" ,  msgId);
-     jx_SetStrByName (pMsg , "msgDta",  msgDta);
-     // TODO - convert the msgid / msgData to text
+      jx_SetStrByName (pMsg , "msgId" ,  msgId);
+      jx_SetStrByName (pMsg , "msgDta",  msgDta);
+      // TODO - convert the msgid / msgData to text
    } else  {
-     jx_SetStrByName (pMsg , "msg" ,  jxMessage);
+      jx_SetStrByName (pMsg , "msg" ,  jxMessage);
    }
    return pMsg;
 }
@@ -3627,21 +3636,21 @@ BOOL jx_HasMore(PJXNODE pNode)
 //---------------------------------------------------------------------------
 LGL jx_IsJson(PJXNODE pNode)
 {
-     return  (pNode->signature == NODESIG) ? ON : OFF;
+   return  (pNode->signature == NODESIG) ? ON : OFF;
 }
 //---------------------------------------------------------------------------
 LGL jx_MemLeak(VOID)
 {
-    return  isOn(memLeak());
+   return  isOn(memLeak());
 }
 //---------------------------------------------------------------------------
 VOID jx_MemStat(VOID)
 {
-    memStat();
+   memStat();
 }
 //---------------------------------------------------------------------------
 INT64 jx_MemUse(VOID)
 {
-    return memUse();
+   return memUse();
 }
 

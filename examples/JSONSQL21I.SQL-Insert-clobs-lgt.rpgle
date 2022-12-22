@@ -20,7 +20,7 @@
 // Using SQL. Resultsets
 
 //  on a table like this:
-//    create table QGPL.NOTES3(
+//    create table noxdbdemo.NOTES3(
 //       id     int generated always as Identity unique,
 //       title  varchar(256)     not null with default,
 //       text1  clob             not null with default,

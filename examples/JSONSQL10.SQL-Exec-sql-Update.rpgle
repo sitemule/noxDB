@@ -31,20 +31,20 @@
          
          // Simple update
          err = json_sqlExec(
-            'update icproduct set price = price * 1.01'
+            'update noxdbdemo.icproduct set price = price * 1.01'
          );
 
          // update using json string used in template
          priceJsStr  = '{ newprice : 1.03 }';
          err = json_sqlExec(
-            'update icproduct set price = price * $newprice'
+            'update noxdbdemo.icproduct set price = price * $newprice'
             :priceJsStr
          );
 
          // update using json object used in template
          priceObj    = json_parseString ('{ newprice : 1.04 }');
          err = json_sqlExec(
-            'update icproduct set price = price * $newprice'
+            'update noxdbdemo.icproduct set price = price * $newprice'
             :priceObj
          );
 

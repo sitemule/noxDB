@@ -37,7 +37,7 @@
 
 
 static PJXNODE * ppRoot;
-static PXLATEDESC pXd = NULL;
+static iconv_t iconvCd;
 
 typedef void (*JX_DATAGEN)();
 
@@ -60,8 +60,8 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
         }
         case QrnDgEvent_03_Start            : {
 
-            if (pXd == NULL) {
-                pXd = XlateXdOpen (13488 , 0);
+            if (memcmp (&iconvCd , 0 , sizeof(iconvCd)) == 0) {
+                iconvCd = XlateOpenDescriptor (13488, 0 , false);
             }
             pNode = NULL;
             first = true;
@@ -73,7 +73,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
         case QrnDgEvent_05_StartStruct      : {
             PJXNODE pObj;
             UCHAR name [256];
-            ULONG namelen = XlateXdBuf(pXd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            LONG namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
             
             pObj  = jx_NewObject(NULL);
@@ -93,7 +93,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
         case QrnDgEvent_07_StartScalarArray : {
             PJXNODE pArr;
             UCHAR name [256];
-            ULONG namelen = XlateXdBuf(pXd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            ULONG namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
             pArr = jx_NewArray(NULL);
@@ -113,7 +113,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
         case QrnDgEvent_09_StartStructArray : {
             PJXNODE pArr;
             UCHAR name [256];
-            ULONG namelen = XlateXdBuf(pXd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            ULONG namelen = XlateBuffer(iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
             pArr = jx_NewArray(NULL);
@@ -139,10 +139,10 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             ULONG namelen;
             NODETYPE  type;
             
-            namelen = XlateXdBuf(pXd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
-            valuelen = XlateXdBuf(pXd, value , (PUCHAR) pParms->u.scalar.value  , pParms->u.scalar.valueLenBytes);
+            valuelen = XlateBuffer (iconvCd, value , (PUCHAR) pParms->u.scalar.value  , pParms->u.scalar.valueLenBytes);
             value[valuelen] = '\0';
 
             switch (pParms->u.scalar.dataType) {

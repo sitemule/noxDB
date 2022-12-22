@@ -35,7 +35,8 @@
 
 
 static PJXNODE pRoot; 
-static PXLATEDESC pXd = NULL;
+static iconv_t iconvCd;
+
 
 
 // Portotype can not move to generic header since dubble defintion i IBM headers :(
@@ -51,7 +52,7 @@ static void  jx_dataIntoMapObject  (PJXNODE pParent, QrnDiParm_T * pParms, SHORT
 	for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
 		if  ( pNode->Name && *pNode->Name > 0) {
 			UCHAR name [256];
-			ULONG namelen = XlateXdBuf(pXd, name , pNode->Name , strlen(pNode->Name));
+			LONG namelen = XlateBuffer (iconvCd, name , pNode->Name , strlen(pNode->Name));
 			* ((PUSHORT) (name + namelen)) = 0; // Unicode termination
 			pParms->env->QrnDiReportName  (pParms->handle , name , namelen);    
 		}
@@ -77,7 +78,7 @@ static void jx_dataIntoMapValue   (PJXNODE pNode, QrnDiParm_T * pParms )
 	// Has value?
 	if (pNode->Value && pNode->Value[0] > '\0') {
 		UCHAR value [32768];
-		ULONG valuelen = XlateXdBuf(pXd, value , pNode->Value , strlen(pNode->Value));
+		LONG valuelen = XlateBuffer (iconvCd, value , pNode->Value , strlen(pNode->Value));
 		* ((PUSHORT) (value + valuelen)) = 0; // Unicode termination
 		pParms->env->QrnDiReportValue (pParms->handle , value , valuelen);
 	// Else it is some kind of null: Strings are "". Literals will return "null"
@@ -122,10 +123,10 @@ static void  jx_dataIntoMapNode  (PJXNODE pNode, QrnDiParm_T * pParms, SHORT lev
 static void   jx_dataIntoMapper (QrnDiParm_T * pParms)
 {
 
-	if (pXd == NULL ) {
-		pXd = XlateXdOpen (0, 13488);
+	if (memcmp (&iconvCd , 0 , sizeof(iconvCd)) == 0) {
+		iconvCd = XlateOpenDescriptor (0, 13488, false);
 	}
-			
+
 	pParms->env->QrnDiStart  (pParms->handle); 
 	jx_dataIntoMapNode (pRoot , pParms , 0 );             
 	pParms->env->QrnDiFinish (pParms->handle );              

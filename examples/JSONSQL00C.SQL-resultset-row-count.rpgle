@@ -44,13 +44,15 @@ end-proc;
 dcl-proc simpleStatement;
    Dcl-S pResult            Pointer;
    Dcl-S sql                VarChar(512);
-   Dcl-S start              Int(10:0);
-   Dcl-S limit              Int(10:0);
+   Dcl-S start              Int(10);
+   Dcl-S limit              Int(10);
+   Dcl-S totalRows          Int(10);
+   
 
    // return a object with 10 first rows - give me exact number of rows ( slow result)
    sql= ('-
       Select * -
-      from ICPRODUCT -
+      from noxdbdemo.icproduct -
       order by 1 -
    ');
    start = 1;
@@ -69,6 +71,9 @@ dcl-proc simpleStatement;
       : *ON
    );
 
+   totalRows = json_getInt(pResult:'totalRows');
+   json_joblog (%char(totalRows));
+
    // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
    json_delete(pResult);
 
@@ -83,13 +88,15 @@ dcl-proc groupByStatement;
 
    Dcl-S pResult            Pointer;
    Dcl-S sql                VarChar(512);
-   Dcl-S start              Int(10:0);
-   Dcl-S limit              Int(10:0);
+   Dcl-S start              Int(10);
+   Dcl-S limit              Int(10);
+   Dcl-S totalRows          Int(10);
+
 
    // return a object with 10 first rows - give me exact number of rows ( slow result)
    sql=(' -
       Select manuid, count(*) counter - 
-      from ICPRODUCT - 
+      from noxdbdemo.icproduct - 
       group by manuid -
       order by 1 -
    ');
@@ -110,6 +117,9 @@ dcl-proc groupByStatement;
       : *ON
    );
 
+   totalRows = json_getInt(pResult:'totalRows');
+   json_joblog (%char(totalRows));
+
    // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
    json_delete(pResult);
 
@@ -122,15 +132,16 @@ dcl-proc commonTableExpresionStatement;
 
    Dcl-S pResult            Pointer;
    Dcl-S sql                VarChar(512);
-   Dcl-S start              Int(10:0);
-   Dcl-S limit              Int(10:0);
+   Dcl-S start              Int(10);
+   Dcl-S limit              Int(10);
+   Dcl-S totalRows          Int(10);
 
 
    // return a object with 10 first rows - give me exact number of rows ( slow result)
    sql= (' -
       with a as ( -
          Select *  -
-         from ICPRODUCT -
+         from noxdbdemo.icproduct -
       )  -
       select *  -
       from a  -
@@ -152,6 +163,9 @@ dcl-proc commonTableExpresionStatement;
       : *ON
    );
 
+   totalRows = json_getInt(pResult:'totalRows');
+   json_joblog (%char(totalRows));
+
    // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
    json_delete(pResult);
 
@@ -164,13 +178,14 @@ dcl-proc aproximate;
 
    Dcl-S pResult            Pointer;
    Dcl-S sql                VarChar(512);
-   Dcl-S start              Int(10:0);
-   Dcl-S limit              Int(10:0);
+   Dcl-S start              Int(10);
+   Dcl-S limit              Int(10);
+   Dcl-S totalRows          Int(10);
 
    // return a object with first 10, give me the approximatly number of rows ( fast result)
    sql   = ('-
       Select * -
-      from ICPRODUCT -
+      from noxdbdemo.icproduct -
    ');
    start = 1;
    limit = -1; // Give me all rows
@@ -187,6 +202,9 @@ dcl-proc aproximate;
       : 1208 
       : *ON
    );
+
+   totalRows = json_getInt(pResult:'totalRows');
+   json_joblog (%char(totalRows));
 
    // Cleanup: Close the SQL cursor, dispose the row and the array
    json_delete(pResult);

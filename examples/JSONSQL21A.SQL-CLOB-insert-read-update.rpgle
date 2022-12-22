@@ -20,7 +20,7 @@
 // Using SQL cursors. Resultsets
 
 //  on a table like this:
-//    create table QGPL/NOTE2 (
+//    create table noxdbdemo/NOTE2 (
 //       id     int generated always as Identity,
 //       title  varchar(256)     not null with default,
 //       text1  clob             not null with default,

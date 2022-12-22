@@ -44,7 +44,7 @@
 
          // Run a "normal SQL " to create the test case 
          err = json_sqlExec('-
-            create or replace table noxdb.example (      -         
+            create or replace table noxdbdemo.example (      -         
                id int generated always as identity,      -
                xSmallint  smallint,                      -
                xInt       int,                           -
@@ -86,7 +86,7 @@
          }';
 
          err = json_sqlInsert (
-            'example'                // table name
+            'noxdbdemo.example'                // table name
             :row                     // row in object form {a:1,b:2} etc..
          );
 
@@ -103,7 +103,7 @@
          }';
 
          err = json_sqlInsert (
-            'example'                // table name
+            'noxdbdemo.example'                // table name
             :row                     // row in object form {a:1,b:2} etc..
          );
 
@@ -112,7 +112,7 @@
 
          // 1) Use simple update ( normal sql commands)
          err = json_sqlExec(
-            'update example  -
+            'update noxdbdemo.example  -
              set xDec = xDec * 1.01 - 
              where id = (select min(id) from example)'
          );
@@ -143,7 +143,7 @@
             "xClob": "xyz" -
          }';
          err = json_sqlUpdate (
-            'example'         // table name
+            'noxdbdemo.example'         // table name
             :row              // row in object form {a:1,b:2} etc..
             :'id = 1'         // This is your "where" clause
          );
@@ -152,9 +152,9 @@
 
          // Note the where clause can be a SQL statement
          err = json_sqlUpdate (
-            'example'         // table name
+            'noxdbdemo.example'         // table name
             :row              // row in object form {a:1,b:2} etc..
-            :'id = (select min(id) from example)' // This is your "where" clause
+            :'id = (select min(id) from noxdbdemo.example)' // This is your "where" clause
          );
 
          // Test for errors: This is the long version
@@ -172,9 +172,9 @@
          }';
 
          err = json_sqlUpdate (
-            'example'         // table name
+            'noxdbdemo.example'         // table name
             :row              // row in object form {a:1,b:2} etc..
-            :'id = (select min(id) from example)' // This is your "where" clause
+            :'id = (select min(id) from noxdbdemo.example)' // This is your "where" clause
          );
 
          rc= json_SqlCode();

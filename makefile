@@ -23,7 +23,8 @@ INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'
 CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) INCDIR($(INCLUDE)) DBGVIEW($(DBGVIEW)) DEFINE($(DEFINE)) TGTCCSID($(TARGET_CCSID)) TGTRLS($(TARGET_RLS))
 
 # For current compile:
-CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*none) $(CCFLAGS)
+CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*print) $(CCFLAGS)
+
 
 #
 # User-defined part end
@@ -33,7 +34,7 @@ CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*none) $(CCFLAGS)
 
 all:  $(BIN_LIB).lib link jsonxml.srvpgm  hdr
 
-jsonxml.srvpgm: noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlserial.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c trace.clle ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
+jsonxml.srvpgm: initialize.cpp noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlserial.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c trace.clle ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
 jsonxml.bnddir: jsonxml.entry
 noxdb.bnddir: jsonxml.entry
 
@@ -62,20 +63,24 @@ link:
 	system -q "CHGATR OBJ('src/$*.c') ATR(*CCSID) VALUE(1252)"
 	system "CRTCMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCSTMF('src/$*.c') $(CCFLAGS)"
 
+%.cpp:
+	system -q "CHGATR OBJ('src/$*.cpp') ATR(*CCSID) VALUE(1252)"
+	system "CRTCPPMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCSTMF('src/$*.cpp') $(CCFLAGS)"
+
 %.clle:
 	system -q "CHGATR OBJ('src/$*.clle') ATR(*CCSID) VALUE(1252)"
-	-system -q "CRTSRCPF FILE($(BIN_LIB)/QCLLESRC) RCDLEN(132)"
+	-system -q "CRTSRCPF FILE($(BIN_LIB)/QCLLESRC) RCDLEN(200)"
 	system "CPYFRMSTMF FROMSTMF('src/$*.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/$(notdir $*).mbr') MBROPT(*ADD)"
 	system "CRTCLMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW)) TGTRLS($(TARGET_RLS))"
 
 %.srvpgm:
-	-system -q "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(132)"
+	-system -q "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(200)"
 	system "CPYFRMSTMF FROMSTMF('headers/$*.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/$*.mbr') MBROPT(*replace)"
 	
 	# You may be wondering what this ugly string is. It's a list of objects created from the dep list that end with .c or .clle.
-	$(eval modules := $(patsubst %,$(BIN_LIB)/%,$(basename $(filter %.c %.clle,$(notdir $^)))))
+	$(eval modules := $(patsubst %,$(BIN_LIB)/%,$(basename $(filter %.c %.cpp %.clle,$(notdir $^)))))
 	
-	system -q -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) TGTRLS($(TARGET_RLS))"
+	system -q -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) DETAIL(*BASIC) TGTRLS($(TARGET_RLS))"
 
 
 hdr:
@@ -86,8 +91,8 @@ hdr:
 	sed "s/**FREE//g" headers/XMLPARSER.rpgle >> headers/NOXDB.rpgle
 	
 
-	-system -q "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(132)"
-	-system -q "CRTSRCPF FILE($(BIN_LIB)/H) RCDLEN(132)"
+	-system -q "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(200)"
+	-system -q "CRTSRCPF FILE($(BIN_LIB)/H) RCDLEN(200)"
   
 	system "CPYFRMSTMF FROMSTMF('headers/JSONPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONPARSER.mbr') MBROPT(*REPLACE)"
 	system "CPYFRMSTMF FROMSTMF('headers/XMLPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/XMLPARSER.mbr') MBROPT(*REPLACE)"
@@ -115,6 +120,7 @@ release: clean
 	system "CRTSAVF FILE($(BIN_LIB)/RELEASE)"
 	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) DTACPR(*HIGH) OMITOBJ((RELEASE *FILE))"
 	-mkdir -p release
+	-rm ./release/release.savf
 	system "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release.savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"
 	@echo " -- Cleaning up... --"
 	system "DLTOBJ OBJ($(BIN_LIB)/RELEASE) OBJTYPE(*FILE)"
@@ -127,9 +133,18 @@ release: clean
 	@echo ""
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
-current: 
-	system -i "CRTCMOD MODULE($(BIN_LIB)/$(SRC)) SRCSTMF('src/$(SRC).c') $(CCFLAGS2) "
+ifeq "$(suffix $(SRC))" ".c"
+current:
+	system -i "CRTCMOD MODULE($(BIN_LIB)/$(basename $(notdir ($(SRC))))) SRCSTMF('$(SRC)') $(CCFLAGS2) "
 	system -i "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/*ALL)"  
+endif
+
+ifeq "$(suffix $(SRC))" ".cpp"
+current:
+	system "CRTCPPMOD MODULE($(BIN_LIB)/$(basename $(notdir ($(SRC))))) SRCSTMF('$(SRC)') $(CCFLAGS2) "
+	system "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/*ALL)"  
+endif
+
 
 # For vsCode / single file then i.e.: gmake current sqlio.c  
 example: 

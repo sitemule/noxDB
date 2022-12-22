@@ -28,7 +28,7 @@
 
           // return an simple array with all rows
           json_sqlSetOptions ('{ hexSort : true }');
-          sql = 'Select * from icproduct where manuid= ''ACER'' order by prodid';
+          sql = 'Select * from noxdbdemo.icproduct where manuid= ''ACER'' order by prodid';
           pRows = json_sqlResultSet(sql);
 
           // Produce a JSON stream file in the root of the IFS
@@ -41,7 +41,7 @@
 
           // return an simple array with all rows
           json_sqlSetOptions ('{ hexSort : true }');
-          sql= 'Select * from icproduct where manuid = ''ACER'' order by prodid';
+          sql= 'Select * from noxdbdemo.icproduct where manuid = ''ACER'' order by prodid';
           pRows = json_sqlResultSet(sql);
 
           // Produce a JSON stream file in the root of the IFS

@@ -2,19 +2,18 @@
 #define XLATE_H
 #include <iconv.h>
 #include <QTQICONV.h>
-typedef _Packed struct _XLATEDESC   {
-   iconv_t Iconv;
-   BOOL    Open;
-   int     FromCCSID;
-   int     ToCCSID;
-} XLATEDESC , * PXLATEDESC;
-PXLATEDESC XlateXdOpen ( int FromCCSID, int ToCCSID);
-ULONG      XlateXdBuf(PXLATEDESC xd , PUCHAR OutBuf, PUCHAR InBuf , ULONG Len);
-VARCHAR    XlateXdStr(PXLATEDESC xd , PVARCHAR InBuf);
-LONG       XlateXdSprintf (PXLATEDESC pxd, PUCHAR out , PUCHAR Ctlstr,...);
-VOID       XlateXdClose( PXLATEDESC xd);
-ULONG      XlateBuf(PUCHAR OutBuf, PUCHAR InBuf , ULONG Len, int FromCCSID, int ToCCSID);
-VARCHAR    XlateStr (PVARCHAR In ,  int FromCCSID, int ToCCSID);
-PUCHAR     Xlatestr (PUCHAR out, PUCHAR in , int FromCCSID, int ToCCSID);
-PUCHAR     XlateFromAnyAscii2ebcdic (PUCHAR outStr, PUCHAR inStr);
+
+LONG       XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen );
+LONG       XlateBufferQ (PUCHAR OutBuf, PUCHAR InBuf , ULONG Len, int FromCCSID, int ToCCSID);
+VARCHAR    XlateString (iconv_t iconvCd, PVARCHAR In );
+PUCHAR     XlateStringQ (PUCHAR out, PUCHAR in, int FromCCSID, int ToCCSID);
+VARCHAR    XlateVarCharQ (PVARCHAR In ,  int FromCCSID, int ToCCSID);
+VARCHAR    XlateVarChar (iconv_t iconvCd, PVARCHAR In );
+iconv_t    XlateOpenDescriptor (int FromCcsid, int ToCcsid, int reportError);
+LONG       XlateUtf8ToSbcs (PUCHAR outBuf , PUCHAR inBuf , LONG inBufLen , int toCcsid);
+BOOL       XlateGetStaticConversionTables  (PUCHAR e2a , PUCHAR a2e , int AsciiCcsid , int EbcdicCcsid);
+
+
+
+
 #endif
