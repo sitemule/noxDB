@@ -52,8 +52,9 @@ link:
 
 # get the git hash and put it into the version file so it becomes part of the copyright notice in the service program
 githash:	
+	-$(eval GITSHORT := $(shell git rev-parse --short HEAD))
 	-$(eval GITHASH := $(shell git rev-parse --verify HEAD))
-	-echo "#pragma comment(copyright,\"git hash: $(GITHASH)\")" > src/githash.c 
+	-echo "#pragma comment(copyright,\"git checkout $(GITSHORT) (hash: $(GITHASH) )\")" > src/githash.c 
 
 %.bnddir:
 	-system -q "DLTBNDDIR BNDDIR($(BIN_LIB)/$*)"
