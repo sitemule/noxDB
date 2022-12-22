@@ -31,6 +31,7 @@ dcl-proc main;
 
   clobs();
   blobs();
+  db2services();
   json_sqlDisconnect();
   return;
 end-proc;
@@ -93,5 +94,35 @@ on-exit;
   json_delete(pRows);
 
 end-proc;
+// ------------------------------------------------------------------------------------
+// db2services
+// ------------------------------------------------------------------------------------
+dcl-proc db2services;
+
+  dcl-s pRows              Pointer;
+
+  // return a object with all rows
+  pRows = json_sqlResultSet(
+    'Select * from noxdbdemo.clobs':
+    1: // Starting from row
+    JSON_ALLROWS: // Number of rows to read
+    JSON_META+JSON_FIELDS // Embed the rows array in an object and produce a metatag with column info
+  );
+
+  // Produce a JSON stream file in the root of the IFS
+  json_writeJsonStmf(pRows  :
+      '/prj/noxdb/testout/resultset-object-clob.json' : 1208 : *ON
+  );
+
+  return; // Always remeber the return - otherwise the on-exit wil not be run
+
+on-exit;
+
+  // Cleanup: Close the SQL cursor, dispose the rows, arrays etc;
+  json_delete(pRows);
+
+end-proc;
+
+
 
 
