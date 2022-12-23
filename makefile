@@ -32,11 +32,9 @@ CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*print) $(CCFLAGS)
 
 # Dependency list
 
-all:  $(BIN_LIB).lib link githash jsonxml.srvpgm  hdr
+all:  $(BIN_LIB).lib link hdr githash jsonxml.srvpgm jsonxml.bnddir 
 
 jsonxml.srvpgm: initialize.cpp noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlserial.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c trace.clle githash.c ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
-jsonxml.bnddir: jsonxml.entry
-noxdb.bnddir: jsonxml.entry
 
 #-----------------------------------------------------------
 
@@ -50,11 +48,29 @@ link:
 	-ln -s  /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./headers/qoar/h/qrndtagen
 	-ln -s  /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./headers/qoar/h/qrndtainto
 
+hdr:
+	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
+	sed "s/ jx_/ xml_/g; s/ JX_/ xml_/g" headers/JSONXML.rpgle > headers/XMLPARSER.rpgle
+	
+	cp headers/JSONPARSER.rpgle headers/NOXDB.rpgle
+	sed "s/**FREE//g" headers/XMLPARSER.rpgle >> headers/NOXDB.rpgle
+	
+
+	-system -q "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(200)"
+	-system -q "CRTSRCPF FILE($(BIN_LIB)/H) RCDLEN(200)"
+  
+	system "CPYFRMSTMF FROMSTMF('headers/JSONPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONPARSER.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/XMLPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/XMLPARSER.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/NOXDB.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/NOXDB.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/JSONXML.mbr') MBROPT(*REPLACE)"
+
+
+
 # get the git hash and put it into the version file so it becomes part of the copyright notice in the service program
 githash:	
-	-$(eval GITSHORT := $(shell git rev-parse --short HEAD))
-	-$(eval GITHASH := $(shell git rev-parse --verify HEAD))
-	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(GITSHORT) (hash: $(GITHASH) )\")" > src/githash.c 
+	-$(eval gitshort := $(shell git rev-parse --short HEAD))
+	-$(eval githash := $(shell git rev-parse --verify HEAD))
+	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(gitshort) (hash: $(githash) )\")" > src/githash.c 
 
 %.bnddir:
 	-system -q "DLTBNDDIR BNDDIR($(BIN_LIB)/$*)"
@@ -87,23 +103,10 @@ githash:
 	$(eval modules := $(patsubst %,$(BIN_LIB)/%,$(basename $(filter %.c %.cpp %.clle,$(notdir $^)))))
 	
 	system -q -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) DETAIL(*BASIC) TGTRLS($(TARGET_RLS))"
-
-
-hdr:
-	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
-	sed "s/ jx_/ xml_/g; s/ JX_/ xml_/g" headers/JSONXML.rpgle > headers/XMLPARSER.rpgle
 	
-	cp headers/JSONPARSER.rpgle headers/NOXDB.rpgle
-	sed "s/**FREE//g" headers/XMLPARSER.rpgle >> headers/NOXDB.rpgle
-	
-
-	-system -q "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(200)"
-	-system -q "CRTSRCPF FILE($(BIN_LIB)/H) RCDLEN(200)"
-  
-	system "CPYFRMSTMF FROMSTMF('headers/JSONPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONPARSER.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/XMLPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/XMLPARSER.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/NOXDB.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/NOXDB.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/JSONXML.mbr') MBROPT(*REPLACE)"
+	@for module in $(modules); do\
+		system -q "dltmod $$module" ; \
+	done
 
 all:
 	@echo Build success!
