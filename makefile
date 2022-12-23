@@ -74,8 +74,7 @@ githash:
 %.bnddir:
 	@-system -q "DLTBNDDIR BNDDIR($(BIN_LIB)/$*)"
 	@system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/$*)"
-	@system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/$*) OBJ((*LIBL/$* *SRVPGM *IMMED))"
-	
+	@system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/$*) OBJ((*LIBL/JSONXML *SRVPGM *IMMED))"
 
 %.c:
 	@system -q "CHGATR OBJ('src/$*.c') ATR(*CCSID) VALUE(1252)"
