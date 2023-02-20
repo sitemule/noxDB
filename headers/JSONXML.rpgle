@@ -658,7 +658,7 @@ End-PR;
 Dcl-PR jx_setProcPtr pointer extproc(*CWIDEN : 'jx_SetPtrByName');
   node pointer value;
   nodePath pointer value options(*string);
-  value pointer(*proc);
+  value pointer(*proc) value;
   isString ind value options(*nopass); 
 End-PR;
 
@@ -768,6 +768,12 @@ Dcl-PR jx_getValuePtr pointer extproc(*CWIDEN : 'jx_GetNodeValuePtr');
   node pointer value;
   defaultValue pointer value options(*string : *nopass);
 End-PR;
+
+Dcl-PR jx_getValueProcPtr pointer(*proc) extproc(*CWIDEN : 'jx_GetNodeValuePtr');
+  node pointer value;
+  defaultValue pointer value options(*nopass);
+End-PR;
+
 
 ///
 // Get node name
@@ -1014,11 +1020,39 @@ End-PR;
 // @return New node or <code>*null</code> if source or destination is 
 //         <code>*null</code>.
 ///
-Dcl-PR jx_nodeCopy extproc(*CWIDEN : 'jx_NodeCopy');
+Dcl-PR jx_nodeCopy pointer extproc(*CWIDEN : 'jx_NodeCopy');
   node pointer value;
   sourceNode pointer value;
   referenceLocation int(10) value;
 End-PR;
+
+///
+// Insert node existing root node
+//
+// Moves an existing root node to the noxDB object tree.
+// <br><br>
+// 
+// The reference location indicates where the new node will be moved into relative
+// to the passed node. Possible value are
+// <ul>
+//   <li>JX_FIRST_CHILD</li>
+//   <li>JX_LAST_CHILD</li>
+//   <li>JX_BEFORE_SIBLING</li>
+//   <li>JX_AFTER_SIBLING</li>
+// </ul>
+//
+// @param Node
+// @param Source node
+// @param Reference location
+// @return the source node  <code>*null</code> if source or destination is 
+//         <code>*null</code>.
+///
+Dcl-PR jx_nodeInsert  pointer extproc(*CWIDEN : 'jx_nodeInsert');
+  node pointer value;
+  sourceNode pointer value;
+  referenceLocation int(10) value;
+End-PR;
+
 
 ///
 // Node Copy - Reference location : first child

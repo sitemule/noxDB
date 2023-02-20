@@ -1457,24 +1457,25 @@ void jx_NodeInsertSiblingAfter( PJXNODE pRef, PJXNODE pSibling)
 //    to do ... renumber seq.
 }
 // ---------------------------------------------------------------------------
-void jx_nodeInsert(PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
+PJXNODE  jx_nodeInsert(PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
 {
    if (pDest   == NULL) return;
 
    switch ( refloc) {
-   case RL_LAST_CHILD:
-     jx_NodeInsertChildTail (pDest, pSource);
-     break;
-   case RL_FIRST_CHILD:
-     jx_NodeInsertChildHead (pDest, pSource);
-     break;
-   case RL_BEFORE_SIBLING:
-     jx_NodeInsertSiblingBefore(pDest, pSource);
-     break;
-   case RL_AFTER_SIBLING:
-     jx_NodeInsertSiblingAfter(pDest, pSource);
-     break;
+      case RL_LAST_CHILD:
+         jx_NodeInsertChildTail (pDest, pSource);
+         break;
+      case RL_FIRST_CHILD:
+         jx_NodeInsertChildHead (pDest, pSource);
+         break;
+      case RL_BEFORE_SIBLING:
+         jx_NodeInsertSiblingBefore(pDest, pSource);
+         break;
+      case RL_AFTER_SIBLING:
+         jx_NodeInsertSiblingAfter(pDest, pSource);
+         break;
    }
+   return pSource;
 }
 // ---------------------------------------------------------------------------
 // XML documents has a anonymus root node. Each child from the 
