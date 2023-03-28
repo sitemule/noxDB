@@ -675,10 +675,13 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
 
       if (compilereg) {
          int rc;
+         UCHAR buf [256]; 
          ULONG options =  REG_NOSUB + REG_EXTENDED + REG_ICASE;
-         rc = regcomp(&hasLimitReg , "limit[ ]*[0-9]"   , options );
-         rc = regcomp(&hasOffsetReg, "offset[ ]*[0-9]"  , options );
-         rc = regcomp(&hasFetchReg , "fetch[ ]*first"   , options );
+         #pragma convert(1252)
+         rc = regcomp(&hasLimitReg , XlateStringQ (buf , "limit[ ]*[0-9]" , 1252, 0)  , options );
+         rc = regcomp(&hasOffsetReg, XlateStringQ (buf , "offset[ ]*[0-9]", 1252, 0)   , options );
+         rc = regcomp(&hasFetchReg , XlateStringQ (buf , "fetch[ ]*first" , 1252, 0)     , options );
+      	#pragma convert(0)
          compilereg = false;
       }
 

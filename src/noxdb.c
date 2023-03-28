@@ -903,32 +903,53 @@ static void  jx_MergeObj  (PJXNODE pDest, PJXNODE pSource, PJWRITE pjWrite, MERG
    --------------------------------------------------------------------------- */
 void  jx_MergeObjects (PJXNODE pDest, PJXNODE pSource , MERGEOPTION merge)
 {
-   PJXNODE  p;
-   UCHAR tempname[256];
-   PJXNODE pDestNode , pEdt ;
-   PJXNODE pSourceNode;
-   int ix =0;
+   PJXNODE pSourceNode, pDestNode, pNext;
 
    if (pDest ==NULL ||pSource == NULL) return;
 
-   pSourceNode =  pSource->pNodeChildHead;
-   while (pSourceNode) {
+   if (merge & MO_MERGE_MOVE) {
+      pSourceNode =  pSource->pNodeChildHead;
+      while (pSourceNode) {
+         pNext = pSourceNode->pNodeSibling; // Need to keep the next at this point, since "move" will prmote nodes as roots
 
-      pDestNode = jx_GetNode  (pDest, pSourceNode->Name);
-      if (pDestNode) {
-         if (merge == MO_MERGE_REPLACE) {
-            jx_NodeDelete (pDestNode);
-            jx_InsertByName (pDest , pSourceNode->Name , pSourceNode );
+         pDestNode = jx_GetNode  (pDest, pSourceNode->Name);
+         if (pDestNode) {
+            if ((merge & MO_MERGE_REPLACE) 
+            ||  (merge & MO_MERGE_MATCH)) {
+               jx_NodeMoveInto  (pDest , pSourceNode->Name , pSourceNode );
+            }
          } else {
-            if (pSourceNode->type == OBJECT) {
-               jx_MergeObjects  (pDestNode ,  pSourceNode , merge);
+            if ((merge & MO_MERGE_REPLACE) 
+            ||  (merge & MO_MERGE_NEW)) {
+               jx_NodeMoveInto  (pDest , pSourceNode->Name , pSourceNode );
             }
          }
-      } else {
-         jx_InsertByName (pDest , pSourceNode->Name , pSourceNode );
+         pSourceNode = pNext;
       }
-      pSourceNode = pSourceNode->pNodeSibling;
+
+   } else {
+
+      pSourceNode =  pSource->pNodeChildHead;
+      while (pSourceNode) {
+
+         pDestNode = jx_GetNode  (pDest, pSourceNode->Name);
+         if (pDestNode) {
+            if (merge == MO_MERGE_REPLACE) {
+               jx_NodeDelete (pDestNode);
+               jx_InsertByName (pDest , pSourceNode->Name , pSourceNode );
+            } else {
+               if (pSourceNode->type == OBJECT) {
+                  jx_MergeObjects  (pDestNode ,  pSourceNode , merge);
+               }
+            }
+         } else {
+            jx_InsertByName (pDest , pSourceNode->Name , pSourceNode );
+         }
+         pSourceNode = pSourceNode->pNodeSibling;
+      }
+
    }
+
 }
 /* ---------------------------------------------------------------------------
    Obsolete- use MergeObjects
@@ -2575,15 +2596,15 @@ PJXNODE jx_GetNodeByName  (PJXNODE  pNode, PUCHAR Ctlstr , ... )
 }
 /* -------------------------------------------------------------
    returns the value of the node
+   NOTE: pNode->Value == NULL returns true from proc pointers 
    ------------------------------------------------------------- */
 PUCHAR  jx_GetNodeValuePtr  (PJXNODE pNode , PUCHAR DefaultValue)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pNode == NULL
-   ||  pNode->Value == NULL){
-      return (pParms->OpDescList->NbrOfParms >= 2 ? DefaultValue : NULL);
-   } else {
+   if (pNode != NULL) {
       return (pNode->Value);
+   } else {
+      return (pParms->OpDescList->NbrOfParms >= 2 ? DefaultValue : NULL);
    }
 }
 /* -------------------------------------------------------------

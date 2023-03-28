@@ -78,7 +78,8 @@ typedef enum {
 	// Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
 	MO_MERGE_NEW      =   256,  // Only new elements are merged - existing are left untouched
 	MO_MERGE_MATCH    =   512,  // Merge and replace only existing nodes
-	MO_MERGE_REPLACE  =  1024   // Merge all: replace if it exists and append new nodes if not exists
+	MO_MERGE_REPLACE  =  1024,  // Merge all: replace if it exists and append new nodes if not exists
+	MO_MERGE_MOVE     =  2048   // When added - moving from source  to destination 
 } MERGEOPTION , *PMERGEOPTION;
 
 typedef enum {

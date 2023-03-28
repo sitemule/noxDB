@@ -253,7 +253,7 @@ BOOL jx_ParseJsonNode(PJXCOM pJxCom, JSTATE state,  PUCHAR name , PJXNODE pCurNo
          jx_setRootNode( pCurNode, t);
          return FALSE;
       } else if (BeginsWith(t.data, "null") && t.isLiteral) {
-         pNewNode = jx_NodeAdd (pCurNode, RL_LAST_CHILD, name , NULL , VALUE);
+         pNewNode = jx_NodeAdd (pCurNode, RL_LAST_CHILD, name , NULL  , LITERAL);
       } else {
          pNewNode = jx_NodeAdd (pCurNode, RL_LAST_CHILD, name , t.data , VALUE);
          pNewNode->isLiteral = t.isLiteral;

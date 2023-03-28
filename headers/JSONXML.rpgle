@@ -181,6 +181,9 @@ Dcl-C MO_MERGE_MATCH const(512);
 //Merge all: replace if it exists and
 //append new nodes if not exists
 Dcl-C MO_MERGE_REPLACE const(1024 );
+//Move from source into destination when this is added 
+Dcl-C MO_MERGE_MOVE const(2048);
+
 /endif
 
 Dcl-C JX_CHILD_LIST const('[0]');
@@ -1337,8 +1340,7 @@ End-PR;
 //
 // @param Destination
 // @param Source
-// @param Merge option (JX_DONTREPLACE (default) or JX_REPLACE)
-// 
+// @param Merge option 
 // @deprecated Replaced by jx_mergeObjects
 ///
 Dcl-PR jx_merge extproc(*CWIDEN : 'jx_NodeMerge');
@@ -1369,7 +1371,8 @@ Dcl-C JX_REPLACE const(1);
 // 
 // @param Destination object tree
 // @param Source object tree
-// @param Merge option (JX_DONTREPLACE or JX_REPLACE)
+// @param Merge option:  MO_MERGE_NEW,MO_MERGE_MATCH,MO_MERGE_REPLACE,MO_MERGE_MOVE )
+
 ///
 Dcl-PR jx_mergeObjects extproc(*CWIDEN : 'jx_MergeObjects');
   destination pointer value;
