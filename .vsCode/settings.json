@@ -1,0 +1,9 @@
+{
+    "files.encoding": "windows1252",
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "prettier.tabWidth": 4,
+    "prettier.useTabs": false
+}
