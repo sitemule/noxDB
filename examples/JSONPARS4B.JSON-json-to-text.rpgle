@@ -55,7 +55,7 @@ dcl-proc main;
       Return;
    EndIf;
 
-   json_WriteJsonStmf(pJson : '/prj/noxdb/testout/josn_to_text.json' : 1208 : *OFF);
+   json_WriteJsonStmf(pJson : '/prj/noxdb/testout/json_to_text.json' : 1208 : *OFF);
 
 
    // up to 32K
