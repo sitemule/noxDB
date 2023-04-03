@@ -28,14 +28,8 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') main(main);
 dcl-proc main;
 
    Dcl-S pJson              Pointer;
-   Dcl-S pNode              Pointer;
-   Dcl-S pArr               Pointer;
-   Dcl-S msg                VarChar(50);
-   Dcl-S tag                VarChar(50);
-   Dcl-S value              VarChar(50);
    Dcl-S jsonText           VarChar(32768);
-   Dcl-S jsonText16M         like(VARCHAR16M);
-   Dcl-S n                  Packed(15:2);
+   Dcl-S jsonTextxl         like(1000000:4);
 
    pJson = json_ParseString (
       '{  u:"This is a unicode \u00b5 string"  ,   '+
@@ -47,16 +41,15 @@ dcl-proc main;
       '     m:"yyyy"  ' +
       '   }         '+
       '}'
-         : '');
+   );
 
    If json_Error(pJson) ;
-      msg = json_Message(pJson);
+      json_joblog (json_Message(pJson));
       json_dump(pJson);
       Return;
    EndIf;
 
    json_WriteJsonStmf(pJson : '/prj/noxdb/testout/json_to_text.json' : 1208 : *OFF);
-
 
    // up to 32K
    jsonText= json_asJsonText(pJson);
@@ -64,10 +57,9 @@ dcl-proc main;
    // 16MEG
    jsonText16M= json_AsJsonText16M(pJson);
 
-
-
    return;
 
+// Generic cleanup
 on-exit;
    json_delete(pJson);
 
