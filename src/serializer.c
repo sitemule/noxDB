@@ -60,7 +60,7 @@ static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
 		in++;
 	}
 }
-/* In the stream - only  ... 
+/* In the stream - only  ...
 	static PUCHAR jx_EncodeJson (PUCHAR out , PUCHAR in)
 	{
 		PUCHAR ret = out;
@@ -141,7 +141,7 @@ static void  jsonStreamPrintArray (PJXNODE pParent, PSTREAM pStream, SHORT level
 	SHORT nextLevel = level +1;
 
 	// indent (pStream ,level);
-	stream_putc (pStream, pJw->braBeg); 
+	stream_putc (pStream, pJw->braBeg);
 
 	indent (pStream ,nextLevel);
 	for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
@@ -249,8 +249,8 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 	PSTREAM  pStream;
 	LONG     len;
 	PJWRITE  pjWrite;
-	
-	
+
+
 	if (pNode == NULL) return 0;
 	if (pNode->signature != NODESIG) {
 		strcpy (buf, (PUCHAR) pNode);
@@ -275,6 +275,12 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
+void jx_AsJsonText16M ( PVARCHAR_16M result , PJXNODE pNode)
+{
+	result->Length = jx_AsJsonTextMem (pNode, result->String , sizeof(VARCHAR_16M)-4);
+}
+/* ---------------------------------------------------------------------------
+	 --------------------------------------------------------------------------- */
 static void  jx_AsJsonStreamRunner   (PSTREAM pStream)
 {
 	PJXNODE  pNode = pStream->context;
@@ -287,7 +293,7 @@ PSTREAM jx_Stream  (PJXNODE pNode)
 	 PSTREAM  pStream;
 	 LONG     len;
 	 PJWRITE  pjWrite;
-	 
+
 	 pStream = stream_new (4096);
 	 pStream->handle = pjWrite = jx_newWriter();
 	 pjWrite->doTrim  = true;
@@ -310,12 +316,12 @@ VARCHAR jx_AsJsonText (PJXNODE pNode)
 
 PJWRITE jx_newWriter ()
 {
-	PJWRITE pjWrite = malloc (sizeof(JWRITE)); 
+	PJWRITE pjWrite = malloc (sizeof(JWRITE));
 	memset(pjWrite , 0 , sizeof(JWRITE) - sizeof(pjWrite->filler));
 	#pragma convert(1252)
 	XlateBufferQ(&pjWrite->braBeg , "[]{}\\\"" , 6, 1252 ,0 ); ;
 	#pragma convert(0)
-	return pjWrite; 
+	return pjWrite;
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */

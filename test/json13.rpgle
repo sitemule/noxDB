@@ -1,5 +1,5 @@
         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
-        
+
         /include 'headers/JSONPARSER.rpgle'
 
         Dcl-S pJson        Pointer;
@@ -21,7 +21,7 @@
         json_SetStr    (pJson : 's'  : 'hi');  // String
 
         // Write it out:
-        pResult = json_AsText(pJson);
+        pResult = json_asJsonText(pJson);
 
-        json_Close(pJSON);
+        json_delete(pJSON);
         *inlr = *on;

@@ -5,7 +5,7 @@ set schema noxdbdemo;
 
 create or replace table noxdbdemo.blobs (
   id  bigint not null generated always as identity primary key,
-  myblob blob (1G)
+  myblob blob (16M)
 );
 
 label on column noxdbdemo.blobs  (
@@ -13,9 +13,8 @@ label on column noxdbdemo.blobs  (
   myBlob  is 'Blob Data'
 );
 
-insert into noxdbdemo.blobs (myblob) 
+insert into noxdbdemo.blobs (myblob)
     values (blob(x'ABCD'));
 
 
 select * from noxdbdemo.blobs;
-

@@ -197,6 +197,12 @@ typedef _Packed struct _VARCHAR16384 {
    UCHAR String[16384];
 } VARCHAR16384, * PVARCHAR16384;
 
+typedef _Packed struct _VARCHAR_16M {
+   LONG Length;
+   UCHAR String[16773096];
+} VARCHAR_16M, * PVARCHAR_16M;
+
+
 typedef _Packed struct _VARPUCHAR {
    USHORT Length;
    PUCHAR String;

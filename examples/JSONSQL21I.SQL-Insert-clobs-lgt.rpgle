@@ -38,7 +38,7 @@
 //  http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.html
 // ------------------------------------------------------------- *
 Ctl-Opt BndDir('NOXDB') dftactgrp(*NO);
-Ctl-Opt actgrp('QTERASPACE') stgmdl(*TERASPACE); 
+Ctl-Opt actgrp('QTERASPACE') stgmdl(*TERASPACE);
 
 /include qrpgleRef,noxdb
 
@@ -53,25 +53,25 @@ Dcl-s pPayWork         pointer;
 Dcl-S payload          Char(1000) based(pPayWork);
 Dcl-S payloadChar      Char(1)    based(pPayWork);
 
-   // Example of storing 1G clob data
+   // Example of storing 16M clob data
 
    json_sqlExec ('-
       create or replace table noxdbdemo.clobs ( -
          id       int generated always as Identity primary key, -
-         payload  clob (1G) -
+         payload  clob (16M) -
       ) -
    ');
    json_sqlExec ('truncate  noxdbdemo.clobs');
 
    pRow     = json_newObject();
 
-   // Get 1G of memory ( its hard to work on that size with 7.2)
+   // Get 16M of memory ( its hard to work on that size with 7.2)
    mem = 1000000000;
    pPayload  = %alloc(mem);
    for i= 1 to mem by 1000;
       pPayWork = pPayload + (i -1);
       payload = *All'x';
-   endfor; 
+   endfor;
    pPayWork = pPayload + (mem -1);
    payloadChar = x'00';
 
@@ -82,7 +82,7 @@ Dcl-S payloadChar      Char(1)    based(pPayWork);
       :pRow
    );
 
-   // What is the size written? 
+   // What is the size written?
    pRes = json_sqlResultRow ('-
       Select id, length(payload) length_of_clob -
       from noxdbdemo.clobs -
@@ -92,12 +92,12 @@ Dcl-S payloadChar      Char(1)    based(pPayWork);
    json_delete(pRes);
 
    // update the row with all "y"
-   // Get 1G of memory ( its hard to work on that size with 7.2)
+   // Get 16M of memory ( its hard to work on that size with 7.2)
    mem = 1000000000;
    for i= 1 to mem by 1000;
       pPayWork = pPayload + (i -1);
       payload = *All'y';
-   endfor; 
+   endfor;
    pPayWork = pPayload + (mem -1);
    payloadChar = x'00';
 

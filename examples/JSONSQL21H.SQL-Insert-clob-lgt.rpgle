@@ -16,8 +16,8 @@
 //  A: Bind you program with "NOXDB" Bind directory
 //  B: Include the noxDB prototypes from QRPGLEREF member NOXDB
 
-// Note this code utlize the IceBreak ILOB's 
-// Internal Large Objects. 
+// Note this code utlize the IceBreak ILOB's
+// Internal Large Objects.
 
 //  CALL QSYS/QP0WUSRT parm('-l 2' '-c 0' 'xxxxxx')
 
@@ -29,7 +29,7 @@
 //  http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.html
 // ------------------------------------------------------------- *
 Ctl-Opt BndDir('NOXDB':'ICEBREAK') dftactgrp(*NO);
-Ctl-Opt actgrp('QTERASPACE') stgmdl(*TERASPACE); 
+Ctl-Opt actgrp('QTERASPACE') stgmdl(*TERASPACE);
 
 /include qrpgleRef,noxdb
 /include qasphdr,ilob
@@ -46,14 +46,14 @@ Dcl-s pPayWork         pointer;
 Dcl-s pMsgIlob         pointer;
 Dcl-S payload          Char(1000) based(pPayWork);
 Dcl-S payloadChar      Char(1)    based(pPayWork);
-dcl-s filePath         varchar(256) inz('/prj/noxdb/testout/demo-nested.xml'); 
+dcl-s filePath         varchar(256) inz('/prj/noxdb/testout/demo-nested.xml');
 
-   // Example of storing 1G clob data
+   // Example of storing 16M clob data
 
    json_sqlExec ('-
       create or replace table noxdbdemo.clobs ( -
          id       int generated always as Identity primary key, -
-         payload  clob (1G) -
+         payload  clob (16M) -
       ) -
    ');
    json_sqlExec ('truncate  noxdbdemo.clobs');
@@ -61,19 +61,19 @@ dcl-s filePath         varchar(256) inz('/prj/noxdb/testout/demo-nested.xml');
    pRow     = json_newObject();
 
    // Load the stream-file into a ILOB
-   pMsgIlob = ilob_new(); 
+   pMsgIlob = ilob_new();
    ilob_loadFromBinaryStream(pMsgIlob:filePath);
    if pMsgIlob = *NULL;
       json_joblog('File not found' + filePath );
       return;
    endif;
 
-   // Data in running job CCSID 
+   // Data in running job CCSID
    ilob_xlate(pMsgIlob: ilob_getCcsid(pMsgIlob): 0);
    // Ensure the pMsgIlob will be a C-compatible string (zeroterminate it)
    ilob_setLength(pMsgIlob:ilob_getLength(pMsgIlob));
    // Update row with ILOB
-   json_setStr(pRow : 'payload' : pMsgIlob); 
+   json_setStr(pRow : 'payload' : pMsgIlob);
    ilob_delete(pMsgIlob);
 
    err = json_sqlInsert  (
@@ -81,7 +81,7 @@ dcl-s filePath         varchar(256) inz('/prj/noxdb/testout/demo-nested.xml');
       :pRow
    );
 
-   // What is the size written? 
+   // What is the size written?
    pRes = json_sqlResultRow ('-
       Select id, length(payload) length_of_clob -
       from noxdbdemo.clobs -
