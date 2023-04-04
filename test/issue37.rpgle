@@ -4,10 +4,13 @@ ctl-opt decEdit('0,') datEdit(*YMD.) main(main);
 ctl-opt bndDir('NOXDB');
 ctl-opt ALWNULL(*USRCTL);
 //   -----------------------------------------------------------------------------
+//   Tracing the datastructure evaluation :
+//   ADDENVVAR QIBM_RPG_DATA_INTO_TRACE_PARSER VALUE('*STDOUT')
+//   -----------------------------------------------------------------------------
 /include 'headers/JSONPARSER.rpgle'
 
-
 dcl-proc main ;
+
     dcl-ds CashAccountMovementsParms qualified inz;
         clientAccount         char(7)  inz nullind;
         cashAccountType       char(16) inz nullind;

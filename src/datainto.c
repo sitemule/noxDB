@@ -52,6 +52,7 @@ static void  jx_dataIntoMapObject  (PJXNODE pParent, QrnDiParm_T * pParms, SHORT
     for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
         if  ( pNode->Name && *pNode->Name > 0) {
             // TODO !! Only report names for nodes  - not null
+            // TODO !! Implement real null support when IBM has the API ready
             if (pNode->Value || pNode->type == OBJECT || pNode->type == ARRAY) {
                 UCHAR name [256];
                 LONG namelen = XlateBuffer (iconvCd, name , pNode->Name , strlen(pNode->Name));
@@ -93,7 +94,7 @@ static void jx_dataIntoMapValue   (PJXNODE pNode, QrnDiParm_T * pParms )
         // Then it id better to simpy
         // Not do anything an rely of the host structure has initialized fields:
 
-        // pParms->env->QrnDiReportValue (pParms->handle , NULL  , 0);
+        // pParms->env->QrnDiReportValue (pParms->handle , "" , 0);
     }
 }
 /* --------------------------------------------------------------------------- */

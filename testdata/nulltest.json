@@ -1,41 +1,43 @@
 {
 	"clientAccount": "1234567",
-	"cashAccountType": "CURRENT",
+	"cashAccountType": "ABC",
 	"numberOfResults": null,
-	"cashAccountMovementsFilter": [{
-		"name": "fromMovementId",
-		"value": null
-	},
-	{
-		"name": "SEARCH_TRANSACTION_DATE_TO",
-		"value": null
-	},
-	{
-		"name": "SEARCH_COMMENT",
-		"value": null
-	},
-	{
-		"name": "SEARCH_TRANSACTION_DATE_FROM",
-		"value": null
-	},
-	{
-		"name": "SEARCH_TRANSACTION",
-		"value": null
-	},
-	{
-		"name": "SEARCH_TRANSACTION_AMOUNT_FROM",
-		"value": null
-	},
-	{
-		"name": "SEARCH_TRANSACTION_AMOUNT_TO",
-		"value": null
-	},
-	{
-		"name": "SEARCH_SEC_GROUP",
-		"value": null
-	},
-	{
-		"name": "SEARCH_STATEMENT",
-		"value": null
-	}]
+	"CashAccountMovementsFilters": [
+		{
+			"name": "SEARCH_A",
+			"value": null
+		},
+		{
+			"name": "SEARCH_B",
+			"value": null
+		},
+		{
+			"name": "SEARCH_C",
+			"value": null
+		},
+		{
+			"name": "SEARCH_D",
+			"value": null
+		},
+		{
+			"name": "SEARCH_E",
+			"value": null
+		},
+		{
+			"name": "SEARCH_F",
+			"value": null
+		},
+		{
+			"name": "SEARCH_G",
+			"value": null
+		},
+		{
+			"name": "SEARCH_H",
+			"value": null
+		},
+		{
+			"name": "SEARCH_I",
+			"value": null
+		}
+	]
 }
