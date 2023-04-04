@@ -51,10 +51,13 @@ static void  jx_dataIntoMapObject  (PJXNODE pParent, QrnDiParm_T * pParms, SHORT
     pParms->env->QrnDiStartStruct (pParms->handle);
     for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
         if  ( pNode->Name && *pNode->Name > 0) {
-            UCHAR name [256];
-            LONG namelen = XlateBuffer (iconvCd, name , pNode->Name , strlen(pNode->Name));
-            * ((PUSHORT) (name + namelen)) = 0; // Unicode termination
-            pParms->env->QrnDiReportName  (pParms->handle , name , namelen);
+            // TODO !! Only report names for nodes  - not null
+            if (pNode->Value || pNode->type == OBJECT || pNode->type == ARRAY) {
+                UCHAR name [256];
+                LONG namelen = XlateBuffer (iconvCd, name , pNode->Name , strlen(pNode->Name));
+                * ((PUSHORT) (name + namelen)) = 0; // Unicode termination
+                pParms->env->QrnDiReportName  (pParms->handle , name , namelen);
+            }
         }
         jx_dataIntoMapNode (pNode , pParms, nextLevel);
     }
@@ -76,7 +79,7 @@ static void  jx_dataIntoMapArray (PJXNODE pParent, QrnDiParm_T * pParms, SHORT l
 static void jx_dataIntoMapValue   (PJXNODE pNode, QrnDiParm_T * pParms )
 {
     // Has value?
-    if (pNode->Value && pNode->Value[0] > '\0') {
+    if (pNode->Value) {
         UCHAR value [32768];
         LONG valuelen = XlateBuffer (iconvCd, value , pNode->Value , strlen(pNode->Value));
         * ((PUSHORT) (value + valuelen)) = 0; // Unicode termination
@@ -84,16 +87,13 @@ static void jx_dataIntoMapValue   (PJXNODE pNode, QrnDiParm_T * pParms )
     // Else it is some kind of null: Strings are "". Literals will return "null"
     } else {
         // Null handeling - for now : TODO !! What about real NULL
-        pParms->env->QrnDiReportValue (pParms->handle , "" , 0);
-        /*
-        if (pNode->isLiteral) {
+        // For now :
+        // 1) Since "" is not allowed for numeric / dates
+        // 2) and NULL will return "pointer not set"
+        // Then it id better to simpy
+        // Not do anything an rely of the host structure has initialized fields:
 
-        //	pParms->env->QrnDiReportName  (pParms->handle , pNode->Name , strlen(pNode->Name));
-        //	pParms->env->QrnDiReportValue (pParms->handle , pNode->Value, strlen(pNode->Value));
-        }
-
-
-        */
+        // pParms->env->QrnDiReportValue (pParms->handle , NULL  , 0);
     }
 }
 /* --------------------------------------------------------------------------- */
