@@ -652,7 +652,7 @@ BOOL findHasFetch  (PUCHAR sqlStmt)
 {
    PUCHAR p = stristr(sqlStmt, "fetch ");
    if (p && *(p -1) == ' ') {
-      PUCHAR p2 = stristr(sqlStmt, "first ");
+      PUCHAR p2 = stristr(p , "first ");
       if (p2 && *(p2 -1) == ' ') {
             return true;
       }
