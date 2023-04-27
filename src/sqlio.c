@@ -89,14 +89,14 @@ typedef struct {
    SQLSMALLINT mode     ;
    SQLSMALLINT sqlType  ;
    PJXNODE     pNode        ;
-   PUCHAR      pData       ; 
+   PUCHAR      pData       ;
 } PROCPARM ,* PPROCPARM;
 
 void          jx_sqlDisconnect (void);
 PJXSQLCONNECT jx_sqlNewConnection(void);
 void jx_traceOpen (PJXSQLCONNECT pCon);
 void jx_traceInsert (PJXSQL pSQL, PUCHAR stmt , PUCHAR sqlState);
-PJXNODE static sqlErrorObject(PUCHAR sqlstmt); 
+PJXNODE static sqlErrorObject(PUCHAR sqlstmt);
 
 /* ------------------------------------------------------------- */
 SQLINTEGER jx_sqlCode(void)
@@ -222,11 +222,11 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
    }
    */
 
-   /* done on each statement */ 
+   /* done on each statement */
    /*
    attrParm = SQL_TRUE;
    rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_EXTENDED_COL_INFO , &attrParm  , 0);
-   */ 
+   */
 
    attrParm = SQL_TRUE;
    rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
@@ -350,15 +350,15 @@ static LGL jx_sqlCommitOrRollback(int type)
 
    pConnection->transaction = false;
 
-   rc1 = SQLTransact ( 
-      SQL_HANDLE_DBC, 
-      pConnection->hdbc, 
-      type 
-   ); 
+   rc1 = SQLTransact (
+      SQL_HANDLE_DBC,
+      pConnection->hdbc,
+      type
+   );
 
    if (rc1!=0) {
       //check_error (NULL);
-   }    
+   }
 
    attrParm = SQL_TXN_NO_COMMIT; // does not work with BLOBS
    rc2 = SQLSetConnectAttr (pConnection->hdbc, SQL_ATTR_COMMIT , &attrParm  , 0);
@@ -528,7 +528,7 @@ static PUCHAR getSystemColumnName ( PUCHAR sysColumnName, PUCHAR columnText, PUC
    SYSCOLR sysColR;
    SYSCOLK sysColK;
    int keylen;
-   int i; 
+   int i;
 
    static _RFILE * fSysCol = null;
    if ((fSysCol = _Ropen ("QSYS/QADBILFI" , "rr,nullcap=Y")) == NULL) {
@@ -536,7 +536,7 @@ static PUCHAR getSystemColumnName ( PUCHAR sysColumnName, PUCHAR columnText, PUC
       return sysColumnName;
    }
 
-   // memset will not work on "volatile" in null maps 
+   // memset will not work on "volatile" in null maps
    for (i=0; i< fSysCol->null_map_len     ; i ++) { fSysCol->in_null_map[i]= '0';}
    for (i=0; i< fSysCol->null_key_map_len ; i ++) { fSysCol->null_key_map[i]= '0';}
 
@@ -592,8 +592,8 @@ static PUCHAR  getSysNameForColumn ( PUCHAR sysColumnName, PUCHAR columnText, SQ
 
    return  getSystemColumnName ( sysColumnName, columnText, schema , table , column);
 }
-/* ------------------------------------------------------------- 
-   Locates the part after rgw last pareparenthesis
+/* -------------------------------------------------------------
+   Locates the part after CTE last pareparenthesis
    ------------------------------------------------------------- */
 PUCHAR finalSQLPart (PUCHAR stmt)
 {
@@ -602,10 +602,10 @@ PUCHAR finalSQLPart (PUCHAR stmt)
    int level =0;
    for (;*p;p++) {
       switch (*p) {
-         case '(' : 
+         case '(' :
             level ++;
             break;
-         case ')' : 
+         case ')' :
             level --;
             if (level =0) {
                ret = p +1;
@@ -613,8 +613,53 @@ PUCHAR finalSQLPart (PUCHAR stmt)
             break;
       }
    }
-   return ret; 
+   return ret;
 }
+/* ------------------------------------------------------------- */
+/* Poyfill for regex                                             */
+/* ------------------------------------------------------------- */
+BOOL findHasLimit  (PUCHAR sqlStmt)
+{
+   PUCHAR p = stristr(sqlStmt, "limit ");
+   if (p && *(p -1) == ' ') {
+      UCHAR temp [10];
+      substr ( temp , p+6, 3);
+      if ( str2dec ( temp , ',' ) > 0) {
+         return true;
+      }
+   }
+   return false;
+}
+/* ------------------------------------------------------------- */
+/* Poyfill for regex                                             */
+/* ------------------------------------------------------------- */
+BOOL findHasOffset  (PUCHAR sqlStmt)
+{
+   PUCHAR p = stristr(sqlStmt, "offset ");
+   if (p && *(p -1) == ' ') {
+      UCHAR temp [10];
+      substr ( temp , p+6, 3);
+      if ( str2dec ( temp , ',' ) > 0) {
+         return true;
+      }
+   }
+   return false;
+}
+/* ------------------------------------------------------------- */
+/* Poyfill for regex                                             */
+/* ------------------------------------------------------------- */
+BOOL findHasFetch  (PUCHAR sqlStmt)
+{
+   PUCHAR p = stristr(sqlStmt, "fetch ");
+   if (p && *(p -1) == ' ') {
+      PUCHAR p2 = stristr(sqlStmt, "first ");
+      if (p2 && *(p2 -1) == ' ') {
+            return true;
+      }
+   }
+   return false;
+}
+
 /* ------------------------------------------------------------- */
 PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG startP , LONG limitP )
 {
@@ -631,7 +676,7 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    PJXSQL pSQL;
    SQLINTEGER  dummyInt , isTrue,descLen;
    SQLSMALLINT len , dummyShort;
-   BOOL scroll = pParms->OpDescList->NbrOfParms <= 2; // Typicall from CALL from RPG 
+   BOOL scroll = pParms->OpDescList->NbrOfParms <= 2; // Typicall from CALL from RPG
 
    int rc;
 
@@ -665,17 +710,18 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       BOOL hasLimit  ;
       BOOL hasOffset ;
       BOOL hasFetch  ;
-      PUCHAR end; 
+      PUCHAR end;
 
-      // Before we begin adding to the statement  - ensure is does not end with a ; 
+      // Before we begin adding to the statement  - ensure is does not end with a ;
       for (end = sqlTempStmt + strlen(sqlTempStmt) -1  ; end > sqlTempStmt; end--) {
          if (*end == ';') *end = ' ';
          if (*end > ' ') break;
       }
 
+      /* regex does not always work when on other CCSID  platforms
       if (compilereg) {
          int rc;
-         UCHAR buf [256]; 
+         UCHAR buf [256];
          ULONG options =  REG_NOSUB + REG_EXTENDED + REG_ICASE;
          #pragma convert(1252)
          rc = regcomp(&hasLimitReg , XlateStringQ (buf , "limit[ ]*[0-9]" , 1252, 0)  , options );
@@ -688,7 +734,11 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       hasLimit  = 0 == (rc= regexec(&hasLimitReg  , lookFrom , 0, NULL, 0));
       hasOffset = 0 == (rc= regexec(&hasOffsetReg , lookFrom , 0, NULL, 0));
       hasFetch  = 0 == (rc= regexec(&hasFetchReg  , lookFrom , 0, NULL, 0));
-      
+      */
+      hasLimit  = findHasLimit  (lookFrom);
+      hasOffset = findHasOffset (lookFrom);
+      hasFetch  = findHasFetch  (lookFrom);
+
       if (limit > 0 && ! hasFetch && ! hasLimit) {
          sprintf (sqlTempStmt + strlen(sqlTempStmt)," limit %ld ", limit);
       }
@@ -710,18 +760,18 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    }
 
    // Number of rows? .. No does not work :(
-   // DB2_NUMBER_ROWS = 110   
+   // DB2_NUMBER_ROWS = 110
    // SQLGetDiagField(SQL_HANDLE_STMT,pSQL->pstmt->hstmt, 0 , 110 ,&pSQL->rowcount,0, NULL);
-   
+
    // Row count is only affected row in a "delete" or "update" ..TODO find a solution for select
-   /* 
+   /*
    rc = SQLRowCount (pSQL->pstmt->hstmt, &pSQL->rowcount);
    if (rc != SQL_SUCCESS ) {
      check_error (pSQL);
      return NULL; // we have an error
    }
-   */ 
-   
+   */
+
    rc = SQLNumResultCols (pSQL->pstmt->hstmt, &pSQL->nresultcols);
    if (rc != SQL_SUCCESS ) {
       check_error (pSQL);
@@ -731,20 +781,20 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
 
    for (i = 0; i < pSQL->nresultcols; i++) {
 
-      int labelRc; 
+      int labelRc;
       UCHAR colText  [256];
 
       PJXCOL pCol = &pSQL->cols[i];
 
       rc = SQLDescribeCol (
-         pSQL->pstmt->hstmt, 
-         i+1, 
-         pCol->colname, 
+         pSQL->pstmt->hstmt,
+         i+1,
+         pCol->colname,
          sizeof (pCol->colname),
-         &pCol->colnamelen, 
-         &pCol->coltype, 
-         (SQLINTEGER *) &pCol->collen, 
-         &pCol->scale, 
+         &pCol->colnamelen,
+         &pCol->coltype,
+         (SQLINTEGER *) &pCol->collen,
+         &pCol->scale,
          &pCol->nullable
       );
 
@@ -760,10 +810,10 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
          *pCol->sysname = '\0';
       }
 
-      if (format & (JX_COLUMN_TEXT)) {    
+      if (format & (JX_COLUMN_TEXT)) {
          strcpy (pCol->text , colText);
       } else {
-         *pCol->text = '\0'; 
+         *pCol->text = '\0';
       }
 
       // If all uppsercase ( not given name by .. AS "newName") then lowercase
@@ -862,7 +912,7 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       }
       if (pSQL->maxColSize < pCol->collen) {
           pSQL->maxColSize = pCol->collen;
-      } 
+      }
 
       if (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE) {
          pCol->nodeType = JX_LITERAL;
@@ -880,8 +930,8 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
    int i;
    PJXNODE pRow;
    SQLINTEGER buflen, datatype;
-   PUCHAR buf = memAlloc (pSQL->maxColSize); 
- 
+   PUCHAR buf = memAlloc (pSQL->maxColSize);
+
    if ( pSQL->rc == SQL_SUCCESS
    ||   pSQL->rc == SQL_SUCCESS_WITH_INFO ) {
       jxError = false;
@@ -907,11 +957,11 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
                // fix !! UNICODE tends to leave uninitialized data behind
                if ( 0 == (pCol->collen & 0xF0000000 )) {
                    memset( buf, '\0' , pCol->collen);
-               } 
+               }
                // Note: SQLCLI only supports LONG_MAX size of data to be transfered
                // SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , memSize(buf), &buflen);
                SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , LONG_MAX, &buflen);
-               // Note: collen will contain xFFFFFFFF for  type 14 = CLOB 
+               // Note: collen will contain xFFFFFFFF for  type 14 = CLOB
                memset ( buf + buflen, 0 , 2); // Zero term - also UNICODE
 
 
@@ -979,7 +1029,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
                      memmove (p+1 , p, len+1);
                      *(p+1) = '0';
 
-                  } 
+                  }
 
                   jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
                   break ;
@@ -1227,7 +1277,7 @@ PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
       if (*pCol->text > ' ') {
          jx_NodeAdd (pField  , RL_LAST_CHILD, "text"   , pCol->text, VALUE  );
       }
-      
+
       // Push to array
       jx_ArrayPush (pFields , pField, FALSE);
    }
@@ -1240,12 +1290,12 @@ PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
 static BOOL buildCountStatement (PUCHAR countStmt, PUCHAR sqlStmt)
 {
 
-   PUCHAR  pCountStmt = countStmt; 
-   PUCHAR  end; 
+   PUCHAR  pCountStmt = countStmt;
+   PUCHAR  end;
    int len;
 
    // quick trim
-   for  (;*sqlStmt <= ' ' && *sqlStmt > '\0'; sqlStmt++);;  
+   for  (;*sqlStmt <= ' ' && *sqlStmt > '\0'; sqlStmt++);;
 
    // find the active part of the select statment ( i.e. up until with ur is exists)
    end  =  stristr(sqlStmt  , "with ur");
@@ -1284,7 +1334,7 @@ static BOOL buildCountStatement (PUCHAR countStmt, PUCHAR sqlStmt)
    } else {
       pCountStmt += sprintf(pCountStmt , "select count(*) counter from (");
       substr (pCountStmt, sqlStmt , len);
-      pCountStmt += len; 
+      pCountStmt += len;
       pCountStmt += sprintf(pCountStmt , ")");
       return true;
    }
@@ -1297,7 +1347,7 @@ LONG jx_sqlNumberOfRows(PUCHAR sqlStmt)
    LONG    rowCount;
    PJXNODE pRow;
    UCHAR   countStmt [32766];
-   
+
    if (buildCountStatement (countStmt , sqlStmt)) {
       // Get that only row
       pRow = jx_sqlResultRow(countStmt, NULL, 0);
@@ -1306,8 +1356,8 @@ LONG jx_sqlNumberOfRows(PUCHAR sqlStmt)
       return rowCount;
 
    } else {
-      return -1; // not able to produce a count statement 
-   } 
+      return -1; // not able to produce a count statement
+   }
 
 }
 /* ------------------------------------------------------------- */
@@ -1438,7 +1488,7 @@ LONG jx_sqlRows (PJXSQL pSQL)
 }
 /* ------------------------------------------------------------- *\
    Maybe use this for jx_sqlProcedureMeta :
-   
+
    SQLRETURN sqlRet = SQLProcedureColumns(
       SQLHSTMT          pSQL->pstmt->hstmt,
       SQLCHAR           NULL, // *CatalogName,
@@ -1452,7 +1502,7 @@ LONG jx_sqlRows (PJXSQL pSQL)
    );
 
    but for now:
-\* ------------------------------------------------------------- */ 
+\* ------------------------------------------------------------- */
 PJXNODE jx_sqlProcedureMeta (PUCHAR procedureName)
 {
 
@@ -1469,9 +1519,9 @@ PJXNODE jx_sqlProcedureMeta (PUCHAR procedureName)
    strcpy (procedure , split +1);
 
 
-   sprintf (sqlStmt , 
-      "with cte as ( "  
-      "select "  
+   sprintf (sqlStmt ,
+      "with cte as ( "
+      "select "
          "a.specific_name specific_name,"
          "parameter_mode,"
          "parameter_name,"
@@ -1484,7 +1534,7 @@ PJXNODE jx_sqlProcedureMeta (PUCHAR procedureName)
          "is_nullable,"
          "max(ifnull(numeric_precision , 0) + 2, ifnull(character_maximum_length,0))  buffer_length "
       "from sysprocs a "
-      "left join  sysparms b " 
+      "left join  sysparms b "
       "on a.specific_schema = b.specific_schema and a.specific_name = b.specific_name "
       "where a.routine_schema  = upper('%s') "
       "and   a.routine_name = upper('%s') "
@@ -1498,8 +1548,8 @@ PJXNODE jx_sqlProcedureMeta (PUCHAR procedureName)
 static SQLSMALLINT text2parmtype (PUCHAR mode)  {
    if  (0 == strcmp (mode , "IN"))  return SQL_PARAM_INPUT;
    if  (0 == strcmp (mode , "OUT")) return SQL_PARAM_OUTPUT;
-   return SQL_PARAM_INPUT_OUTPUT; 
-}    
+   return SQL_PARAM_INPUT_OUTPUT;
+}
 /* ------------------------------------------------------------- */
 static SQLSMALLINT textType2SQLtype (PUCHAR parmType, PUCHAR parmName)  {
 
@@ -1515,12 +1565,12 @@ static SQLSMALLINT textType2SQLtype (PUCHAR parmType, PUCHAR parmName)  {
    if  (0 == strcmp (parmType , "REAL"))                  return(SQL_REAL);
    if  (0 == strcmp (parmType , "NUMERIC"))               return(SQL_NUMERIC);
    if  (0 == strcmp (parmType , "DOUBLE PRECISION"))      return(SQL_DOUBLE);
-   
+
    jx_joblog("Unsupported datatype %s for %s" , parmType, parmName);
 
    return(NOXDB_UNKNOWN_SQL_DATATYPE);
 
-/* TODO  !!  more types  
+/* TODO  !!  more types
    if  (0 == strcmp (mode , "GRAPHIC VARYING"))                     return();
    if  (0 == strcmp (mode , "BINARY VARYING"))                      return();
    if  (0 == strcmp (mode , "BINARY"))                              return();
@@ -1536,26 +1586,26 @@ static SQLSMALLINT textType2SQLtype (PUCHAR parmType, PUCHAR parmName)  {
 */
 }
 /* ------------------------------------------------------------- */
-static LONG currentLength (PPROCPARM p, LONG length) 
+static LONG currentLength (PPROCPARM p, LONG length)
 {
-   if (p->mode == SQL_PARAM_INPUT  
+   if (p->mode == SQL_PARAM_INPUT
    ||  p->mode == SQL_PARAM_INPUT_OUTPUT) {
-      return (p->pData == null) ? SQL_NULL_DATA : length;  
+      return (p->pData == null) ? SQL_NULL_DATA : length;
    } else {
       return length;
-   } 
+   }
 }
 /* ------------------------------------------------------------- */
-// Note: Only works on qualified procedure calls 
+// Note: Only works on qualified procedure calls
 /* ------------------------------------------------------------- */
 PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
 {
    PJXNODE pResult = NULL;
-   UCHAR   stmtBuf [32760]; 
+   UCHAR   stmtBuf [32760];
    PUCHAR  stmt =stmtBuf;
    PJXNODE pNode;
    PUCHAR  name;
-   UCHAR   temp [256]; 
+   UCHAR   temp [256];
    PUCHAR  comma = "";
    PJXSQL  pSQL;
    int     rc;
@@ -1564,9 +1614,9 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    LONG    bufLen ;
    int     impl;
    SQLRETURN    sqlRet;
-   SQLSMALLINT  fCtype;                    
-   SQLSMALLINT  fSQLtype;                    
-      
+   SQLSMALLINT  fCtype;
+   SQLSMALLINT  fSQLtype;
+
    UCHAR      buffer  [650000];
    PUCHAR     bufferPos = buffer;
    int        numerOfParms = 0;
@@ -1596,12 +1646,12 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    for (i=0; pNode; i++) {
       p = &procParms[i];
       p->name = jx_GetValuePtr    (pNode , "parameter_name" , "");
-      p->mode = text2parmtype (jx_GetValuePtr    (pNode , "parameter_mode" , ""));                 
+      p->mode = text2parmtype (jx_GetValuePtr    (pNode , "parameter_mode" , ""));
       p->sqlType  = textType2SQLtype (jx_GetValuePtr (pNode , "data_type" , ""), p->name);
 
-      if (p->mode == SQL_PARAM_INPUT 
+      if (p->mode == SQL_PARAM_INPUT
       && NULL == jx_GetNode  (pInParms, p->name)) {
-         // Omit it from parmist, reuse this slot for next parameter 
+         // Omit it from parmist, reuse this slot for next parameter
          i --;
       } else {
          stmt += sprintf (stmt , "%s%s=>?"  , comma , p->name);
@@ -1637,7 +1687,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
             p->inLen   = currentLength (p, p->pData ? strlen(p->pData):0);
             p->bufLen  = atol (jx_GetValuePtr   (p->pNode , "buffer_length" , "0"));
             if ( p->inLen != SQL_NULL_DATA ) {
-               if (p->inLen > p->bufLen) p->inLen = p->bufLen;  
+               if (p->inLen > p->bufLen) p->inLen = p->bufLen;
                substr( p->buffer , p->pData , p->inLen);
             }
             *(p->buffer + p->bufLen) = '\0'; // Always keep an final zertermination at the end of buffer
@@ -1647,35 +1697,35 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
             fCtype = SQL_C_SHORT;
             p->inLen  = currentLength (p, p->pData ? sizeof(SHORT):0);
             p->bufLen = sizeof(SHORT);
-            if (p->pData) * (SHORT *) p->buffer = atoi(p->pData);  
+            if (p->pData) * (SHORT *) p->buffer = atoi(p->pData);
             break;
          case SQL_INTEGER:
             fCtype = SQL_C_LONG;
             p->inLen  = currentLength (p, p->pData ? sizeof(LONG):0);
             p->bufLen = sizeof(LONG);
-            if (p->pData)  * (LONG *) p->buffer = atol(p->pData);  
+            if (p->pData)  * (LONG *) p->buffer = atol(p->pData);
             break;
          case SQL_BIGINT:
             fCtype = SQL_C_BIGINT;
             p->inLen  = currentLength (p, p->pData ? sizeof(INT64):0);
             p->bufLen = sizeof(INT64);
-            if (p->pData)  * (INT64 *) p->buffer = atoll(p->pData);  
+            if (p->pData)  * (INT64 *) p->buffer = atoll(p->pData);
             break;
          case SQL_REAL:
             fCtype = SQL_C_FLOAT;
             p->inLen  = currentLength (p, p->pData ? sizeof(float):0);
             p->bufLen = sizeof(float);
-            if (p->pData)  * (float *) p->buffer = atof(p->pData);  
+            if (p->pData)  * (float *) p->buffer = atof(p->pData);
             break;
          case SQL_DOUBLE:
             fCtype = SQL_C_DOUBLE;
             p->inLen  = currentLength (p, p->pData ? sizeof(double):0);
             p->bufLen = sizeof(double);
-            if (p->pData)  * (double  *) p->buffer = atof(p->pData);  
+            if (p->pData)  * (double  *) p->buffer = atof(p->pData);
             break;
       }
 
- 
+
       rc  = SQLBindParameter (
          pSQL->pstmt->hstmt,  // hstmt
          i + 1,            // Parm number
@@ -1683,13 +1733,13 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
          fCtype ,          // data type here in C
          p->sqlType,       // dtatype in SQL
          p->bufLen,        // precision / Length of the C - string
-         0, 
+         0,
          p->buffer,        // buffer ,
          0,                // cbValueMax
          &p->inLen         // Buffer length  or indPtr // was:  &outLen              // pcbValue
       );
 
-      // Setup next; 
+      // Setup next;
       bufferPos += p->bufLen + nullterm;
    }
 
@@ -1709,7 +1759,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
       // json is always in lower ( in this implementation)
       str2lower  (p->name , p->name);
 
-      if (p->mode == SQL_PARAM_OUTPUT  
+      if (p->mode == SQL_PARAM_OUTPUT
       ||  p->mode == SQL_PARAM_INPUT_OUTPUT) {
 
          if (p->inLen == SQL_NULL_DATA ) {
@@ -1727,7 +1777,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
                   *(p->buffer + p->bufLen) = '\0'; // Always keep an final zertermination at the end of buffer
                   jx_SetValueByName(pResult , p->name,  p->buffer , p->type);
                   break;
-               case SQL_SMALLINT: 
+               case SQL_SMALLINT:
                   sprintf(temp, "%hd" , * (SHORT *) p->buffer);
                   jx_SetValueByName(pResult , p->name,  temp , p->type);
                   break;
@@ -1741,7 +1791,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
                   break;
                case SQL_REAL:
                   sprintf(temp, "%.5f" , * (float *) p->buffer);
-                  strreplacechar(temp ,',', '.'); // locale safty 
+                  strreplacechar(temp ,',', '.'); // locale safty
                   jx_SetValueByName(pResult , p->name,  temp , p->type);
                   break;
                case SQL_DOUBLE:
@@ -1764,31 +1814,31 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
 
 
 /* ------------------------------------------------------------- */
-// Note: Only works on qualified procedure calls 
+// Note: Only works on qualified procedure calls
 /* ------------------------------------------------------------- */
 LGL jx_sqlCallNode ( PUCHAR procedureName , ... )
 {
    va_list vl;
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   UCHAR   stmtBuf [32760]; 
+   UCHAR   stmtBuf [32760];
    PUCHAR  stmt =stmtBuf;
    PUCHAR  comma = "";
    PJXSQL  pSQL;
    int     rc;
    int     i, pIx;
-   SQLSMALLINT  fCtype;                    
-   SQLSMALLINT  fSQLtype;                    
-      
-   INT64       buffer [10]; 
+   SQLSMALLINT  fCtype;
+   SQLSMALLINT  fSQLtype;
+
+   INT64       buffer [10];
    SQLINTEGER  inLen  [10] ;
- 
+
    stmt += sprintf (stmt , "call %s (" , procedureName );
    for (i=1; i <  pParms->OpDescList->NbrOfParms; i++) {
       stmt += sprintf (stmt , "%s?" , comma);
       comma = ",";
-   } 
+   }
    stmt += sprintf (stmt , ")" );
-   
+
    pSQL = jx_sqlNewStatement (NULL, true, false);
 
    rc  = SQLPrepare( pSQL->pstmt->hstmt, stmtBuf, SQL_NTS );
@@ -1804,7 +1854,7 @@ LGL jx_sqlCallNode ( PUCHAR procedureName , ... )
 
       inLen[pIx]  = sizeof(INT64);
       buffer[pIx] = jx_cvtNodePtr2Offset ( (PJXNODE ) va_arg(vl,PJXNODE) );
-      
+
       rc  = SQLBindParameter (
          pSQL->pstmt->hstmt,  // hstmt
          i,                   // Parm number
@@ -1812,14 +1862,14 @@ LGL jx_sqlCallNode ( PUCHAR procedureName , ... )
          SQL_BIGINT,          // data type here in C
          SQL_BIGINT,          // dtatype in SQL
          sizeof(INT64),       // precision / Length of the C - string
-         0, 
+         0,
          &buffer[pIx],        // buffer ,
          0,                   // cbValueMax
          &inLen [pIx]         // Buffer length  or indPtr // was:  &outLen              // pcbValue
       );
    }
    va_end(vl);
-  
+
    rc = SQLExecute(pSQL->pstmt->hstmt);
    if (rc != SQL_SUCCESS &&  rc != SQL_SUCCESS_WITH_INFO) {
       check_error (pSQL);
@@ -1834,17 +1884,17 @@ LGL jx_sqlCallNode ( PUCHAR procedureName , ... )
 }
 
 /* ------------------------------------------------------------- */
-// Note: Only works on qualified procedure calls 
+// Note: Only works on qualified procedure calls
 /* ------------------------------------------------------------- */
 /*
 PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
 {
    PJXNODE pResult = NULL;
-   UCHAR   stmtBuf [32760]; 
+   UCHAR   stmtBuf [32760];
    PUCHAR  stmt =stmtBuf;
    PJXNODE pNode;
    PUCHAR  name;
-   UCHAR   temp [256]; 
+   UCHAR   temp [256];
    PUCHAR  comma = "";
    PJXSQL  pSQL;
    int     rc;
@@ -1852,9 +1902,9 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    int     i;
    int     bufLen ;
    int     impl;
-   SQLSMALLINT     col; 
+   SQLSMALLINT     col;
    SQLSMALLINT   fCType;
-   
+
    UCHAR      out  [650000];
    PUCHAR     outPos = out;
    SQLINTEGER outParmLen  [4096];
@@ -1862,7 +1912,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    PUCHAR     name [4096];
    SHORT      type [4096];
    int        i =0;
-   
+
    SQLRETURN sqlRet;
    PUCHAR  mode;
    PUCHAR  parmName;
@@ -1895,7 +1945,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
          stmt += sprintf (stmt , "%s%s=>null"  , comma , temp);
       } else {
          stmt += sprintf (stmt , "%s%s=>?"  , comma , temp);
-      }    
+      }
       comma = ",";
       pNode = jx_GetNodeNext(pNode);
    }
@@ -1916,7 +1966,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
          type [outParmsCnt] = 0 == atoi (jx_GetValuePtr (pNode , "numeric_precision" , "0")) ? VALUE:LITERAL;
          outParmsCnt ++;
          *(outPos + bufLen) = '\0';  // Ensure each is zero terminated
-         outPos += bufLen + 1; 
+         outPos += bufLen + 1;
          comma = ",";
       }
       pNode = jx_GetNodeNext(pNode);
@@ -1926,7 +1976,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    pSQL = jx_sqlNewStatement (NULL, true, false);
    rc  = SQLPrepare( pSQL->pstmt->hstmt, stmtBuf, SQL_NTS );
 
-   
+
    // bind input parameters:
    pNode    =  jx_GetNodeChild (pInParms);
    col = 1;
@@ -1946,15 +1996,15 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
          len = strlen(pData);
          outLen = SQL_NTS; // was outLen = len;
       }
-      * / 
+      * /
       PUCHAR  val = jx_GetValuePtr(pNode , "" ,null);
       if (val == null) {
       } else {
-         SQLSMALLINT fCType = SQL_C_CHAR;                    
-         PUCHAR pData = val;    
-         SQLINTEGER len = strlen(pData);                     
-         SQLINTEGER scale =0;                                
-         SQLINTEGER outLen = 0;                    
+         SQLSMALLINT fCType = SQL_C_CHAR;
+         PUCHAR pData = val;
+         SQLINTEGER len = strlen(pData);
+         SQLINTEGER scale =0;
+         SQLINTEGER outLen = 0;
 
          rc  = SQLBindParameter (
             pSQL->pstmt->hstmt, // hstmt
@@ -2013,7 +2063,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
 
 }*/
 /* ------------------------------------------------------------- */
-PJXNODE static sqlErrorObject(PUCHAR sqlstmt) 
+PJXNODE static sqlErrorObject(PUCHAR sqlstmt)
 {
    PJXNODE pError = jx_NewObject(NULL);
    jx_SetBoolByName (pError , "success" ,  OFF);
@@ -2111,7 +2161,7 @@ PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startP, PJXNODE pSqlParmsP , LO
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    LONG    start     = (pParms->OpDescList->NbrOfParms >= 2) ? startP     : NOXDB_FIRST_ROW;  // From first row
    PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
-   LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0; 
+   LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;
    PJXNODE pRow;
    PJXSQL  pSQL;
 
@@ -2407,7 +2457,7 @@ void jx_traceInsert (PJXSQL pSQL, PUCHAR stmt , PUCHAR sqlState)
    rc = SQLExecute(pTrc->handle);
 
 }
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 static BOOL isNumeric (SQLSMALLINT colType)
 {
    switch (colType) {
@@ -2415,14 +2465,14 @@ static BOOL isNumeric (SQLSMALLINT colType)
       case SQL_DECIMAL:
       case SQL_INTEGER:
       case SQL_SMALLINT:
-      case SQL_FLOAT:  
-      case SQL_REAL:   
+      case SQL_FLOAT:
+      case SQL_REAL:
       case SQL_DOUBLE:
          return true;
    }
-   return false; 
+   return false;
 }
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 // Note this is done in ascii
 #pragma convert(1252)
 PUCHAR convertAndUnescapeUTF8 ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
@@ -2437,15 +2487,15 @@ PUCHAR convertAndUnescapeUTF8 ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
    valout = memAlloc ( (*plbytes) * 4);
    newLen =  XlateBufferQ(valout, value , *plbytes, FromCCSID, ToCCSID);
    valout[newLen] = '\0'; // Use it as as zero term string later in this logic
-   
+
    if (*pfreeme) {
       memFree(&value);
-   } 
+   }
 
    // now replace unicode escapes utf8 values
    // pickup the next four hex chars and convert it
    // Note: we can use the same overlapping buff since we are ahread while we replace
-   pIn = pOut = valout; 
+   pIn = pOut = valout;
    while (*pIn) {
       if (*pIn == '\\' && *(pIn+1) == 'u') {
          UCHAR temp [4];
@@ -2456,17 +2506,17 @@ PUCHAR convertAndUnescapeUTF8 ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
       } else {
          *(pOut++) = *(pIn++);
       }
-   } 
+   }
 
-   *(pOut) = '\0'; 
+   *(pOut) = '\0';
    *pfreeme = true;
    *plbytes = pOut - valout;
    return valout;
 
 }
 #pragma convert(0)
-// ------------------------------------------------------------- 
-// Quick fix - double escape \ for unicode in json  - that is not supported by IBM 
+// -------------------------------------------------------------
+// Quick fix - double escape \ for unicode in json  - that is not supported by IBM
 PUCHAR  escapeBackSlash ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
 {
    ULONG  cntback = 0;
@@ -2474,34 +2524,34 @@ PUCHAR  escapeBackSlash ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
    PUCHAR valout;
 
    for (p=value; *p ; p++) {
-      if (*p == '\\') cntback ++; 
+      if (*p == '\\') cntback ++;
    }
    if ( cntback == 0 ) return value;
 
-   // escape is nessesary 
+   // escape is nessesary
    valout = memAlloc ( (*plbytes) +  cntback);
 
-   pIn= value; 
+   pIn= value;
    pOut = valout;
-   while (*pIn ) { 
+   while (*pIn ) {
       if (*pIn ==  '\\') * (pOut ++) = '\\';
       * (pOut ++)  = * (pIn ++);
-   }  
+   }
 
    if (*pfreeme) {
       memFree(&value);
-   } 
+   }
    *pfreeme = true;
    return valout;
 }
 
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 //  supports this:
 //   curl 'http://myibmi:15020/.1/ip2-services/ip2dmdProxy.aspx' -H 'Pragma: no-cache' -H 'Origin: http://localhost:3000' -H 'Accept-Encoding: gzip, deflate, br' -H 'Accept-Language: da,en-US;q=0.9,en;q=0.8,sv;q=0.7,fr;q=0.6' -H 'x-profile: 2019-04-16-09.57.15.263576/PNO/148/3' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36' -H 'Content-Type: application/json' -H 'Accept: */*' -H 'Cache-Control: no-cache' -H 'X-Requested-With: XMLHttpRequest' -H 'Cookie: sys_sesid="2019-04-16-09.57.15.263576"; ' -H 'Connection: keep-alive' -H 'Referer: http://localhost:3000/' --data-binary '{"batch":[{"type":"upsert","dmd":"dmd/pnoTest.dmd","entity":"PROPTST","transactiontype":"PROPTST","key":{"ID":1},"row":{"ID":1,"PROP":{"field_1":"123t","field_2":"123","field_3":"123","Tester_test":"123"},"PROPS":{"test":"test","tester":"test"}}}]}' --compressed
 //
 // Unicode escaped chars
 //   curl 'http://myibmi:15020/.1/ip2-services/ip2dmdProxy.aspx' -H 'Pragma: no-cache' -H 'Origin: http://localhost:3000' -H 'Accept-Encoding: gzip, deflate, br' -H 'Accept-Language: da,en-US;q=0.9,en;q=0.8,sv;q=0.7,fr;q=0.6' -H 'x-profile: 2019-04-16-09.57.15.263576/PNO/148/3' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36' -H 'Content-Type: application/json' -H 'Accept: */*' -H 'Cache-Control: no-cache' -H 'X-Requested-With: XMLHttpRequest' -H 'Cookie: sys_sesid="2019-04-16-09.57.15.263576"; ' -H 'Connection: keep-alive' -H 'Referer: http://localhost:3000/' --data-binary '{"batch":[{"type":"upsert","dmd":"dmd/pnoTest.dmd","entity":"PROPTST","transactiontype":"PROPTST","key":{"ID":1},"row":{"ID":1,"PROP":{"field_1":"123t","field_2":"123","field_3":"123","Tester_test":"123"},"PROPS":{"test":"test","tester":"\u00f8"}}}]}' --compressed
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 SHORT  doInsertOrUpdate(
    PJXSQL pSQL,
    PJXSQL pSQLmeta,
@@ -2521,7 +2571,7 @@ SHORT  doInsertOrUpdate(
       PJXNODE     pNode;
       BOOL        isUTF8;
    } COLDATA, *PCOLDATA;
-      
+
    COLDATA colData[16000];
    PCOLDATA pColData;
    LONG   attrParm;
@@ -2597,7 +2647,7 @@ SHORT  doInsertOrUpdate(
          rc = SQLColAttribute  (
             pSQLmeta->pstmt->hstmt,
             colno,                  // The meta "cursor" contaians all columns
-            SQL_DESC_COLUMN_CCSID, 
+            SQL_DESC_COLUMN_CCSID,
             CharacterAttributePtr , // SQLPOINTER     CharacterAttributePtr,
             0 ,                     // SQLSMALLINT    BufferLength,
             NULL ,                  // SQLSMALLINT    *StringLengthPtr,
@@ -2609,7 +2659,7 @@ SHORT  doInsertOrUpdate(
          // Blob's need binary data - !!TODO check all binary types.
          if (pColData->isUTF8) {
             fCType = SQL_UTF8_CHAR;
-         }  else if (pColData->coltype == SQL_BLOB) { 
+         }  else if (pColData->coltype == SQL_BLOB) {
          //|| pColData->coltype == SQL_CLOB ) {
             fCType = SQL_C_BINARY;
          } else {
@@ -2617,8 +2667,8 @@ SHORT  doInsertOrUpdate(
          }
 
          if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
-            // Keep the max len (from the column) for now.. 
-            // Data will be allocated and serilized in "NEED_DATA" section  
+            // Keep the max len (from the column) for now..
+            // Data will be allocated and serilized in "NEED_DATA" section
          } else {
             pColData->collen = strlen (jx_GetNodeValuePtr  (pNode , NULL));
          }
@@ -2673,7 +2723,7 @@ SHORT  doInsertOrUpdate(
             freeme = false;
             value = jx_GetNodeValuePtr  (pNode , NULL);
             lbytes = pColData->collen;
-         } 
+         }
 
          if (pColData->isUTF8) {
             value = convertAndUnescapeUTF8 (&lbytes , value , &freeme);
@@ -3069,4 +3119,3 @@ PJXSQLCONNECT jx_sqlConnect(PJXNODE pOptionsP)
 
    return pc;
 }
-

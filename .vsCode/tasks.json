@@ -5,7 +5,7 @@
     "tasks": [
         {
             "label": "Compile current file",
-            "command": "ssh -t MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake current SRC=${relativeFile} '",
+            "command": "ssh -t MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake current SRC=${relativeFile} MODULE=${fileBasenameNoExtension}' ",
             "type": "shell",
             "group": {
                 "kind": "build",

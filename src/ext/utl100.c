@@ -95,7 +95,7 @@ UCHAR tolowerascii (UCHAR c)
 }
 /* ------------------------------------------------------------- *\
    stristr is strstr that ignores the case
-   is trturns the pointer to "key" with in base
+   is returns the pointer to "key" with in base
 \* ------------------------------------------------------------- */
 PUCHAR stristr(PUCHAR base, PUCHAR key )
 {
