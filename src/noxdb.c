@@ -99,7 +99,7 @@ UCHAR  jx_DecPoint = '.';
 iconv_t xlateEto1208;
 iconv_t xlate1208toE;
 
-static JX_TRACE jx_trace = null; 
+static JX_TRACE jx_trace = null;
 
 
 /* --------------------------------------------------------------------------- */
@@ -112,9 +112,9 @@ void jx_joblog (PUCHAR msg , ...)
    int  len;
    UCHAR mem [999999];
 
-   // Poor mans polymorphisme: Nodes have a signature byte 
+   // Poor mans polymorphisme: Nodes have a signature byte
    if (msg == null){
-      return; 
+      return;
    } else if ( *msg == NODESIG) {
       len = jx_AsJsonTextMem (((PJXNODE) msg) , mem , 512);
       QMHSNDPM ("CPF9898", "QCPFMSG   *LIBL     ",  mem  , len  , "*INFO     ", "jx_joblog                "  ,
@@ -127,8 +127,8 @@ void jx_joblog (PUCHAR msg , ...)
                stackcount, msgkey , &zeroval);
    }
 }
-/* --------------------------------------------------------------------------- 
--- TODO !! Messages up to 32K is supported but need a message file :( 
+/* ---------------------------------------------------------------------------
+-- TODO !! Messages up to 32K is supported but need a message file :(
 void jx_joblog (PUCHAR msg)
 {
    char msgkey [10];
@@ -136,11 +136,11 @@ void jx_joblog (PUCHAR msg)
    UINT64 zeroval  = 0;
    int  len;
 
-   // Poor mans polymorphisme: Nodes have a signature byte 
+   // Poor mans polymorphisme: Nodes have a signature byte
    if ( *msg == NODESIG) {
       int len1, len2;
       UCHAR mem [999999];
-      memset(mem , ' ' ,80);  
+      memset(mem , ' ' ,80);
       len1 = jx_AsJsonTextMem (((PJXNODE) msg) , mem , 80);
       len2 = jx_AsJsonTextMem (((PJXNODE) msg) , &mem[80] , 9900);
       if (len2 > 9900) len2 = 9900;
@@ -151,7 +151,7 @@ void jx_joblog (PUCHAR msg)
                stackcount, msgkey , &zeroval);
    }
 }
-*/ 
+*/
 /* --------------------------------------------------------------------------- */
 void jx_SetMessage (PUCHAR Ctlstr , ... )
 {
@@ -172,7 +172,7 @@ void  freeNodeValue(PJXNODE pNode)
 }
 void jx_SetTraceProc (JX_TRACE  proc) {
    jx_trace = proc;
-} 
+}
 /* ------------------------------------------------------------- */
 //void dummy01(){}
 /* ------------------------------------------------------------- */
@@ -846,24 +846,28 @@ PJXNODE  jx_InsertByName (PJXNODE pDest , PUCHAR name , PJXNODE pSource )
 /* --------------------------------------------------------------------------- */
 PJXNODE  jx_CopyValue (PJXNODE pDest , PUCHAR destName , PJXNODE pSource , PUCHAR sourceName)
 {
-    PJXNODE pRes;
+   PJXNODE pRes;
 
-    pSource = jx_GetNode  (pSource  , sourceName );
-    if (pSource == NULL) return NULL;
+   pSource = jx_GetNode  (pSource  , sourceName );
+   if (pSource == NULL) return NULL;
 
 
-    pDest = jx_GetOrCreateNode (pDest, destName);
-    if (pDest  == NULL) return NULL;
+   pDest = jx_GetOrCreateNode (pDest, destName);
+   if (pDest  == NULL) return NULL;
 
-    if ( pSource->type == OBJECT || pSource->type == ARRAY ) {
-       jx_NodeCloneAndReplace (pDest  , pSource);
+   if ( pSource->type == OBJECT || pSource->type == ARRAY ) {
+      jx_NodeCloneAndReplace (pDest  , pSource);
 
-    } else {
-       jx_NodeSet (pDest ,pSource->Value);
-       pDest->isLiteral = pSource->isLiteral;
-    }
+   } else {
+      // Need copy: destination could be parent to Source, and therfor be deleted in the process
+      PUCHAR pTempValue = memStrDup(pSource->Value);
+      BOOL   tempIsLiteral  = pSource->isLiteral;
+      jx_NodeSet (pDest , pTempValue);
+      pDest->isLiteral = tempIsLiteral;
+      memFree (&pTempValue);
+   }
 
-    return pDest ;
+   return pDest ;
 }
 /* --------------------------------------------------------------------------- */
 static void  jx_MergeObj  (PJXNODE pDest, PJXNODE pSource, PJWRITE pjWrite, MERGEOPTION merge)
@@ -914,12 +918,12 @@ void  jx_MergeObjects (PJXNODE pDest, PJXNODE pSource , MERGEOPTION merge)
 
          pDestNode = jx_GetNode  (pDest, pSourceNode->Name);
          if (pDestNode) {
-            if ((merge & MO_MERGE_REPLACE) 
+            if ((merge & MO_MERGE_REPLACE)
             ||  (merge & MO_MERGE_MATCH)) {
                jx_NodeMoveInto  (pDest , pSourceNode->Name , pSourceNode );
             }
          } else {
-            if ((merge & MO_MERGE_REPLACE) 
+            if ((merge & MO_MERGE_REPLACE)
             ||  (merge & MO_MERGE_NEW)) {
                jx_NodeMoveInto  (pDest , pSourceNode->Name , pSourceNode );
             }
@@ -1085,7 +1089,7 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
         ||  BeginsWith(p , "false")
         ||  BeginsWith(p , "null" )) {
            // This is not good - some places it is converted to job other not !!
-           // DODO!! For now patch the actual into the job  
+           // DODO!! For now patch the actual into the job
            jobBraBeg = BraBeg;
            jobCurBeg = CurBeg;
            jobBraEnd = BraEnd;
@@ -1164,7 +1168,7 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
     pJxCom->State = XML_EXIT_ERROR;
     return outbuf;
   }
-  
+
   // Convert const to current ccsid
   initconst( OutputCcsid);  // Init const from 1252 to current output ccsid
 
@@ -1499,8 +1503,8 @@ PJXNODE  jx_nodeInsert(PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
    return pSource;
 }
 // ---------------------------------------------------------------------------
-// XML documents has a anonymus root node. Each child from the 
-// root is added  
+// XML documents has a anonymus root node. Each child from the
+// root is added
 PJXNODE jx_documentInsert(PJXNODE pDest, PJXNODE * ppSource, REFLOC refloc)
 {
    PJXNODE pTemp;
@@ -1511,7 +1515,7 @@ PJXNODE jx_documentInsert(PJXNODE pDest, PJXNODE * ppSource, REFLOC refloc)
 
    // find length of source nodes:
    for (len =0, pTemp = pSource->pNodeChildHead ; pTemp != NULL; len++, pTemp = pTemp->pNodeSibling);
-   
+
    if (len == 0) return pDest;
 
    // Store the list of nodes and make each of them them roots;
@@ -1688,14 +1692,14 @@ void jx_NodeDelete(PJXNODE pNode)
 
    if (pNode == NULL) return;
 
-   // Perhaps a basic memory chunk ( not a node?) 
+   // Perhaps a basic memory chunk ( not a node?)
    if (pNode->signature != NODESIG) {
       PMEMHDR mem = (PMEMHDR) ((PUCHAR) pNode - sizeof(MEMHDR)) ;
       if (mem->signature == MEMSIG ) {
          memFree (&pNode);
       }
       return;
-   }   
+   }
 
    jx_NodeUnlink (pNode);
    jx_FreeChildren (pNode);
@@ -1757,7 +1761,7 @@ PJXDELIM jx_GetDelimiters(void)
   return   (PJXDELIM)   &delimiters;
 }
 // ---------------------------------------------------------------------------
-// Note: Options is depricated 
+// Note: Options is depricated
 // ---------------------------------------------------------------------------
 PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
 {
@@ -1768,7 +1772,7 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
 
    PJXNODE pRoot;
    PJXCOM pJxCom;
-   
+
 
    #ifdef MEMDEBUG
    UCHAR  tempStr[100];
@@ -1797,7 +1801,7 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
    if (pJxCom->UseIconv) {
       int inlen = strlen(Buf);
       int templen;
-      PUCHAR temp = memAlloc(inlen * 4); // Need room for unicode  
+      PUCHAR temp = memAlloc(inlen * 4); // Need room for unicode
 
       if (InputCcsid == 1208) {
          templen = XlateUtf8ToSbcs (temp , Buf , inlen , 0);
@@ -1833,7 +1837,7 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
 PJXNODE jx_parseStringCcsid(PUCHAR buf, int ccsid)
 {
    PJXNODE pRoot;
-   JXDELIM storeDelimiters; 
+   JXDELIM storeDelimiters;
 
    storeDelimiters = * jx_GetDelimiters();
    InputCcsid = ccsid;
@@ -1977,7 +1981,7 @@ PJXNODE jx_ParseFile(PUCHAR FileName, PUCHAR pOptions)
    // make it a string
    pStreamBuf[len] = '\0';
    pFirstChar = pStreamBuf;
-   
+
    pRoot = jx_parseStringCcsid(pFirstChar,0);
    memFree (&pStreamBuf);
 
@@ -2031,11 +2035,11 @@ void splitNameAndAttribute (PUCHAR nodeName , PUCHAR attributeName ,PUCHAR keyNa
          substr(attributeName , p+ 1 , strlen(p+1));
          return;
       }
-   } 
+   }
    strcpy ( nodeName , keyName );
    *attributeName = '\0';
 
-} 
+}
 
 /* --------------------------------------------------------------------------- */
 PJXNODE static queryXmlElements ( PJXNODE pRootNode , PUCHAR keyName , PUCHAR compVal , int compLen, int comp)
@@ -2043,13 +2047,13 @@ PJXNODE static queryXmlElements ( PJXNODE pRootNode , PUCHAR keyName , PUCHAR co
    UCHAR nodeName  [256];
    UCHAR attributeName [256];
    PJXNODE pNodeTemp;
-   PUCHAR pValue; 
+   PUCHAR pValue;
 
-   splitNameAndAttribute (nodeName , attributeName , keyName); 
+   splitNameAndAttribute (nodeName , attributeName , keyName);
 
    pNodeTemp = pRootNode;
    while (pNodeTemp && pNodeTemp->signature == NODESIG) {
-      // Note: XML can mix the order of elements 
+      // Note: XML can mix the order of elements
       if (stricmp (pRootNode->Name , jx_NodeName (pNodeTemp ,false)) == 0) {
          PJXNODE pNode = jx_GetNode  (pNodeTemp, nodeName);
          if (pNode) {
@@ -2059,7 +2063,7 @@ PJXNODE static queryXmlElements ( PJXNODE pRootNode , PUCHAR keyName , PUCHAR co
                   pValue = pAtr->Value;
                } else {
                   pValue = NULL;
-               } 
+               }
             } else {
                pValue = pNode->Value;
             }
@@ -2125,9 +2129,9 @@ PJXNODE jx_lookupByXpath (PJXNODE pRootNode, PUCHAR * ppName)
    } else {
       PJXNODE pNodeTemp;
 
-      // Is it from the XML parser? Then names can jump  
+      // Is it from the XML parser? Then names can jump
       if (pRootNode && pRootNode->type == UNKNOWN) {
-         return queryXmlElements (pRootNode , keyName ,compVal , compLen , comp); 
+         return queryXmlElements (pRootNode , keyName ,compVal , compLen , comp);
       } else {
          pNodeTemp = pRootNode == NULL? NULL:pRootNode->pNodeChildHead;
 
@@ -2596,7 +2600,7 @@ PJXNODE jx_GetNodeByName  (PJXNODE  pNode, PUCHAR Ctlstr , ... )
 }
 /* -------------------------------------------------------------
    returns the value of the node
-   NOTE: pNode->Value == NULL returns true from proc pointers 
+   NOTE: pNode->Value == NULL returns true from proc pointers
    ------------------------------------------------------------- */
 PUCHAR  jx_GetNodeValuePtr  (PJXNODE pNode , PUCHAR DefaultValue)
 {
@@ -2817,8 +2821,8 @@ void  jx_SetByParseString (PJXNODE pDest , PUCHAR pSourceStr , MERGEOPTION merge
 
    // TODO :  jx_ParseString returns object for any string which is an error; now dont use
    // the paser if it is not an OBJECT or ARRAY
-   // TODO !! have to test posibilies for spacial chars ... 
-   if ( *firstNonBlank == BraBeg    ||  *firstNonBlank == CurBeg 
+   // TODO !! have to test posibilies for spacial chars ...
+   if ( *firstNonBlank == BraBeg    ||  *firstNonBlank == CurBeg
    ||   *firstNonBlank == jobBraBeg ||  *firstNonBlank == jobCurBeg) {
       pSource = jx_ParseString(  firstNonBlank , "");
    }
@@ -3178,7 +3182,7 @@ PJXNODE  jx_SetValueByName (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETY
    return jx_traceNode("Set value" , pParentNode);
 }
 /* -------------------------------------------------------------
-   Set integer by name - old version 
+   Set integer by name - old version
    ------------------------------------------------------------- */
 PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value)
 {
@@ -3267,7 +3271,7 @@ PJXNODE  jx_SetTimeByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
    ------------------------------------------------------------- */
 PJXNODE  jx_SetTimeStampByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
 {
-   UCHAR temp [27]; 
+   UCHAR temp [27];
    substr (temp, Value , 26);
    return jx_SetValueByName(pNode , Name , temp , VALUE );
 }
@@ -3396,10 +3400,10 @@ TIMESTAMP jx_GetValueTimeStamp (PJXNODE pNode , PUCHAR Name  , TIMESTAMP dftParm
    }
    return *(TIMESTAMP*) value;
 }
-// -------------------------------------------------------------  
+// -------------------------------------------------------------
 // Same base logic as in "isTrue", but with default value
 // and null/null-values return default values
-// -------------------------------------------------------------  
+// -------------------------------------------------------------
 LGL jx_GetValueBool  (PJXNODE pNode , PUCHAR Name  , LGL  dftParm)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -3675,4 +3679,3 @@ INT64 jx_MemUse(VOID)
 {
    return memUse();
 }
-
