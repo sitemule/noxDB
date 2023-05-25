@@ -2080,7 +2080,7 @@ Dcl-C JX_CAMEL_CASE   const(64);
 // If not set:  a *NULL pointer is returned and
 // you have to handle the error manually
 ///
-Dcl-C JX_GRACEFUL_ERRROR   const(128);
+Dcl-C JX_GRACEFUL_ERROR   const(128);
 
 ///
 // Result set format option to return extra column text label
@@ -2206,6 +2206,26 @@ Dcl-PR jx_sqlCall pointer extproc(*CWIDEN : 'jx_sqlCall');
   procedureName pointer value options(*string);
   inputParms pointer value;
 End-PR;
+
+///
+// SQL : Call stored procedure, select from UDTF table functions, return values from scalar function
+//
+// Calls a SQL stored procedure / Table Function / value with the passed parameters.
+//
+// @param Qualified SQL procedure / UDTF / value  name
+// @param noxDB object tree with input ( INOUT) parameters
+// @param Result set format options
+// @return noxDB object tree with output parameters or reult set
+//
+// @info The caller of this procedure needs to take care of freeing the resources
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
+///
+Dcl-PR jx_sqlExecuteRoutine pointer extproc(*CWIDEN : 'jx_sqlExecuteRoutine');
+  routineName     pointer value options(*string);
+  parameterObject pointer value options(*nopass);
+  formatOptions   int(10) value options(*nopass);
+End-PR;
+
 
 ///
 // SQL : Call stored procedure (noxDB nodes)

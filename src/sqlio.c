@@ -1545,6 +1545,52 @@ PJXNODE jx_sqlProcedureMeta (PUCHAR procedureName)
    return jx_sqlResultSet(sqlStmt, 0 , 99999 , 0 , NULL);
 }
 /* ------------------------------------------------------------- */
+// All types;
+/* ------------------------------------------------------------- */
+PJXNODE jx_sqlRoutineMeta (PUCHAR routineName)
+{
+
+   UCHAR sqlStmt [1024];
+   UCHAR schema [32];
+   UCHAR routine  [256];
+   PUCHAR split;
+
+   split = strchr(routineName , '.');
+
+   if (split == NULL) return NULL;
+
+   substr (schema    , routineName , split - routineName);
+   strcpy (routine , split +1);
+
+
+   sprintf (sqlStmt ,
+      "with cte as ( "
+      "select "
+         "case a.function_type when 'S' then 'SCALAR' when 'T' then 'TABLE' else 'PROC' end type ,"
+         "a.specific_name specific_name,"
+         "a.max_dynamic_result_sets,"
+         "parameter_mode,"
+         "parameter_name,"
+         "data_type,"
+         "numeric_scale,"
+         "numeric_precision,"
+         "character_maximum_length,"
+         "numeric_precision_radix,"
+         "datetime_precision,"
+         "is_nullable,"
+         "max(ifnull(numeric_precision , 0) + 2, ifnull(character_maximum_length,0))  buffer_length "
+      "from sysroutines  a "
+      "left join  sysparms b "
+      "on a.specific_schema = b.specific_schema and a.specific_name = b.specific_name "
+      "where a.routine_schema  = upper('%s') "
+      "and   a.routine_name = upper('%s') "
+      ") "
+      "select (select count(distinct cte.specific_name) from cte) number_of_implementations  , cte.* from cte "
+      , schema ,routine
+   );
+   return jx_sqlResultSet(sqlStmt, 0 , 99999 , 0 , NULL);
+}
+/* ------------------------------------------------------------- */
 static SQLSMALLINT text2parmtype (PUCHAR mode)  {
    if  (0 == strcmp (mode , "IN"))  return SQL_PARAM_INPUT;
    if  (0 == strcmp (mode , "OUT")) return SQL_PARAM_OUTPUT;
@@ -1810,6 +1856,281 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    return (pResult);
 
 }
+
+/* ------------------------------------------------------------- */
+// Note: This will replace the jx_sqlCall when ready
+/* ------------------------------------------------------------- */
+PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG formatP)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PJXNODE pInParms = (pParms->OpDescList->NbrOfParms >= 2) ? pInParmsP  : NULL;
+   LONG    format  = (pParms->OpDescList->NbrOfParms >= 3) ? formatP  : 0;  // Default: Arrray only
+   PJXNODE pResult = NULL;
+   UCHAR   stmtBuf [32760];
+   PUCHAR  stmt =stmtBuf;
+   PJXNODE pNode;
+   PUCHAR  name;
+   UCHAR   temp [256];
+   PUCHAR  comma = "";
+   PJXSQL  pSQL;
+   int     rc;
+   int     outCol;
+   SQLSMALLINT i;
+   LONG    bufLen ;
+   int     impl;
+   SQLRETURN    sqlRet;
+   SQLSMALLINT  fCtype;
+   SQLSMALLINT  fSQLtype;
+
+   UCHAR      buffer  [650000];
+   PUCHAR     bufferPos = buffer;
+   int        numerOfParms = 0;
+   PJXNODE    pRoutineMeta = jx_sqlRoutineMeta (routineName);
+   PROCPARM   procParms   [NOXDB_MAX_PARMS];
+   PPROCPARM  p;
+   PUCHAR     type ;
+   LONG       resultSets;
+
+   if (pRoutineMeta == NULL) {
+      sprintf( jxMessage , "Routine %s is not found or not called qualified" , routineName);
+      jxError = true;
+      return NULL;
+   }
+   pNode    =  jx_GetNodeChild (pRoutineMeta);
+
+   type = jx_GetValuePtr    (pNode , "type" , "");
+   resultSets = atoi (jx_GetValuePtr (pNode , "max_dynamic_result_sets" , "0"));
+
+
+   if (0 == strcmp ( type , "PROC"  )
+   &&  0 == resultSets ) {
+      stmt += sprintf (stmt , "call %s (" , routineName );
+   } else {
+
+      if (0 == strcmp ( type , "PROC"  )) {
+         stmt += sprintf (stmt , "call %s (" , routineName );
+      } else if (0 == strcmp ( type , "SCALAR") ) {
+         stmt += sprintf (stmt , "values %s (" , routineName );
+      } else if (0 == strcmp ( type , "TABLE" ) ) {
+         stmt += sprintf (stmt , "select * from table ( %s (" , routineName );
+      }
+
+      pNode    =  jx_GetNodeChild (pRoutineMeta);
+      for (i=0; pNode; i++) {
+         p = &procParms[i];
+         p->name = jx_GetValuePtr    (pNode , "parameter_name" , "");
+         p->mode = text2parmtype (jx_GetValuePtr    (pNode , "parameter_mode" , ""));
+         p->sqlType  = textType2SQLtype (jx_GetValuePtr (pNode , "data_type" , ""), p->name);
+
+         if ((p->mode == SQL_PARAM_INPUT && NULL == jx_GetNode  (pInParms, p->name))
+         ||  (p->mode == SQL_PARAM_OUTPUT)) {
+            // Omit it from parmist, reuse this slot for next parameter
+            i --;
+         } else {
+            if (*p->name > ' ') {
+               stmt += sprintf (stmt , "%s%s=>"  , comma , p->name);
+            }
+            //if (ON ==  jx_IsLiteral (pNode ) ) {
+            //   stmt += sprintf (stmt , "%s" , jx_GetValuePtr(pInParms , p->name , "0"));
+            //} else {
+               stmt += sprintf (stmt , "'%s'" , jx_GetValuePtr(pInParms , p->name , ""));
+            //}
+            comma = ",";
+            numerOfParms = i+1;
+            p->pNode = pNode;
+         }
+         pNode = jx_GetNodeNext(pNode);
+      }
+
+      if ((0 == strcmp ( type , "PROC"  ))
+      ||  (0 == strcmp ( type , "SCALAR"))) {
+         stmt += sprintf (stmt , ")" );
+      } else if (0 == strcmp ( type , "TABLE" ) ) {
+         stmt += sprintf (stmt , "))" );
+      }
+
+      return jx_sqlResultSet(stmtBuf, 0 , -1 , format , NULL);
+
+   }
+
+   impl = atoi (jx_GetValuePtr (pNode , "number_of_implementations" , "0"));
+   if (impl > 1) {
+      sprintf( jxMessage , "Procedure %s has %d implementations. Can not decide which to use" , routineName, impl);
+      jxError = true;
+      jx_NodeDelete (pRoutineMeta);
+      return NULL;
+   }
+
+   pNode    =  jx_GetNodeChild (pRoutineMeta);
+   for (i=0; pNode; i++) {
+      p = &procParms[i];
+      p->name = jx_GetValuePtr    (pNode , "parameter_name" , "");
+      p->mode = text2parmtype (jx_GetValuePtr    (pNode , "parameter_mode" , ""));
+      p->sqlType  = textType2SQLtype (jx_GetValuePtr (pNode , "data_type" , ""), p->name);
+
+      if (p->mode == SQL_PARAM_INPUT
+      && NULL == jx_GetNode  (pInParms, p->name)) {
+         // Omit it from parmist, reuse this slot for next parameter
+         i --;
+      } else {
+         stmt += sprintf (stmt , "%s%s=>?"  , comma , p->name);
+         comma = ",";
+         numerOfParms = i+1;
+         p->pNode = pNode;
+         p->pData = jx_GetValuePtr(pInParms , p->name ,null);
+      }
+      pNode = jx_GetNodeNext(pNode);
+   }
+   stmt += sprintf (stmt , ")" );
+
+   pSQL = jx_sqlNewStatement (NULL, true, false);
+   rc  = SQLPrepare( pSQL->pstmt->hstmt, stmtBuf, SQL_NTS );
+
+   for (i=0; i < numerOfParms ; i++) {
+      int nullterm = 0;
+      p = &procParms[i];
+
+      p->buffer = bufferPos;
+      p->type = 0 == atoi (jx_GetValuePtr (p->pNode , "numeric_precision" , "0")) ? VALUE:LITERAL;
+
+      switch (p->sqlType ) {
+         case SQL_CHAR:
+         case SQL_VARCHAR:
+         case SQL_TIMESTAMP:
+         case SQL_DATE:
+         case SQL_TIME:
+         case SQL_DECIMAL:
+         case SQL_NUMERIC:
+         case NOXDB_UNKNOWN_SQL_DATATYPE:
+            fCtype = SQL_C_CHAR;
+            p->inLen   = currentLength (p, p->pData ? strlen(p->pData):0);
+            p->bufLen  = atol (jx_GetValuePtr   (p->pNode , "buffer_length" , "0"));
+            if ( p->inLen != SQL_NULL_DATA ) {
+               if (p->inLen > p->bufLen) p->inLen = p->bufLen;
+               substr( p->buffer , p->pData , p->inLen);
+            }
+            *(p->buffer + p->bufLen) = '\0'; // Always keep an final zertermination at the end of buffer
+            nullterm = 1 ; // Keep the zerotermination in the buffer;
+            break;
+         case SQL_SMALLINT:
+            fCtype = SQL_C_SHORT;
+            p->inLen  = currentLength (p, p->pData ? sizeof(SHORT):0);
+            p->bufLen = sizeof(SHORT);
+            if (p->pData) * (SHORT *) p->buffer = atoi(p->pData);
+            break;
+         case SQL_INTEGER:
+            fCtype = SQL_C_LONG;
+            p->inLen  = currentLength (p, p->pData ? sizeof(LONG):0);
+            p->bufLen = sizeof(LONG);
+            if (p->pData)  * (LONG *) p->buffer = atol(p->pData);
+            break;
+         case SQL_BIGINT:
+            fCtype = SQL_C_BIGINT;
+            p->inLen  = currentLength (p, p->pData ? sizeof(INT64):0);
+            p->bufLen = sizeof(INT64);
+            if (p->pData)  * (INT64 *) p->buffer = atoll(p->pData);
+            break;
+         case SQL_REAL:
+            fCtype = SQL_C_FLOAT;
+            p->inLen  = currentLength (p, p->pData ? sizeof(float):0);
+            p->bufLen = sizeof(float);
+            if (p->pData)  * (float *) p->buffer = atof(p->pData);
+            break;
+         case SQL_DOUBLE:
+            fCtype = SQL_C_DOUBLE;
+            p->inLen  = currentLength (p, p->pData ? sizeof(double):0);
+            p->bufLen = sizeof(double);
+            if (p->pData)  * (double  *) p->buffer = atof(p->pData);
+            break;
+      }
+
+
+      rc  = SQLBindParameter (
+         pSQL->pstmt->hstmt,  // hstmt
+         i + 1,            // Parm number
+         p->mode,          // fParamType
+         fCtype ,          // data type here in C
+         p->sqlType,       // dtatype in SQL
+         p->bufLen,        // precision / Length of the C - string
+         0,
+         p->buffer,        // buffer ,
+         0,                // cbValueMax
+         &p->inLen         // Buffer length  or indPtr // was:  &outLen              // pcbValue
+      );
+
+      // Setup next;
+      bufferPos += p->bufLen + nullterm;
+   }
+
+   rc = SQLExecute(pSQL->pstmt->hstmt);
+   if (rc != SQL_SUCCESS &&  rc != SQL_SUCCESS_WITH_INFO) {
+      check_error (pSQL);
+      jxError = true;
+      jx_NodeDelete (pRoutineMeta);
+      return NULL;
+   }
+
+   pResult = jx_NewObject(NULL);
+
+   for (i = 0 ; i < numerOfParms  ; i ++) {
+      p = &procParms[i];
+
+      // json is always in lower ( in this implementation)
+      str2lower  (p->name , p->name);
+
+      if (p->mode == SQL_PARAM_OUTPUT
+      ||  p->mode == SQL_PARAM_INPUT_OUTPUT) {
+
+         if (p->inLen == SQL_NULL_DATA ) {
+            jx_SetNullByName (pResult , p->name);
+         } else {
+
+            switch (p->sqlType) {
+               case SQL_CHAR:
+               case SQL_VARCHAR:
+               case SQL_TIMESTAMP:
+               case SQL_DATE:
+               case SQL_TIME:
+               case SQL_DECIMAL:
+               case SQL_NUMERIC:
+                  *(p->buffer + p->bufLen) = '\0'; // Always keep an final zertermination at the end of buffer
+                  jx_SetValueByName(pResult , p->name,  p->buffer , p->type);
+                  break;
+               case SQL_SMALLINT:
+                  sprintf(temp, "%hd" , * (SHORT *) p->buffer);
+                  jx_SetValueByName(pResult , p->name,  temp , p->type);
+                  break;
+               case SQL_INTEGER:
+                  sprintf(temp, "%ld" , * (LONG *) p->buffer);
+                  jx_SetValueByName(pResult , p->name,  temp , p->type);
+                  break;
+               case SQL_BIGINT:
+                  sprintf(temp, "%lld" , * (INT64*) p->buffer);
+                  jx_SetValueByName(pResult , p->name,  temp , p->type);
+                  break;
+               case SQL_REAL:
+                  sprintf(temp, "%.5f" , * (float *) p->buffer);
+                  strreplacechar(temp ,',', '.'); // locale safty
+                  jx_SetValueByName(pResult , p->name,  temp , p->type);
+                  break;
+               case SQL_DOUBLE:
+                  sprintf(temp, "%.10f" , * (double *) p->buffer);
+                  strreplacechar(temp ,',', '.'); // locale safty
+                  jx_SetValueByName(pResult , p->name,  temp , p->type);
+                  break;
+            }
+         }
+      }
+   }
+
+   jx_sqlClose (&pSQL);
+   jx_NodeDelete (pRoutineMeta);
+
+   return (pResult);
+
+}
+
+
 //////////////////////
 
 
@@ -1939,7 +2260,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    while (pNode) {
       PUCHAR val;
       name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÃ˜B
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
       val = jx_GetValuePtr(pNode , "" ,null);
       if (val == null) {
          stmt += sprintf (stmt , "%s%s=>null"  , comma , temp);
@@ -2344,7 +2665,7 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
    for ( colno=1; pNode; colno++) {
       if (! isIdColumn(hMetastmt, colno)) {
          name  = jx_GetNodeNamePtr   (pNode);
-         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÃ˜B
+         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
          if  (nodeisnull(pNode)) {
             stmt += sprintf (stmt , "%s%s=NULL" , comma , temp);
          } else if  (nodeisblank(pNode)) {
@@ -2380,7 +2701,7 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
       if (! isIdColumn(hMetaStmt, colno)) {
          if (!nodeisnull(pNode)) {
             name     = jx_GetNodeNamePtr   (pNode);
-            str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÃ˜B
+            str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
             stmt    += sprintf (stmt , "%s%s" , comma , temp);
             if  (nodeisblank(pNode)) {
                pMarker+= sprintf (pMarker , "%sdefault" , comma);    // because timesstamp / date can be set as ''
@@ -2904,7 +3225,7 @@ static PJXSQL buildMetaStmt (PUCHAR table, PJXNODE pRow)
    pNode    =  jx_GetNodeChild (pRow);
    while (pNode) {
       name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÃ˜B
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
       stmt += sprintf (stmt , "%s%s" , comma , temp);
       comma = ",";
       pNode = jx_GetNodeNext(pNode);

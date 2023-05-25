@@ -18,7 +18,7 @@
 
 // ------------------------------------------------------------------------------------
 // Using SQL resultset rturning simple array
-// This also demonstrate the use of limit and position in the resultset 
+// This also demonstrate the use of limit and position in the resultset
 // ------------------------------------------------------------------------------------
 Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
 /include qrpgleRef,noxdb
@@ -62,7 +62,7 @@ end-proc;
 // ------------------------------------------------------------------------------------
 // example2
 // Number of rows and limit
-// Given by parameters 
+// Given by parameters
 // ------------------------------------------------------------------------------------
 dcl-proc example2;
 
@@ -71,7 +71,7 @@ dcl-proc example2;
    // return an simple array with rows
    pRows = json_sqlResultSet(
       'Select * from noxdbdemo.icproduct':
-      10: // from and including row 10 
+      10: // from and including row 10
       5   // max 5 rows
    );
 
@@ -87,7 +87,7 @@ end-proc;
 // ------------------------------------------------------------------------------------
 // example3
 // Number of rows and limit
-// given by the SQL statement 
+// given by the SQL statement
 // ------------------------------------------------------------------------------------
 dcl-proc example3;
 
@@ -111,7 +111,7 @@ end-proc;
 // ------------------------------------------------------------------------------------
 // example4
 // Number of rows and limit
-// given by the SQL statement alternive syntax 
+// given by the SQL statement alternive syntax
 // Note!! Then spcial syntax of combined LIMIT X,Y is not supported !!
 // ------------------------------------------------------------------------------------
 dcl-proc example4;
@@ -137,8 +137,8 @@ end-proc;
 // ------------------------------------------------------------------------------------
 // example5
 // Number of rows and limit
-// precedence 
-// given by the SQL statement ignors the parameters 
+// precedence
+// given by the SQL statement ignors the parameters
 // ------------------------------------------------------------------------------------
 dcl-proc example5;
 
@@ -176,7 +176,7 @@ dcl-proc example6;
       offset 10 rows fetch first 5 rows only':
       1 :  // from row  !! will be ignored since given in the sql statement
       100: // numberof rows !! will be ignored since given in the sql statement
-      JSON_GRACEFUL_ERRROR
+      JSON_GRACEFUL_ERROR
    );
 
    // Produce a JSON stream file in the IFS

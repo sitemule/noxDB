@@ -45,7 +45,7 @@
           err = json_sqlUpsert (
              'beløb'                  // table name
              :row                     // row in object form {a:1,b:2} etc..
-             :'xbelØb =   12.34    '  // national chars in "where"h as to be Uppercased by you !!
+             :'xbEL�B =   12.34    '  // national chars in "where"h as to be Uppercased by you !!
           );
 
           // get ret unique ID generated
