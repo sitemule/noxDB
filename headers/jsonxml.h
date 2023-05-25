@@ -10,7 +10,7 @@
 #ifdef IFSCOMPILE
  #include "/qsys.lib/include.lib/h.file/ostypes.mbr"
 #else
- #include "ostypes.h"     
+ #include "ostypes.h"
  #include "streamer.h"
  #include "apierr.h"
  #include "xlate.h"
@@ -79,7 +79,7 @@ typedef enum {
 	MO_MERGE_NEW      =   256,  // Only new elements are merged - existing are left untouched
 	MO_MERGE_MATCH    =   512,  // Merge and replace only existing nodes
 	MO_MERGE_REPLACE  =  1024,  // Merge all: replace if it exists and append new nodes if not exists
-	MO_MERGE_MOVE     =  2048   // When added - moving from source  to destination 
+	MO_MERGE_MOVE     =  2048   // When added - moving from source  to destination
 } MERGEOPTION , *PMERGEOPTION;
 
 typedef enum {
@@ -505,8 +505,8 @@ typedef _Packed struct  {
 
 typedef struct  {
 	 SQLCHAR       colname  [64]; // !!!! TODO !!! set len to 32!!
-	 SQLCHAR       sysname  [64]; 
-	 SQLCHAR       realname [64]; 
+	 SQLCHAR       sysname  [64];
+	 SQLCHAR       realname [64];
 	 SQLSMALLINT   coltype;
 	 SQLSMALLINT   colnamelen;
 	 SQLSMALLINT   nullable;
@@ -594,6 +594,13 @@ typedef enum _JX_RESULTSET {
 	 JX_COLUMN_TEXT   		= 256
 } JX_RESULTSET, *PJX_RESULTSET;
 
+typedef enum _JX_ROUTINE_TYPE {
+	JX_ROUTINE_PROCEDURE = 'P',
+	JX_ROUTINE_SCALAR    = 'S',
+	JX_ROUTINE_TABLE     = 'T'
+} JX_ROUTINE_TYPE , *PJX_ROUTINE_TYPE;
+
+
 VOID TRACE ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);
 
 PJXNODE jx_sqlResultRow ( PUCHAR sqlstmt, PJXNODE pSqlParmsP , LONG format) ;
@@ -640,8 +647,8 @@ PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT options);
 void jx_deleteWriter (PJWRITE  pjWrite);
 PJWRITE jx_newWriter (void);
 
-PJXNODE jx_cvtNodeOffset2Ptr (INT64 offset); 
-INT64   jx_cvtNodePtr2Offset (PJXNODE pNode); 
+PJXNODE jx_cvtNodeOffset2Ptr (INT64 offset);
+INT64   jx_cvtNodePtr2Offset (PJXNODE pNode);
 
 LGL jx_sqlCallNode ( PUCHAR procedureName , ... )  ;
 #pragma descriptor ( void jx_sqlCallNode  (void))

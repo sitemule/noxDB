@@ -1566,7 +1566,7 @@ PJXNODE jx_sqlRoutineMeta (PUCHAR routineName)
    sprintf (sqlStmt ,
       "with cte as ( "
       "select "
-         "case a.function_type when 'S' then 'SCALAR' when 'T' then 'TABLE' else 'PROC' end type ,"
+         "case a.function_type when 'S' then 'S' when 'T' then 'T' else 'P' end type ,"
          "a.specific_name specific_name,"
          "a.max_dynamic_result_sets,"
          "parameter_mode,"
@@ -1888,7 +1888,8 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
    PJXNODE    pRoutineMeta = jx_sqlRoutineMeta (routineName);
    PROCPARM   procParms   [NOXDB_MAX_PARMS];
    PPROCPARM  p;
-   PUCHAR     type ;
+
+   JX_ROUTINE_TYPE type ;
    LONG       resultSets;
 
    if (pRoutineMeta == NULL) {
@@ -1898,21 +1899,26 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
    }
    pNode    =  jx_GetNodeChild (pRoutineMeta);
 
-   type = jx_GetValuePtr    (pNode , "type" , "");
+   type = *jx_GetValuePtr    (pNode , "type" , "");
    resultSets = atoi (jx_GetValuePtr (pNode , "max_dynamic_result_sets" , "0"));
 
 
-   if (0 == strcmp ( type , "PROC"  )
+   if (type == JX_ROUTINE_PROCEDURE
    &&  0 == resultSets ) {
       stmt += sprintf (stmt , "call %s (" , routineName );
    } else {
 
-      if (0 == strcmp ( type , "PROC"  )) {
-         stmt += sprintf (stmt , "call %s (" , routineName );
-      } else if (0 == strcmp ( type , "SCALAR") ) {
-         stmt += sprintf (stmt , "values %s (" , routineName );
-      } else if (0 == strcmp ( type , "TABLE" ) ) {
-         stmt += sprintf (stmt , "select * from table ( %s (" , routineName );
+
+      switch (type) {
+         case	JX_ROUTINE_PROCEDURE :
+            stmt += sprintf (stmt , "call %s (" , routineName );
+            break;
+         case	JX_ROUTINE_SCALAR    :
+            stmt += sprintf (stmt , "values %s (" , routineName );
+            break;
+         case	JX_ROUTINE_TABLE     :
+            stmt += sprintf (stmt , "select * from table ( %s (" , routineName );
+            break;
       }
 
       pNode    =  jx_GetNodeChild (pRoutineMeta);
@@ -1942,14 +1948,31 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
          pNode = jx_GetNodeNext(pNode);
       }
 
-      if ((0 == strcmp ( type , "PROC"  ))
-      ||  (0 == strcmp ( type , "SCALAR"))) {
-         stmt += sprintf (stmt , ")" );
-      } else if (0 == strcmp ( type , "TABLE" ) ) {
-         stmt += sprintf (stmt , "))" );
+      switch (type) {
+         case	JX_ROUTINE_PROCEDURE :
+         case	JX_ROUTINE_SCALAR    :
+            stmt += sprintf (stmt , ")" );
+            break;
+         case	JX_ROUTINE_TABLE     :
+            stmt += sprintf (stmt , "))" );
+            break;
       }
 
-      return jx_sqlResultSet(stmtBuf, 0 , -1 , format , NULL);
+      if  (type ==  JX_ROUTINE_SCALAR ) {
+         PJXNODE pTemp = jx_sqlResultSet(stmtBuf, 0 , -1 , format , NULL);
+         PJXNODE pValue = jx_GetNodeChild(jx_GetNodeChild (jx_GetNode  (pTemp, "rows")));
+         if  (pValue) {
+            pResult = jx_NewObject(NULL);
+            jx_NodeMoveInto (pResult , "result" , pValue);
+            jx_SetBoolByName(pResult , "success" , ON);
+            jx_NodeDelete (pTemp);
+            return pResult;
+         } else {
+            return pTemp;
+         }
+      } else {
+         return jx_sqlResultSet(stmtBuf, 0 , -1 , format , NULL);
+      }
 
    }
 
