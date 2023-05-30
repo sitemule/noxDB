@@ -66,6 +66,9 @@ extern UCHAR jobDollar      ;
 static PJXSQLCONNECT pConnection = NULL;
 static BOOL keepConnection = false;
 static SQLINTEGER sqlCode = 0;
+static SQLCHAR    sqlMessage [SQL_MAX_MESSAGE_LENGTH + 1];
+static SQLCHAR    sqlState   [SQL_SQLSTATE_SIZE + 1];
+
 
 static enum  {
    UNCONNECTED,
@@ -106,62 +109,66 @@ SQLINTEGER jx_sqlCode(void)
 /* ------------------------------------------------------------- */
 static SQLINTEGER getSqlCode(SQLHSTMT hStmt)
 {
-   SQLCHAR        buffer[SQL_MAX_MESSAGE_LENGTH + 1];
-   SQLCHAR        sqlstate[SQL_SQLSTATE_SIZE + 1];
-   SQLSMALLINT    length;
-
+   SQLSMALLINT    length = 0;
 
    SQLError(SQL_NULL_HENV, SQL_NULL_HDBC, hStmt,
-      sqlstate,
+      sqlState,
       &sqlCode,
-      buffer,
+      sqlMessage,
       SQL_MAX_MESSAGE_LENGTH + 1,
       &length
    );
+   sqlMessage[length] = '\0';
    return sqlCode;
 }
 /* ------------------------------------------------------------- */
 static int check_error (PJXSQL pSQL)
 {
-  SQLSMALLINT length;
-  ULONG l;
-  int rc;
+   SQLSMALLINT length;
+   ULONG l;
+   int rc;
 
-  SQLHANDLE     handle;
-  SQLSMALLINT   hType = SQL_HANDLE_ENV;
+   SQLHANDLE     handle;
+   SQLSMALLINT   hType = SQL_HANDLE_ENV;
+   SQLSMALLINT   msgRecNo = 1;
+   SQLHENV       henv  = SQL_NULL_HENV;
+   SQLHDBC       hdbc  = SQL_NULL_HDBC;
+   SQLHSTMT      hstmt = pSQL && pSQL->pstmt? pSQL->pstmt->hstmt : SQL_NULL_HSTMT;
+   LONG          tmpSqlCode;
+   UCHAR         tmpSqlState[5];
+   UCHAR         tmpSqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
+   PLONG         psqlCode   = &tmpSqlCode;
+   PUCHAR        psqlState  = tmpSqlState;
+   PUCHAR        psqlMsgDta = tmpSqlMsgDta;
 
-  SQLHENV       henv  = SQL_NULL_HENV;
-  SQLHDBC       hdbc  = SQL_NULL_HDBC;
-  SQLHSTMT      hstmt = pSQL && pSQL->pstmt? pSQL->pstmt->hstmt : SQL_NULL_HSTMT;
-  UCHAR         sqlState[5];
-  UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
-  PUCHAR        psqlState  = sqlState;
-  PLONG         psqlCode   = &sqlCode;
-  PUCHAR        psqlMsgDta = sqlMsgDta;
+   if (pSQL && pSQL->pstmt) {
+      hType  =  SQL_HANDLE_STMT;
+      handle =  pSQL->pstmt->hstmt;
+   } else if ( pConnection) {
+      if (pConnection->hdbc) {
+         hType  =  SQL_HANDLE_DBC;
+         handle =  pConnection->hdbc;
+      } else {
+         hType  =  SQL_HANDLE_ENV;
+         handle =  pConnection->henv;
+      }
+      psqlState  = pConnection->sqlState;
+      psqlCode   = &pConnection->sqlCode;
+      psqlMsgDta = pConnection->sqlMsgDta;
+   }
 
-  if (pSQL && pSQL->pstmt) {
-     hType  =  SQL_HANDLE_STMT;
-     handle =  pSQL->pstmt->hstmt;
-  } else if ( pConnection) {
-     if (pConnection->hdbc) {
-        hType  =  SQL_HANDLE_DBC;
-        handle =  pConnection->hdbc;
-     } else {
-        hType  =  SQL_HANDLE_ENV;
-        handle =  pConnection->henv;
-     }
-     psqlState  = pConnection->sqlState;
-     psqlCode   = &pConnection->sqlCode;
-     psqlMsgDta = pConnection->sqlMsgDta;
-  }
+   length = 0;
+   rc = SQLGetDiagRec(hType , handle, msgRecNo, psqlState, psqlCode, psqlMsgDta,  sizeof(tmpSqlMsgDta), &length);
+   // No diagnostics - it already was pulled by "getSqlCode"
+   if  (rc == 100) {
+      sprintf( jxMessage , "%-5.5s %s" , sqlState, sqlMessage);
+   } else {
+      sprintf( jxMessage , "%-5.5s %-*.*s" , psqlState, length, length, psqlMsgDta);
+   }
+   jx_sqlClose (&pSQL); // Free the data
+   jxError = true;
 
-  length = 0;
-  rc = SQLGetDiagRec(hType , handle, 1, psqlState, psqlCode, psqlMsgDta,  sizeof(sqlMsgDta), &length);
-  sprintf( jxMessage , "%-5.5s %-*.*s" , psqlState, length, length, psqlMsgDta);
-  jx_sqlClose (&pSQL); // Free the data
-  jxError = true;
-
-  return;
+   return;
 }
 /* ------------------------------------------------------------- */
 static PJXSQLCONNECT jx_sqlNewConnection(void )
@@ -1961,7 +1968,7 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
       if  (type ==  JX_ROUTINE_SCALAR ) {
          PJXNODE pTemp = jx_sqlResultSet(stmtBuf, 0 , -1 , format , NULL);
          PJXNODE pValue = jx_GetNodeChild(jx_GetNodeChild (jx_GetNode  (pTemp, "rows")));
-         if  (pValue) {
+         if  (pValue && jxError == false) {
             pResult = jx_NewObject(NULL);
             jx_NodeMoveInto (pResult , "result" , pValue);
             jx_SetBoolByName(pResult , "success" , ON);
@@ -2090,7 +2097,11 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
       check_error (pSQL);
       jxError = true;
       jx_NodeDelete (pRoutineMeta);
-      return NULL;
+      if (format & JX_GRACEFUL_ERROR) {
+         return sqlErrorObject(stmtBuf);
+      } else {
+         return NULL;
+      }
    }
 
    pResult = jx_NewObject(NULL);
@@ -2425,7 +2436,7 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
    LONG    limit     = (pParms->OpDescList->NbrOfParms >= 3) ? limitP     : NOXDB_ALL_ROWS; // All row
    LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;  // Arrray only
    PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 5) ? pSqlParmsP : NULL;
-   PJXNODE pRows     = jx_NewArray(NULL);
+   PJXNODE pRows     ;
    PJXNODE pRow      ;
    PJXNODE pResult;
    PJXSQL  pSQL;
@@ -2444,10 +2455,16 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
       }
    }
 
+   pRows = jx_NewArray(NULL);
    pRow  = jx_sqlFetchNext (pSQL);
    for (rowCount = 1; pRow && (rowCount <=limit || limit == -1); rowCount ++) {
       jx_ArrayPush (pRows , pRow, FALSE);
       pRow  = jx_sqlFetchNext (pSQL);
+   }
+   if ( (pSQL->rc != SQL_NO_DATA_FOUND) && (format & JX_GRACEFUL_ERROR) ) {
+      jx_NodeDelete (pRows);
+      jx_sqlClose (&pSQL);
+      return sqlErrorObject(sqlstmt);
    }
 
    // need a object as return value
