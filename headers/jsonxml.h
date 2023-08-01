@@ -625,13 +625,22 @@ LGL jx_sqlUpsert (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParm
 #pragma descriptor ( void jx_sqlUpsert      (void))
 
 LONG jx_sqlNumberOfRows(PUCHAR sqlstmt);
+#pragma descriptor ( void jx_sqlNumberOfRows        (void))
+
 PJXNODE jx_sqlFetchRelative (PJXSQL pSQL, LONG fromRow);
+#pragma descriptor ( void jx_sqlFetchRelative        (void))
+
 PJXNODE jx_sqlFetchNext (PJXSQL pSQL);
+#pragma descriptor ( void jx_sqlFetchNext        (void))
 
 void jx_sqlClose (PJXSQL * ppSQL);
-void jx_sqlKeepConnection (BOOL keep);
-PJXNODE jx_sqlGetMeta (PUCHAR sqlstmt, LONG formatP);
+#pragma descriptor ( void jx_sqlClose        (void))
 
+void jx_sqlKeepConnection (BOOL keep);
+#pragma descriptor ( void jx_sqlKeepConnection        (void))
+
+PJXNODE jx_sqlGetMeta (PUCHAR sqlstmt, LONG formatP);
+#pragma descriptor ( void jx_sqlGetMeta        (void))
 
 LGL    jx_sqlExec (PUCHAR sqlstmt , PJXNODE pSqlParms  );
 #pragma descriptor ( void jx_sqlExec        (void))

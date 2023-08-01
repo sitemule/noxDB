@@ -1988,7 +1988,11 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
       sprintf( jxMessage , "Procedure %s has %d implementations. Can not decide which to use" , routineName, impl);
       jxError = true;
       jx_NodeDelete (pRoutineMeta);
-      return NULL;
+      if (format & JX_GRACEFUL_ERROR) {
+         return sqlErrorObject(stmtBuf);
+      } else {
+         return NULL;
+      }
    }
 
    pNode    =  jx_GetNodeChild (pRoutineMeta);
@@ -2160,7 +2164,14 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
    jx_sqlClose (&pSQL);
    jx_NodeDelete (pRoutineMeta);
 
-   return (pResult);
+   if (format & JX_GRACEFUL_ERROR) {
+      PJXNODE  pEnvelope = jx_NewObject (NULL);
+      jx_SetBoolByName (pEnvelope , "success" , true);
+      jx_NodeMoveInto(pEnvelope , "data" , pResult);
+      return pEnvelope;
+   } else {
+      return (pResult);
+   }
 
 }
 

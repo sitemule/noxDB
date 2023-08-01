@@ -163,8 +163,8 @@ dcl-proc example5;
 end-proc;
 // ------------------------------------------------------------------------------------
 // example6
-// Gracefull errors
-// the SQL is invalide, so the resultset will be an error object
+// Graceful errors
+// the SQL is invalid, so the resultset will be an error object
 // ------------------------------------------------------------------------------------
 dcl-proc example6;
 
