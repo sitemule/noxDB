@@ -1,12 +1,13 @@
 /* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL) */
-/* ------------------------------------------------------------- *
- * Company . . . : System & Method A/S                           *
- * Design  . . . : Niels Liisberg                                *
- * Function  . . : NOX - XML serializer - refactored             *
- *                                                               *
- * By     Date       Task    Description                         *
- * NL     22.07.2021 0000000 New module                          *
- * ------------------------------------------------------------- */
+/* ----------------------------------------------------------------- *
+ * Company . . . : System & Method A/S                               *
+ * Design  . . . : Niels Liisberg                                    *
+ * Function  . . : NOX - XML serializer - refactored                 *
+ *                                                                   *
+ * By     Date       Task    Description                             *
+ * NL     22.07.2021 0000000 New module                              *
+ * NL     04.10.2023 0000000 FIx for serialize only selected element *
+ * ----------------------------------------------------------------- */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -35,11 +36,10 @@ extern UCHAR Cdata    [10]; // <![CDATA[
 
 
 #pragma convert(1252)
-static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode, SHORT cdatamode)
+static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode, SHORT cdatamode, SHORT level)
 {
    PJXNODE  pNodeTemp, pNodeNext;
    PXMLATTR pAttrTemp;
-   static int level = 0;
    UCHAR    tab[256];
    BOOL     shortform;
    BOOL     doEscape;
@@ -51,10 +51,8 @@ static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode, 
    //' Make indention
    tab [0] = 0x0d;
    tab [1] = 0x0a;
-   memset(tab+2, 0x20 ,level*2);
-   tab [2 + (level*2)] = '\0';
-
-   level++;
+   memset(tab+2, 0x20 ,(level-1)*2);
+   tab [2 + ((level-1)*2)] = '\0';
 
    while (pNode) {
 
@@ -109,7 +107,7 @@ static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode, 
                fputs("<![CDATA[", f);
             }
          }
-         jx_WriteXmlStmfNodeList (f, pIconv, pNode->pNodeChildHead, cdatamode);
+         jx_WriteXmlStmfNodeList (f, pIconv, pNode->pNodeChildHead, cdatamode , level + 1);
       }
 
       if (shortform) {
@@ -131,7 +129,8 @@ static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode, 
       if (cdatamode==level) {
          cdatamode = 0;
       }
-      pNode = pNode->pNodeSibling;
+      // Only process first element on root node
+      pNode = (level == 1) ? NULL : pNode->pNodeSibling;
    }
 
    level --;
@@ -199,11 +198,11 @@ void jx_WriteXmlStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , P
    &&  pNode->Name       == NULL) {
       PJXNODE pTemp;
       for ( pTemp = pNode ; pTemp; pTemp= pTemp->pNodeSibling) {
-         jx_WriteXmlStmfNodeList (f , &Iconv , pTemp->pNodeChildHead, 0);
+         jx_WriteXmlStmfNodeList (f , &Iconv , pTemp->pNodeChildHead, 0, 1);
       }
-   // But serialization of any other node in the tree is also supported      
+   // But serialization of any other node in the tree is also supported
    } else {
-      jx_WriteXmlStmfNodeList (f , &Iconv , pNode, 0);
+      jx_WriteXmlStmfNodeList (f , &Iconv , pNode, 0, 1);
    }
    fclose(f);
    iconv_close(Iconv);
@@ -211,18 +210,16 @@ void jx_WriteXmlStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , P
 
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
-static LONG xmlTextMemList (PJXNODE pNode, PUCHAR buf, SHORT cdatamode)
+static LONG xmlTextMemList (PJXNODE pNode, PUCHAR buf, SHORT cdatamode , SHORT level)
 {
    PJXNODE    pNodeTemp, pNodeNext;
    PXMLATTR   pAttrTemp;
-   static int level = 0;
    BOOL       shortform;
    PUCHAR     temp = buf;
    PUCHAR     CdataBegin = "";
    PUCHAR     CdataEnd   = "";
-   PUCHAR     defaultNode = "row"; 
+   PUCHAR     defaultNode = "row";
 
-   level++;
 
    while (pNode) {
 
@@ -252,7 +249,7 @@ static LONG xmlTextMemList (PJXNODE pNode, PUCHAR buf, SHORT cdatamode)
          } else {
             temp +=  sprintf(temp , ">%s",CdataBegin);
          }
-         temp += xmlTextMemList (pNode->pNodeChildHead , temp, cdatamode);
+         temp += xmlTextMemList (pNode->pNodeChildHead , temp, cdatamode, level + 1);
       }
 
       if (shortform) {
@@ -263,14 +260,14 @@ static LONG xmlTextMemList (PJXNODE pNode, PUCHAR buf, SHORT cdatamode)
 
       if (cdatamode == level) {
          cdatamode = 0;
-      } 
+      }
       CdataBegin = "";
       CdataEnd   = "";
 
-      pNode = pNode->pNodeSibling;
+      // Only process first element on root node
+      pNode = (level == 1) ? NULL : pNode->pNodeSibling;
    }
 
-   level --;
    return temp - buf;
 
 }
@@ -287,11 +284,11 @@ LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf)
    &&  pNode->Name       == NULL) {
       PJXNODE pTemp;
       for ( pTemp = pNode; pTemp; pTemp= pTemp->pNodeSibling) {
-         temp += xmlTextMemList (pTemp->pNodeChildHead, temp, 0);
+         temp += xmlTextMemList (pTemp->pNodeChildHead, temp, 0, 1);
       }
-   // But serialization of any other node in the tree is also supported      
+   // But serialization of any other node in the tree is also supported
    } else {
-      temp += xmlTextMemList (pNode, temp, 0);
+      temp += xmlTextMemList (pNode, temp, 0, 1);
    }
 
    return temp - buf;
