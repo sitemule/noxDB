@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+
+	<!-- This is just to show formating at text will be save   -->
+	<content
+		defaultCharset="utf-8"
+		serveAlwaysUTF8="true"
+		serveAlwaysChunks="true"
+	/>
+
+
+	<hives>
+		<map alias="menu"
+			path="/prj/icecap/client"
+			lib="*LIBL"
+		/>
+
+		<map alias="icecap"
+			path="/prj/icecap/client"
+			lib="*LIBL"
+		/>
+		<map alias="xlate"
+			path="/prj/icecap/src/icecapxlat"
+			lib="CAPDEV"
+		/>
+	</hives>
+
+
+</configuration>
