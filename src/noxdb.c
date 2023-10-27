@@ -2365,6 +2365,7 @@ int jx_getNumericKey (PUCHAR pStr, PUCHAR pEnd)
       pStr++;
    }
    return index;
+
 }
 /* ---------------------------------------------------------------------------
    Find node by name, by parsing a name string and traverse the tree
@@ -2379,6 +2380,7 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
    PUCHAR  p, pName, pEnd = "";
    PJXNODE refNode;
    UCHAR   refName [256];
+   BOOL    isQuoted = FALSE;
 
    if (pNode == NULL
    ||  pNode->signature != NODESIG) {
@@ -2392,6 +2394,8 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
    if (Name == NULL || *Name == '\0'  ) {
       return jx_ReturnNode (pNode, false); // Done !! Just want the root
    }
+
+
    // Ubound on the root node
    if (jx_isUbound(Name)) {
       jx_CountChildren(pNode);
@@ -2407,7 +2411,7 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
 
 
    // By default we are searching for Nodeents in objects hench Start with the
-   // First child and match; if OK the take the next level etc
+   // First child and match; if OK then take the next level etc
    // However - the level can be restored to the object for ie [UBOUND] or index lookup like: [123]
    if (*Name != BraBeg) {
       pNode = pNode->pNodeChildHead;
@@ -2422,6 +2426,8 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
 
    for (;;) {
 
+      isQuoted = *pName == '"';
+
       // No node or dead node
       if (pNode == NULL
       ||  pNode->signature != NODESIG) {
@@ -2429,9 +2435,14 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
       }
 
       // Find delimiter, find the end of this token
-      if (*pEnd == BraBeg) {
+      if (isQuoted) {
+         pName ++;
+         pEnd = strchr ( pName , '"');
+      }
+      else if (*pEnd == BraBeg) {
          pEnd = strchr ( pName , BraEnd);
-      } else {
+      }
+      else {
          pEnd = findchr(pName , delimiters , sizeof(delimiters));
       }
 
@@ -2491,7 +2502,7 @@ PJXNODE jx_GetNode  (PJXNODE pNode, PUCHAR Name)
       refNode = pNode;
 
       // Skip trailing "]" and blanks
-      for (; *pEnd == BraEnd || *pEnd == Blank ; pEnd++);    // the ']'
+      for (; *pEnd == BraEnd || *pEnd == Blank || *pEnd == '"'; pEnd++ );    // the ']'
 
       // This level found. Iterate on next name
       if (*pEnd > '\0') { // Otherwise past end of string
@@ -2752,18 +2763,25 @@ PUCHAR jx_splitAtrFromName (PUCHAR name)
 {
    int balance = 0;
    PUCHAR pEnd;
+   BOOL  isQuoted  = FALSE;
 
    for (pEnd = name + strlen(name)-1 ; pEnd >= name; pEnd --) {
-      if (*pEnd == Masterspace && balance == 0) {
-         *pEnd  = '\0';     // Terminate the Node end giving the name to the node only
-         return (pEnd +1);  // atribute name is the next. Return that
+
+      if (*pEnd == '"') isQuoted = (! isQuoted);
+
+      if (! isQuoted) {
+         if (*pEnd == Masterspace && balance == 0) {
+            *pEnd  = '\0';     // Terminate the Node end giving the name to the node only
+            return (pEnd +1);  // atribute name is the next. Return that
+         }
+         else if (*pEnd == BraBeg) {
+            balance --;
+         }
+         else if (*pEnd == BraEnd) {
+            balance ++;
+         }
       }
-      else if (*pEnd == BraBeg) {
-         balance --;
-      }
-      else if (*pEnd == BraEnd) {
-         balance ++;
-      }
+
    }
    return NULL;
 }

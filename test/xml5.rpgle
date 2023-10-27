@@ -13,10 +13,10 @@
         Dcl-C OB Const(x'9E');
         Dcl-C CB Const(x'9F');
         Dcl-C AT Const(x'80');
-      
+
         //------------------------------------------------------------- *
 
-        Dcl-Pi XML5;
+        dcl-pi *N;
           pResult Char(50);
         End-Pi;
 
@@ -25,7 +25,7 @@
         pXml  = xml_ParseFile('/prj/noxdb/testdata/XmlSample2.xml':'syntax=LOOSE');
         if Xml_Error(pXml ) ;
            pResult = xml_Message(pXml);
-           xml_Close(pXml );
+           xml_delete(pXml );
            return;
         endif;
 
@@ -40,5 +40,5 @@
 
         pResult = Result;
 
-        xml_Close(pXml);
+        xml_delete(pXml);
         *inlr = *on;

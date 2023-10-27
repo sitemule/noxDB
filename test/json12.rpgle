@@ -13,7 +13,7 @@
 
         //------------------------------------------------------------- *
 
-        Dcl-Pi JSON12;
+        dcl-pi *N;
           pResult Char(50);
         End-Pi;
 
@@ -28,7 +28,7 @@
         if json_Error(pJson) ;
            pResult = json_Message(pJson);
            json_dump(pJson);
-           json_Close(pJson);
+           json_delete(pJson);
            return;
         endif;
 

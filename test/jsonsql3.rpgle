@@ -1,8 +1,8 @@
 
         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
-        
+
         /include 'headers/JSONPARSER.rpgle'
-        
+
         Dcl-S manuRow      Pointer;
         Dcl-S prodArray    Pointer;
         Dcl-S resultArray  Pointer;
@@ -11,12 +11,12 @@
         Dcl-S prodHnd      Pointer;
         Dcl-S sql          Varchar(512);
         Dcl-S json         Varchar(512);
-        
+
         Dcl-C DL Const(x'67');
 
         //------------------------------------------------------------- *
-        
-        Dcl-Pi JSONSQL3;
+
+        dcl-pi *N;
           pResult Char(50);
         End-Pi;
 
@@ -48,7 +48,7 @@
         pResult = json;
 
         // Cleanup: Close the SQL cursor, dispose the row and the array
-        json_close(resultArray);
+        json_delete(resultArray);
         json_sqlClose(manuHnd);
         json_sqlDisconnect();
 

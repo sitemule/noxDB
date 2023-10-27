@@ -9,7 +9,7 @@
 
         //------------------------------------------------------------- *
 
-        Dcl-Pi JSON9;
+        dcl-pi *N;
           pResult Char(50);
         End-Pi;
 
@@ -24,7 +24,7 @@
 
         pResult = json_asJsonText(pObj);
 
-        json_close(pObj);
+        json_delete(pObj);
 
         *Inlr = *on;
         return;

@@ -6,13 +6,13 @@
         Dcl-S pData        Pointer;
         Dcl-S a            Pointer;
         Dcl-S c            Pointer;
-        
+
         Dcl-C OS Const(x'9C');
         Dcl-C CS Const(x'47');
 
         //------------------------------------------------------------- *
 
-        Dcl-Pi JSON8;
+        dcl-pi *N;
           pResult Char(50);
         End-Pi;
 
@@ -38,7 +38,6 @@
         // write a,b,c,d in this order:
         pResult = json_asJsonText(pData);
 
-        json_Close(pData);
+        json_delete(pData);
         *inlr = *on;
         return;
-

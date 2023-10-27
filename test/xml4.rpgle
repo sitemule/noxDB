@@ -16,7 +16,7 @@
 
         //------------------------------------------------------------- *
 
-        Dcl-Pi XML4;
+        dcl-pi *N;
           pResult Char(50);
         End-Pi;
 
@@ -52,6 +52,6 @@
 
         pResult = Result;
 
-        xml_Close(pXml);
-        
+        xml_delete(pXml);
+
         Return;

@@ -20,7 +20,7 @@
 
         //------------------------------------------------------------- *
 
-        Dcl-PI XML3;
+        dcl-pi *N;
           pResult Char(50);
         End-Pi;
 
@@ -30,7 +30,7 @@
         pXml = xml_ParseFile('/prj/noxdb/testdata/manifest.xml');
         if Xml_Error(pXml) ;
            pResult = xml_Message(pXml);
-           xml_Close(pXml);
+           xml_delete(pXml);
            return;
         endif;
 
@@ -40,12 +40,12 @@
         if (pVisit =  *NULL);
            // If we did not found the "visit" element we die - remember to close the xml to avoid a leak
            pResult = 'null';
-           xml_Close(pXml);
+           xml_delete(pXml);
            return;
         endif;
 
          // Consignments is an array: use UBOUND to detect the numbers of entries
-        consignments = %int(xml_GetValue(pVisit:'consignment' + 
+        consignments = %int(xml_GetValue(pVisit:'consignment' +
                                                 OB + 'UBOUND' + CB:'0'));
 
         // Now loop for each elemnt consignments. Note - x-path use 0 as the first element

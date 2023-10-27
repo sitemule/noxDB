@@ -40,7 +40,11 @@
     Result = xml_asXmlText (pA);
     xml_WriteXmlStmf (pA: '/prj/noxdb/testout/selected-5.xml' : 1208: *OFF);
 
+    pA = xml_locate(pXml : '/a/l[2]');
+    Result = xml_asXmlText (pA);
+    xml_WriteXmlStmf (pA: '/prj/noxdb/testout/selected-6.xml' : 1208: *OFF);
 
-    xml_Close(pXml);
+
+    xml_delete(pXml);
 
     Return;

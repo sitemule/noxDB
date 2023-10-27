@@ -9,13 +9,13 @@
         Dcl-DS list  likeds(json_iterator);
 
         Dcl-S Result Varchar(50);
-        
+
         Dcl-C OS Const(x'9C');
         Dcl-C CS Const(x'47');
 
         //------------------------------------------------------------- *
-        
-        Dcl-Pi JSON15;
+
+        dcl-pi *N;
           pResult Char(50);
         End-Pi;
 
@@ -34,7 +34,7 @@
         if JSON_Error(pJson) ;
            pResult = JSON_Message(pJson);
            JSON_dump(pJson);
-           JSON_Close(pJson);
+           JSON_delete(pJson);
            return;
         endif;
 
@@ -47,5 +47,5 @@
 
         pResult = Result;
 
-        JSON_Close(pJSON);
+        JSON_delete(pJSON);
         *inlr = *on;

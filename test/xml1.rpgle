@@ -12,7 +12,7 @@
 
         //------------------------------------------------------------- *
 
-        Dcl-Pi XML1;
+        dcl-pi *N;
           pResult Char(50);
         End-Pi;
 
@@ -34,7 +34,7 @@
            enddo;
         endif;
 
-        xml_Close(pXml);
+        xml_delete(pXml);
 
         pResult = Result;
 

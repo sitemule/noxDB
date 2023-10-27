@@ -7,23 +7,23 @@
 
         Dcl-S result       Varchar(50);
 
-      
+
         //------------------------------------------------------------- *
 
-        Dcl-Pi XML6;
+        dcl-pi *N;
         End-Pi;
 
         pXml  = xml_ParseFile('/prj/noxdb/testdata/XmlSample3.xml');
         if Xml_Error(pXml ) ;
            result  = xml_Message(pXml);
-           xml_Close(pXml );
+           xml_delete(pXml );
            return;
         endif;
 
         result = xml_GetStr (
           pXml:
           '/configuration/routing/map[1]@pattern'
-        ); 
+        );
 
-        xml_Close(pXml);
+        xml_delete(pXml);
         *inlr = *on;

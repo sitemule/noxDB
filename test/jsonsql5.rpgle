@@ -1,18 +1,18 @@
 
         Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
-        
+
         /include 'headers/JSONPARSER.rpgle'
-        
+
         Dcl-S pRow         Pointer;
         Dcl-S sql          Varchar(512);
-        
+
         Dcl-C OS Const(x'9C');
         Dcl-C CS Const(x'47');
         Dcl-C DL Const(x'67');
 
         //------------------------------------------------------------- *
-        
-        Dcl-Pi JSONSQL5;
+
+        dcl-pi *N;
           pResult Char(50);
         End-Pi;
 
@@ -34,5 +34,5 @@
 
         // That's it..
         *inlr = *on;
-        
+
         Return;

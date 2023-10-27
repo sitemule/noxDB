@@ -8,7 +8,7 @@
 
         //------------------------------------------------------------- *
 
-        Dcl-Pi JSON1;
+        dcl-pi *N;
           pResult Char(50);
         End-Pi;
 
@@ -18,7 +18,7 @@
         If Json_Error(pJson) ;
            pResult = Json_Message(pJson);
            Json_dump(pJson);
-           Json_Close(pJson);
+           Json_delete(pJson);
            return;
         Endif;
 
@@ -27,6 +27,6 @@
 
         pResult = %Char(price);
 
-        Json_Close(pJson);
+        Json_delete(pJson);
 
         Return;
