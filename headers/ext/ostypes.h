@@ -93,6 +93,10 @@ typedef PGM * PPGM;
    #define Max(a,b) (a>b) ? a : b
 #endif
 
+#ifndef Min
+   #define Min(a,b) (a<b) ? a : b
+#endif
+
 /* Missing in math.h */
 #ifndef M_PI
   #define M_PI 3.141592653589793238462643

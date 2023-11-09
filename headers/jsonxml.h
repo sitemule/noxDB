@@ -2,6 +2,7 @@
 #define JSONXML
 #include <stdio.h>
 #include <iconv.h>
+#include <pointer.h>
 
 #ifndef FROMSQLPROC
 #include <sqlcli.h>
@@ -236,6 +237,22 @@ typedef _Packed struct  _JXDELIM     {
 	UCHAR     Quot        ;
 	UCHAR     Dollar      ;
 } JXDELIM , * PJXDELIM;
+
+_SYSPTR loadServiceProgram (PUCHAR Lib , PUCHAR SrvPgm);
+_SYSPTR loadProc (_SYSPTR srvpgm ,  PUCHAR procName);
+_SYSPTR loadServiceProgramProc (PUCHAR Lib , PUCHAR SrvPgm, PUCHAR procName , LGL cache);
+_SYSPTR loadProgram (PUCHAR Lib , PUCHAR Pgm);
+
+typedef _Packed struct _JXMETHOD  {
+    PJXNODE pPcml;
+    _SYSPTR userMethod;
+    BOOL    userMethodIsProgram;
+    ULONG   ccsid;
+    UCHAR   library   [10];
+    UCHAR   program   [10];
+    UCHAR   procedure [64];
+} JXMETHOD, * PJXMETHOD;
+
 
 #endif
 

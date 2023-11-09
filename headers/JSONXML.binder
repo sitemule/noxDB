@@ -167,5 +167,8 @@ STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('JSONXML01')
   EXPORT SYMBOL("jx_nodeInsert")
   EXPORT SYMBOL("jx_AsJsonText16M")
   EXPORT SYMBOL("jx_sqlExecuteRoutine")
+  EXPORT SYMBOL("jx_CallProgram")
+  EXPORT SYMBOL("jx_ProgramMeta")
+
 
 ENDPGMEXP

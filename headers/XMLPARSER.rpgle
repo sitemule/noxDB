@@ -1863,6 +1863,50 @@ Dcl-PR xml_close extproc(*CWIDEN : 'jx_Close');
   node pointer;
 End-PR;
 
+
+///
+// Programs and procedures : Call program
+//
+// Call ILE program compiled with ctl-opt pgminfo(*PCML:*MODULE)
+//
+// @param Library where the ILE program exists or *LIBL
+// @param Program name of the ILE program
+// @param parms   input parameters for the program in a json object mached by names
+// @param options formating and runtime options AND/added togeter
+// @return noxDB object tree with output from the program call
+//
+// @info The caller of this procedure needs to take care of freeing the resources
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
+///
+
+Dcl-PR xml_CallProgram pointer extproc(*CWIDEN : 'jx_CallProgram');
+  library        char(10) const;
+  program        char(10) const;
+  parms          pointer  value  options(*string:*nopass) ;
+  formatOptions  int(10) value options(*nopass) ;
+End-PR;
+
+
+///
+// Programs and procedures : Program meta
+//
+// Returns the parameter meta information as a noxDb object graph accordin to the PCML format
+//
+// @param Library where the ILE program exists or *LIBL
+// @param Program name of the ILE program
+// @param options formating and runtime options AND/added togeter
+// @return noxDB object tree with output from the program call
+//
+// @info The caller of this procedure needs to take care of freeing the resources
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
+///
+
+Dcl-PR xml_ProgramMeta pointer extproc(*CWIDEN : 'jx_ProgramMeta');
+  library        char(10) const;
+  program        char(10) const;
+  formatOptions  int(10) value options(*nopass) ;
+End-PR;
+
 ///
 // Detect memory leak
 //
