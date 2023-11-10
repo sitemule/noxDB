@@ -94,10 +94,8 @@ dcl-proc callByJsonString;
    // Note the "makefile" is set to international - ccsid 500 for all source filess
    json_setDelimitersByCcsid(500);
 
-    // here we let the call pass the string and do the cleanup of it
-    pOut  = json_CallProgram  (
-        '*LIBL'    :
-        'HELLOPGM' :
+    // here we let the call parse he string and do the cleanup of it
+    pOut  = json_CallProgram  ( '*LIBL':'HELLOPGM' :
         '{ -
             "name":"Niels"-
         }'
