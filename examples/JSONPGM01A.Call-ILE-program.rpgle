@@ -65,7 +65,9 @@ dcl-proc callByObject;
 
     // Setup an object and call
     pIn = json_newObject();
-    json_setStr(pIn: 'name': 'John');
+    json_setStr (pIn: 'name': 'John');
+    json_setInt (pIn: 'age' : 25);
+
 
     pOut  = json_CallProgram  ('*LIBL' : 'HELLOPGM' : pIn);
     If json_Error(pOut) ;
@@ -91,13 +93,14 @@ dcl-proc callByJsonString;
     Dcl-s msg        char(50);
 
    // Set your delimiter according to your CCSID of your source file if you parse any strings.
-   // Note the "makefile" is set to international - ccsid 500 for all source filess
+   // Note the "makefile" is set to international - ccsid 500 for all source files in the examples
    json_setDelimitersByCcsid(500);
 
     // here we let the call parse he string and do the cleanup of it
     pOut  = json_CallProgram  ( '*LIBL':'HELLOPGM' :
         '{ -
-            "name":"Niels"-
+            "name":"Niels", -
+            "age" : 25 -
         }'
     );
 

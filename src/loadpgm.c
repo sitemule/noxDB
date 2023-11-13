@@ -26,6 +26,7 @@
 #include "parms.h"
 #include "trycatch.h"
 #include "utl100.h"
+
 #include "jsonxml.h"
 
 
@@ -100,6 +101,7 @@ _SYSPTR loadProgram (PUCHAR Lib , PUCHAR Pgm)
       <program name="HELLOPGM" path="/QSYS.LIB/ILEASTIC.LIB/HELLOPGM.PGM">
          <data name="NAME" type="char" length="10" usage="input" />
          <data name="TEXT" type="char" length="200" usage="inputoutput" />
+          <data name="AGE" type="packed" length="5" precision="0" usage="inputoutput"/>
       </program>
    </pcml>
 \* --------------------------------------------------------------------------- */
@@ -118,6 +120,7 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
    PUCHAR  pParmBuffer = parmbuffer;
    SHORT   parmIx = 0;
    PVOID   argArray[256];
+   SHORT   parmNum;
 
    if ((parms != NULL)
    &&  (parms->signature != NODESIG)) {
@@ -134,20 +137,28 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
       PUCHAR length = jx_GetAttrValuePtr ( jx_AttributeLookup ( pParm, "LENGTH"));
       PUCHAR usage  = jx_GetAttrValuePtr ( jx_AttributeLookup ( pParm, "USAGE"));
       int len = length ? atoi(length) : 0;
-      int dtaLen;
+      int dtaLen, bufLen;
       PUCHAR pValue =  jx_GetNodeValuePtr(jx_GetNode  (pParms ,name),"") ;
       argArray [parmIx++] = pParmBuffer;
-      memset ( pParmBuffer , ' ', len);
-      dtaLen = strlen(pValue);
-      memcpy ( pParmBuffer , pValue  ,  Min(dtaLen , len));
-      pParmBuffer += len + 1; // room for zeroterm
+
+      if ( 0 == strcmp ( type, "char")) {
+         padncpy ( pParmBuffer , pValue , len);
+         pParmBuffer[len] = '\0'; // terminate for now
+         bufLen = len+ 1 ; // room for zero term
+      } else if ( 0 == strcmp ( type, "packed")) {
+         SHORT  precision = atoi(jx_GetAttrValuePtr ( jx_AttributeLookup ( pParm, "PRECISION")));
+         str2packedMem ( pParmBuffer , pValue , len , precision);
+         pParmBuffer += (len + 1) / 2;
+      }
+      pParmBuffer += bufLen;
+
       pParm = jx_GetNodeNext(pParm);
    }
 
    _CALLPGMV ( &pMethod->userMethod , argArray , parmIx );
 
    pReturnObject = jx_NewObject(NULL);
-   pParmBuffer = parmbuffer;
+   parmIx= 0;
    while ( pOutParm) {
       PUCHAR name   = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "NAME"));
       PUCHAR type   = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "TYPE"));
@@ -155,10 +166,20 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
       PUCHAR usage  = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "USAGE"));
       int len = length ? atoi(length) : 0;
       UCHAR temp [256];
+      UCHAR data [256];
+      PUCHAR pData;
+
+      pParmBuffer = argArray [parmIx++];
+
       if (0==strcmp(usage , "inputoutput")) {
-         jx_SetStrByName (pReturnObject , str2lower (temp, name ) , righttrimlen(pParmBuffer , len ));
+         if ( 0 == strcmp ( type, "char")) {
+            pData = righttrimlen(pParmBuffer , len );
+         } else if ( 0 == strcmp ( type, "packed")) {
+            SHORT  precision = atoi(jx_GetAttrValuePtr ( jx_AttributeLookup ( pParm, "PRECISION")));
+            pData = fmtPacked(data  , pParmBuffer , len  , precision, '.');
+         }
+         jx_SetStrByName (pReturnObject , str2lower (temp, name ) , pData);
       }
-      pParmBuffer += len + 1; // room for zero term
       pOutParm = jx_GetNodeNext(pOutParm);
    }
 
