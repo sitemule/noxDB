@@ -1882,6 +1882,7 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
    PJXSQL  pSQL;
    int     rc;
    int     outCol;
+   int     noi;
    SQLSMALLINT i;
    LONG    bufLen ;
    int     impl;
@@ -1902,10 +1903,25 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
    if (pRoutineMeta == NULL) {
       sprintf( jxMessage , "Routine %s is not found or not called qualified" , routineName);
       jxError = true;
-      return NULL;
+      if (format & JX_GRACEFUL_ERROR) {
+         return sqlErrorObject(routineName);
+      } else {
+         return NULL;
+      }
    }
    pNode    =  jx_GetNodeChild (pRoutineMeta);
 
+   noi  = atoi (jx_GetValuePtr (pNode , "number_of_implementations" , "0"));
+   if (noi > 1 ) {
+      sprintf( jxMessage , "Routine %s is polymorphic with %d implementations, can not deside which to use" , routineName, noi);
+      jx_NodeDelete ( pRoutineMeta);
+      jxError = true;
+      if (format & JX_GRACEFUL_ERROR) {
+         return sqlErrorObject(routineName);
+      } else {
+         return NULL;
+      }
+   }
    type = *jx_GetValuePtr    (pNode , "type" , "");
    resultSets = atoi (jx_GetValuePtr (pNode , "max_dynamic_result_sets" , "0"));
 

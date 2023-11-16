@@ -1,4 +1,6 @@
--- Table using sysnames
+﻿-- Table using sysnames
+
+
 create schema noxdbdemo;
 set schema noxdbdemo;
 create or replace table sysnames
