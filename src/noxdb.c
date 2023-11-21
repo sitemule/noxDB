@@ -3447,6 +3447,10 @@ VARCHAR jx_GetNodeValueVC (PJXNODE pNode , PUCHAR DefaultValue)
    VARCHAR res;
 
    value =  jx_GetNodeValuePtr  (pNode , dft);
+   // Found and has value NULL. NULL is not supported yue so we use default (TODO )
+   if (value == NULL) {
+      value = dft;
+   }
    res.Length = strlen(value);
    memcpy(res.String , value , res.Length);
    return (res);
