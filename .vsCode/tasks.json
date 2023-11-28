@@ -52,13 +52,25 @@
         },
         {
             "label": "Compile current example file",
-            "command": "ssh -t MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
+            "command": "ssh -t MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/examples/;gmake compile SRC=${fileBasename}'",
             "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": []
+            "problemMatcher": {
+                "owner": "c",
+                "fileLocation": ["relative", "${workspaceRoot}/examples"],
+                "pattern": {
+                    // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
+                    "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    // "severity": 4,
+                    "message": 4
+                }
+            }
         },
         {
             "label": "Compile current test file",

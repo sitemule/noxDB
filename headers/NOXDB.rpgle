@@ -1907,6 +1907,54 @@ Dcl-PR json_ProgramMeta pointer extproc(*CWIDEN : 'jx_ProgramMeta');
   formatOptions  int(10) value options(*nopass) ;
 End-PR;
 
+
+///
+// Programs and procedures : Call procedure
+//
+// Call ILE service program procedure compiled with ctl-opt pgminfo(*PCML:*MODULE)
+//
+// @param Library where the ILE service program exists or *LIBL
+// @param service Program name
+// @param procedure Name of service program procedure to call
+// @param parms   input parameters for the program in a json object mached by names
+// @param options formating and runtime options AND/added togeter
+// @return noxDB object tree with output from the program call
+//
+// @info The caller of this procedure needs to take care of freeing the resources
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
+///
+
+Dcl-PR json_CallProcedure pointer extproc(*CWIDEN : 'jx_CallProcedure');
+  library        char(10)    const;
+  srvpgm         char(10)    const;
+  procedure      pointer     value  options(*string);
+  parms          pointer     value  options(*string:*nopass) ;
+  formatOptions  int(10) value options(*nopass) ;
+End-PR;
+
+
+///
+// Programs and procedures : Program meta
+//
+// Returns the parameter meta information as a noxDb object graph accordin to the PCML format
+//
+// @param Library where the ILE service program exists or *LIBL
+// @param service Program name
+// @param procedure Name of service program procedure or *ALL
+// @param options formating and runtime options AND/added togeter
+// @return noxDB object tree with meta descript in PCML format
+//
+// @info The caller of this procedure needs to take care of freeing the resources
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
+///
+
+Dcl-PR json_ProcedureMeta pointer extproc(*CWIDEN : 'jx_ProcedureMeta');
+  library        char(10)  const;
+  program        char(10)  const;
+  procedure      pointer   value options(*string);
+  formatOptions  int(10)   value options(*nopass) ;
+End-PR;
+
 ///
 // Detect memory leak
 //
@@ -4605,6 +4653,54 @@ Dcl-PR xml_ProgramMeta pointer extproc(*CWIDEN : 'jx_ProgramMeta');
   library        char(10) const;
   program        char(10) const;
   formatOptions  int(10) value options(*nopass) ;
+End-PR;
+
+
+///
+// Programs and procedures : Call procedure
+//
+// Call ILE service program procedure compiled with ctl-opt pgminfo(*PCML:*MODULE)
+//
+// @param Library where the ILE service program exists or *LIBL
+// @param service Program name
+// @param procedure Name of service program procedure to call
+// @param parms   input parameters for the program in a json object mached by names
+// @param options formating and runtime options AND/added togeter
+// @return noxDB object tree with output from the program call
+//
+// @info The caller of this procedure needs to take care of freeing the resources
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
+///
+
+Dcl-PR xml_CallProcedure pointer extproc(*CWIDEN : 'jx_CallProcedure');
+  library        char(10)    const;
+  srvpgm         char(10)    const;
+  procedure      pointer     value  options(*string);
+  parms          pointer     value  options(*string:*nopass) ;
+  formatOptions  int(10) value options(*nopass) ;
+End-PR;
+
+
+///
+// Programs and procedures : Program meta
+//
+// Returns the parameter meta information as a noxDb object graph accordin to the PCML format
+//
+// @param Library where the ILE service program exists or *LIBL
+// @param service Program name
+// @param procedure Name of service program procedure or *ALL
+// @param options formating and runtime options AND/added togeter
+// @return noxDB object tree with meta descript in PCML format
+//
+// @info The caller of this procedure needs to take care of freeing the resources
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
+///
+
+Dcl-PR xml_ProcedureMeta pointer extproc(*CWIDEN : 'jx_ProcedureMeta');
+  library        char(10)  const;
+  program        char(10)  const;
+  procedure      pointer   value options(*string);
+  formatOptions  int(10)   value options(*nopass) ;
 End-PR;
 
 ///
