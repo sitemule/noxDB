@@ -1552,7 +1552,9 @@ PJXNODE jx_sqlProcedureMeta (PUCHAR procedureName)
    return jx_sqlResultSet(sqlStmt, 0 , 99999 , 0 , NULL);
 }
 /* ------------------------------------------------------------- */
-// All types;
+// Get Meta from All types - only works if names are uniqye accross
+// scalar / table / procedures.
+// Alternative use The specific version
 /* ------------------------------------------------------------- */
 PJXNODE jx_sqlRoutineMeta (PUCHAR routineName)
 {
@@ -1591,6 +1593,52 @@ PJXNODE jx_sqlRoutineMeta (PUCHAR routineName)
       "on a.specific_schema = b.specific_schema and a.specific_name = b.specific_name "
       "where a.routine_schema  = upper('%s') "
       "and   a.routine_name = upper('%s') "
+      ") "
+      "select (select count(distinct cte.specific_name) from cte) number_of_implementations  , cte.* from cte "
+      , schema ,routine
+   );
+   return jx_sqlResultSet(sqlStmt, 0 , 99999 , 0 , NULL);
+}
+/* ------------------------------------------------------------- */
+PJXNODE jx_sqlSpecificRoutineMeta (PUCHAR routineName)
+{
+
+   UCHAR sqlStmt [1024];
+   UCHAR schema [32];
+   UCHAR routine  [256];
+   PUCHAR split;
+
+   split = strchr(routineName , '.');
+
+   if (split == NULL) return NULL;
+
+   substr (schema    , routineName , split - routineName);
+   strcpy (routine , split +1);
+
+
+   sprintf (sqlStmt ,
+      "with cte as ( "
+      "select "
+         "case a.function_type when 'S' then 'S' when 'T' then 'T' else 'P' end type ,"
+         "a.routine_name routine_name,"
+         "a.routine_schema routine_schema,"
+         "a.specific_name specific_name,"
+         "a.max_dynamic_result_sets,"
+         "parameter_mode,"
+         "parameter_name,"
+         "data_type,"
+         "numeric_scale,"
+         "numeric_precision,"
+         "character_maximum_length,"
+         "numeric_precision_radix,"
+         "datetime_precision,"
+         "is_nullable,"
+         "max(ifnull(numeric_precision , 0) + 2, ifnull(character_maximum_length,0))  buffer_length "
+      "from sysroutines  a "
+      "left join  sysparms b "
+      "on a.specific_schema = b.specific_schema and a.specific_name = b.specific_name "
+      "where a.specific_schema = upper('%s') "
+      "and   a.specific_name   = upper('%s') "
       ") "
       "select (select count(distinct cte.specific_name) from cte) number_of_implementations  , cte.* from cte "
       , schema ,routine
@@ -1867,11 +1915,12 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
 /* ------------------------------------------------------------- */
 // Note: This will replace the jx_sqlCall when ready
 /* ------------------------------------------------------------- */
-PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG formatP)
+PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG formatP, LGL specificP)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    PJXNODE pInParms = (pParms->OpDescList->NbrOfParms >= 2) ? pInParmsP  : NULL;
    LONG    format  = (pParms->OpDescList->NbrOfParms >= 3) ? formatP  : 0;  // Default: Arrray only
+   BOOL    specific = (pParms->OpDescList->NbrOfParms >= 4) ? (specificP == ON)  : FALSE;
    PJXNODE pResult = NULL;
    UCHAR   stmtBuf [32760];
    PUCHAR  stmt =stmtBuf;
@@ -1893,12 +1942,14 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
    UCHAR      buffer  [650000];
    PUCHAR     bufferPos = buffer;
    int        numerOfParms = 0;
-   PJXNODE    pRoutineMeta = jx_sqlRoutineMeta (routineName);
+   PJXNODE    pRoutineMeta = specific ? jx_sqlSpecificRoutineMeta (routineName) : jx_sqlRoutineMeta (routineName);
    PROCPARM   procParms   [NOXDB_MAX_PARMS];
    PPROCPARM  p;
 
    JX_ROUTINE_TYPE type ;
    LONG       resultSets;
+
+
 
    if (pRoutineMeta == NULL) {
       sprintf( jxMessage , "Routine %s is not found or not called qualified" , routineName);
@@ -1924,6 +1975,14 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
    }
    type = *jx_GetValuePtr    (pNode , "type" , "");
    resultSets = atoi (jx_GetValuePtr (pNode , "max_dynamic_result_sets" , "0"));
+
+   // Can not call specific names, so we re-map the name :
+   if (specific) {
+      sprintf ( routineName , "%s.%s" ,
+         jx_GetValuePtr (pNode ,  "routine_schema" , ""),
+         jx_GetValuePtr (pNode ,  "routine_name"   , "")
+      );
+   }
 
 
    if (type == JX_ROUTINE_PROCEDURE
