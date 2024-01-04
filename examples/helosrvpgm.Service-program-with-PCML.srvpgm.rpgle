@@ -42,3 +42,61 @@ dcl-proc nameage export;
 
 
 end-proc;
+
+// ------------------------------------------------------------------------------------
+// alltypes - following produces:
+//<?xml version="1.0" encoding="UTF-8" ?>
+//<pcml version="7.0">
+//  <program name="ALLTYPES" entrypoint="ALLTYPES">
+//    <data name="CHAR" type="char" length="10" usage="inputoutput"/>
+//    <data name="INT" type="int" length="8" precision="63" usage="inputoutput"/>
+//    <data name="PACKED" type="packed" length="9" precision="2" usage="inputoutput"/>
+//    <data name="IND" type="char" length="1" usage="inputoutput"/>
+//    <data name="DATE" type="date" dateformat="ISO" dateseparator="hyphen" usage="inputoutput"/>
+//    <data name="TIME" type="time" timeformat="ISO" timeseparator="period" usage="inputoutput"/>
+//    <data name="TIMESTAMP" type="timestamp" usage="inputoutput"/>
+//  </program>
+//  <program name="NAMEAGE" entrypoint="NAMEAGE">
+//    <data name="NAME" type="char" length="10" usage="input"/>
+//    <data name="TEXT" type="char" length="200" usage="inputoutput"/>
+//    <data name="AGE" type="packed" length="5" precision="0" usage="inputoutput"/>
+//  </program>
+//</pcml>
+// ------------------------------------------------------------------------------------
+dcl-proc alltypes export;
+
+    dcl-pi alltypes ;
+        char    char (10);
+        int8     int(20);
+        int4     int(10);
+//        int2     int(3);
+        uns8     uns(20);
+        uns4     uns(10);
+        uns2     uns(3);
+        packed  packed(9:2);
+        zoned   zoned(9:2);
+        ind     ind;
+        date    date;
+        time    time;
+        timestamp    timestamp;
+    end-pi;
+
+
+    char    = 'xyz';
+    int8     = -456789012345;
+    int4     = -56789;
+//    int2     = -127;
+    uns8     = 456789012345;
+    uns4     = 56789;
+    uns2     = 255;
+    packed  = 987.65;
+    zoned   = 8765.43;
+    ind     = *OFF;
+    date    = %date();
+    time    = %time();
+    timestamp   = %timestamp();
+
+    return;
+
+
+end-proc;

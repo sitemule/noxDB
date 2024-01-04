@@ -13,6 +13,7 @@
 #include <signal.h>
 #include <mih/stsppo.h>
 #include <mih/setsppo.h>
+#include <mih/MIDTTM.h>
 #include <qwtsetp.h>
 #include <miptrnam.h>
 #include <qsygetph.h>
@@ -29,11 +30,10 @@
 
 #include "jsonxml.h"
 
-//typedef _SYSPTR (*ILEPROC)(void * , ...);
+extern UCHAR BraBeg;
+extern UCHAR BraEnd;
+extern UCHAR Masterspace;
 
-typedef _SYSPTR (*ILEPROC)(PVOID, ...);
-typedef _SYSPTR (*ILEPROC0)();
-void callProc ( _SYSPTR proc , void * args [256] , SHORT parms);
 
 /* ------------------------------------------------------------- */
 _SYSPTR loadServiceProgram (PUCHAR lib , PUCHAR srvPgm)
@@ -100,13 +100,38 @@ _SYSPTR loadProgram (PUCHAR lib , PUCHAR pgm)
    }
    return pPgm;
 }
+
+static void convertDate ( PUCHAR pOut, PUCHAR pIn , PUCHAR pFormat )
+{
+   if (0 == strcmp ( pFormat , "ISO")) {
+      strcpy(pOut, pIn); // noxDb is always in ISO
+   } else if (0 == strcmp ( pFormat , "EUR")) { // YYYY-MM-DD to DD/MM/YYYY
+      strcpy (pOut , "0001-01-01");
+      memcpy ( pOut + 6 , pIn +0 , 4); // YYYY
+      memcpy ( pOut + 3 , pIn +5 , 2); // MM
+      memcpy ( pOut + 0 , pIn +8 , 2); // DD
+   } // todo  - more to come
+   else {
+      strcpy ( pOut , pFormat); // Abbend !!
+   }
+}
+
 /* --------------------------------------------------------------------------- *\
    parse PCML:
-   <pcml version="7.0">
-      <program name="HELLOPGM" path="/QSYS.lIB/ILEASTIC.lIB/HELLOPGM.PGM">
-         <data name="NAME" type="char" length="10" usage="input" />
-         <data name="TEXT" type="char" length="200" usage="inputoutput" />
-          <data name="AGE" type="packed" length="5" precision="0" usage="inputoutput"/>
+      <pcml version="7.0">
+      <program name="ALLTYPES" entrypoint="ALLTYPES">
+         <data name="CHAR" type="char" length="10" usage="inputoutput"/>
+         <data name="INT" type="int" length="8" precision="63" usage="inputoutput"/>
+         <data name="PACKED" type="packed" length="9" precision="2" usage="inputoutput"/>
+         <data name="IND" type="char" length="1" usage="inputoutput"/>
+         <data name="DATE" type="date" dateformat="ISO" dateseparator="hyphen" usage="inputoutput"/>
+         <data name="TIME" type="time" timeformat="ISO" timeseparator="period" usage="inputoutput"/>
+         <data name="TIMESTAMP" type="timestamp" usage="inputoutput"/>
+      </program>
+      <program name="NAMEAGE" entrypoint="NAMEAGE">
+         <data name="NAME" type="char" length="10" usage="input"/>
+         <data name="TEXT" type="char" length="200" usage="inputoutput"/>
+         <data name="AGE" type="packed" length="5" precision="0" usage="inputoutput"/>
       </program>
    </pcml>
 \* --------------------------------------------------------------------------- */
@@ -116,9 +141,7 @@ _SYSPTR loadProgram (PUCHAR lib , PUCHAR pgm)
 \* --------------------------------------------------------------------------- */
 static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
 {
-   PJXNODE pParm = jx_GetNode  (pMethod->pPcml , "/pcml/program/data") ;
-   PJXNODE pOutParm = pParm;
-   PJXNODE pInParm  = pParm;
+   PJXNODE pParm , pOutParm , pInParm;
    PJXNODE pReturnObject;
    PJXNODE pParms;
    BOOL    freeAfter;
@@ -127,7 +150,16 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
    SHORT   parmIx = 0;
    PVOID   argArray[256];
    SHORT   parmNum;
+   UCHAR   rootNode [128];
 
+
+   if ( pMethod->userMethodIsProgram) {
+      strcpy ( rootNode , "/pcml/program/data"); // assume only PEP
+   } else {
+      sprintf ( rootNode ,  "/pcml/program%c%cname=%s%c/data",BraBeg , Masterspace, pMethod->procedure, BraEnd );
+   }
+
+   pOutParm = pInParm = pParm = jx_GetNode  (pMethod->pPcml , rootNode) ;
 
    if ((parms != NULL)
    &&  (parms->signature != NODESIG)) {
@@ -152,11 +184,43 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
          padncpy ( pParmBuffer , pValue , len);
          pParmBuffer[len] = '\0'; // terminate for now
          bufLen = len+ 1 ; // room for zero term
+      } else if ( 0 == strcmp ( type, "varchar")) {
+         long actlen = strlen ( pValue );
+         memcpy ( pParmBuffer  , pValue , actlen + 1); // include the zero term
+         bufLen = len+ 1 ; // room for zero term
+      } else if ( 0 == strcmp ( type, "int")) {
+         switch (len) {
+            case 8: *(long long *) pParmBuffer = atoll (pValue); break;
+            case 4: *(long *) pParmBuffer = atol (pValue); break;
+            case 2: *(int *) pParmBuffer = atoi (pValue); break;
+            case 1: *(char *) pParmBuffer = atoi (pValue); break;
+         }
+         bufLen = len;
+      } else if ( 0 == strcmp ( type, "byte")) {
+         *(char *) pParmBuffer = atoi (pValue);
+         bufLen = len ;
       } else if ( 0 == strcmp ( type, "packed")) {
          SHORT  precision = atoi(jx_GetAttrValuePtr ( jx_AttributeLookup ( pInParm, "PRECISION")));
          str2packedMem ( pParmBuffer , pValue , len , precision);
-         pParmBuffer += (len + 1) / 2;
+         bufLen = (len + 1) / 2;
+      } else if ( 0 == strcmp ( type, "zoned")) {
+         SHORT  precision = atoi(jx_GetAttrValuePtr ( jx_AttributeLookup ( pInParm, "PRECISION")));
+         str2zonedMem ( pParmBuffer , pValue , len , precision);
+         bufLen = len;
+      } else if ( 0 == strcmp ( type, "date")) {
+         PUCHAR format = jx_GetAttrValuePtr ( jx_AttributeLookup ( pInParm, "DATEFORMAT"));
+         convertDate ( pParmBuffer , pValue , format);
+         bufLen = 11 ; // room for zero term
+      } else if ( 0 == strcmp ( type, "time")) {
+         memcpy ( pParmBuffer , "00.00.00", 9);
+         memcpy ( pParmBuffer , pValue , strlen(pValue));
+         bufLen = 9 ; // room for zero term
+      } else if ( 0 == strcmp ( type, "timestamp")) {
+         memcpy ( pParmBuffer , "0001-01-01-00.00.00.000000", 27);
+         memcpy ( pParmBuffer , pValue , strlen(pValue));
+         bufLen = 27 ; // room for zero term
       }
+
       pParmBuffer += bufLen;
    }
 
@@ -168,26 +232,29 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
 
    pReturnObject = jx_NewObject(NULL);
    parmIx= 0;
-   for (pOutParm = pParm; pOutParm ;  pOutParm = jx_GetNodeNext(pOutParm) ) {
-      PUCHAR name   = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "NAME"));
-      PUCHAR type   = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "TYPE"));
-      PUCHAR length = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "LENGTH"));
+   for (pOutParm = pParm; pOutParm ;  pOutParm = jx_GetNodeNext(pOutParm), parmIx++ ) {
       PUCHAR usage  = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "USAGE"));
-      int len = length ? atoi(length) : 0;
-      UCHAR temp [256];
-      UCHAR data [256];
-      PUCHAR pData;
-
 
       if (0==strcmp(usage , "inputoutput")) {
-         pParmBuffer = argArray [parmIx++];
+         PUCHAR name   = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "NAME"));
+         PUCHAR type   = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "TYPE"));
+         PUCHAR length = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "LENGTH"));
+         int len = length ? atoi(length) : 0;
+         UCHAR temp [256];
+         UCHAR data [256];
+         PUCHAR pData;
+         NODETYPE nodeType;
+
+         pParmBuffer = argArray [parmIx];
          if ( 0 == strcmp ( type, "char")) {
             pData = righttrimlen(pParmBuffer , len );
+            nodeType = VALUE;
          } else if ( 0 == strcmp ( type, "packed")) {
             SHORT  precision = atoi(jx_GetAttrValuePtr ( jx_AttributeLookup ( pParm, "PRECISION")));
             pData = fmtPacked(data  , pParmBuffer , len  , precision, '.');
+            nodeType = LITERAL;
          }
-         jx_SetStrByName (pReturnObject , str2lower (temp, name ) , pData);
+         jx_SetValueByName( pReturnObject , str2lower (temp, name ) , pData , nodeType );
       }
    }
 
@@ -289,7 +356,11 @@ PJXNODE  jx_CallProgram (PUCHAR library , PUCHAR program, PJXNODE parmsP, ULONG 
    PJXNODE parms   = (pParms->OpDescList->NbrOfParms >= 3 ) ? parmsP : NULL;
    ULONG   options = (pParms->OpDescList->NbrOfParms >= 4 ) ? optionsP : 0;
 
+   memset ( &pgm , 0 , sizeof(pgm));
    pgm.pPcml = jx_ProgramMeta(library , program);
+   strcpy(pgm.library   , library);
+   strcpy(pgm.program   , program);
+
    pgm.userMethodIsProgram = TRUE;
    pgm.userMethod = loadProgram ( library, program);
    pResult = call (&pgm, parms , options);
@@ -306,328 +377,19 @@ PJXNODE  jx_CallProcedure (PUCHAR library, PUCHAR srvPgm, PUCHAR procedure, PJXN
    JXMETHOD pgm;
    PJXNODE pResult;
 
+
    PJXNODE parms   = (pParms->OpDescList->NbrOfParms >= 4 ) ? parmsP : NULL;
    ULONG   options = (pParms->OpDescList->NbrOfParms >= 5 ) ? optionsP : 0;
 
+   memset ( &pgm , 0 , sizeof(pgm));
    pgm.pPcml = jx_ProcedureMeta(library , srvPgm , procedure );
    pgm.userMethodIsProgram = FALSE;
+   strcpy(pgm.library   , library);
+   strcpy(pgm.program   , srvPgm);
+   strcpy(pgm.procedure , procedure);
+
    pgm.userMethod = loadServiceProgramProc ( library, srvPgm , procedure);
    pResult = call (&pgm, parms , options);
    jx_NodeDelete( pgm.pPcml);
    return pResult;
-}
-/* ------------------------------------------------------------- */
-void callProc ( _SYSPTR proc , void *  p[64] , SHORT parms)
-{
-   PVOID pv =  proc;
-   ILEPROC ileproc = pv;
-   switch(parms) {
-   case  0 : {
-      ILEPROC0 ileproc = pv;
-      ileproc();
-      break;
-   }
-   case  1 : ileproc(p[0]);
-             break;
-   case  2 : ileproc(p[0] ,p[1]);
-             break;
-   case  3 : ileproc(p[0] ,p[1] ,p[2]);
-             break;
-   case  4 : ileproc(p[0] ,p[1] ,p[2] ,p[3]);
-             break;
-   case  5 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4]);
-             break;
-   case  6 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5]);
-             break;
-   case  7 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6]);
-             break;
-   case  8 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7]);
-             break;
-   case  9 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] );
-             break;
-   case 10 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9]);
-             break;
-   case 11 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10]);
-             break;
-   case 12 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11]);
-             break;
-   case 13 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12]);
-             break;
-   case 14 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13]);
-             break;
-   case 15 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14]);
-             break;
-   case 16 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15]);
-             break;
-   case 17 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16]);
-             break;
-   case 18 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17]);
-             break;
-   case 19 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18]);
-             break;
-   case 20 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19]);
-             break;
-   case 21 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20]);
-             break;
-   case 22 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21]);
-             break;
-   case 23 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22]);
-             break;
-   case 24 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23]);
-             break;
-   case 25 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24]);
-             break;
-   case 26 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25]);
-             break;
-   case 27 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26]);
-             break;
-   case 28 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27]);
-             break;
-   case 29 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28]);
-             break;
-   case 30 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29]);
-             break;
-   case 31 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30]);
-             break;
-   case 32 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31]);
-             break;
-   case 33 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32]);
-             break;
-   case 34 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33]);
-             break;
-   case 35 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34]);
-             break;
-   case 36 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35]);
-             break;
-   case 37 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36]);
-             break;
-   case 38 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37]);
-             break;
-   case 39 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38]);
-             break;
-   case 40 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39]);
-             break;
-   case 41 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40]);
-             break;
-   case 42 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41]);
-             break;
-   case 43 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42]);
-             break;
-   case 44 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43]);
-             break;
-   case 45 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44]);
-             break;
-   case 46 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45]);
-             break;
-   case 47 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46]);
-             break;
-   case 48 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47]);
-             break;
-   case 49 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48]);
-             break;
-   case 50 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49]);
-             break;
-   case 51 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50]);
-             break;
-   case 52 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51]);
-             break;
-   case 53 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52]);
-             break;
-   case 54 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52],p[53]);
-             break;
-   case 55 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52],p[53],p[54]);
-             break;
-   case 56 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52],p[53],p[54],p[55]);
-             break;
-   case 57 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52],p[53],p[54],p[55],p[56]);
-             break;
-   case 58 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52],p[53],p[54],p[55],p[56],p[57]);
-             break;
-   case 59 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52],p[53],p[54],p[55],p[56],p[57],p[58]);
-             break;
-   case 60 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52],p[53],p[54],p[55],p[56],p[57],p[58],p[59]);
-             break;
-   case 61 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52],p[53],p[54],p[55],p[56],p[57],p[58],p[59],
-                  p[60]);
-             break;
-   case 62 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52],p[53],p[54],p[55],p[56],p[57],p[58],p[59],
-                  p[60],p[61]);
-             break;
-   case 63 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52],p[53],p[54],p[55],p[56],p[57],p[58],p[59],
-                  p[60],p[61],p[62]);
-             break;
-   case 64 : ileproc(p[0] ,p[1] ,p[2] ,p[3] ,p[4] ,p[5] ,p[6] ,p[7] ,p[8] ,p[9] ,
-                  p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17],p[18],p[19],
-                  p[20],p[21],p[22],p[23],p[24],p[25],p[26],p[27],p[28],p[29],
-                  p[30],p[31],p[32],p[33],p[34],p[35],p[36],p[37],p[38],p[39],
-                  p[40],p[41],p[42],p[43],p[44],p[45],p[46],p[47],p[48],p[49],
-                  p[50],p[51],p[52],p[53],p[54],p[55],p[56],p[57],p[58],p[59],
-                  p[60],p[61],p[62],p[63]);
-             break;
-   }
 }

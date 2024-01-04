@@ -950,6 +950,47 @@ PUCHAR  str2packedMem ( PUCHAR out , PUCHAR in , SHORT len , SHORT prec)
    return out;
 }
 /* ------------------------------------------------------------- */
+// String to zoned decimal buffer
+/* ------------------------------------------------------------- */
+PUCHAR  str2zonedMem ( PUCHAR out , PUCHAR in , SHORT len , SHORT prec)
+{
+   PUCHAR outEnd;
+   UCHAR digitsBuf  [256];
+   PUCHAR digits =  digitsBuf + 64;
+   SHORT  digitsLen = 0;
+   PUCHAR digitsEnd;
+   SHORT  decimals = 0;
+   UCHAR sign = 0x0F; // Positive
+   BOOL  countDecimals= FALSE;
+
+   memset ( digitsBuf , 0 , sizeof(digitsBuf));
+
+   for (;*in;in++) {
+      if (*in >= '0' && *in <= '9') {
+        digits  [digitsLen++] = *in - '0';
+        if (countDecimals) {
+           decimals ++;
+        }
+      } else if (*in == '-' ) {
+        sign =  0x0D;
+      } else if (*in == '.') {
+        countDecimals= TRUE;
+      }
+   }
+   // Find last usable digit, and patch sign int last position
+   digitsEnd = digits + digitsLen - (decimals - prec);
+   *digitsEnd = sign;
+   outEnd = out + len ;
+
+   // Pack two nibbles into a byte
+   while ( outEnd >= out) {
+      *outEnd = *(digitsEnd);
+      digitsEnd -=1;
+      outEnd -= 1;
+   }
+   return out;
+}
+/* ------------------------------------------------------------- */
 PUCHAR fmtPacked(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint)
 {
    UCHAR  temp [64];
