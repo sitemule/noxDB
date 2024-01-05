@@ -2316,6 +2316,7 @@ Dcl-PR json_sqlExecuteRoutine pointer extproc(*CWIDEN : 'jx_sqlExecuteRoutine');
   routineName     pointer value options(*string);
   parameterObject pointer value options(*nopass);
   formatOptions   int(10) value options(*nopass);
+  specific        ind     value options(*nopass);
 End-PR;
 
 
@@ -5064,6 +5065,7 @@ Dcl-PR xml_sqlExecuteRoutine pointer extproc(*CWIDEN : 'jx_sqlExecuteRoutine');
   routineName     pointer value options(*string);
   parameterObject pointer value options(*nopass);
   formatOptions   int(10) value options(*nopass);
+  specific        ind     value options(*nopass);
 End-PR;
 
 
