@@ -2189,7 +2189,11 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
       p = &procParms[i];
 
       // json is always in lower ( in this implementation)
-      str2lower  (p->name , p->name);
+      if (format & (JX_CAMEL_CASE)) {
+         camelCase(p->name , p->name);
+      } else {
+         str2lower (p->name , p->name);
+      }
 
       if (p->mode == SQL_PARAM_OUTPUT
       ||  p->mode == SQL_PARAM_INPUT_OUTPUT) {
