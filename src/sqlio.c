@@ -144,6 +144,19 @@ static int check_error (PJXSQL pSQL)
    if (pSQL && pSQL->pstmt) {
       hType  =  SQL_HANDLE_STMT;
       handle =  pSQL->pstmt->hstmt;
+
+      /* --------
+      // int i;
+      // int SQL_DIAG_COLUMN_NAME = 21; is not supported in Db2 for i
+
+      UCHAR text [512];
+      SQLSMALLINT textSize = sizeof(text);
+
+      for (i=0;i < 5; i++) {
+         SQLGetDiagField(hType, handle , i , SQL_DIAG_COLUMN_NAME,text,sizeof(text), &textSize);
+      }
+      --------- */
+
    } else if ( pConnection) {
       if (pConnection->hdbc) {
          hType  =  SQL_HANDLE_DBC;
@@ -1466,6 +1479,33 @@ LONG jx_sqlNumberOfRowsDiag(PUCHAR sqlstmt)
    return rowCount;
 }
 */
+/* dont work - it is works when used in stored procedures  */
+/*********
+void jx_sqlGetDiagnostics ()
+{
+
+   int rc;
+   UCHAR messageId [11];
+   LONG length;
+
+   PJXSQL pSQL = jx_sqlNewStatement (NULL, true, false);
+   rc = SQLPrepare (pSQL->pstmt->hstmt, "get diagnostics condition 1? = DB2_MESSAGE_ID", SQL_NTS);
+   rc = SQLBindParameter (
+      pSQL->pstmt->hstmt,
+      1,
+      SQL_PARAM_OUTPUT ,
+      SQL_C_DEFAULT,
+      SQL_C_CHAR,
+      0,
+      0,
+      messageId ,
+      sizeof(messageId),
+      &length
+   );
+   rc = SQLExecute (pSQL->pstmt->hstmt);
+   jx_sqlClose (&pSQL);
+}
+*******/
 /* ------------------------------------------------------------- */
 /********
 void jx_sqlUpperCaseNames(PJXSQL pSQL)
@@ -2173,6 +2213,8 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
 
    rc = SQLExecute(pSQL->pstmt->hstmt);
    if (rc != SQL_SUCCESS &&  rc != SQL_SUCCESS_WITH_INFO) {
+      // jx_sqlGetDiagnostics ();
+      // getSqlCode(pSQL->pstmt->hstmt);
       check_error (pSQL);
       jxError = true;
       jx_NodeDelete (pRoutineMeta);

@@ -343,6 +343,9 @@ LGL jx_Has  (PJXNODE pNode, PUCHAR Name);
 LGL jx_IsTrue  (PJXNODE pNode, PUCHAR Name);
 #pragma descriptor ( void jx_IsTrue                            (void))
 
+LGL jx_isNode  (PJXNODE pNode);
+#pragma descriptor ( void jx_isNode                            (void))
+
 LGL jx_IsNull  (PJXNODE pNode, PUCHAR Name);
 #pragma descriptor ( void jx_IsNull                            (void))
 
@@ -507,9 +510,17 @@ PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value);
 PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value);
 PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value);
 PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value);
+PJXNODE  jx_SetNullByName (PJXNODE pNode, PUCHAR Name);
 PJXNODE  jx_NodeMoveInto (PJXNODE  pDest, PUCHAR Name , PJXNODE pSource);
+void jx_NodeRename(PJXNODE pNode, PUCHAR name);
 void jx_NodeCloneAndReplace (PJXNODE pDest , PJXNODE pSource);
 void jx_Debug(PUCHAR text, PJXNODE pNode);
+void jx_joblog (PUCHAR msg , ...);
+
+
+void CheckBufSize(PJXCOM pJxCom);
+void ensureOpenXlate(void);
+
 
 // SQL functions
 #ifndef JXSQLSTMT_MAX
