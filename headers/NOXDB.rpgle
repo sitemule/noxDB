@@ -2082,6 +2082,19 @@ Dcl-PR json_sqlSetOptions extproc(*CWIDEN : 'jx_sqlSetOptions');
 End-PR;
 
 ///
+// SQL : Set SQL root name for reultset
+//
+// By default the result set object will be called "rows",
+// however calling this funtion will override this name
+//
+// @param Name of the root elemt in resultsets when object are returnd
+///
+Dcl-PR json_sqlSetRootName extproc(*CWIDEN : 'jx_sqlSetRootName');
+  rootName  pointer value options(*string);
+End-PR;
+
+
+///
 // SQL : Execute SQL statement (single row)
 //
 // Returns an object node with one (first) resulting row for the SQL statment.
@@ -4829,6 +4842,19 @@ End-PR;
 Dcl-PR xml_sqlSetOptions extproc(*CWIDEN : 'jx_sqlSetOptions');
   options pointer value options(*string : *nopass);
 End-PR;
+
+///
+// SQL : Set SQL root name for reultset
+//
+// By default the result set object will be called "rows",
+// however calling this funtion will override this name
+//
+// @param Name of the root elemt in resultsets when object are returnd
+///
+Dcl-PR xml_sqlSetRootName extproc(*CWIDEN : 'jx_sqlSetRootName');
+  rootName  pointer value options(*string);
+End-PR;
+
 
 ///
 // SQL : Execute SQL statement (single row)

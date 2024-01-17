@@ -68,6 +68,7 @@ static BOOL keepConnection = false;
 static SQLINTEGER sqlCode = 0;
 static SQLCHAR    sqlMessage [SQL_MAX_MESSAGE_LENGTH + 1];
 static SQLCHAR    sqlState   [SQL_SQLSTATE_SIZE + 1];
+static UCHAR      rootName[32] = "rows";
 
 
 static enum  {
@@ -100,6 +101,12 @@ PJXSQLCONNECT jx_sqlNewConnection(void);
 void jx_traceOpen (PJXSQLCONNECT pCon);
 void jx_traceInsert (PJXSQL pSQL, PUCHAR stmt , PUCHAR sqlState);
 PJXNODE static sqlErrorObject(PUCHAR sqlstmt);
+
+/* ------------------------------------------------------------- */
+void jx_sqlSetRootName (PUCHAR name )
+{
+   strcpy ( rootName , name);
+}
 
 /* ------------------------------------------------------------- */
 SQLINTEGER jx_sqlCode(void)
@@ -1938,7 +1945,6 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
    SQLRETURN    sqlRet;
    SQLSMALLINT  fCtype;
    SQLSMALLINT  fSQLtype;
-
    UCHAR      buffer  [650000];
    PUCHAR     bufferPos = buffer;
    int        numerOfParms = 0;
@@ -1983,7 +1989,6 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
          jx_GetValuePtr (pNode ,  "routine_name"   , "")
       );
    }
-
 
    if (type == JX_ROUTINE_PROCEDURE
    &&  0 == resultSets ) {
@@ -2042,10 +2047,10 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
 
       if  (type ==  JX_ROUTINE_SCALAR ) {
          PJXNODE pTemp = jx_sqlResultSet(stmtBuf, 0 , -1 , format , NULL);
-         PJXNODE pValue = jx_GetNodeChild(jx_GetNodeChild (jx_GetNode  (pTemp, "rows")));
+         PJXNODE pValue = jx_GetNodeChild(jx_GetNodeChild (jx_GetNode  (pTemp, rootName)));
          if  (pValue && jxError == false) {
             pResult = jx_NewObject(NULL);
-            jx_NodeMoveInto (pResult , "result" , pValue);
+            jx_NodeMoveInto (pResult , rootName , pValue);
             jx_SetBoolByName(pResult , "success" , ON);
             jx_NodeDelete (pTemp);
             return pResult;
@@ -2246,7 +2251,7 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
    if (format & JX_GRACEFUL_ERROR) {
       PJXNODE  pEnvelope = jx_NewObject (NULL);
       jx_SetBoolByName (pEnvelope , "success" , true);
-      jx_NodeMoveInto(pEnvelope , "data" , pResult);
+      jx_NodeMoveInto(pEnvelope , rootName , pResult);
       return pEnvelope;
    } else {
       return (pResult);
@@ -2507,6 +2512,18 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    return (pResult);
 
 }*/
+
+// Additional data descibing the error can optionally
+// be set and found in the envvar MESSAGES_LIST
+/* ------------------------------------------------------------- */
+void static messageList (PJXNODE pError) {
+   PUCHAR message;
+   message = getenv ("MESSAGES_LIST");
+   if (message && *message > ' ') {
+      jx_SetEvalByName ( pError , "messages", message);
+      putenv("MESSAGES_LIST=");
+   }
+}
 /* ------------------------------------------------------------- */
 PJXNODE static sqlErrorObject(PUCHAR sqlstmt)
 {
@@ -2514,6 +2531,7 @@ PJXNODE static sqlErrorObject(PUCHAR sqlstmt)
    jx_SetBoolByName (pError , "success" ,  OFF);
    jx_SetStrByName  (pError , "msg"     ,  jxMessage);
    jx_SetStrByName  (pError , "stmt"    ,  sqlstmt);
+   messageList (pError);
 
    return pError;
 }
@@ -2563,7 +2581,7 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
       pResult  = jx_NewObject(NULL);
       pMeta    = jx_NewObject(NULL);
       jx_SetValueByName(pResult  , "success" , "true" , LITERAL);
-      jx_SetValueByName(pResult , "root"    , "rows" , VALUE);
+      jx_SetValueByName(pResult , "root"    , rootName , VALUE);
       if (format & JX_FIELDS ) {
          PJXNODE pFields = jx_buildMetaFields (pSQL);
          jx_NodeMoveInto(pMeta , "fields" , pFields);
@@ -2593,7 +2611,7 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
       }
 
       jx_NodeMoveInto (pResult , "metaData" , pMeta);
-      jx_NodeMoveInto (pResult , "rows"     , pRows);
+      jx_NodeMoveInto (pResult , rootName    , pRows);
 
    } else {
 
