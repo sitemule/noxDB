@@ -1996,8 +1996,9 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
    LONG       resultSets;
 
 
+   pNode    =  jx_GetNodeChild (pRoutineMeta);
 
-   if (pRoutineMeta == NULL) {
+   if (pNode == NULL) {
       sprintf( jxMessage , "Routine %s is not found or not called qualified" , routineName);
       jxError = true;
       if (format & JX_GRACEFUL_ERROR) {
@@ -2006,7 +2007,6 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
          return NULL;
       }
    }
-   pNode    =  jx_GetNodeChild (pRoutineMeta);
 
    noi  = atoi (jx_GetValuePtr (pNode , "number_of_implementations" , "0"));
    if (noi > 1 ) {
