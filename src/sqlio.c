@@ -620,28 +620,43 @@ static PUCHAR  getSysNameForColumn ( PUCHAR sysColumnName, PUCHAR columnText, SQ
    return  getSystemColumnName ( sysColumnName, columnText, schema , table , column);
 }
 /* -------------------------------------------------------------
-   Locates the part after CTE last pareparenthesis
+   Locates the part after last parenthesis
    ------------------------------------------------------------- */
 PUCHAR finalSQLPart (PUCHAR stmt)
 {
-   PUCHAR p   = stmt;
-   PUCHAR ret = stmt;
-   int level =0;
-   for (;*p;p++) {
-      switch (*p) {
-         case '(' :
-            level ++;
-            break;
-         case ')' :
-            level --;
-            if (level =0) {
-               ret = p +1;
-            }
-            break;
-      }
+   PUCHAR end = stmt;
+   PUCHAR temp;
+   for (;;) {
+      temp = strchr ( end  , ')');
+      if (temp == NULL) break;
+      end = temp + 1 ;
    }
-   return ret;
+   return end;
 }
+
+///* -------------------------------------------------------------
+//   Locates the part after CTE last pareparenthesis
+//   ------------------------------------------------------------- */
+//PUCHAR finalSQLPart (PUCHAR stmt)
+//{
+//   PUCHAR p   = stmt;
+//   PUCHAR ret = stmt;
+//   int level =0;
+//   for (;*p;p++) {
+//      switch (*p) {
+//         case '(' :
+//            level ++;
+//            break;
+//         case ')' :
+//            level --;
+//            if (level == 0) {
+//               ret = p +1;
+//            }
+//            break;
+//      }
+//   }
+//   return ret;
+//}
 /* ------------------------------------------------------------- */
 /* Poyfill for regex                                             */
 /* ------------------------------------------------------------- */
