@@ -94,6 +94,7 @@ typedef struct {
    SQLSMALLINT sqlType  ;
    PJXNODE     pNode        ;
    PUCHAR      pData       ;
+   BOOL        isBool;
 } PROCPARM ,* PPROCPARM;
 
 void          jx_sqlDisconnect (void);
@@ -1601,10 +1602,11 @@ PJXNODE jx_sqlProcedureMeta (PUCHAR procedureName)
          "numeric_precision_radix,"
          "datetime_precision,"
          "is_nullable,"
+         "data_type_name,"
          "max(ifnull(numeric_precision , 0) + 2, ifnull(character_maximum_length,0))  buffer_length "
       "from sysprocs a "
       "left join  sysparms b "
-      "on a.specific_schema = b.specific_schema and a.specific_name = b.specific_name "
+      "on a. = b.specific_schema and a.specific_name = b.specific_name "
       "where a.routine_schema  = upper('%s') "
       "and   a.routine_name = upper('%s') "
       ") "
@@ -1614,7 +1616,7 @@ PJXNODE jx_sqlProcedureMeta (PUCHAR procedureName)
    return jx_sqlResultSet(sqlStmt, 0 , 99999 , 0 , NULL);
 }
 /* ------------------------------------------------------------- */
-// Get Meta from All types - only works if names are uniqye accross
+// Get Meta from All types - only works if names are unique accross
 // scalar / table / procedures.
 // Alternative use The specific version
 /* ------------------------------------------------------------- */
@@ -1649,6 +1651,7 @@ PJXNODE jx_sqlRoutineMeta (PUCHAR routineName)
          "numeric_precision_radix,"
          "datetime_precision,"
          "is_nullable,"
+         "data_type_name,"
          "max(ifnull(numeric_precision , 0) + 2, ifnull(character_maximum_length,0))  buffer_length "
       "from sysroutines  a "
       "left join  sysparms b "
@@ -1695,6 +1698,7 @@ PJXNODE jx_sqlSpecificRoutineMeta (PUCHAR routineName)
          "numeric_precision_radix,"
          "datetime_precision,"
          "is_nullable,"
+         "data_type_name,"
          "max(ifnull(numeric_precision , 0) + 2, ifnull(character_maximum_length,0))  buffer_length "
       "from sysroutines  a "
       "left join  sysparms b "
@@ -1832,10 +1836,13 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
 
    for (i=0; i < numerOfParms ; i++) {
       int nullterm = 0;
+      PUCHAR userType = jx_GetValuePtr (p->pNode , "data_type_name" , "");
       p = &procParms[i];
 
       p->buffer = bufferPos;
       p->type = 0 == atoi (jx_GetValuePtr (p->pNode , "numeric_precision" , "0")) ? VALUE:LITERAL;
+      // Pollyfill for BOOLEAN pre 7.5
+      p->isBool = BeginsWith (userType , "BOOL");
 
       switch (p->sqlType ) {
          case SQL_CHAR:
@@ -1850,8 +1857,13 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
             p->inLen   = currentLength (p, p->pData ? strlen(p->pData):0);
             p->bufLen  = atol (jx_GetValuePtr   (p->pNode , "buffer_length" , "0"));
             if ( p->inLen != SQL_NULL_DATA ) {
-               if (p->inLen > p->bufLen) p->inLen = p->bufLen;
-               substr( p->buffer , p->pData , p->inLen);
+               // Pollyfill for BOOLEAN pre 7.5
+               if (p->isBool) {
+                  p->bufLen = 1;
+                  strcpy ( p->buffer , (0==strcmp (p->buffer, "true") ? "1":"0"));
+               } else {
+                  substr( p->buffer , p->pData , p->inLen);
+               }
             }
             *(p->buffer + p->bufLen) = '\0'; // Always keep an final zertermination at the end of buffer
             nullterm = 1 ; // Keep the zerotermination in the buffer;
@@ -1938,7 +1950,12 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
                case SQL_DECIMAL:
                case SQL_NUMERIC:
                   *(p->buffer + p->bufLen) = '\0'; // Always keep an final zertermination at the end of buffer
-                  jx_SetValueByName(pResult , p->name,  p->buffer , p->type);
+                  // Pollyfill for BOOLEAN pre 7.5
+                  if (p->isBool) {
+                     jx_SetValueByName(pResult , p->name,  (*p->buffer == '1') ? "true":"false", LITERAL);
+                  } else {
+                     jx_SetValueByName(pResult , p->name,  p->buffer , p->type);
+                  }
                   break;
                case SQL_SMALLINT:
                   sprintf(temp, "%hd" , * (SHORT *) p->buffer);
