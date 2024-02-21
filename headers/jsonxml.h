@@ -8,6 +8,7 @@
 #include <sqlcli.h>
 #endif
 
+
 #ifdef IFSCOMPILE
  #include "/qsys.lib/include.lib/h.file/ostypes.mbr"
 #else

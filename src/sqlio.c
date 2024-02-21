@@ -44,6 +44,11 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #define NOXDB_FIRST_ROW -1
 #define NOXDB_ALL_ROWS  -1
 
+// Until 7.5
+#ifndef SQL_BOOLEAN
+#define SQL_BOOLEAN            16
+#endif
+
 
 // Globlas: TODO !!! remove to make code reintrant
 extern UCHAR jxMessage[512];
@@ -715,6 +720,8 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    LONG   limit       =  (pParms->OpDescList->NbrOfParms >= 5 ) ? limitP : NOXDB_ALL_ROWS; // all rows
    LONG   attrParm;
    LONG   i;
+   UCHAR  typeName [256];
+   LONG   tprc;
    //   PJXSQL pSQL = jx_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
    PJXSQL pSQL;
    SQLINTEGER  dummyInt , isTrue,descLen;
@@ -898,6 +905,15 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       // get display length for column
       SQLColAttribute (pSQL->pstmt->hstmt, i+1, SQL_DESC_PRECISION, NULL, 0,NULL, &pCol->displaysize);
 
+      // Pollyfill for pre 7.5
+      tprc = SQLColAttribute (pSQL->pstmt->hstmt,i+1,SQL_DESC_TYPE_NAME, typeName , sizeof(typeName),&len,&dummyInt);
+      if (tprc == SQL_SUCCESS) {
+         typeName [len] =  '\0';
+         if (strstr(typeName ,"BOOL") != NULL) {
+            pCol->coltype = SQL_BOOLEAN;
+         }
+      }
+
       // set column length to max of display length, and column name
       //   length.  Plus one byte for null terminator
       // collen[i] = max(displaysize, collen[i]);
@@ -916,6 +932,9 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       }
 
       switch( pCol->coltype) {
+         case SQL_BOOLEAN:
+            pCol->collen = pCol->collen = 6; // size of "false" + null
+            break;
          case SQL_BLOB:
          case SQL_CLOB:
  //           pCol->collen = pCol->displaysize * 2;
@@ -957,11 +976,21 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
           pSQL->maxColSize = pCol->collen;
       }
 
-      if (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE) {
-         pCol->nodeType = JX_LITERAL;
-      } else {
-         pCol->nodeType = JX_VALUE;
+      switch (pCol->coltype ) {
+         case SQL_NUMERIC    :
+         case SQL_DECIMAL    :
+         case SQL_INTEGER    :
+         case SQL_SMALLINT   :
+         case SQL_FLOAT      :
+         case SQL_REAL       :
+         case SQL_BIGINT     :
+         case SQL_BOOLEAN    :
+            pCol->nodeType = JX_LITERAL;
+            break;
+         default:
+            pCol->nodeType = JX_VALUE;
       }
+
    }
 
    return pSQL;
@@ -1024,6 +1053,9 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
             memset ( buf + buflen, 0 , 2); // Zero term - also UNICODE
 
             switch( pCol->coltype) {
+               case SQL_BOOLEAN    :
+                  jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , (*buf == '1' || *buf == 't') ? "true":"false",  pCol->nodeType );
+                  break;
                case SQL_WCHAR:
                case SQL_WVARCHAR:
                case SQL_GRAPHIC:
@@ -1285,6 +1317,7 @@ PJXNODE jx_buildMetaFields ( PJXSQL pSQL )
          case SQL_VARGRAPHIC:  type = "vargraphic"     ; break;
          case SQL_BIGINT     : type = "bigint"         ; break;
          case SQL_TINYINT    : type = "tinyint"        ; break;
+         case SQL_BOOLEAN    : type = "boolean"        ; break;
 
          default: {
             if (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE ) {
@@ -1606,7 +1639,7 @@ PJXNODE jx_sqlProcedureMeta (PUCHAR procedureName)
          "max(ifnull(numeric_precision , 0) + 2, ifnull(character_maximum_length,0))  buffer_length "
       "from sysprocs a "
       "left join  sysparms b "
-      "on a. = b.specific_schema and a.specific_name = b.specific_name "
+      "on a.specific_schema = b.specific_schema and a.specific_name = b.specific_name "
       "where a.routine_schema  = upper('%s') "
       "and   a.routine_name = upper('%s') "
       ") "
@@ -1732,6 +1765,7 @@ static SQLSMALLINT textType2SQLtype (PUCHAR parmType, PUCHAR parmName)  {
    if  (0 == strcmp (parmType , "REAL"))                  return(SQL_REAL);
    if  (0 == strcmp (parmType , "NUMERIC"))               return(SQL_NUMERIC);
    if  (0 == strcmp (parmType , "DOUBLE PRECISION"))      return(SQL_DOUBLE);
+   if  (0 == strcmp (parmType , "BOOLEAN"))               return(SQL_BOOLEAN);
 
    jx_joblog("Unsupported datatype %s for %s" , parmType, parmName);
 
@@ -1952,7 +1986,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
                   *(p->buffer + p->bufLen) = '\0'; // Always keep an final zertermination at the end of buffer
                   // Pollyfill for BOOLEAN pre 7.5
                   if (p->isBool) {
-                     jx_SetValueByName(pResult , p->name,  (*p->buffer == '1') ? "true":"false", LITERAL);
+                     jx_SetValueByName(pResult , p->name,  (*p->buffer == '1' || *p->buffer == 't') ? "true":"false", LITERAL);
                   } else {
                      jx_SetValueByName(pResult , p->name,  p->buffer , p->type);
                   }
