@@ -3257,7 +3257,9 @@ PJXNODE  jx_SetNullByName (PJXNODE pNode, PUCHAR Name)
    ------------------------------------------------------------- */
 PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value)
 {
-   return jx_SetValueByName(pNode , Name , Value == OFF ? "false":"true", LITERAL );
+   UCHAR boolValue [10];
+   strcpy ( boolValue , (Value == OFF) ? "false":"true"); // optimizer fails to do this on the call
+   return jx_SetValueByName(pNode , Name , boolValue, LITERAL );
 }
 /* -------------------------------------------------------------
    Set String by name

@@ -31,7 +31,7 @@
 #include "mem001.h"
 #include "varchar.h"
 
-/* 
+/*
 extern  UCHAR BraBeg;
 extern  UCHAR BraEnd;
 extern  UCHAR CurBeg;
@@ -39,7 +39,7 @@ extern  UCHAR CurEnd;
 extern  UCHAR Quot  ;
 extern  UCHAR Apos  ;
 extern  UCHAR BackSlash;
-*/ 
+*/
 
 extern UCHAR jobSlash       ;
 extern UCHAR jobBackSlash   ;
@@ -301,7 +301,7 @@ BOOL jx_ParseJsonNode(PJXCOM pJxCom, JSTATE state,  PUCHAR name , PJXNODE pCurNo
 
         sep = getTok(pJxCom);
         if (sep.isEof) {
-          jx_SetMessage( "Invalid end of stream at (%d:%d) token number: %d. Was expecting an sepeator or end of object"
+          jx_SetMessage( "Invalid end of stream at (%d:%d) token number: %d. Was expecting an seperator or end of object"
                                , pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo);
           pJxCom->State = XML_EXIT_ERROR;
           return TRUE;
@@ -367,4 +367,3 @@ BOOL jx_ParseJson(PJXCOM pJxCom)
    return (pJxCom->State == XML_EXIT_ERROR);
 
 }
-
