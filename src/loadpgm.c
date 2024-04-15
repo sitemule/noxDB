@@ -36,7 +36,7 @@ extern UCHAR Masterspace;
 
 
 /* ------------------------------------------------------------- */
-_SYSPTR loadServiceProgram (PUCHAR lib , PUCHAR srvPgm)
+_SYSPTR jx_loadServiceProgram (PUCHAR lib , PUCHAR srvPgm)
 {
    UCHAR srvPgm_  [11];
    UCHAR lib_     [11];
@@ -54,7 +54,7 @@ _SYSPTR loadServiceProgram (PUCHAR lib , PUCHAR srvPgm)
    return pgm;
 }
 /* ------------------------------------------------------------- */
-_SYSPTR loadProc (_SYSPTR srvPgm ,  PUCHAR procName)
+_SYSPTR jx_loadProc (_SYSPTR srvPgm ,  PUCHAR procName)
 {
    _SYSPTR proc;
    int type;
@@ -77,13 +77,13 @@ _SYSPTR loadProc (_SYSPTR srvPgm ,  PUCHAR procName)
    return proc;
 }
 /* ------------------------------------------------------------- */
-_SYSPTR loadServiceProgramProc (PUCHAR lib , PUCHAR srvPgm, PUCHAR procName)
+_SYSPTR jx_loadServiceProgramProc (PUCHAR lib , PUCHAR srvPgm, PUCHAR procName)
 {
-    _SYSPTR pgm = loadServiceProgram (lib , srvPgm);
-    return loadProc (pgm, procName);
+    _SYSPTR pgm = jx_loadServiceProgram (lib , srvPgm);
+    return jx_loadProc (pgm, procName);
 }
 /* ------------------------------------------------------------- */
-_SYSPTR loadProgram (PUCHAR lib , PUCHAR pgm)
+_SYSPTR jx_loadProgram (PUCHAR lib , PUCHAR pgm)
 {
    UCHAR pgm_  [11];
    UCHAR lib_  [11];
@@ -227,7 +227,7 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
    if ( pMethod->userMethodIsProgram) {
       _CALLPGMV ( &pMethod->userMethod , argArray , parmIx );
    } else {
-      callProc (pMethod->userMethod , argArray , parmIx);
+      jx_callProc (pMethod->userMethod , argArray , parmIx);
    }
 
    pReturnObject = jx_NewObject(NULL);
@@ -362,7 +362,7 @@ PJXNODE  jx_CallProgram (PUCHAR library , PUCHAR program, PJXNODE parmsP, ULONG 
    strcpy(pgm.program   , program);
 
    pgm.userMethodIsProgram = TRUE;
-   pgm.userMethod = loadProgram ( library, program);
+   pgm.userMethod = jx_loadProgram ( library, program);
    pResult = call (&pgm, parms , options);
    jx_NodeDelete( pgm.pPcml);
    return pResult;
@@ -388,7 +388,7 @@ PJXNODE  jx_CallProcedure (PUCHAR library, PUCHAR srvPgm, PUCHAR procedure, PJXN
    strcpy(pgm.program   , srvPgm);
    strcpy(pgm.procedure , procedure);
 
-   pgm.userMethod = loadServiceProgramProc ( library, srvPgm , procedure);
+   pgm.userMethod = jx_loadServiceProgramProc ( library, srvPgm , procedure);
    pResult = call (&pgm, parms , options);
    jx_NodeDelete( pgm.pPcml);
    return pResult;

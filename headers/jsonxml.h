@@ -239,11 +239,11 @@ typedef _Packed struct  _JXDELIM     {
 	UCHAR     Dollar      ;
 } JXDELIM , * PJXDELIM;
 
-_SYSPTR loadServiceProgram (PUCHAR lib , PUCHAR srvPgm);
-_SYSPTR loadProc (_SYSPTR srvPgm ,  PUCHAR procName);
-_SYSPTR loadServiceProgramProc (PUCHAR lib , PUCHAR srvPgm, PUCHAR procName);
-_SYSPTR loadProgram (PUCHAR lib , PUCHAR pgm);
-void callProc ( _SYSPTR proc , void * args [64] , SHORT parms);
+_SYSPTR jx_loadServiceProgram (PUCHAR lib , PUCHAR srvPgm);
+_SYSPTR jx_loadProc (_SYSPTR srvPgm ,  PUCHAR procName);
+_SYSPTR jx_loadServiceProgramProc (PUCHAR lib , PUCHAR srvPgm, PUCHAR procName);
+_SYSPTR jx_loadProgram (PUCHAR lib , PUCHAR pgm);
+void jx_callProc ( _SYSPTR proc , void * args [64] , SHORT parms);
 
 
 typedef _Packed struct _JXMETHOD  {

@@ -37,7 +37,7 @@ typedef _SYSPTR (*ILEPROC0)();
     exists to do this AFAIN, _CALLPGMV "only" works for programs - not for
     preocedures, so we have to live with this for now
 \* --------------------------------------------------------------------------- */
-void callProc ( _SYSPTR proc , void *  p[64] , SHORT parms)
+void jx_callProc ( _SYSPTR proc , void *  p[64] , SHORT parms)
 {
    // Cast will not work on SYSPTR to PROC pointer so we need a VOID pointer in the middle
    PVOID pv =  proc;
