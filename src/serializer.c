@@ -29,6 +29,14 @@
 
 
 extern int   OutputCcsid;
+// Backwards compatibility with old streamer issue #87
+extern  UCHAR BraBeg;
+extern  UCHAR BraEnd;
+extern  UCHAR CurBeg;
+extern  UCHAR CurEnd;
+extern  UCHAR Quot  ;
+
+
 
 
 /* ---------------------------------------------------------------------------
@@ -201,6 +209,16 @@ void  jx_AsJsonStream (PJXNODE pNode, PSTREAM pStream)
 	if (pNode == NULL) {
 		stream_puts (pStream, "null");
 	} else {
+
+		// Issue #87
+		// Backwards support form older streamer implementation that dont set control chars
+		PJWRITE pJw = pStream->handle;
+		if ( pJw->curBeg == '\0' ) pJw->curBeg = CurBeg;
+		if ( pJw->curEnd == '\0' ) pJw->curEnd = CurEnd;
+		if ( pJw->braBeg == '\0' ) pJw->braBeg = BraBeg;
+		if ( pJw->braEnd == '\0' ) pJw->braEnd = BraEnd;
+		if ( pJw->quote  == '\0' ) pJw->quote  = Quot;
+
 		jsonStreamPrintNode (pNode, pStream, 0);
 	}
 }
