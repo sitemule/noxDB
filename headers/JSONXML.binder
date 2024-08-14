@@ -173,5 +173,6 @@ STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('JSONXML01')
   EXPORT SYMBOL("jx_ProcedureMeta")
   EXPORT SYMBOL("jx_sqlSpecificRoutineMeta")
   EXPORT SYMBOL("jx_sqlSetRootName")
+  EXPORT SYMBOL("jx_sqlGetOptions")
 
 ENDPGMEXP

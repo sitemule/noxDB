@@ -509,6 +509,7 @@ ULONG     jx_NodeCheckSum (PJXNODE pNode);
 
 PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value);
 PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value);
+PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value);
 PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value);
 PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value);
 PJXNODE  jx_SetNullByName (PJXNODE pNode, PUCHAR Name);

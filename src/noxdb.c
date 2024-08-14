@@ -3261,6 +3261,13 @@ PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value)
    strcpy (boolValue , (Value == OFF) ? "false":"true"); // optimizer fails to do this on the call
    return jx_SetValueByName(pNode , Name , boolValue, LITERAL );
 }
+PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value)
+{
+   UCHAR value [2];
+   value [0] = Value;
+   value [1] = '\0';
+   return jx_SetValueByName(pNode , Name , value, VALUE );
+}
 /* -------------------------------------------------------------
    Set String by name
    ------------------------------------------------------------- */

@@ -3681,6 +3681,31 @@ void jx_sqlSetOptions (PJXNODE pOptionsP)
       pNode = jx_GetNodeNext(pNode);
    }
 }
+/* -------------------------------------------------------------------
+ * Get the current options from connection as string
+ * ------------------------------------------------------------------- */
+VARCHAR jx_sqlGetOptions ()
+{
+   VARCHAR ret;
+   PSQLOPTIONS po = &pConnection->options;
+   PJXNODE pOptions = jx_NewObject(NULL);
+
+
+   jx_SetBoolByName (pOptions , "upperCaseColName" , po->upperCaseColName);
+   jx_SetBoolByName (pOptions , "autoParseContent" , po->autoParseContent);
+   jx_SetCharByName (pOptions , "decimalPoint"     , po->DecimalPoint    );
+   jx_SetBoolByName (pOptions , "hexSort"          , po->hexSort         );
+   jx_SetBoolByName (pOptions , "sqlNaming"        , po->sqlNaming       );
+   jx_SetCharByName (pOptions , "dateSep"          , po->DateSep         );
+   jx_SetCharByName (pOptions , "dateFmt"          , po->DateFmt         );
+   jx_SetCharByName (pOptions , "timeSep"          , po->TimeSep         );
+   jx_SetCharByName (pOptions , "timeFmt"          , po->TimeFmt         );
+
+   ret = jx_AsJsonText (pOptions);
+   jx_NodeDelete (pOptions);
+   return ret;
+
+}
 /* ------------------------------------------------------------- */
 PJXSQLCONNECT jx_sqlConnect(PJXNODE pOptionsP)
 {

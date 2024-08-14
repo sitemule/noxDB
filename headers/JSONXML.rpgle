@@ -2081,6 +2081,9 @@ Dcl-PR jx_sqlSetOptions extproc(*CWIDEN : 'jx_sqlSetOptions');
   options pointer value options(*string : *nopass);
 End-PR;
 
+Dcl-PR jx_sqlGetOptions varchar(32767) extproc(*CWIDEN : 'jx_sqlGetOptions');
+End-PR;
+
 ///
 // SQL : Set SQL root name for reultset
 //
