@@ -25,7 +25,8 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt
     example1();
     example2();
     example3();
-    
+    example4();
+
     *INLR = *ON;
 
 // ------------------------------------------------------------------------------------
@@ -36,28 +37,28 @@ dcl-proc example1;
 
     // This is he data structure we map the object graph into:
     // The name "rows" is in the data-into statement
-    // The "dim" causes it to be an array: 
+    // The "dim" causes it to be an array:
     dcl-DS rows dim(2) qualified inz;
         id   int(10);
         name varchar(256);
-    end-ds;  
+    end-ds;
 
     dcl-s pJson     pointer;
-    dcl-s i	        int(10);  
+    dcl-s i	        int(10);
     dcl-s handle	char(1);
 
     // Make some data we can play with
     for i = 1 to %elem(rows) ;
         rows(i).id = i;
-        rows(i).name = 'John ' + %char(i);
-    endfor;                                                           
+        rows(i).name = 'John Smørrebrødspålæg' + %char(i);
+    endfor;
 
     // Now the magic: the pJson pointer is send to the mapper and returns as an object graph
     data-gen rows %data(handle: '') %gen(json_DataGen(pJson));
-    
+
     // Let's see what we got
     json_WriteJsonStmf(pJson:'/prj/noxdb/testout/dump-payload.json':1208:*OFF);
-       
+
 
     // Always remember to delete used memory !!
     json_delete(pJson);
@@ -71,7 +72,7 @@ dcl-proc example2;
 
 
     dcl-s pJson     pointer;
-    dcl-s i	        int(10);  
+    dcl-s i	        int(10);
     dcl-s handle	char(1);
 
     // This is the data structure we map the object graph into:
@@ -82,10 +83,10 @@ dcl-proc example2;
         name        varchar(256);
         ucs2name    ucs2(256);
         utf8name    varchar(256) ccsid(*utf8);
-        //utf16name   varchar(256) ccsid(*UTF16); 
+        //utf16name   varchar(256) ccsid(*UTF16);
         myDate      date(*ISO);
         myTime      time(*ISO);
-        myTimeStamp timestamp; 
+        myTimeStamp timestamp;
         canbenull   varchar(100) nullind;
         //dynarr      char(1) dim(*AUTO:100);
         dcl-ds substructure;
@@ -95,7 +96,7 @@ dcl-proc example2;
             margin      zoned(5:3);
             pi          float(8);
         end-ds;
-    end-ds;  
+    end-ds;
 
     // Initialize with some fun:
     alltypes.id = 123;
@@ -120,7 +121,7 @@ dcl-proc example2;
 
     // Now the magic: the pJson pointer is send to the mapper and returns as an object graph
     data-gen alltypes %data(handle: '') %gen(json_DataGen(pJson));
-    
+
     // Let's see what we got
     json_WriteJsonStmf(pJson:'/prj/noxdb/testout/dump-payload2.json':1208:*OFF);
 
@@ -136,15 +137,15 @@ dcl-proc example3;
 
     // This is he data structure we map the object graph into:
     // The name "rows" is in the data-into statement
-    // The "dim" causes it to be an array: 
+    // The "dim" causes it to be an array:
     dcl-DS row  qualified inz;
         id   int(10);
         name varchar(256);
-    end-ds;  
+    end-ds;
 
     dcl-s pArr	    pointer;
     dcl-s pRow      pointer;
-    dcl-s i	        int(10);  
+    dcl-s i	        int(10);
     dcl-s handle	char(1);
 
     pArr = json_newArray();
@@ -158,14 +159,53 @@ dcl-proc example3;
         data-gen row %data(handle: '') %gen(json_DataGen(pRow));
         json_arrayPush (pArr : pRow);
 
-    endfor;                                                           
+    endfor;
 
-    
+
     // Let's see what we got
     json_WriteJsonStmf(pArr:'/prj/noxdb/testout/dump-payload3.json':1208:*OFF);
-       
 
-    // Always remember to delete used memory. pArr "owns" all object generated 
+
+    // Always remember to delete used memory. pArr "owns" all object generated
     json_delete(pArr);
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// Generating JSON or XML by placing the datastructure in the objectgraph
+// CCSID testing -  The test code is build for CCSID 500, so the job need to be the same
+// Ensure you see the the right ccsid of the data:
+// 1) Set your emullator to ccsid(500)
+// 2) Logon to your 5250 emmulator
+// 3) Use CHGJOB CCSID(500) BEFORE you load any program using noxDb
+//        noxDb will initiate the delimiters at invocation time
+// 4) Now call you program
+// 5) use DSPF '/prj/noxdb/testout/ccsid-test.json'
+// It will show the correct national chars
+// ------------------------------------------------------------------------------------
+dcl-proc example4;
+
+
+    // This is he data structure we map the object graph into:
+    // The name "row" is in the data-into statement
+    // The *JOBRUN will ensure the "text" is in the running job ccsid that noxDb are using
+    dcl-DS row qualified inz;
+        text varchar(256) ccsid(*JOBRUN);
+    end-ds;
+
+    dcl-s pJson     pointer;
+    dcl-s handle	char(1);
+
+    row.text = 'Smørrebrødspålæg';
+
+    // Now the magic: the pJson pointer is send to the mapper and returns as an object graph
+    data-gen row %data(handle: '') %gen(json_DataGen(pJson));
+
+    // Let's see what we got
+    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/ccsid-test.json':1208:*OFF);
+
+
+    // Always remember to delete used memory !!
+    json_delete(pJson);
 
 end-proc;

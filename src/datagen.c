@@ -33,7 +33,7 @@
 #else
 #include  "/QSYS.LIB/QOAR.LIB/H.FILE/QRNTYPES.MBR"
 #include  "/QSYS.LIB/QOAR.LIB/H.FILE/QRNDTAGEN.MBR"
-#endif 
+#endif
 
 
 static PJXNODE * ppRoot;
@@ -49,7 +49,13 @@ typedef void (*JX_DATAGEN)();
 void  jx_dataGenMapper (QrnDgParm_T * pParms)
 {
     static PJXNODE pNode;
-    static BOOL first;
+    static BOOL first = false;
+    static BOOL buildIconv  = true;
+
+    if (buildIconv) {
+        buildIconv  = false;
+        iconvCd = XlateOpenDescriptor (13488, 0 , false);
+    }
 
     switch ( pParms->event) {
         case QrnDgEvent_01_StartMultiple    : {
@@ -59,10 +65,6 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             break;
         }
         case QrnDgEvent_03_Start            : {
-
-            if (memcmp (&iconvCd , 0 , sizeof(iconvCd)) == 0) {
-                iconvCd = XlateOpenDescriptor (13488, 0 , false);
-            }
             pNode = NULL;
             first = true;
             break;
@@ -75,7 +77,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             UCHAR name [256];
             LONG namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
-            
+
             pObj  = jx_NewObject(NULL);
             jx_NodeRename(pObj ,  name);
             jx_NodeInsertChildTail (pNode , pObj);
@@ -98,7 +100,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
 
             pArr = jx_NewArray(NULL);
             jx_NodeRename(pArr ,  name);
-            jx_NodeInsertChildTail (pNode , pArr);  
+            jx_NodeInsertChildTail (pNode , pArr);
             pNode = pArr;
             if (first) {
                 first = false;
@@ -119,7 +121,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             pArr = jx_NewArray(NULL);
             jx_NodeRename(pArr ,  name);
             jx_NodeInsertChildTail (pNode , pArr);
-            pNode = pArr; 
+            pNode = pArr;
             if (first) {
                 first = false;
                 *ppRoot = pNode;
@@ -138,7 +140,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             UCHAR name [256];
             ULONG namelen;
             NODETYPE  type;
-            
+
             namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
@@ -151,15 +153,15 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
                     type = LITERAL;
                     break;
 
-                // Numeric  
+                // Numeric
                 case QrnDatatype_Decimal  :
                 case QrnDatatype_Integer  :
                 case QrnDatatype_Unsigned :
-                case QrnDatatype_Float    : 
+                case QrnDatatype_Float    :
                     if (*pValue  == '+') pValue ++; // Skip the + sign
                     type = LITERAL;
                     break;
-                default: 
+                default:
                     type = VALUE;
                     break;
             }
@@ -179,8 +181,8 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
 
 /* 	---------------------------------------------------------------------------
     --------------------------------------------------------------------------- */
-JX_DATAGEN jx_dataGen (PJXNODE * ppNode) 
+JX_DATAGEN jx_dataGen (PJXNODE * ppNode)
 {
-    ppRoot = ppNode; // not reentrant 
+    ppRoot = ppNode; // not reentrant
     return &jx_dataGenMapper;
 }
