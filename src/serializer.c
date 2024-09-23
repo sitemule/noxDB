@@ -177,6 +177,18 @@ static void jsonStreamPrintValue   (PJXNODE pNode, PSTREAM pStream)
 		}
 	}
 }
+/* -- Experimental for issue90 ----------------------------------------------- */
+/* Transcode - analyse what node type it might be                              */
+/* XML Elements - if no children then a value else an object object            */
+/* --------------------------------------------------------------------------- */
+static void jsonStreamPrintTranscode (PJXNODE pNode, PSTREAM pStream, SHORT level)
+{
+	if (pNode->pNodeChildHead) {
+		jsonStreamPrintObject  (pNode, pStream, level);
+	} else {
+		jsonStreamPrintValue   (pNode, pStream);
+	}
+}
 /* --------------------------------------------------------------------------- */
 /* Invalid node types a just jeft out                                          */
 /* --------------------------------------------------------------------------- */
@@ -195,6 +207,9 @@ static void  jsonStreamPrintNode (PJXNODE pNode, PSTREAM pStream, SHORT level)
 		case POINTER_VALUE:
 			jsonStreamPrintValue   (pNode, pStream);
 			break;
+
+		default:
+			jsonStreamPrintTranscode (pNode, pStream, level);
 	 }
 }
 /* --------------------------------------------------------------------------- */
