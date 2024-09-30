@@ -82,7 +82,8 @@ hdr:
 githash:
 	-$(eval gitshort := $(shell git rev-parse --short HEAD))
 	-$(eval githash := $(shell git rev-parse --verify HEAD))
-	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(gitshort) (hash: $(githash) )\")" > src/githash.c
+	-$(eval ts := $(shell date +'%F-%H.%M.%S' ))
+	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(gitshort) (hash: $(githash) ) build: $(ts)\")" > src/githash.c
 
 %.bnddir:
 	@-system -q "DLTBNDDIR BNDDIR($(BIN_LIB)/$*)"
