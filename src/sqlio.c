@@ -2116,12 +2116,20 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
 
       pNode    =  jx_GetNodeChild (pRoutineMeta);
       for (i=0; pNode; i++) {
+         UCHAR tempName [256];
          p = &procParms[i];
          p->name = jx_GetValuePtr    (pNode , "parameter_name" , "");
+         if (format & (JX_CAMEL_CASE)) {
+            camelCase(tempName , p->name);
+         } else {
+            strcpy(tempName, p->name);
+         }
+
+
          p->mode = text2parmtype (jx_GetValuePtr    (pNode , "parameter_mode" , ""));
          p->sqlType  = textType2SQLtype (jx_GetValuePtr (pNode , "data_type" , ""), p->name);
 
-         if ((p->mode == SQL_PARAM_INPUT && NULL == jx_GetNode  (pInParms, p->name))
+         if ((p->mode == SQL_PARAM_INPUT && NULL == jx_GetNode  (pInParms, tempName))
          ||  (p->mode == SQL_PARAM_OUTPUT)) {
             // Omit it from parmist, reuse this slot for next parameter
             i --;
@@ -2130,9 +2138,9 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
                stmt += sprintf (stmt , "%s%s=>"  , comma , p->name);
             }
             //if (ON ==  jx_IsLiteral (pNode ) ) {
-            //   stmt += sprintf (stmt , "%s" , jx_GetValuePtr(pInParms , p->name , "0"));
+            //   stmt += sprintf (stmt , "%s" , jx_GetValuePtr(pInParms , tempName , "0"));
             //} else {
-               stmt += sprintf (stmt , "'%s'" , jx_GetValuePtr(pInParms , p->name , ""));
+               stmt += sprintf (stmt , "'%s'" , jx_GetValuePtr(pInParms , tempName , ""));
             //}
             comma = ",";
             numerOfParms = i+1;
