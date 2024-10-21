@@ -983,6 +983,7 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
          case SQL_SMALLINT   :
          case SQL_FLOAT      :
          case SQL_REAL       :
+         case SQL_DOUBLE     :
          case SQL_BIGINT     :
          case SQL_BOOLEAN    :
             pCol->nodeType = JX_LITERAL;
