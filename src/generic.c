@@ -191,8 +191,6 @@ void iconvPutc( FILE * f, iconv_t * pIconv, UCHAR c)
 #pragma convert(0)
 /* ---------------------------------------------------------------------------
     --------------------------------------------------------------------------- */
-/* ---------------------------------------------------------------------------
-    --------------------------------------------------------------------------- */
 void  swapEndian(PUCHAR buf, LONG len)
 {
    LONG i;
@@ -203,6 +201,36 @@ void  swapEndian(PUCHAR buf, LONG len)
       buf[i] = buf[i+1];
       buf[i+1] = c;
    }
+}
+/* ---------------------------------------------------------------------------
+    --------------------------------------------------------------------------- */
+LONG  swapEndianString(PUCHAR buf)
+{
+   LONG lengthInBytes = 0;
+   UCHAR c;
+   PUCHAR p1 = buf, p2 = buf+1;
+
+   while (*p1 || *p2) {
+      c = *p1;
+      *p1 = *p2;
+      *p2 = c;
+      p1+=2;
+      p2+=2;
+      lengthInBytes += 2;
+   }
+   return lengthInBytes;
+}
+LONG  strlenUnicode(PUCHAR buf)
+{
+   LONG lengthInBytes = 0;
+   PUCHAR p1 = buf, p2 = buf+1;
+
+   while (*p1 || *p2) {
+      p1+=2;
+      p2+=2;
+      lengthInBytes += 2;
+   }
+   return lengthInBytes;
 }
 /* ---------------------------------------------------------------------------
     --------------------------------------------------------------------------- */
@@ -227,14 +255,14 @@ void  swapEndian(PUCHAR buf, LONG len)
    return len;
 }
 /* ---------------------------------------------------------------------------
-    Escape utf-8 into unicde 
+    Escape utf-8 into unicde
     \uFFFF where FFFF is the hexadecimal unicode value
     --------------------------------------------------------------------------- */
 void utf8toUnicode (PUCHAR * inbuf , size_t * inbytesleft, PUCHAR * outbuf, size_t *outbytesleft , ESCAPE_ENCODE encode )
 {
-   int patchLen ; 
+   int patchLen ;
    patchLen = sprintf(*outbuf,"\\FFFF");
-   *outbuf += patchLen; 
+   *outbuf += patchLen;
    outbytesleft -= patchLen;
    *inbuf += 2;
    inbytesleft -= 2;
@@ -304,5 +332,3 @@ UCHAR unicode2ebcdic (USHORT c)
    if (c >= 'a' && c <= 'f') return ( c - 'a' + 10);
    return 0;
 }
-
-

@@ -1025,6 +1025,7 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
   BOOL done = FALSE;
   BOOL isXml = FALSE;
   BOOL isAscii = FALSE;
+  BOOL isUnicode  = FALSE;
 
   // need temp version since it is modified
   substr ( buf, pIn , 128);
@@ -1032,8 +1033,26 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
   if (buf [0] == 0xef && buf[1] == 0xbb && buf [2] == 0xbf) { // utf8
      InputCcsid = 1208;
      isAscii = TRUE;
-     p = buf + 3;
+     p = buf + 3 ;
      outbuf = pIn + 3;
+  } else if (buf [0] == 0xff && buf[1] == 0xfe) { // Unicode LE BOM
+     InputCcsid = 1200;
+     p = buf + 2 + 1; // +1 so the  "bumper" later (  the  -1 ) works
+     outbuf = pIn + 2;
+     pJxCom->LittleEndian  = TRUE;
+     pJxCom->isJson = FALSE;
+     isAscii = FALSE;
+     isUnicode = TRUE;
+     done = TRUE; // JSON in Unicode LE is not supported
+  } else if (buf [0] == 0xfe && buf[1] == 0xff) { // Unicode BE BOM
+     InputCcsid = 1200;
+     p = buf + 2 + 1; // +1 so the  "bumper" later (  the  -1 ) works
+     outbuf = pIn + 2;
+     pJxCom->LittleEndian  = FALSE;
+     pJxCom->isJson = FALSE;
+     isAscii = FALSE;
+     isUnicode = TRUE;
+     done = TRUE; // JSON in Unicode LE is not supported
   } else {
      p = buf;
      outbuf = pIn;
@@ -1136,7 +1155,7 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
       InputCcsid = 1208;  // Default to UTF-8
     }
 
-    if (*(p+1) == 0x00) { // UNICODE litle endian
+    if (*(p+1) == 0x00) { // Little endian
       pJxCom->LittleEndian  = TRUE;
       InputCcsid = 1200;
     }
@@ -1161,6 +1180,8 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
       }
       #pragma convert(0)
     }
+  } else if (isUnicode) {
+   // NOP !! we are good - Unicode with BOM
   } else if (strlen(buf) == 0) {
     InputCcsid = 0; // Empty string; build from scratch XML
   } else {
@@ -1799,21 +1820,31 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
    // Peek the first, t0 detect the encoding
    Buf = detectEncoding(pJxCom, Buf);
    if (pJxCom->UseIconv) {
-      int inlen = strlen(Buf);
+      int inlen;
       int templen;
-      PUCHAR temp = memAlloc(inlen * 4); // Need room for unicode
+      PUCHAR temp;
 
       if (InputCcsid == 1208) {
+         inlen = strlen(Buf);
+         temp = memAlloc(inlen * 4); // Need room for unicode
          templen = XlateUtf8ToSbcs (temp , Buf , inlen , 0);
-      } else if (pJxCom->LittleEndian) {
-         swapEndian(Buf , inlen);
+      } else if (InputCcsid == 1200) {
+         if (pJxCom->LittleEndian) {
+            inlen = swapEndianString(Buf);
+         } else {
+            inlen = strlenUnicode(Buf);
+         }
+         temp = memAlloc(inlen); // inlen is in bytes not chars
          templen  = XlateBufferQ(temp , Buf , inlen , InputCcsid , 0);
-         swapEndian(Buf , inlen);
+         // swapEndian(Buf , inlen);
       } else {
+         inlen = strlen(Buf);
+         temp = memAlloc(inlen * 4); // Need room for unicode
          templen  = XlateBufferQ(temp , Buf , inlen , InputCcsid , 0);
       }
       pJxCom->pStreamBuf = temp;
-      pJxCom->pStreamBuf [templen] = '\0';
+      pJxCom->pStreamBuf [templen]   = '\0';
+      pJxCom->pStreamBuf [templen+1] = '\0';
       pRoot = SelectParser (pJxCom);
       memFree (&temp);
 
@@ -1967,7 +1998,7 @@ PJXNODE jx_ParseFile(PUCHAR FileName, PUCHAR pOptions)
    fseek( f , 0L, SEEK_SET);
 
    // read it all
-   pStreamBuf = memAlloc (fileSize+1);
+   pStreamBuf = memAlloc (fileSize+2);
    len = fread(pStreamBuf, 1 , fileSize  , f );
    fclose(f);
 
@@ -1980,6 +2011,7 @@ PJXNODE jx_ParseFile(PUCHAR FileName, PUCHAR pOptions)
 
    // make it a string
    pStreamBuf[len] = '\0';
+   pStreamBuf[len+1] = '\0';
    pFirstChar = pStreamBuf;
 
    pRoot = jx_parseStringCcsid(pFirstChar,0);

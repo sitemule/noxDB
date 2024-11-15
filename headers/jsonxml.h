@@ -288,6 +288,8 @@ int cpy (PUCHAR out , PUCHAR in)                                  ;
 void iconvWrite( FILE * f, iconv_t * pIconv, PUCHAR Value, BOOL Esc);
 void iconvPutc( FILE * f, iconv_t * pIconv, UCHAR c);
 void swapEndian(PUCHAR buf, LONG len)                                ;
+LONG  swapEndianString(PUCHAR buf);
+LONG  strlenUnicode(PUCHAR buf);
 LONG xlate(PJXCOM pJxCom, PUCHAR outbuf, PUCHAR inbuf , LONG len)    ;
 int readBlock(PJXCOM pJxCom , PUCHAR buf, int size)                  ;
 BOOL isTimeStamp(PUCHAR p)                                           ;
