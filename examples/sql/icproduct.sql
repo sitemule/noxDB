@@ -1,46 +1,48 @@
-create schema noxdbdemo; 
+﻿create schema noxdbdemo;
 drop table noxdbdemo.icproduct;
-CREATE or REPLACE TABLE noxdbdemo.icproduct ( 
-	PRODKEY DECIMAL(11, 0) NOT NULL DEFAULT 0 primary key, 
-	PRODID CHAR(30)  NOT NULL DEFAULT '' , 
-	DESCRIPTION  CHAR(256)  NOT NULL DEFAULT '' , 
-	MANUID CHAR(30)  NOT NULL DEFAULT '' , 
-	PRICE DECIMAL(11, 2) NOT NULL DEFAULT 0 , 
-	STOCKCNT DECIMAL(11, 0) NOT NULL DEFAULT 0 , 
-	STOCKDATE DATE NOT NULL DEFAULT CURRENT_DATE )   
-	  
-	RCDFMT PRODUCTR   ; 
-  
-LABEL ON TABLE noxdbdemo.icproduct 
-	IS 'noxDb demo: Product master' ; 
-  
-LABEL ON COLUMN noxdbdemo.icproduct 
-( PRODKEY IS 'Product             Key' , 
-	PRODID IS 'Product             ID' , 
-	DESCRIPTION  IS 'Description' , 
-	MANUID IS 'Manufacturer        ID' , 
-	PRICE IS 'Price' , 
-	STOCKCNT IS 'Stock               Count' , 
-	STOCKDATE IS 'Stock               Date' ) ; 
-  
-LABEL ON COLUMN noxdbdemo.icproduct 
-( PRODKEY TEXT IS 'Product Key' , 
-	PRODID TEXT IS 'Product ID' , 
-	DESCRIPTION  TEXT IS 'Description' , 
-	MANUID TEXT IS 'Manufacturer ID' , 
-	PRICE TEXT IS 'Price' , 
-	STOCKCNT TEXT IS 'Stock Count' , 
-	STOCKDATE TEXT IS 'Stock Date' ) ; 
-  
-GRANT DELETE , INSERT , SELECT , UPDATE   
-ON noxdbdemo.icproduct TO PUBLIC ; 
-  
-GRANT ALTER , DELETE , INDEX , INSERT , REFERENCES , SELECT , UPDATE   
-ON noxdbdemo.icproduct TO QPGMR WITH GRANT OPTION ; 
 
-insert into noxdbdemo.icproduct 
+create or replace table noxdbdemo.icproduct (
+	prodkey decimal(11, 0) not null default 0 primary key,
+	prodid char(30)  not null default '' ,
+	description  char(256)  not null default '' ,
+	manuid char(30)  not null default '' ,
+	price decimal(11, 2) not null default 0 ,
+	stockcnt decimal(11, 0) not null default 0 ,
+	stockdate date not null default current_date
+) rcdfmt productr   ;
+
+label on table noxdbdemo.icproduct
+	is 'noxDb demo: Product master' ;
+
+label on column noxdbdemo.icproduct (
+	prodkey     is 'Product             Key' ,
+	prodid      is 'Product             ID' ,
+	description is 'Description' ,
+	manuid      is 'Manufacturer        ID' ,
+	price       is 'Price' ,
+	stockcnt    is 'Stock               Count' ,
+	stockdate   is 'Stock               Date'
+) ;
+
+label on column noxdbdemo.icproduct (
+	prodkey 	 text is 'Product Key' ,
+	prodid   	 text is 'Product ID' ,
+	description  text is 'Description' ,
+	manuid 		 text is 'Manufacturer ID' ,
+	price 		 text is 'Price' ,
+	stockcnt 	 text is 'Stock Count' ,
+	stockdate 	 text is 'Stock Date'
+) ;
+
+grant delete , insert , select , update
+on noxdbdemo.icproduct to public ;
+
+grant alter , delete , index , insert , references , select , update
+on noxdbdemo.icproduct to qpgmr with grant option ;
+
+insert into noxdbdemo.icproduct
 (prodkey,prodid,description,manuid,price,stockcnt,stockdate)
-values 
+values
 ('10','µDIGITAL 600 ax''','Camera Plus','CASIO','-1.43','9',now()),
 ('20','µDIGITAL 600 ex','Super flex XL plus','OLYMPUS','3005.80','234',now()),
 ('30','µ-mini DIGITAL','Digitalkamera - 50 Mpix - optisk zoom: 2 x - understøttet hukommelse: xD-Picture Card','OLYMPUS','2667.12','200',now()),
@@ -50,7 +52,6 @@ values
 ('70','µmini DIGITAL S','Digitalkamera - 50 Mpix - optisk zoom: 2 x - understøtet hukommelse: xD-Picture Card - guld','OLYMPUS','1378.86','30',now()),
 ('80','µ[MJU:] DIGITAL 800','Digitalkamera - 80 Mpix - optisk zoom: 3 x - understøtet hukommelse: xD-Picture Card - møkeblåCard - møkeblå','OLYMPUS','3095.73','9',now()),
 ('90','µ[MJU:] DIGITAL 800','Digitalkamera - 50 Mpix - optisk zoom: 3 x - understøtet hukommelse: xD-Picture Card','OLYMPUS','3069.59','2',now()),
-('100','µ[MJU:] mini DIGITAL','x--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xx--------xyyyyyy','OLYMPUS','2828.08','122',now()),
 ('110','µ[MJU:] mini DIGITAL','Digitalkamera - 40 Mpix - optisk zoom: 2 x - understøttet hukommelse: xD-Picture Card - kosmisk sort','OLYMPUS','2461.64','3',now()),
 ('120','µ[MJU:] mini DIGITAL','Digitalkamera - 40 Mpix - optisk zoom: 2 x - understøttet hukommelse: xD-Picture Card - ren hvid','SAMSUNG','1234.00','22',now()),
 ('130','CAMEDIA AZ-2 Zoom','Digitalkamera - 40 Mpix - optisk zoom: 28 x - understøttet hukommelse: xD-Picture Card','SAMSUNG','1234.00','22',now()),
