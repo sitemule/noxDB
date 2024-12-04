@@ -51,7 +51,10 @@ static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
 			}
 		}
 		else if  (c  == pJw->backSlash) {
-			if (in[1] != 'u') {  // Dont double escape unicode escape sequence
+			// Dont double escape unicode escape sequence
+			if (strlen(in) < 6 || in[1] != 'u'   
+				|| !isxdigit(in[2]) || !isxdigit(in[3])
+				|| !isxdigit(in[4]) || !isxdigit(in[5])) {  
 				stream_putc(p,pJw->backSlash);
 			}
 		}
