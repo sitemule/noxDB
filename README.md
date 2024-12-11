@@ -32,8 +32,13 @@ This will create:
 ### Build the distribution.
 
 When you have made the project in library NOXDB, you can create the release as a savefile
+
 ```
 ssh my_ibm_i
 cd /prj/noxDB
 gmake clean release
 ```
+
+### Further Reading
+
+Want some further reading on noxDB?  See Andy Youens PowerWire article on [noxDB here.](https://powerwire.uk/noxdb-easily-use-json-in-rpg/)
