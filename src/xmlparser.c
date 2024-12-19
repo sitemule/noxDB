@@ -56,7 +56,8 @@ static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 			else if  (amemiBeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
 			else if  (amemiBeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
 			else if  (in[1] == HASH) {
-				int n = 0;
+				USHORT n = 0;
+				int l = 0;
 				in += 2; // Skip the '&#'
 				if (*in == 'x' || *in == 'X') {   // Hexadecimal representation
 					in ++;
@@ -65,20 +66,18 @@ static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
 						in ++;
 					}
 				} else { // Decimal representation
-					while (*in >= '0') {
+					while (*in >= '0' && *in <= '9') {
 						n = 10 * n + ((*in) - '0');
 						in ++;
 					}
 				}
-				if (n<=255) {
-					*(p++) = n;
-				// Unicode chars ...
-				} else {
-					int l = XlateBuf(p  , (PUCHAR) &n , 2 , 13488, 1208 );
-					if (l==0 || *p <= ' ') { // Invalid char or replacement char ..
-						*p = '.';
-					}
+				
+				l = XlateBuf(p  , (PUCHAR) &n , 2 , 13488, 1208 );
+				if (l==0 || *p <= ' ') { // Invalid char or replacement char ..
+					*p = '.';
 					p++;
+				} else {
+					p += l;	
 				}
 				in ++;
 			} else {
