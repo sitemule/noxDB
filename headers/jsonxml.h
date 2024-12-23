@@ -509,7 +509,9 @@ PJXNODE  jx_LookupValue (PJXNODE pDest, PUCHAR expr , BOOL16 ignorecase);
 LONG     jx_getLength (PJXNODE pNode);
 ULONG     jx_NodeCheckSum (PJXNODE pNode);
 
-PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value);
+PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, PUCHAR NullValue);
+#pragma descriptor ( void jx_SetStrByName      (void))
+
 PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value);
 PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value);
 PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value);
