@@ -2646,8 +2646,8 @@ PJXNODE static sqlErrorObject(PUCHAR sqlstmt)
 {
    PJXNODE pError = jx_NewObject(NULL);
    jx_SetBoolByName (pError , "success" ,  OFF);
-   jx_SetStrByName  (pError , "msg"     ,  jxMessage);
-   jx_SetStrByName  (pError , "stmt"    ,  sqlstmt);
+   jx_SetStrByName  (pError , "msg"     ,  jxMessage , NULL);
+   jx_SetStrByName  (pError , "stmt"    ,  sqlstmt   , NULL);
    messageList (pError);
 
    return pError;

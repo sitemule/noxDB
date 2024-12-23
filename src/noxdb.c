@@ -3303,8 +3303,14 @@ PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value)
 /* -------------------------------------------------------------
    Set String by name
    ------------------------------------------------------------- */
-PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
+PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, PUCHAR NullValue)
 {
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   if (pParms->OpDescList->NbrOfParms >= 4) {
+      if (strcmp(Value, NullValue) == 0) {
+         return jx_SetNullByName(pNode, Name);
+      }
+   }
    return jx_SetValueByName(pNode , Name , Value , VALUE );
 }
 /* -------------------------------------------------------------
@@ -3677,11 +3683,11 @@ PJXNODE jx_GetMessageObject (PUCHAR msgId , PUCHAR msgDta)
    PJXNODE pMsg = jx_NewObject(NULL);
    jx_SetBoolByName (pMsg , "success" ,  OFF);
    if (pParms->OpDescList->NbrOfParms > 0)  {
-      jx_SetStrByName (pMsg , "msgId" ,  msgId);
-      jx_SetStrByName (pMsg , "msgDta",  msgDta);
+      jx_SetStrByName (pMsg , "msgId" ,  msgId, NULL);
+      jx_SetStrByName (pMsg , "msgDta",  msgDta, NULL);
       // TODO - convert the msgid / msgData to text
    } else  {
-      jx_SetStrByName (pMsg , "msg" ,  jxMessage);
+      jx_SetStrByName (pMsg , "msg" ,  jxMessage, NULL);
    }
    return pMsg;
 }

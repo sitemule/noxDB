@@ -523,12 +523,14 @@ End-PR;
 // @param Node
 // @param Node path expression
 // @param New string value
+// @param Value to be replaced with null
 // @return Changed node
 ///
 Dcl-PR json_setStr pointer extproc(*CWIDEN : 'jx_SetStrByName');
   node pointer value;
   nodePath pointer value options(*string);
   value pointer value options(*string);
+  nullValue pointer value options(*string : *nopass);
 End-PR;
 
 ///
