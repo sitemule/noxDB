@@ -28,22 +28,16 @@ dcl-proc main;
    dcl-s  pReq   	  		pointer;
    dcl-s  pResponse 		pointer;
    dcl-s  url  	  	  	varchar(1024);
-   dcl-s  options       varchar(2048);
 
    // Always set your ccsid for constants:
    json_setDelimitersByCcsid(500);
 
    // parameters on URL
-   url = 'https://new.api.molslinjen.dk/api/v1/departure/getnextdepartures?departureRegionId=JYL';
-
-   // Here we add a custom header
-   options = ('-
-     -H ''Line: Mols'' -
-   ');
+   url = 'http://www.floatrates.com/daily/dkk.json';
 
    // Do the http request to get next depature
    // Use YUM to install curl, which is the tool used by httpRequest
-   pResponse = json_httpRequest (url: pReq : options);
+   pResponse = json_httpRequest (url: pReq);
 
    json_WriteJsonStmf(pResponse:'/prj/noxdb/testout/httpdump.json':1208:*OFF);
 

@@ -23,14 +23,14 @@ ctl-opt bndDir('NOXDB' );
 // --------------------------------------------------------------
 dcl-proc main;
 
-   // Always set your ccsid for constants: 
+   // Always set your ccsid for constants:
    json_setDelimitersByCcsid(500);
 
    jsonRequest();
    xmlRequest();
    textGetRequest();
-   textPostRequest();  
-   jsonPutRequest(); 
+   textPostRequest();
+   jsonPutRequest();
 
 end-proc;
 
@@ -44,11 +44,11 @@ dcl-proc jsonRequest;
    dcl-s  url  	  	varchar(1024);
 
    // parameters on URL
-   url = 'https://www.molslinjen.dk/umbraco/api/departure/getnextdepartures?departureRegionId=JYL';
+   url = 'http://www.floatrates.com/daily/dkk.json';
 
-   // Note: No payload in the request. use *null - here we pass a null pointer  
+   // Note: No payload in the request. use *null - here we pass a null pointer
    // Note: No options in the request. use *null - here we pass the *null literal value
-   
+
    // Do the http request to get next depature
    // Use YUM to install curl, which is the tool used by httpRequest
    pResponse = json_httpRequest (url: pReq:*null:'JSON');
@@ -69,9 +69,9 @@ dcl-proc xmlRequest;
    dcl-s  url  	  	  	varchar(1024);
 
    // parameters on URL
-   url = 'https://www.nationalbanken.dk/_vti_bin/DN/DataService.svc/CurrencyRatesXML?lang=en';
+   url = 'https://www.nationalbanken.dk/api/currencyratesxml?lang=en';
 
-   // Note: No payload in the request. use *null - here we pass a null pointer  
+   // Note: No payload in the request. use *null - here we pass a null pointer
    // Note: No options in the request. use *null - here we pass the *null literal value
 
    // Do the http request to get exchangerates from the Danish National bank
@@ -86,7 +86,7 @@ dcl-proc xmlRequest;
 
 end-proc;
 // --------------------------------------------------------------
-// Google search 
+// Google search
 // --------------------------------------------------------------
 dcl-proc textGetRequest;
 
@@ -106,7 +106,7 @@ dcl-proc textGetRequest;
    // Note: When using 'TEXT' mode, then the response is not a node, but a string.
    // After use, the correct way to dispose the memory is with json_delete()
    text = %str(pResponse);
-   
+
    json_joblog (text);
 
    json_delete(pResponse);
@@ -128,14 +128,14 @@ dcl-proc textPostRequest;
    url = 'https://www.w3schools.com/action_page.php';
 
    // Note: This is a form request.
-   // For "TEXT" mode this have to be a string  
+   // For "TEXT" mode this have to be a string
    req = 'fname=John&lname=Doe';
 
    options = ('-
      -H ''content-type: application/x-www-form-urlencoded'' -
-   '); 
+   ');
 
-   // Do the http request to post a form 
+   // Do the http request to post a form
    // Use YUM to install curl, which is the tool used by httpRequest
    pResponse = json_httpRequest (url : req : options : 'TEXT');
 
@@ -161,13 +161,13 @@ dcl-proc jsonPutRequest;
    url = 'http://www.icebreak.org/services/appstore/getrows';
 
    // Build a JSON object for the request
-   pReq = json_newObject(); 
+   pReq = json_newObject();
    json_setStr (pReq:'search': '*ALL');
 
    // This service expect a PUT method
    options = ('-
      -X PUT    -
-   '); 
+   ');
 
    // Do the http request to get next depature
    // Use YUM to install curl, which is the tool used by httpRequest
@@ -179,5 +179,3 @@ dcl-proc jsonPutRequest;
    json_delete(pResponse);
 
 end-proc;
-
-
