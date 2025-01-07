@@ -13,7 +13,7 @@
 // for a complete description of the functionality
 //
 // Basic features example: build, save, load manipulate JSON
-// ill only compile on >= 7.4 because of using overloads  
+// ill only compile on >= 7.4 because of using overloads
 //
 // Step 1)
 // When using noxDB you need two things:
@@ -37,12 +37,12 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) actgrp('QILE') option(*nodebugio:*srcstmt
 // ------------------------------------------------------------------------------------
 dcl-proc main;
 
-    // Always set your ccsid for constants: 
+    // Always set your ccsid for constants:
     json_setDelimitersByCcsid(500);
 
-    // Setup trace/debugging ( or perhaps unit testing) for 
+    // Setup trace/debugging ( or perhaps unit testing) for
     // your code if you like - this is optional
-    // myTrace is defined in the bottom in the example 
+    // myTrace is defined in the bottom in the example
     // Note - you can disable the trace by setting it to *NULL
     json_SetTraceProc (%paddr(myTrace));
 
@@ -66,10 +66,11 @@ dcl-proc example1;
     Dcl-S birthTime   time(*EUR);
     Dcl-S updated     timestamp;
     Dcl-S isMale      ind;
-    
-    // Step 1) 
-    // Produce a JSON object and write it to a file: 
-    // Let start with an object: 
+    Dcl-s sex         char(1) inz('M');
+
+    // Step 1)
+    // Produce a JSON object and write it to a file:
+    // Let start with an object:
     pJson = json_newObject();
 
     // Now lets place some elements in that object:
@@ -82,8 +83,16 @@ dcl-proc example1;
     json_setTimeStamp (pJson: 'updated' : %timestamp());
     json_setBool      (pJson: 'isMale' : *ON);
 
+    // Or set by expressions:
+    json_setInt       (pJson: 'age' : %diff (%date() : d'1997-02-16' : *years ));
+    json_setBool      (pJson: 'isMale' : sex = 'M');
+
+
     // Put the node in the joblog (max 512 is shown)
-    myTrace ('The final object':pJson); 
+    myTrace ('The final object':pJson);
+    // Write to the IFS, Note date/time will be stored in *ISO always
+    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/simple0.json':1208:*OFF);
+
 
     // Play with arrays
     pArr = json_newArray();
@@ -91,17 +100,17 @@ dcl-proc example1;
         json_arrayPush (pArr : pJson : JSON_COPY_CLONE);
     endfor;
 
-    myTrace ('After the loop':pArr); 
+    myTrace ('After the loop':pArr);
 
     // Write to the IFS, Note date/time will be stored in *ISO always
-    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/simple0.json':1208:*OFF);
+    json_WriteJsonStmf(pArr:'/prj/noxdb/testout/array0.json':1208:*OFF);
 
     // And always remember to cleanup
     json_delete (pJson);
     json_delete (pArr);
 
 
-end-proc; 
+end-proc;
 // ------------------------------------------------------------------------------------
 // example2
 // Load and parse a JSON object from IFS and extract data from the object
@@ -119,11 +128,11 @@ dcl-proc example2;
     Dcl-S isMale      ind;
 
     // Now let's load it from the disk and have fun with it:
-    // Note the error detection: It will return *NULL if errors 
+    // Note the error detection: It will return *NULL if errors
     pJson = json_ParseFile ('/prj/noxdb/testout/simple0.json');
     If json_Error(pJson) ;
         msg = json_Message(pJson);
-        myTrace (msg :pJson); 
+        myTrace (msg :pJson);
         json_delete(pJson);
         Return;
     EndIf;
@@ -151,10 +160,10 @@ dcl-proc example2;
     // And always remember to cleanup
     json_delete (pJson);
 
-end-proc; 
+end-proc;
 // ------------------------------------------------------------------------------------
 // myTrace - an example of a trace procedure for debugging and unit test
-// This will be called each time you interact with the objec graph - if set by  
+// This will be called each time you interact with the objec graph - if set by
 // json_SetTraceProc ( %paddr(myTrace));
 // ------------------------------------------------------------------------------------
 dcl-proc myTrace;
@@ -168,8 +177,8 @@ dcl-proc myTrace;
     dcl-s showme varchar(32000);
 
     // I could put it into the joblog
-    json_joblog(Text); 
-    json_joblog(pNode); 
+    json_joblog(Text);
+    json_joblog(pNode);
 
     // Or I could just have it in variables that i debug
     action = text;
@@ -178,7 +187,7 @@ dcl-proc myTrace;
     // Or maybe put it into a stream file
     //json_WriteJsonStmf(pJson:'/prj/noxdb/testout/trace.json':1208:*OFF);
 
-    // Or place it into a trace table.. Up to you !! 
+    // Or place it into a trace table.. Up to you !!
 
 
 end-proc;

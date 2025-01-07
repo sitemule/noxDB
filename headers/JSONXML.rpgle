@@ -523,12 +523,14 @@ End-PR;
 // @param Node
 // @param Node path expression
 // @param New string value
+// @param If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setStr pointer extproc(*CWIDEN : 'jx_SetStrByName');
   node pointer value;
   nodePath pointer value options(*string);
   value pointer value options(*string);
+  nullIf ind value options(*nopass);
 End-PR;
 
 ///
@@ -539,12 +541,14 @@ End-PR;
 // @param Node
 // @param Node path expression
 // @param New value
+// @param If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setInt pointer extproc(*CWIDEN : 'jx_SetIntByName2');
   node pointer value;
   nodePath pointer value options(*string);
   value int(20) value;
+  nullIf ind value options(*nopass);
 End-PR;
 
 ///
@@ -555,12 +559,14 @@ End-PR;
 // @param Node
 // @param Node path expression
 // @param New value
+// @param If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setNum pointer extproc(*CWIDEN : 'jx_SetDecByName');
   node pointer value;
   nodePath pointer value options(*string);
   value packed(30:15) value;
+  nullIf ind value options(*nopass);
 End-PR;
 
 ///
@@ -571,12 +577,14 @@ End-PR;
 // @param Node
 // @param Node path expression
 // @param New value
+// @param If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setBool pointer extproc(*CWIDEN : 'jx_SetBoolByName');
   node pointer value;
   nodePath pointer value options(*string);
   value ind value;
+  nullIf ind value options(*nopass);
 End-PR;
 
 ///
@@ -587,12 +595,14 @@ End-PR;
 // @param Node
 // @param Node path expression
 // @param New value
+// @param If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setDate pointer extproc(*CWIDEN: 'jx_SetDateByName');
   node pointer value;
   nodePath pointer value options(*string);
   value date(*ISO) const;
+  nullIf ind value options(*nopass);
 End-PR;
 
 ///
@@ -603,12 +613,14 @@ End-PR;
 // @param Node
 // @param Node path expression
 // @param New value
+// @param If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setTime pointer extproc(*CWIDEN : 'jx_SetTimeByName');
   node pointer value;
   nodePath pointer value options(*string);
   value time(*ISO) const;
+  nullIf ind value options(*nopass);
 End-PR;
 
 ///
@@ -619,12 +631,14 @@ End-PR;
 // @param Node
 // @param Node path expression
 // @param New value
+// @param If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setTimeStamp pointer extproc(*CWIDEN : 'jx_SetTimeStampByName');
   node pointer value;
   nodePath pointer value options(*string);
   value timestamp  const;
+  nullIf ind value options(*nopass);
 End-PR;
 
 ///

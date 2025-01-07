@@ -509,11 +509,11 @@ PJXNODE  jx_LookupValue (PJXNODE pDest, PUCHAR expr , BOOL16 ignorecase);
 LONG     jx_getLength (PJXNODE pNode);
 ULONG     jx_NodeCheckSum (PJXNODE pNode);
 
-PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value);
-PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value);
-PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value);
-PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value);
-PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value);
+PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value , LGL nullIf);
+PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value , LGL nullIf);
+PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value , LGL nullIf);
+PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value, LGL nullIf);
+PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value, LGL nullIf);
 PJXNODE  jx_SetNullByName (PJXNODE pNode, PUCHAR Name);
 PJXNODE  jx_NodeMoveInto (PJXNODE  pDest, PUCHAR Name , PJXNODE pSource);
 void jx_NodeRename(PJXNODE pNode, PUCHAR name);

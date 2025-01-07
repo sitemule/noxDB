@@ -2166,7 +2166,7 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
          if  (pValue && jxError == false) {
             pResult = jx_NewObject(NULL);
             jx_NodeMoveInto (pResult , rootName , pValue);
-            jx_SetBoolByName(pResult , "success" , ON);
+            jx_SetBoolByName(pResult , "success" , ON,OFF);
             jx_NodeDelete (pTemp);
             return pResult;
          } else {
@@ -2367,7 +2367,7 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
 
    if (format & JX_GRACEFUL_ERROR) {
       PJXNODE  pEnvelope = jx_NewObject (NULL);
-      jx_SetBoolByName (pEnvelope , "success" , true);
+      jx_SetBoolByName (pEnvelope , "success" , true , OFF);
       jx_NodeMoveInto(pEnvelope , rootName , pResult);
       return pEnvelope;
    } else {
@@ -2645,9 +2645,9 @@ void static messageList (PJXNODE pError) {
 PJXNODE static sqlErrorObject(PUCHAR sqlstmt)
 {
    PJXNODE pError = jx_NewObject(NULL);
-   jx_SetBoolByName (pError , "success" ,  OFF);
-   jx_SetStrByName  (pError , "msg"     ,  jxMessage);
-   jx_SetStrByName  (pError , "stmt"    ,  sqlstmt);
+   jx_SetBoolByName (pError , "success" ,  OFF, OFF);
+   jx_SetStrByName  (pError , "msg"     ,  jxMessage,OFF);
+   jx_SetStrByName  (pError , "stmt"    ,  sqlstmt, OFF);
    messageList (pError);
 
    return pError;
@@ -2715,7 +2715,7 @@ PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP 
          } else {
             pSQL->rowcount = jx_sqlNumberOfRows(sqlstmt);
          }
-         jx_SetIntByName(pResult , "totalRows" , pSQL->rowcount );
+         jx_SetIntByName(pResult , "totalRows" , pSQL->rowcount , OFF);
 
          //SQLGetDiagField(SQL_HANDLE_STMT,
          //    pSQL->pstmt->hstmt,0,DB2_NUMBER_ROWS,&rowCount,SQL_INTEGER,&strLen);
@@ -3700,15 +3700,15 @@ VARCHAR jx_sqlGetOptions ()
    PJXNODE pOptions = jx_NewObject(NULL);
 
 
-   jx_SetBoolByName (pOptions , "upperCaseColName" , po->upperCaseColName);
-   jx_SetBoolByName (pOptions , "autoParseContent" , po->autoParseContent);
-   jx_SetCharByName (pOptions , "decimalPoint"     , po->DecimalPoint    );
-   jx_SetBoolByName (pOptions , "hexSort"          , po->hexSort         );
-   jx_SetBoolByName (pOptions , "sqlNaming"        , po->sqlNaming       );
-   jx_SetCharByName (pOptions , "dateSep"          , po->DateSep         );
-   jx_SetCharByName (pOptions , "dateFmt"          , po->DateFmt         );
-   jx_SetCharByName (pOptions , "timeSep"          , po->TimeSep         );
-   jx_SetCharByName (pOptions , "timeFmt"          , po->TimeFmt         );
+   jx_SetBoolByName (pOptions , "upperCaseColName" , po->upperCaseColName,OFF);
+   jx_SetBoolByName (pOptions , "autoParseContent" , po->autoParseContent,OFF);
+   jx_SetCharByName (pOptions , "decimalPoint"     , po->DecimalPoint    ,OFF);
+   jx_SetBoolByName (pOptions , "hexSort"          , po->hexSort         ,OFF);
+   jx_SetBoolByName (pOptions , "sqlNaming"        , po->sqlNaming       ,OFF);
+   jx_SetCharByName (pOptions , "dateSep"          , po->DateSep         ,OFF);
+   jx_SetCharByName (pOptions , "dateFmt"          , po->DateFmt         ,OFF);
+   jx_SetCharByName (pOptions , "timeSep"          , po->TimeSep         ,OFF);
+   jx_SetCharByName (pOptions , "timeFmt"          , po->TimeFmt         ,OFF);
 
    ret = jx_AsJsonText (pOptions);
    jx_NodeDelete (pOptions);

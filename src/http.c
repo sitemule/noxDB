@@ -51,7 +51,7 @@ void saveText (PUCHAR file , PUCHAR data)
      fclose(f);
 }
 /* ---------------------------------------------------------------------------
-   Run a schell script 
+   Run a schell script
    --------------------------------------------------------------------------- */
 void shell (PUCHAR cmd)
 {
@@ -75,7 +75,7 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options , PUCHAR forma
    if (pParms->OpDescList->NbrOfParms >= 4) {
       if  (stricmp (format , "XML") == 0) {
          dataFormat = FMT_XML;
-      } 
+      }
       else if  (stricmp (format , "TEXT") == 0) {
          dataFormat = FMT_TEXT;
       }
@@ -98,7 +98,7 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options , PUCHAR forma
 
    // Build the cur command, note: ignore sertificate error due to IBM i implementation
    p += sprintf( p , "curl -s -k -o %s", temp2);
-   
+
    if (pNode) {
       // The negative causes it not to produce BOM code
       switch (dataFormat) {
@@ -119,7 +119,7 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options , PUCHAR forma
       p += sprintf( p , " --data %c%s " , at , temp1);
    }
 
-   // "Content-type" and "Accept" defaults can be overwritten by the "options" if given, 
+   // "Content-type" and "Accept" defaults can be overwritten by the "options" if given,
    switch (dataFormat) {
       case FMT_JSON:
          p += sprintf( p ,  " %s %s ",

@@ -3234,48 +3234,63 @@ PJXNODE  jx_SetValueByName (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETY
 /* -------------------------------------------------------------
    Set integer by name - old version
    ------------------------------------------------------------- */
-PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value)
+PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value, LGL nullIf)
 {
-   UCHAR  s [32];
-   sprintf(s , "%ld" , Value);
-   return jx_SetValueByName(pNode , Name , s, LITERAL );
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+      return jx_SetValueByName(pNode , Name , NULL , LITERAL );
+   } else {
+      UCHAR  s [32];
+      sprintf(s , "%ld" , Value);
+      return jx_SetValueByName(pNode , Name , s, LITERAL );
+   }
 }
 /* -------------------------------------------------------------
    Set integer by name
    ------------------------------------------------------------- */
-PJXNODE  jx_SetIntByName2 (PJXNODE pNode, PUCHAR Name, INT64 Value)
+PJXNODE  jx_SetIntByName2 (PJXNODE pNode, PUCHAR Name, INT64 Value, LGL nullIf)
 {
-   UCHAR  s [32];
-   sprintf(s , "%lld" , Value);
-   return jx_SetValueByName(pNode , Name , s, LITERAL );
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+      return jx_SetValueByName(pNode , Name , NULL , LITERAL );
+   } else {
+      UCHAR  s [32];
+      sprintf(s , "%lld" , Value);
+      return jx_SetValueByName(pNode , Name , s, LITERAL );
+   }
 }
 /* -------------------------------------------------------------
    Set decimal  by name
    ------------------------------------------------------------- */
-PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value)
+PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value, LGL nullIf)
 {
-   UCHAR  s [32];
-   PUCHAR t;
-   int len = sprintf(s , "%D(30,15)" , Value);
-   PUCHAR p = s + len -1 ;
-   // int cutlen = 16; // remove last trailing zeroes. if none after the decimal point the also the secimal point
-   int cutlen = 14; // remove last trailing zeroes. Keep the last zero so it is still a decimal point
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+      return jx_SetValueByName(pNode , Name , NULL , LITERAL );
+   } else {
+      UCHAR  s [32];
+      PUCHAR t;
+      int len = sprintf(s , "%D(30,15)" , Value);
+      PUCHAR p = s + len -1 ;
+      // int cutlen = 16; // remove last trailing zeroes. if none after the decimal point the also the secimal point
+      int cutlen = 14; // remove last trailing zeroes. Keep the last zero so it is still a decimal point
 
-   // %D is determined ny locale so we can have either  , or .
-   // we always need .
-   for(t=s; *t ; t++) {
-     if (*t == ',') {
-       *t = '.';
-       break;
-     }
+      // %D is determined ny locale so we can have either  , or .
+      // we always need .
+      for(t=s; *t ; t++) {
+      if (*t == ',') {
+         *t = '.';
+         break;
+      }
+      }
+
+      while ((*p == '0' || *p == '.') && cutlen --) {
+         *p = '\0';
+         p--;
+      }
+
+      return jx_SetValueByName(pNode , Name , s, LITERAL );
    }
-
-   while ((*p == '0' || *p == '.') && cutlen --) {
-      *p = '\0';
-      p--;
-   }
-
-   return jx_SetValueByName(pNode , Name , s, LITERAL );
 }
 /* -------------------------------------------------------------
    Set Null by name
@@ -3287,52 +3302,85 @@ PJXNODE  jx_SetNullByName (PJXNODE pNode, PUCHAR Name)
 /* -------------------------------------------------------------
    Set BOOL by name
    ------------------------------------------------------------- */
-PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value)
+PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value , LGL nullIf)
 {
    UCHAR boolValue [10];
-   strcpy (boolValue , (Value == OFF) ? "false":"true"); // optimizer fails to do this on the call
-   return jx_SetValueByName(pNode , Name , boolValue, LITERAL );
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+      return jx_SetValueByName(pNode , Name , NULL , LITERAL );
+   } else {
+      strcpy (boolValue , (Value == OFF) ? "false":"true"); // optimizer fails to do this on the call
+      return jx_SetValueByName(pNode , Name , boolValue, LITERAL );
+   }
 }
-PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value)
+/* -------------------------------------------------------------
+   Set single char by name
+   ------------------------------------------------------------- */
+PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value, LGL nullIf)
 {
    UCHAR value [2];
-   value [0] = Value;
-   value [1] = '\0';
-   return jx_SetValueByName(pNode , Name , value, VALUE );
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+      return jx_SetValueByName(pNode , Name , NULL , LITERAL );
+   } else {
+      value [0] = Value;
+      value [1] = '\0';
+      return jx_SetValueByName(pNode , Name , value, VALUE );
+   }
 }
 /* -------------------------------------------------------------
    Set String by name
    ------------------------------------------------------------- */
-PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
+PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
 {
-   return jx_SetValueByName(pNode , Name , Value , VALUE );
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+      return jx_SetValueByName(pNode , Name , NULL , LITERAL );
+   } else {
+      return jx_SetValueByName(pNode , Name , Value , VALUE );
+   }
 }
 /* -------------------------------------------------------------
    Set Date by name
    ------------------------------------------------------------- */
-PJXNODE  jx_SetDateByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
+PJXNODE  jx_SetDateByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
 {
-   UCHAR temp [11];
-   substr (temp, Value ,10);
-   return jx_SetValueByName(pNode , Name , temp , VALUE );
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+      return jx_SetValueByName(pNode , Name , NULL , LITERAL );
+   } else {
+      UCHAR temp [11];
+      substr (temp, Value ,10);
+      return jx_SetValueByName(pNode , Name , temp , VALUE );
+   }
 }
 /* -------------------------------------------------------------
    Set Time by name
    ------------------------------------------------------------- */
-PJXNODE  jx_SetTimeByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
+PJXNODE  jx_SetTimeByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
 {
-   UCHAR temp [9];
-   substr (temp, Value ,8);
-   return jx_SetValueByName(pNode , Name , temp , VALUE );
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+      return jx_SetValueByName(pNode , Name , NULL , LITERAL );
+   } else {
+      UCHAR temp [9];
+      substr (temp, Value ,8);
+      return jx_SetValueByName(pNode , Name , temp , VALUE );
+   }
 }
 /* -------------------------------------------------------------
    Set TimeStamp by name
    ------------------------------------------------------------- */
-PJXNODE  jx_SetTimeStampByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value)
+PJXNODE  jx_SetTimeStampByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
 {
-   UCHAR temp [27];
-   substr (temp, Value , 26);
-   return jx_SetValueByName(pNode , Name , temp , VALUE );
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+      return jx_SetValueByName(pNode , Name , NULL , LITERAL );
+   } else {
+      UCHAR temp [27];
+      substr (temp, Value , 26);
+      return jx_SetValueByName(pNode , Name , temp , VALUE );
+   }
 }
 /* -------------------------------------------------------------
    Set Parse and evaluate  by name
@@ -3675,13 +3723,13 @@ PJXNODE jx_GetMessageObject (PUCHAR msgId , PUCHAR msgDta)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    PJXNODE pMsg = jx_NewObject(NULL);
-   jx_SetBoolByName (pMsg , "success" ,  OFF);
+   jx_SetBoolByName (pMsg , "success" ,  OFF,OFF);
    if (pParms->OpDescList->NbrOfParms > 0)  {
-      jx_SetStrByName (pMsg , "msgId" ,  msgId);
-      jx_SetStrByName (pMsg , "msgDta",  msgDta);
+      jx_SetStrByName (pMsg , "msgId" ,  msgId ,OFF);
+      jx_SetStrByName (pMsg , "msgDta",  msgDta,OFF);
       // TODO - convert the msgid / msgData to text
    } else  {
-      jx_SetStrByName (pMsg , "msg" ,  jxMessage);
+      jx_SetStrByName (pMsg , "msg" ,  jxMessage,OFF);
    }
    return pMsg;
 }
@@ -3689,7 +3737,7 @@ PJXNODE jx_GetMessageObject (PUCHAR msgId , PUCHAR msgDta)
 PJXNODE jx_SuccessTrue ()
 {
    PJXNODE pMsg = jx_NewObject(NULL);
-   jx_SetBoolByName (pMsg , "success" ,  ON);
+   jx_SetBoolByName (pMsg , "success" ,  ON , OFF);
    return pMsg;
 }
 // -------------------------------------------------------------
