@@ -468,6 +468,20 @@ VARCHAR jx_GetValueVC (PJXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP);
 FIXEDDEC jx_GetValueNum (PJXNODE pNode , PUCHAR Name  , FIXEDDEC dftParm);
 #pragma descriptor ( void jx_GetValueNum    (void))
 
+/* Setters variants */
+PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value , LGL nullIf);
+#pragma descriptor ( void jx_SetStrByName    (void))
+PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value , LGL nullIf);
+#pragma descriptor ( void jx_SetBoolByName    (void))
+PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value , LGL nullIf);
+#pragma descriptor ( void jx_SetCharByName    (void))
+PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value, LGL nullIf);
+#pragma descriptor ( void jx_SetDecByName    (void))
+PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value, LGL nullIf);
+#pragma descriptor ( void jx_SetIntByName    (void))
+PJXNODE  jx_SetNullByName (PJXNODE pNode, PUCHAR Name);
+
+
 
 void jx_Close(PJXNODE * pNode);
 
@@ -509,12 +523,6 @@ PJXNODE  jx_LookupValue (PJXNODE pDest, PUCHAR expr , BOOL16 ignorecase);
 LONG     jx_getLength (PJXNODE pNode);
 ULONG     jx_NodeCheckSum (PJXNODE pNode);
 
-PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value , LGL nullIf);
-PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value , LGL nullIf);
-PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value , LGL nullIf);
-PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value, LGL nullIf);
-PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value, LGL nullIf);
-PJXNODE  jx_SetNullByName (PJXNODE pNode, PUCHAR Name);
 PJXNODE  jx_NodeMoveInto (PJXNODE  pDest, PUCHAR Name , PJXNODE pSource);
 void jx_NodeRename(PJXNODE pNode, PUCHAR name);
 void jx_NodeCloneAndReplace (PJXNODE pDest , PJXNODE pSource);

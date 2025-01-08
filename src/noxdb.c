@@ -3237,7 +3237,7 @@ PJXNODE  jx_SetValueByName (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETY
 PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value, LGL nullIf)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
       return jx_SetValueByName(pNode , Name , NULL , LITERAL );
    } else {
       UCHAR  s [32];
@@ -3251,7 +3251,7 @@ PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value, LGL nullIf)
 PJXNODE  jx_SetIntByName2 (PJXNODE pNode, PUCHAR Name, INT64 Value, LGL nullIf)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
       return jx_SetValueByName(pNode , Name , NULL , LITERAL );
    } else {
       UCHAR  s [32];
@@ -3265,7 +3265,7 @@ PJXNODE  jx_SetIntByName2 (PJXNODE pNode, PUCHAR Name, INT64 Value, LGL nullIf)
 PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value, LGL nullIf)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
       return jx_SetValueByName(pNode , Name , NULL , LITERAL );
    } else {
       UCHAR  s [32];
@@ -3306,7 +3306,7 @@ PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value , LGL nullIf)
 {
    UCHAR boolValue [10];
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
       return jx_SetValueByName(pNode , Name , NULL , LITERAL );
    } else {
       strcpy (boolValue , (Value == OFF) ? "false":"true"); // optimizer fails to do this on the call
@@ -3320,7 +3320,7 @@ PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value, LGL nullIf)
 {
    UCHAR value [2];
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
       return jx_SetValueByName(pNode , Name , NULL , LITERAL );
    } else {
       value [0] = Value;
@@ -3334,7 +3334,7 @@ PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value, LGL nullIf)
 PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
       return jx_SetValueByName(pNode , Name , NULL , LITERAL );
    } else {
       return jx_SetValueByName(pNode , Name , Value , VALUE );
@@ -3346,7 +3346,7 @@ PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
 PJXNODE  jx_SetDateByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
       return jx_SetValueByName(pNode , Name , NULL , LITERAL );
    } else {
       UCHAR temp [11];
@@ -3360,7 +3360,7 @@ PJXNODE  jx_SetDateByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
 PJXNODE  jx_SetTimeByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
       return jx_SetValueByName(pNode , Name , NULL , LITERAL );
    } else {
       UCHAR temp [9];
@@ -3374,7 +3374,7 @@ PJXNODE  jx_SetTimeByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
 PJXNODE  jx_SetTimeStampByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms >= 4 && nullIf == ON) {
+   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
       return jx_SetValueByName(pNode , Name , NULL , LITERAL );
    } else {
       UCHAR temp [27];
