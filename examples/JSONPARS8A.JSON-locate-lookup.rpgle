@@ -27,11 +27,15 @@
        Dcl-S s                  VarChar(50);
        Dcl-S i                      Int(10:0);
 
-          pJson = json_ParseString ('{e:[ -
-              { "name":"a", "val":"a1"}, -
-              { "name":"b", "val":"b2"}, -
-              { "name":"c", "val":"c3"} -
-            ]}');
+          pJson = json_ParseString (
+          '{ -
+            "name":"Super nova", -
+            "breadCrumbs":[ -
+              { "label":"a", "val":"a1"}, -
+              { "label":"b", "val":"b2"}, -
+              { "label":"c", "val":"c3"} -
+            ]}'
+          );
 
           If json_Error(pJson) ;
              msg = json_Message(pJson);
@@ -40,8 +44,8 @@
              Return;
           EndIf;
 
-          // Get the object n the array where the "name" attribute is "b"
-          p = json_locate  (pJson : '/e[name = b]');
+          // Get the object n the array where the "label" attribute is "b"
+          p = json_locate  (pJson : '/breadCrumbs[label = b]');
           s = json_getStr      (p : 'val' );
 
           *inlr = *on;
