@@ -1,4 +1,6 @@
 extern "C" void jx_setDelimitersByCcsid (int);
+extern "C" void jx_sqlDisconnect (void);
+
 
 class Entry_Exit
 {
@@ -18,6 +20,7 @@ class Entry_Exit
     }
 
     Entry_Exit::~Entry_Exit() {
+        jx_sqlDisconnect();
         m_nExit = 0;
     }
 

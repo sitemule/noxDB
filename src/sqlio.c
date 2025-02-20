@@ -1262,7 +1262,7 @@ void jx_sqlDisconnect (void)
    }
 
    jx_Close(&pConnection->pOptions);
-   //memFree (&pConnection);
+   pConnection = NULL;
 
 }
 /* ------------------------------------------------------------- */
