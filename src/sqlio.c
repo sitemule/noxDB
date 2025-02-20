@@ -68,6 +68,7 @@ extern UCHAR jobDollar      ;
 
 
 // Unit Globals:
+static JXSQLCONNECT connection;
 static PJXSQLCONNECT pConnection = NULL;
 static BOOL keepConnection = false;
 static SQLINTEGER sqlCode = 0;
@@ -205,13 +206,13 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
    // LGL  err = ON;
    // LONG rows =0;
 
-   // PJXSQLCONNECT pConnection;  I hate this - bu need to go global for now !!
+   // PJXSQLCONNECT pConnection;  I hate this - but need to go global for now !!
    LONG          attrParm;
    PUCHAR        server = "*LOCAL";
    int rc;
    PSQLOPTIONS po;
 
-   pConnection = memAlloc(sizeof(JXSQLCONNECT));
+   pConnection = &connection;
    memset(pConnection , 0 , sizeof(JXSQLCONNECT));
    pConnection->sqlTrace.handle = -1;
    pConnection->pCd = XlateOpenDescriptor (13488, 0, false);
@@ -1261,7 +1262,7 @@ void jx_sqlDisconnect (void)
    }
 
    jx_Close(&pConnection->pOptions);
-   memFree (&pConnection);
+   //memFree (&pConnection);
 
 }
 /* ------------------------------------------------------------- */
