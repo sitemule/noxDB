@@ -551,6 +551,10 @@ Dcl-PR xml_setInt pointer extproc(*CWIDEN : 'jx_SetIntByName2');
   nullIf ind value options(*nopass);
 End-PR;
 
+Dcl-PR xml_Int pointer extproc(*CWIDEN : 'jx_Int');
+  value int(20) value;
+End-PR;
+
 ///
 // Set decimal value
 //
@@ -1210,6 +1214,18 @@ End-PR;
 Dcl-PR xml_newObject pointer extproc(*CWIDEN : 'jx_NewObject');
   destination pointer value options(*nopass);
 End-PR;
+Dcl-PR xml_Obj pointer extproc(*CWIDEN : 'jx_Object');
+  p00 pointer value options(*nopass:*string);
+  p01 pointer value options(*nopass:*string);
+  p02 pointer value options(*nopass:*string);
+  p03 pointer value options(*nopass:*string);
+  p04 pointer value options(*nopass:*string);
+  p05 pointer value options(*nopass:*string);
+  p06 pointer value options(*nopass:*string);
+  p07 pointer value options(*nopass:*string);
+  p08 pointer value options(*nopass:*string);
+  p09 pointer value options(*nopass:*string);
+End-PR;
 
 ///
 // Create array
@@ -1224,6 +1240,18 @@ End-PR;
 ///
 Dcl-PR xml_newArray pointer extproc(*CWIDEN : 'jx_NewArray');
   node pointer value options(*nopass);
+End-PR;
+Dcl-PR xml_Arr pointer extproc(*CWIDEN : 'jx_Array');
+  p00 pointer value options(*nopass:*string);
+  p01 pointer value options(*nopass:*string);
+  p02 pointer value options(*nopass:*string);
+  p03 pointer value options(*nopass:*string);
+  p04 pointer value options(*nopass:*string);
+  p05 pointer value options(*nopass:*string);
+  p06 pointer value options(*nopass:*string);
+  p07 pointer value options(*nopass:*string);
+  p08 pointer value options(*nopass:*string);
+  p09 pointer value options(*nopass:*string);
 End-PR;
 
 ///

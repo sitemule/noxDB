@@ -3694,6 +3694,60 @@ VARCHAR jx_GetAttrValueVC (PXMLATTR pAttr, PUCHAR DefaultValue)
    return (res);
 }
 // -------------------------------------------------------------
+PJXNODE jx_Object (PJXNODE pFirst, ...)
+{
+   va_list arg_ptr;
+   PJXNODE pObj = jx_NewObject(NULL);
+   return pObj;
+}
+
+// -------------------------------------------------------------
+PJXNODE ensureNode (PJXNODE pNode)
+{
+   if (pNode->signature == NODESIG) {
+      return pNode;
+   } else {
+      return  NewNode  (NULL  , (PUCHAR) pNode, VALUE);
+   }
+}
+// -------------------------------------------------------------
+PJXNODE jx_Array  (PJXNODE pFirst, ...)
+{
+   va_list arg_list;
+
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   int parms = pParms->OpDescList->NbrOfParms;
+   int i;
+   PJXNODE pElm;
+   PJXNODE pArr = jx_NewArray(NULL);
+
+   if (parms > 0) {
+      jx_NodeInsertChildTail (pArr, ensureNode(pFirst));
+
+      va_start(arg_list, pFirst);
+
+      for(i = 1; i<parms;i++){
+         pElm = va_arg(arg_list, PJXNODE );
+         jx_NodeInsertChildTail (pArr, ensureNode(pElm));
+      }
+      va_end(arg_list);
+   }
+
+   return pArr;
+}
+// -------------------------------------------------------------
+PJXNODE jx_Int  (INT64 value)
+{
+   UCHAR temp [256];
+   sprintf (temp ,"%lld", value);
+   return NewNode  (NULL, temp , LITERAL);
+}
+// -------------------------------------------------------------
+PJXNODE jx_Str  (PUCHAR value)
+{
+   return NewNode  (NULL, value , VALUE);
+}
+// -------------------------------------------------------------
 LGL  jx_Error (PJXNODE  pNode)
 {
    return ( jxError || pNode == NULL) ? ON : OFF;
