@@ -115,7 +115,51 @@ static void convertDate ( PUCHAR pOut, PUCHAR pIn , PUCHAR pFormat )
       strcpy ( pOut , pFormat); // Abbend !!
    }
 }
+static PUCHAR fmtDate ( PUCHAR pOut, PUCHAR pIn , PUCHAR pFormat , UCHAR separator )
+{
+   if (0 == strcmp ( pFormat , "ISO")) {
+      strcpy(pOut, pIn); // noxDb is always in ISO
+   } else if (0 == strcmp ( pFormat , "EUR")) { // YYYY-MM-DD to DD/MM/YYYY
+      strcpy (pOut , "01-01-0001");
+      memcpy ( pOut + 0 , pIn +6 , 4); // YYYY
+      memcpy ( pOut + 5 , pIn +3 , 2); // MM
+      memcpy ( pOut + 8 , pIn +0 , 2); // DD
+      pOut[2] = pOut[5] = separator;
+      pOut[10] = '\0';
+   } // todo  - more to come
+   else {
+      strcpy ( pOut , pFormat); // Abbend !!
+   }
+   return pOut;
+}
 
+static PUCHAR fmtTime ( PUCHAR pOut, PUCHAR pIn , UCHAR separator )
+{
+   strcpy (pOut , pIn);
+   pOut[2] = pOut[5] = separator;
+   pOut[8] = '\0';
+   return pOut;
+}
+
+
+static UCHAR convertSeperator (PUCHAR pSeprator)
+{
+   if (0 == strcmp ( pSeprator , "hyphen")) {
+      return '-';
+   } else if (0 == strcmp ( pSeprator , "period")) {
+      return '.';
+   } else if (0 == strcmp ( pSeprator , "slash")) {
+      return '/';
+   } else if (0 == strcmp ( pSeprator , "blank")) {
+      return ' ';
+   } else {
+      return '-'; // Abbend !!
+   }
+}
+static PUCHAR parmMetaValue (PJXNODE pNode , PUCHAR key)
+{
+   return jx_GetAttrValuePtr ( jx_AttributeLookup (  pNode, key));
+}
 /* --------------------------------------------------------------------------- *\
    parse PCML:
       <pcml version="7.0">
@@ -145,7 +189,7 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
    PJXNODE pReturnObject;
    PJXNODE pParms;
    BOOL    freeAfter;
-   UCHAR   parmbuffer [32000];
+   UCHAR   parmbuffer [320000];
    PUCHAR  pParmBuffer = parmbuffer;
    SHORT   parmIx = 0;
    PVOID   argArray[256];
@@ -171,10 +215,11 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
    }
 
    for (pInParm = pParm; pInParm ;  pInParm = jx_GetNodeNext(pInParm) ) {
-      PUCHAR name   = jx_GetAttrValuePtr ( jx_AttributeLookup ( pInParm, "NAME"));
-      PUCHAR type   = jx_GetAttrValuePtr ( jx_AttributeLookup ( pInParm, "TYPE"));
-      PUCHAR length = jx_GetAttrValuePtr ( jx_AttributeLookup ( pInParm, "LENGTH"));
-      PUCHAR usage  = jx_GetAttrValuePtr ( jx_AttributeLookup ( pInParm, "USAGE"));
+      PUCHAR nodeType = jx_GetNodeNamePtr (pInParm);
+      PUCHAR name   = parmMetaValue ( pInParm, "name");
+      PUCHAR type   = parmMetaValue ( pInParm, "type");
+      PUCHAR length = parmMetaValue ( pInParm, "length");
+      PUCHAR usage  = parmMetaValue ( pInParm, "usage");
       int len = length ? atoi(length) : 0;
       int dtaLen, bufLen;
       PUCHAR pValue =  jx_GetNodeValuePtr(jx_GetNode  (pParms ,name),"") ;
@@ -200,15 +245,15 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
          *(char *) pParmBuffer = atoi (pValue);
          bufLen = len ;
       } else if ( 0 == strcmp ( type, "packed")) {
-         SHORT  precision = atoi(jx_GetAttrValuePtr ( jx_AttributeLookup ( pInParm, "PRECISION")));
+         SHORT  precision = atoi(parmMetaValue ( pInParm, "precision"));
          str2packedMem ( pParmBuffer , pValue , len , precision);
          bufLen = (len + 1) / 2;
       } else if ( 0 == strcmp ( type, "zoned")) {
-         SHORT  precision = atoi(jx_GetAttrValuePtr ( jx_AttributeLookup ( pInParm, "PRECISION")));
+         SHORT  precision = atoi(parmMetaValue ( pInParm, "precision"));
          str2zonedMem ( pParmBuffer , pValue , len , precision);
          bufLen = len;
       } else if ( 0 == strcmp ( type, "date")) {
-         PUCHAR format = jx_GetAttrValuePtr ( jx_AttributeLookup ( pInParm, "DATEFORMAT"));
+         PUCHAR format = parmMetaValue ( pInParm, "dateformat");
          convertDate ( pParmBuffer , pValue , format);
          bufLen = 11 ; // room for zero term
       } else if ( 0 == strcmp ( type, "time")) {
@@ -233,26 +278,52 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
    pReturnObject = jx_NewObject(NULL);
    parmIx= 0;
    for (pOutParm = pParm; pOutParm ;  pOutParm = jx_GetNodeNext(pOutParm), parmIx++ ) {
-      PUCHAR usage  = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "USAGE"));
+      PUCHAR usage  = parmMetaValue ( pOutParm, "usage");
 
-      if (0==strcmp(usage , "inputoutput")) {
-         PUCHAR name   = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "NAME"));
-         PUCHAR type   = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "TYPE"));
-         PUCHAR length = jx_GetAttrValuePtr ( jx_AttributeLookup ( pOutParm, "LENGTH"));
+      if (0 == strcmp(usage , "inputoutput")) {
+         PUCHAR name   = parmMetaValue ( pOutParm, "name");
+         PUCHAR type   = parmMetaValue ( pOutParm, "type");
+         PUCHAR length = parmMetaValue ( pOutParm, "length");
          int len = length ? atoi(length) : 0;
          UCHAR temp [256];
          UCHAR data [256];
-         PUCHAR pData;
-         NODETYPE nodeType;
+         PUCHAR pData = data;
+         NODETYPE nodeType = VALUE;
 
          pParmBuffer = argArray [parmIx];
          if ( 0 == strcmp ( type, "char")) {
             pData = righttrimlen(pParmBuffer , len );
-            nodeType = VALUE;
+         } else if ( 0 == strcmp ( type, "varchar")) {
+            substr (data  , pParmBuffer + 2 , *(short int *) pParmBuffer);
          } else if ( 0 == strcmp ( type, "packed")) {
-            SHORT  precision = atoi(jx_GetAttrValuePtr ( jx_AttributeLookup ( pParm, "PRECISION")));
+            SHORT  precision = atoi(parmMetaValue ( pOutParm, "precision"));
             pData = fmtPacked(data  , pParmBuffer , len  , precision, '.');
             nodeType = LITERAL;
+         } else if ( 0 == strcmp ( type, "int")) {
+            switch (len) {
+               case 8: sprintf ( data , "%lld" ,*(long long *) pParmBuffer); break;
+               case 4: sprintf ( data , "%ld"  ,*(long *)      pParmBuffer); break;
+               case 2: sprintf ( data , "%d"   ,*(short int *) pParmBuffer); break;
+               case 1: sprintf ( data , "%d"   ,*(short int *) pParmBuffer); break; // check !!
+            }
+            nodeType = LITERAL;
+         } else if ( 0 == strcmp ( type, "byte")) {
+            sprintf ( data , "%d"   , 0 + pParmBuffer[0]);  // check !!
+            nodeType = LITERAL;
+         } else if ( 0 == strcmp ( type, "zoned")) {
+            SHORT  precision = atoi(parmMetaValue ( pOutParm, "precision"));
+            pData = fmtZoned (data  , pParmBuffer , len  , precision, '.');
+            nodeType = LITERAL;
+         } else if ( 0 == strcmp ( type, "date")) {
+            PUCHAR format = parmMetaValue ( pOutParm, "DATEFORMAT");
+            PUCHAR seprator = parmMetaValue ( pOutParm, "dateseparator");
+            pData = fmtDate  ( data , pParmBuffer , format , convertSeperator(seprator));
+         } else if ( 0 == strcmp ( type, "time")) {
+            PUCHAR seprator = parmMetaValue ( pOutParm, "timeseparator"); // TODO
+            pData = fmtTime  ( data , pParmBuffer , convertSeperator(seprator));
+         } else if ( 0 == strcmp ( type, "timestamp")) {
+            memcpy ( data  , "0001-01-01-00.00.00.000000", 27);
+            memcpy ( data  , pParmBuffer , len == 0 ? 26 : len);
          }
          jx_SetValueByName( pReturnObject , str2lower (temp, name ) , pData , nodeType );
       }
