@@ -1,1 +1,17 @@
-*.savf linguist-generated
+#Run this:
+# git config core.eol lf
+# git config core.autocrlf input
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# Definitively text files
+*.txt text
+*.c text
+*.h text
+*.clp text
+*.clle text
+*.cmd text
+*.md text
+
+*.savf binary
+*.jpg binary
