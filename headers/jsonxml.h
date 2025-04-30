@@ -245,16 +245,34 @@ _SYSPTR jx_loadServiceProgramProc (PUCHAR lib , PUCHAR srvPgm, PUCHAR procName);
 _SYSPTR jx_loadProgram (PUCHAR lib , PUCHAR pgm);
 void jx_callProc ( _SYSPTR proc , void * args [64] , SHORT parms);
 
-
+#define PROC_NAME_MAX 64
 typedef _Packed struct _JXMETHOD  {
-    PJXNODE pPcml;
+    PJXNODE pMetaNode;
     _SYSPTR userMethod;
     BOOL    userMethodIsProgram;
     ULONG   ccsid;
     UCHAR   library   [10];
+	UCHAR   null1;
     UCHAR   program   [10];
-    UCHAR   procedure [64];
+	UCHAR   null2;
+    UCHAR   procedure [PROC_NAME_MAX];
+	UCHAR   null3;
 } JXMETHOD, * PJXMETHOD;
+
+#pragma enum (1)
+typedef enum {
+	JX_DTYPE_CHAR     = 'C',
+	JX_DTYPE_VARCHAR  = 'V',
+	JX_DTYPE_INT      = 'I',
+	JX_DTYPE_BYTE     = 'B',
+	JX_DTYPE_PACKED   = 'P',
+	JX_DTYPE_ZONED    = 'Z',
+	JX_DTYPE_DATE     = 'D',
+	JX_DTYPE_TIME     = 'T',
+	JX_DTYPE_TIME_STAMP = 'S',
+	JX_DTYPE_UNKNOWN  = '?'
+} JX_DTYPE, *PJX_DTYPE;
+#pragma enum (pop)
 
 
 #endif

@@ -1978,7 +1978,7 @@ End-PR;
 ///
 // Programs and procedures : Program meta
 //
-// Returns the parameter meta information as a noxDb object graph accordin to the PCML format
+// Returns the parameter meta information as a noxDb object graph according to the PCML format
 //
 // @param Library where the ILE service program exists or *LIBL
 // @param service Program name
@@ -1996,6 +1996,28 @@ Dcl-PR xml_ProcedureMeta pointer extproc(*CWIDEN : 'jx_ProcedureMeta');
   procedure      pointer   value options(*string);
   formatOptions  int(10)   value options(*nopass) ;
 End-PR;
+
+///
+// Programs and procedures : Program and service program meta
+//
+// Returns the parameter meta information as a noxDb object graph according to the PCML format
+// however in a JSON  format
+//
+// @param Library where the ILE service program exists or *LIBL
+// @param service Program name
+// @param procedure Name of service program procedure or *ALL , or *NULL for programs
+// @return noxDB object tree with meta description in JSON from the PCML format
+//
+// @info The caller of this procedure needs to take care of freeing the resources
+//       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
+///
+
+Dcl-PR xml_ApplicationMetaJson pointer extproc(*CWIDEN : 'jx_ApplicationMetaJson');
+  library        char(10)  const;
+  program        char(10)  const;
+  procedure      pointer   value options(*string);
+End-PR;
+
 
 ///
 // Detect memory leak

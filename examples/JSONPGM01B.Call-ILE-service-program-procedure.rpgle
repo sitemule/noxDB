@@ -28,8 +28,11 @@ Dcl-S pOut       Pointer;
 Dcl-s msg        char(50);
 
 
-    // This is not neede, but illustrates that you can pull the meta data
+    // This is not neede, but illustrates that you can pull the meta data as PCML (XML)
     getTheMeta();
+
+    // This is not neede, but illustrates that you can pull the meta data as JSON (converted)
+    getTheMetaJson();
 
     // this does the real job
     callProcedureByObject();
@@ -58,6 +61,24 @@ dcl-proc getTheMeta;
 
     // Just dump the result since it is XML by nature:
     json_WriteXMLStmf(pMeta:'/prj/noxdb/testout/srvpgmmeta.xml':1208:*OFF);
+
+    // Always clean up
+    json_delete(pMeta);
+
+end-proc;
+// ------------------------------------------------------------------------------------
+// getTheMeta
+// ------------------------------------------------------------------------------------
+dcl-proc getTheMetaJson;
+
+    Dcl-S pMeta      Pointer;
+
+    // Get meta info from a ILE program:
+    // Note - this will be in PCML format a.k.a XML, but in the object graph
+    pMeta = json_ApplicationMetaJson ('*LIBL' : 'HELOSRVPGM': '*SRVPGM');
+
+    // Just dump the result since it is XML by nature:
+    json_WriteJsonStmf(pMeta:'/prj/noxdb/testout/srvpgmmeta.json':1208:*OFF);
 
     // Always clean up
     json_delete(pMeta);
@@ -133,6 +154,7 @@ dcl-proc callProcedureAllTypes;
     // Setup an object and call
     pIn = json_newObject();
     json_setStr  (pIn: 'char'   : 'abc');
+    json_setStr  (pIn: 'varchar': 'hello');
     json_setInt  (pIn: 'int8'   : -1234);
     json_setInt  (pIn: 'int4'   : -1234);
     json_setInt  (pIn: 'int2'   : -1234);

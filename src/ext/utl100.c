@@ -332,7 +332,7 @@ PUCHAR lastnonblankfrom(PUCHAR in, LONG from)
    return end;
 }
 /* ------------------------------------------------------------- *\
-   strtrimcpy copys and remows blanks before and after
+   strtrimcpy copys and removes blanks before and after
 \* ------------------------------------------------------------- */
 PUCHAR strtrimncpy(PUCHAR out , PUCHAR in , LONG maxlen)
 {

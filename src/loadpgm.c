@@ -42,8 +42,8 @@ _SYSPTR jx_loadServiceProgram (PUCHAR lib , PUCHAR srvPgm)
    UCHAR lib_     [11];
    _SYSPTR pgm;
 
-   sprintf(srvPgm_ , "%-10.10s" , srvPgm);
-   sprintf(lib_    , "%-10.10s" , lib);
+   padncpy (srvPgm_ , srvPgm , 10);
+   padncpy (lib_    , lib    , 10);
 
    try {
       pgm = rslvsp(WLI_SRVPGM , srvPgm_  , lib_  , _AUTH_OBJ_MGMT);
@@ -160,9 +160,200 @@ static PUCHAR parmMetaValue (PJXNODE pNode , PUCHAR key)
 {
    return jx_GetAttrValuePtr ( jx_AttributeLookup (  pNode, key));
 }
+static int min(int a, int b)
+{
+   return (a<b) ? a : b;
+}
+static int buildArgBufferArray (PJXMETHOD pMethod, PJXNODE pParms, PVOID argArray [256] , PUCHAR  pParmBuffer)
+{
+
+   int args = 0;
+   int bufTotlen;
+   PUCHAR pBuf;
+   PJXNODE pLib , pPgm ,pProc , pInterface, pParmObj;
+
+   // TODO move this to a function
+   pLib  = jx_GetNode(pMethod->pMetaNode, pMethod->library);
+   pPgm  = jx_GetNode(pLib , pMethod->program);
+   pProc = jx_GetNode(pPgm , pMethod->procedure);
+
+   pInterface = (pProc == NULL) ? pPgm : pProc;
+   bufTotlen =  atoi(jx_GetValuePtr  (pInterface , "buflen" , "0")) ;
+
+   memset ( pParmBuffer , '\0',  bufTotlen);
+
+   pParmObj = jx_GetNodeChild(jx_GetNode ( pInterface , "parms"));
+   while (pParmObj) {
+      JX_DTYPE dType = *jx_GetValuePtr (pParmObj , "dType" , "?");
+      int offset     = atoi(jx_GetValuePtr  (pParmObj , "offset" , "0"));
+      int prec       = atoi(jx_GetValuePtr  (pParmObj , "prec"   , "0"));
+      int length     = atoi(jx_GetValuePtr  (pParmObj , "length"   , "0"));
+      int buflen     = atoi(jx_GetValuePtr  (pParmObj , "buflen"   , "0"));
+      PUCHAR format  = jx_GetValuePtr   (pParmObj , "format" , "");
+      UCHAR  use     = *jx_GetValuePtr  (pParmObj , "use"    , "B");
+      PUCHAR name    = jx_GetValuePtr   (pParmObj , "name"   , "????");
+      PUCHAR pValue  = jx_GetValuePtr   (pParms , name , "");
+
+      pBuf = pParmBuffer + offset;
+      argArray [args++] = pBuf;
+
+      switch (dType) {
+         case JX_DTYPE_CHAR: {
+            padncpy ( pBuf, pValue , length);
+            break;
+         }
+         case JX_DTYPE_VARCHAR: {
+            ULONG actlen = min(strlen (pValue), length);
+            if (prec == 2) {
+               *(PUSHORT) pBuf = actlen;
+            } else {
+               *(PULONG)  pBuf = actlen;
+            }
+            memcpy ( pBuf + prec, pValue , actlen); // include the zero term
+            break;
+         }
+
+         case JX_DTYPE_INT: {
+            switch (length) {
+               case 8: *(long long *) (pBuf) = atoll (pValue); break;
+               case 4: *(long *) pBuf = atol (pValue); break;
+               case 2: *(int *) pBuf = atoi (pValue); break;
+               case 1: *(char *) pBuf = atoi (pValue); break;
+            }
+            break;
+         }
+         case JX_DTYPE_BYTE: {
+            *(PUCHAR) pBuf = atoi (pValue);
+            break;
+         }
+         case JX_DTYPE_PACKED: {
+            str2packedMem ( pBuf  , pValue , length, prec);
+            break;
+         }
+         case JX_DTYPE_ZONED: {
+            str2zonedMem ( pBuf , pValue , length, prec);
+            break;
+         }
+         case JX_DTYPE_DATE: {
+            convertDate  ( pBuf , pValue , format);
+            break;
+         }
+         case JX_DTYPE_TIME: {
+            memcpy ( pBuf , "00.00.00", 8);
+            memcpy ( pBuf , pValue , min(strlen(pValue), length));
+            break;
+         }
+         case JX_DTYPE_TIME_STAMP: {
+            memcpy ( pBuf , "0001-01-01-00.00.00.000000000", length);
+            memcpy ( pBuf , pValue , min(strlen(pValue), length));
+            break;
+         }
+         case JX_DTYPE_UNKNOWN: {
+            break;
+         }
+
+      }
+      pParmObj = jx_GetNodeNext(pParmObj);
+   }
+   return args;
+}
+
+static PJXNODE buildReturnObject (PJXMETHOD  pMethod, PJXNODE pParms, PVOID argArray [256], int args , PUCHAR pParmBuffer)
+{
+   int argIx= 0;
+
+   PJXNODE pParmMeta = pMethod->pMetaNode;
+   PJXNODE pReturnObject = jx_NewObject(NULL);
+   PJXNODE pLib , pPgm ,pProc , pInterface, pParmObj;
+
+   // TODO move this to a function
+   pLib  = jx_GetNode(pMethod->pMetaNode, pMethod->library);
+   pPgm  = jx_GetNode(pLib , pMethod->program);
+   pProc = jx_GetNode(pPgm , pMethod->procedure);
+
+   pInterface = (pProc == NULL) ? pPgm : pProc;
+
+   pParmObj = jx_GetNodeChild(jx_GetNode ( pInterface , "parms"));
+   while (pParmObj) {
+      if (*jx_GetValuePtr  (pParmObj , "use"    , "B") == 'B') {
+
+         UCHAR temp [256];
+         UCHAR data [32000];
+         PUCHAR pData = data;
+         NODETYPE nodeType = VALUE;
+         JX_DTYPE dType = *jx_GetValuePtr (pParmObj , "dType" , "?");
+         int offset     = atoi(jx_GetValuePtr  (pParmObj , "offset" , "0"));
+         int prec       = atoi(jx_GetValuePtr  (pParmObj , "prec"   , "0"));
+         int length     = atoi(jx_GetValuePtr  (pParmObj , "length"   , "0"));
+         int buflen     = atoi(jx_GetValuePtr  (pParmObj , "buflen"   , "0"));
+         PUCHAR format  = jx_GetValuePtr   (pParmObj , "format" , "");
+         UCHAR  use     = *jx_GetValuePtr  (pParmObj , "use"    , "B");
+         UCHAR  seperator  = *jx_GetValuePtr  (pParmObj , "seperator" , ".");
+         PUCHAR name    = jx_GetValuePtr   (pParmObj , "name"   , "????");
+
+         pParmBuffer = argArray [argIx];
+
+         switch (dType) {
+            case JX_DTYPE_CHAR: {
+               pData = righttrimlen(pParmBuffer , length );
+               break;
+            }
+            case JX_DTYPE_VARCHAR: {
+               int actlen =  (prec == 2) ?  *(PUSHORT) pParmBuffer : *(PULONG) pParmBuffer;
+               substr (data  , pParmBuffer + prec ,actlen);
+               break;
+            }
+
+            case JX_DTYPE_INT: {
+               switch (length) {
+                  case 8: sprintf ( data , "%lld" ,*(long long *) pParmBuffer); break;
+                  case 4: sprintf ( data , "%ld"  ,*(long *)      pParmBuffer); break;
+                  case 2: sprintf ( data , "%d"   ,*(short int *) pParmBuffer); break;
+                  case 1: sprintf ( data , "%d"   ,*(short int *) pParmBuffer); break; // check !!
+                  }
+               break;
+            }
+            case JX_DTYPE_BYTE: {
+               sprintf ( data , "%c"   ,* pParmBuffer);
+               break;
+            }
+            case JX_DTYPE_PACKED: {
+               pData = fmtPacked(data  , pParmBuffer , length  , prec , '.');
+               nodeType = LITERAL;
+               break;
+            }
+            case JX_DTYPE_ZONED: {
+               pData = fmtZoned (data  , pParmBuffer , length  , prec, '.');
+               nodeType = LITERAL;
+               break;
+            }
+            case JX_DTYPE_DATE: {
+               pData = fmtDate  ( data , pParmBuffer , format , seperator);
+               break;
+            }
+            case JX_DTYPE_TIME: {
+               pData = fmtTime  ( data , pParmBuffer , seperator);
+               break;
+            }
+            case JX_DTYPE_TIME_STAMP: {
+               substr  ( data  ,  pParmBuffer , length);
+               break;
+            }
+            case JX_DTYPE_UNKNOWN: {
+               break;
+            }
+         }
+         jx_SetValueByName( pReturnObject , str2lower (temp, name ) , pData , nodeType );
+      }
+      argIx++;
+      pParmObj = jx_GetNodeNext(pParmObj);
+   }
+
+   return pReturnObject;
+}
 /* --------------------------------------------------------------------------- *\
    parse PCML:
-      <pcml version="7.0">
+   <pcml version="7.0">
       <program name="ALLTYPES" entrypoint="ALLTYPES">
          <data name="CHAR" type="char" length="10" usage="inputoutput"/>
          <data name="INT" type="int" length="8" precision="63" usage="inputoutput"/>
@@ -185,25 +376,12 @@ static PUCHAR parmMetaValue (PJXNODE pNode , PUCHAR key)
 \* --------------------------------------------------------------------------- */
 static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
 {
-   PJXNODE pParm , pOutParm , pInParm;
    PJXNODE pReturnObject;
    PJXNODE pParms;
    BOOL    freeAfter;
    UCHAR   parmbuffer [320000];
-   PUCHAR  pParmBuffer = parmbuffer;
-   SHORT   parmIx = 0;
    PVOID   argArray[256];
-   SHORT   parmNum;
-   UCHAR   rootNode [128];
-
-
-   if ( pMethod->userMethodIsProgram) {
-      strcpy ( rootNode , "/pcml/program/data"); // assume only PEP
-   } else {
-      sprintf ( rootNode ,  "/pcml/program%c%cname=%s%c/data",BraBeg , Masterspace, pMethod->procedure, BraEnd );
-   }
-
-   pOutParm = pInParm = pParm = jx_GetNode  (pMethod->pPcml , rootNode) ;
+   int     args;
 
    if ((parms != NULL)
    &&  (parms->signature != NODESIG)) {
@@ -214,120 +392,16 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
       freeAfter = FALSE;
    }
 
-   for (pInParm = pParm; pInParm ;  pInParm = jx_GetNodeNext(pInParm) ) {
-      PUCHAR nodeType = jx_GetNodeNamePtr (pInParm);
-      PUCHAR name   = parmMetaValue ( pInParm, "name");
-      PUCHAR type   = parmMetaValue ( pInParm, "type");
-      PUCHAR length = parmMetaValue ( pInParm, "length");
-      PUCHAR usage  = parmMetaValue ( pInParm, "usage");
-      int len = length ? atoi(length) : 0;
-      int dtaLen, bufLen;
-      PUCHAR pValue =  jx_GetNodeValuePtr(jx_GetNode  (pParms ,name),"") ;
-      argArray [parmIx++] = pParmBuffer;
-
-      if ( 0 == strcmp ( type, "char")) {
-         padncpy ( pParmBuffer , pValue , len);
-         pParmBuffer[len] = '\0'; // terminate for now
-         bufLen = len+ 1 ; // room for zero term
-      } else if ( 0 == strcmp ( type, "varchar")) {
-         long actlen = strlen ( pValue );
-         memcpy ( pParmBuffer  , pValue , actlen + 1); // include the zero term
-         bufLen = len+ 1 ; // room for zero term
-      } else if ( 0 == strcmp ( type, "int")) {
-         switch (len) {
-            case 8: *(long long *) pParmBuffer = atoll (pValue); break;
-            case 4: *(long *) pParmBuffer = atol (pValue); break;
-            case 2: *(int *) pParmBuffer = atoi (pValue); break;
-            case 1: *(char *) pParmBuffer = atoi (pValue); break;
-         }
-         bufLen = len;
-      } else if ( 0 == strcmp ( type, "byte")) {
-         *(char *) pParmBuffer = atoi (pValue);
-         bufLen = len ;
-      } else if ( 0 == strcmp ( type, "packed")) {
-         SHORT  precision = atoi(parmMetaValue ( pInParm, "precision"));
-         str2packedMem ( pParmBuffer , pValue , len , precision);
-         bufLen = (len + 1) / 2;
-      } else if ( 0 == strcmp ( type, "zoned")) {
-         SHORT  precision = atoi(parmMetaValue ( pInParm, "precision"));
-         str2zonedMem ( pParmBuffer , pValue , len , precision);
-         bufLen = len;
-      } else if ( 0 == strcmp ( type, "date")) {
-         PUCHAR format = parmMetaValue ( pInParm, "dateformat");
-         convertDate ( pParmBuffer , pValue , format);
-         bufLen = 11 ; // room for zero term
-      } else if ( 0 == strcmp ( type, "time")) {
-         memcpy ( pParmBuffer , "00.00.00", 9);
-         memcpy ( pParmBuffer , pValue , strlen(pValue));
-         bufLen = 9 ; // room for zero term
-      } else if ( 0 == strcmp ( type, "timestamp")) {
-         memcpy ( pParmBuffer , "0001-01-01-00.00.00.000000", 27);
-         memcpy ( pParmBuffer , pValue , strlen(pValue));
-         bufLen = 27 ; // room for zero term
-      }
-
-      pParmBuffer += bufLen;
-   }
+   args = buildArgBufferArray ( pMethod, pParms, argArray, parmbuffer);
 
    if ( pMethod->userMethodIsProgram) {
-      _CALLPGMV ( &pMethod->userMethod , argArray , parmIx );
+      _CALLPGMV ( &pMethod->userMethod , argArray , args );
    } else {
-      jx_callProc (pMethod->userMethod , argArray , parmIx);
+      jx_callProc (pMethod->userMethod , argArray , args);
    }
 
-   pReturnObject = jx_NewObject(NULL);
-   parmIx= 0;
-   for (pOutParm = pParm; pOutParm ;  pOutParm = jx_GetNodeNext(pOutParm), parmIx++ ) {
-      PUCHAR usage  = parmMetaValue ( pOutParm, "usage");
+   pReturnObject = buildReturnObject (pMethod, pParms, argArray, args , parmbuffer);
 
-      if (0 == strcmp(usage , "inputoutput")) {
-         PUCHAR name   = parmMetaValue ( pOutParm, "name");
-         PUCHAR type   = parmMetaValue ( pOutParm, "type");
-         PUCHAR length = parmMetaValue ( pOutParm, "length");
-         int len = length ? atoi(length) : 0;
-         UCHAR temp [256];
-         UCHAR data [256];
-         PUCHAR pData = data;
-         NODETYPE nodeType = VALUE;
-
-         pParmBuffer = argArray [parmIx];
-         if ( 0 == strcmp ( type, "char")) {
-            pData = righttrimlen(pParmBuffer , len );
-         } else if ( 0 == strcmp ( type, "varchar")) {
-            substr (data  , pParmBuffer + 2 , *(short int *) pParmBuffer);
-         } else if ( 0 == strcmp ( type, "packed")) {
-            SHORT  precision = atoi(parmMetaValue ( pOutParm, "precision"));
-            pData = fmtPacked(data  , pParmBuffer , len  , precision, '.');
-            nodeType = LITERAL;
-         } else if ( 0 == strcmp ( type, "int")) {
-            switch (len) {
-               case 8: sprintf ( data , "%lld" ,*(long long *) pParmBuffer); break;
-               case 4: sprintf ( data , "%ld"  ,*(long *)      pParmBuffer); break;
-               case 2: sprintf ( data , "%d"   ,*(short int *) pParmBuffer); break;
-               case 1: sprintf ( data , "%d"   ,*(short int *) pParmBuffer); break; // check !!
-            }
-            nodeType = LITERAL;
-         } else if ( 0 == strcmp ( type, "byte")) {
-            sprintf ( data , "%d"   , 0 + pParmBuffer[0]);  // check !!
-            nodeType = LITERAL;
-         } else if ( 0 == strcmp ( type, "zoned")) {
-            SHORT  precision = atoi(parmMetaValue ( pOutParm, "precision"));
-            pData = fmtZoned (data  , pParmBuffer , len  , precision, '.');
-            nodeType = LITERAL;
-         } else if ( 0 == strcmp ( type, "date")) {
-            PUCHAR format = parmMetaValue ( pOutParm, "DATEFORMAT");
-            PUCHAR seprator = parmMetaValue ( pOutParm, "dateseparator");
-            pData = fmtDate  ( data , pParmBuffer , format , convertSeperator(seprator));
-         } else if ( 0 == strcmp ( type, "time")) {
-            PUCHAR seprator = parmMetaValue ( pOutParm, "timeseparator"); // TODO
-            pData = fmtTime  ( data , pParmBuffer , convertSeperator(seprator));
-         } else if ( 0 == strcmp ( type, "timestamp")) {
-            memcpy ( data  , "0001-01-01-00.00.00.000000", 27);
-            memcpy ( data  , pParmBuffer , len == 0 ? 26 : len);
-         }
-         jx_SetValueByName( pReturnObject , str2lower (temp, name ) , pData , nodeType );
-      }
-   }
 
    if (freeAfter) {
       jx_NodeDelete (pParms);
@@ -350,8 +424,8 @@ PJXNODE  jx_ProgramMeta ( PUCHAR library , PUCHAR Program)
    PUCHAR pcml;
    UCHAR libpgm [20];
 
-   memcpy ( libpgm      , Program , 10 );
-   memcpy ( libpgm +10  , library , 10 );
+   padncpy ( libpgm      , Program , 10 );
+   padncpy ( libpgm +10  , library , 10 );
 
    QBNRPII (
       buffer ,                   /* Receiver variable                    */
@@ -383,8 +457,8 @@ PJXNODE  jx_ProcedureMeta ( PUCHAR library , PUCHAR Program , PUCHAR Procedure)
    PUCHAR pcml;
    UCHAR libpgm [20];
 
-   memcpy ( libpgm      , Program , 10 );
-   memcpy ( libpgm +10  , library , 10 );
+   padncpy ( libpgm      , Program , 10 );
+   padncpy ( libpgm +10  , library , 10 );
 
    QBNRPII (
       buffer ,                   /* Receiver variable                    */
@@ -401,6 +475,10 @@ PJXNODE  jx_ProcedureMeta ( PUCHAR library , PUCHAR Program , PUCHAR Procedure)
       pcml = buffer + pet->Offset_Interface_Info;
       pcml [pet->Interface_Info_Length_Ret] = '\0';
       pPcml  = jx_ParseString(pcml, "");
+      if (*library == '*') {
+         memcpy ( library , pet->Module_Library, 10);
+      }
+
       return  pPcml;
       // TODO !! pOpenAPI->ccsid = pet->Interface_Info_CCSID;
       /*
@@ -415,6 +493,170 @@ PJXNODE  jx_ProcedureMeta ( PUCHAR library , PUCHAR Program , PUCHAR Procedure)
    return NULL;
 }
 /* --------------------------------------------------------------------------- *\
+   Convert pcml to uniform json used for both programs and service programs
+\* --------------------------------------------------------------------------- */
+PJXNODE  jx_ApplicationMetaJson ( PUCHAR library , PUCHAR program , PUCHAR objectType)
+{
+   PJXNODE pResultObject;
+   PJXNODE pPcml , pParmMeta , pParms, pParm, pLib, pProgram, pProcedure , pPcmlProgram , pPcmlParms;
+
+   int     args;
+   int     offset;
+   UCHAR   tempPgm [11];
+   UCHAR   tempLib [11];
+   UCHAR   tempProc [256];
+
+   if (objectType[1] == 'P') {
+      pPcml = jx_ProgramMeta ( library , program );
+   } else {
+      pPcml = jx_ProcedureMeta ( library , program , "*ALL");
+   }
+
+   if (pPcml == NULL ) return NULL;
+
+   pPcmlProgram = jx_GetNode  (pPcml , "/pcml/program");
+   if (pPcmlProgram == NULL) {
+      jx_NodeDelete (pPcml);
+      return NULL;
+   }
+
+   pResultObject = jx_NewObject(NULL);
+   pLib          = jx_NewObject(NULL);
+   pProgram      = jx_NewObject(NULL);
+
+   strtrimncpy ( tempPgm  , program , 10);
+   strtrimncpy ( tempLib  , library , 10);
+
+   while (pPcmlProgram) {
+      PUCHAR  entrypoint     = parmMetaValue ( pPcmlProgram, "entrypoint");
+      args = 0;
+      offset = 0;
+
+      pParms    = jx_NewArray (NULL);
+      pParmMeta = jx_GetNode  (pPcmlProgram , "data");
+      while (pParmMeta) {
+
+         PUCHAR nodeType  = jx_GetNodeNamePtr (pParmMeta);
+         PUCHAR name      = parmMetaValue ( pParmMeta, "name");
+         PUCHAR type      = parmMetaValue ( pParmMeta, "type");
+         PUCHAR length    = parmMetaValue ( pParmMeta, "length");
+         PUCHAR usage     = parmMetaValue ( pParmMeta, "usage");
+         PUCHAR precision = NULL;
+         PUCHAR format    = NULL;
+         PUCHAR separator = NULL;
+         UCHAR  separatorChar = '.';
+         UCHAR  dType;
+         UCHAR  use      =  (0 == strcmp(usage , "inputoutput")) ? 'B' : 'I';
+
+         int len = length ? atoi(length) : 0;
+         int bufLen = len;
+
+         // Struct? (No types no structs)
+         if ( type == NULL ) {
+            // Is it a varchar
+            PJXNODE pChild1 = jx_GetNodeChild ( pParmMeta);
+            PJXNODE pChild2 = jx_GetNodeNext  ( pChild1 );
+
+            if ((pChild1 && pChild2)
+            && ( 0 == strcmp (parmMetaValue ( pChild1, "name") ,"length")
+            &&   0 == strcmp (parmMetaValue ( pChild2, "name") ,"string"))) {
+               int lenlen = atoi(parmMetaValue ( pChild1, "length"));
+               int size   = atoi(parmMetaValue ( pParmMeta, "outputsize"));
+               dType = JX_DTYPE_VARCHAR;
+               type = "varchar"; // Override the struct to varchar
+               len = size - lenlen;
+               precision = (lenlen == 2) ? "2" : "4";
+               bufLen = size;
+            } else {
+               // Other struct -- TODO CALL
+            }
+         } else if ( 0 == strcmp ( type, "char")) {
+            dType = JX_DTYPE_CHAR;
+         //} else if ( 0 == strcmp ( type, "varchar")) {
+         //   dType = JX_DTYPE_VARCHAR;
+         } else if ( 0 == strcmp ( type, "int")) {
+            dType = JX_DTYPE_INT;
+         } else if ( 0 == strcmp ( type, "byte")) {
+            dType = JX_DTYPE_BYTE;
+         } else if ( 0 == strcmp ( type, "packed")) {
+            dType = JX_DTYPE_PACKED;
+            bufLen = (len + 1) / 2;
+            precision= parmMetaValue ( pParmMeta, "precision");
+         } else if ( 0 == strcmp ( type, "zoned")) {
+            dType = JX_DTYPE_ZONED;
+            precision= parmMetaValue ( pParmMeta, "precision");
+         } else if ( 0 == strcmp ( type, "date")) {
+            dType = JX_DTYPE_DATE;
+            separator = parmMetaValue ( pParmMeta, "dateseparator");
+            separatorChar = convertSeperator(separator);
+            format = parmMetaValue ( pParmMeta, "dateformat");
+            bufLen = 10 ; // TODO More?
+         } else if ( 0 == strcmp ( type, "time")) {
+            dType = JX_DTYPE_TIME;
+            separator = parmMetaValue ( pParmMeta, "timeseparator");
+            separatorChar = convertSeperator(separator);
+            bufLen = 8 ;
+         } else if ( 0 == strcmp ( type, "timestamp")) {
+            dType = JX_DTYPE_TIME_STAMP;
+            precision= parmMetaValue ( pParmMeta, "precision");
+            if (precision == NULL) {
+               bufLen = 26 ; // TODO -  Precision default room for zero term
+            } else {
+               bufLen = 20 + atoi(precision) ;
+            }
+
+         } else {
+            dType = JX_DTYPE_UNKNOWN;
+         }
+         pParm = jx_NewObject (NULL);
+         jx_SetValueByName(pParm  , "name"  , name   , VALUE);
+         jx_SetValueByName(pParm  , "type"  , type   , VALUE);
+         jx_SetCharByName (pParm  , "dType" , dType  , OFF);
+         jx_SetCharByName (pParm  , "use"   , use    , OFF);
+         jx_SetIntByName  (pParm  , "offset", offset , OFF);
+         jx_SetIntByName  (pParm  , "buflen", bufLen , OFF);
+         jx_SetIntByName  (pParm  , "length", len , OFF);
+         if (precision) {
+            jx_SetValueByName (pParm, "prec",  precision , LITERAL);
+         }
+         if (format) {
+            jx_SetValueByName (pParm, "format",  format , VALUE);
+         }
+         if (separator) {
+            jx_SetCharByName (pParm, "separator",  separatorChar , VALUE);
+         }
+
+         jx_ArrayPush ( pParms , pParm , FALSE);
+
+         pParmMeta = jx_GetNodeNext(pParmMeta);
+         offset += bufLen;
+      }
+
+      if (objectType[1] == 'P') { // *PGM
+         jx_SetIntByName ( pProgram , "buflen", offset , OFF);
+         jx_NodeMoveInto ( pProgram , "parms" , pParms);
+      } else {
+         pProcedure    = jx_NewObject(NULL);
+         jx_SetIntByName ( pProcedure , "buflen", offset , OFF);
+         jx_NodeMoveInto ( pProcedure , "parms" , pParms);
+         strtrimncpy ( tempProc , entrypoint , PROC_NAME_MAX);
+         jx_NodeMoveInto ( pProgram , tempProc, pProcedure);
+      }
+
+      pPcmlProgram = jx_GetNodeNext(pPcmlProgram);
+
+   }
+
+   jx_NodeMoveInto ( pLib          , tempPgm , pProgram);
+   jx_NodeMoveInto ( pResultObject , tempLib , pLib);
+
+   jx_NodeDelete (pPcml);
+   return pResultObject;
+
+}
+
+
+/* --------------------------------------------------------------------------- *\
     Handler :
 \* --------------------------------------------------------------------------- */
 PJXNODE  jx_CallProgram (PUCHAR library , PUCHAR program, PJXNODE parmsP, ULONG optionsP)
@@ -428,14 +670,14 @@ PJXNODE  jx_CallProgram (PUCHAR library , PUCHAR program, PJXNODE parmsP, ULONG 
    ULONG   options = (pParms->OpDescList->NbrOfParms >= 4 ) ? optionsP : 0;
 
    memset ( &pgm , 0 , sizeof(pgm));
-   pgm.pPcml = jx_ProgramMeta(library , program);
    strcpy(pgm.library   , library);
    strcpy(pgm.program   , program);
+   pgm.pMetaNode  = jx_ProgramMeta(pgm.library, pgm.program);
 
    pgm.userMethodIsProgram = TRUE;
-   pgm.userMethod = jx_loadProgram ( library, program);
+   pgm.userMethod = jx_loadProgram ( pgm.library, pgm.program);
    pResult = call (&pgm, parms , options);
-   jx_NodeDelete( pgm.pPcml);
+   jx_NodeDelete( pgm.pMetaNode );
    return pResult;
 }
 /* --------------------------------------------------------------------------- *\
@@ -453,14 +695,14 @@ PJXNODE  jx_CallProcedure (PUCHAR library, PUCHAR srvPgm, PUCHAR procedure, PJXN
    ULONG   options = (pParms->OpDescList->NbrOfParms >= 5 ) ? optionsP : 0;
 
    memset ( &pgm , 0 , sizeof(pgm));
-   pgm.pPcml = jx_ProcedureMeta(library , srvPgm , procedure );
+   strtrimncpy (pgm.library   , library , 10);
+   strtrimncpy (pgm.program   , srvPgm , 10);
+   strtrimncpy (pgm.procedure , procedure , PROC_NAME_MAX );
+   pgm.pMetaNode = jx_ApplicationMetaJson (pgm.library , pgm.program , pgm.procedure );
    pgm.userMethodIsProgram = FALSE;
-   strcpy(pgm.library   , library);
-   strcpy(pgm.program   , srvPgm);
-   strcpy(pgm.procedure , procedure);
 
-   pgm.userMethod = jx_loadServiceProgramProc ( library, srvPgm , procedure);
+   pgm.userMethod = jx_loadServiceProgramProc ( pgm.library, pgm.program , pgm.procedure);
    pResult = call (&pgm, parms , options);
-   jx_NodeDelete( pgm.pPcml);
+   jx_NodeDelete( pgm.pMetaNode);
    return pResult;
 }

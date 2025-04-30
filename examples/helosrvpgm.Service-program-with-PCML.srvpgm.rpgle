@@ -45,28 +45,38 @@ end-proc;
 
 // ------------------------------------------------------------------------------------
 // alltypes - following produces:
-//<?xml version="1.0" encoding="UTF-8" ?>
-//<pcml version="7.0">
-//  <program name="ALLTYPES" entrypoint="ALLTYPES">
-//    <data name="CHAR" type="char" length="10" usage="inputoutput"/>
-//    <data name="INT" type="int" length="8" precision="63" usage="inputoutput"/>
-//    <data name="PACKED" type="packed" length="9" precision="2" usage="inputoutput"/>
-//    <data name="IND" type="char" length="1" usage="inputoutput"/>
-//    <data name="DATE" type="date" dateformat="ISO" dateseparator="hyphen" usage="inputoutput"/>
-//    <data name="TIME" type="time" timeformat="ISO" timeseparator="period" usage="inputoutput"/>
-//    <data name="TIMESTAMP" type="timestamp" usage="inputoutput"/>
-//  </program>
-//  <program name="NAMEAGE" entrypoint="NAMEAGE">
-//    <data name="NAME" type="char" length="10" usage="input"/>
-//    <data name="TEXT" type="char" length="200" usage="inputoutput"/>
-//    <data name="AGE" type="packed" length="5" precision="0" usage="inputoutput"/>
-//  </program>
-//</pcml>
+//  <?xml version="1.0" encoding="UTF-8" ?>
+//  <pcml version="6.0">
+//    <program name="ALLTYPES" entrypoint="ALLTYPES">
+//      <data name="CHAR" type="char" length="10" usage="inputoutput"/>
+//      <struct name="VARCHAR" outputsize="12" usage="inputoutput">
+//        <data name="length" type="int" length="2" precision="16" usage="inherit"/>
+//        <data name="string" type="char" length="length" usage="inherit"/>
+//      </struct>
+//      <data name="INT8" type="int" length="8" precision="63" usage="inputoutput"/>
+//      <data name="INT4" type="int" length="4" precision="31" usage="inputoutput"/>
+//      <data name="UNS8" type="int" length="8" precision="64" usage="inputoutput"/>
+//      <data name="UNS4" type="int" length="4" precision="32" usage="inputoutput"/>
+//      <data name="UNS2" type="byte" length="1" usage="inputoutput"/>
+//      <data name="PACKED" type="packed" length="9" precision="2" usage="inputoutput"/>
+//      <data name="ZONED" type="zoned" length="9" precision="2" usage="inputoutput"/>
+//      <data name="IND" type="char" length="1" usage="inputoutput"/>
+//      <data name="DATE" type="date" dateformat="ISO" dateseparator="hyphen" usage="inputoutput"/>
+//      <data name="TIME" type="time" timeformat="ISO" timeseparator="period" usage="inputoutput"/>
+//      <data name="TIMESTAMP" type="timestamp" usage="inputoutput"/>
+//    </program>
+//    <program name="NAMEAGE" entrypoint="NAMEAGE">
+//      <data name="NAME" type="char" length="10" usage="input"/>
+//      <data name="TEXT" type="char" length="200" usage="inputoutput"/>
+//      <data name="AGE" type="packed" length="5" precision="0" usage="inputoutput"/>
+//    </program>
+//  </pcml>
 // ------------------------------------------------------------------------------------
 dcl-proc alltypes export;
 
     dcl-pi alltypes ;
-        char    char (10);
+        char      char (10);
+        varchar   varchar (10);
         int8     int(20);
         int4     int(10);
 //        int2     int(3);
@@ -83,6 +93,7 @@ dcl-proc alltypes export;
 
 
     char    = 'xyz';
+    varchar = 'Test';
     int8     = -456789012345;
     int4     = -56789;
 //    int2     = -127;
