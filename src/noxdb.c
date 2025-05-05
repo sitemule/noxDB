@@ -3195,7 +3195,7 @@ PJXNODE  jx_SetValueByName (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETY
          jx_SetByParseString (pParentNode , Value, merge , move);
          return jx_traceNode("Parse String", pParentNode);
       }
-      if ( type == POINTER_VALUE) {
+      if ( type == POINTER_VALUE || type == NOXDB_POINTER) {
          jx_NodeSetAsPointer (pParentNode , Value);
          return jx_traceNode("Pointer", pParentNode);
       }

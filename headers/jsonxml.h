@@ -66,6 +66,7 @@ typedef enum {
 	CLONE_OLD           = 17,  // Was OBJLNK - Obsolete yes but maps to CLONE in appplication
 	CLONE               = 18,  // Obsolete ... NO
 	EVALUATE            = 19,  // Obsolete ??
+	NOXDB_POINTER 	    = 20,  // Internal objects 
 	OBJMOVE             = 2048,
 	// Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
 	// Note: "Merge options" are fit in here... from belowe
@@ -258,6 +259,27 @@ typedef _Packed struct _JXMETHOD  {
     UCHAR   procedure [PROC_NAME_MAX];
 	UCHAR   null3;
 } JXMETHOD, * PJXMETHOD;
+
+typedef _Packed struct _JXMETHODPARM  {
+    PJXNODE pMetaNode;
+	PUCHAR nodeType  ;
+	PUCHAR name      ;
+	PUCHAR type      ;
+	PUCHAR length    ;
+	PUCHAR usage     ;
+	PUCHAR precision ;
+	PUCHAR format    ;
+	PUCHAR separator ;
+	UCHAR  separatorChar;
+	UCHAR  dType;
+	UCHAR  use;
+	ULONG  offset;
+	ULONG  size;
+	ULONG  precisionInt;
+	ULONG  lengthInt;
+	NODETYPE graphDataType;
+} METHODPARM, * PMETHODPARM;
+
 
 #pragma enum (1)
 typedef enum {
