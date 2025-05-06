@@ -18,6 +18,8 @@ LONG   memstrreplace(PUCHAR buf , LONG len , PUCHAR from , PUCHAR to );
 PUCHAR strreplacechar(PUCHAR str, UCHAR find, UCHAR replace);
 PUCHAR fmtPacked(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint);
 PUCHAR fmtZoned(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint);
+PUCHAR fmtInteger (PUCHAR pOut , PUCHAR pIn, SHORT length, BOOL isSigned);
+
 PUCHAR stripLeadingZeros(PUCHAR out, PUCHAR input);
 PUCHAR str2lower(PUCHAR out , PUCHAR in);
 PUCHAR str2upper(PUCHAR out , PUCHAR in);
@@ -29,6 +31,7 @@ PUCHAR strlastchr(PUCHAR base, UCHAR c );
 PUCHAR memstr(PUCHAR base, PUCHAR key , LONG len);
 PUCHAR memistr(PUCHAR base, PUCHAR key , LONG len);
 PUCHAR strtrimncpy(PUCHAR out , PUCHAR in , LONG maxlen);
+PUCHAR strrighttrimncpy(PUCHAR out , PUCHAR in , LONG maxlen);
 int cpy  (PUCHAR out , PUCHAR in);
 PUCHAR trim(PUCHAR in);
 PUCHAR firstnonblank(PUCHAR in);
@@ -58,7 +61,9 @@ PUCHAR asciihex2BinMem (PUCHAR out , PUCHAR in , LONG len);
 void split2LibAndName(PUCHAR Lib , PUCHAR Name , PUCHAR fromString);
 FIXEDDEC num(PVARCHAR Str, PUCHAR DecPointP);
 FIXEDDEC str2dec(PUCHAR str, UCHAR decPoint);
-PUCHAR   str2packedMem ( PUCHAR out , PUCHAR in , SHORT len , SHORT prec);
+PUCHAR   str2packedMem  ( PUCHAR out , PUCHAR in , SHORT len , SHORT prec);
+PUCHAR   str2integerMem ( PUCHAR out , PUCHAR in , SHORT len , BOOL isSigned );
+
 LONG packedMem2Int(PUCHAR buf, SHORT bytes);
 void fcloseAndSetNull  (FILE**  p);
 LGL isOn (int boolExpr);

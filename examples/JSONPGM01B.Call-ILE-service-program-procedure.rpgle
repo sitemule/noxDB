@@ -161,8 +161,8 @@ dcl-proc callProcedureAllTypes;
     json_setInt  (pIn: 'uns8'   : 1234);
     json_setInt  (pIn: 'uns4'   : 1234);
     json_setInt  (pIn: 'uns2'   : 123);
-    json_setNum  (pIn: 'packed' : 2345.67);
-    json_setNum  (pIn: 'zoned'  : 3456.78);
+    json_setNum  (pIn: 'packed' : -2345.67);
+    json_setNum  (pIn: 'zoned'  : -123456.7891);
     json_setBool (pIn: 'bool'   : *ON);
     json_setDate (pIn: 'date'   : %date());
     json_setTime (pIn: 'time'   : %time());
@@ -173,6 +173,9 @@ dcl-proc callProcedureAllTypes;
         msg = json_Message(pOut);
         dsply msg;
     EndIf;
+
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmalltypes.json':1208:*OFF);
+
 
     // Dump the result
     json_joblog(pOut);

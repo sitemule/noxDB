@@ -66,7 +66,7 @@ typedef enum {
 	CLONE_OLD           = 17,  // Was OBJLNK - Obsolete yes but maps to CLONE in appplication
 	CLONE               = 18,  // Obsolete ... NO
 	EVALUATE            = 19,  // Obsolete ??
-	NOXDB_POINTER 	    = 20,  // Internal objects 
+	NOXDB_POINTER 	    = 20,  // Internal objects
 	OBJMOVE             = 2048,
 	// Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
 	// Note: "Merge options" are fit in here... from belowe
@@ -246,40 +246,6 @@ _SYSPTR jx_loadServiceProgramProc (PUCHAR lib , PUCHAR srvPgm, PUCHAR procName);
 _SYSPTR jx_loadProgram (PUCHAR lib , PUCHAR pgm);
 void jx_callProc ( _SYSPTR proc , void * args [64] , SHORT parms);
 
-#define PROC_NAME_MAX 64
-typedef _Packed struct _JXMETHOD  {
-    PJXNODE pMetaNode;
-    _SYSPTR userMethod;
-    BOOL    userMethodIsProgram;
-    ULONG   ccsid;
-    UCHAR   library   [10];
-	UCHAR   null1;
-    UCHAR   program   [10];
-	UCHAR   null2;
-    UCHAR   procedure [PROC_NAME_MAX];
-	UCHAR   null3;
-} JXMETHOD, * PJXMETHOD;
-
-typedef _Packed struct _JXMETHODPARM  {
-    PJXNODE pMetaNode;
-	PUCHAR nodeType  ;
-	PUCHAR name      ;
-	PUCHAR type      ;
-	PUCHAR length    ;
-	PUCHAR usage     ;
-	PUCHAR precision ;
-	PUCHAR format    ;
-	PUCHAR separator ;
-	UCHAR  separatorChar;
-	UCHAR  dType;
-	UCHAR  use;
-	ULONG  offset;
-	ULONG  size;
-	ULONG  precisionInt;
-	ULONG  lengthInt;
-	NODETYPE graphDataType;
-} METHODPARM, * PMETHODPARM;
-
 
 #pragma enum (1)
 typedef enum {
@@ -295,6 +261,39 @@ typedef enum {
 	JX_DTYPE_UNKNOWN  = '?'
 } JX_DTYPE, *PJX_DTYPE;
 #pragma enum (pop)
+
+#define PROC_NAME_MAX 64
+typedef struct _JXMETHOD  {
+    PJXNODE pMetaNode;
+    _SYSPTR userProgram; // program or service program
+    _SYSPTR userMethod;
+    BOOL    userMethodIsProgram;
+    ULONG   ccsid;
+    UCHAR   library   [10];
+	UCHAR   null1;
+    UCHAR   program   [10];
+	UCHAR   null2;
+    UCHAR   procedure [PROC_NAME_MAX];
+	UCHAR   null3;
+} JXMETHOD, * PJXMETHOD;
+
+typedef struct _JXMETHODPARM  {
+	UCHAR    signature; // always hex 00
+	UCHAR    name[PROC_NAME_MAX];
+	BOOL     isStructure;
+	JX_DTYPE dType;
+	UCHAR    use;
+	ULONG    offset;
+	ULONG    size;
+	ULONG    precision;
+	ULONG    length;
+	ULONG    dim;
+	UCHAR    format[10];
+	UCHAR    separatorChar;
+	NODETYPE graphDataType;
+} METHODPARM, * PMETHODPARM;
+
+
 
 
 #endif
