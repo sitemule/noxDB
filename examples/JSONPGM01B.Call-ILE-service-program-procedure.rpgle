@@ -43,6 +43,8 @@ Dcl-s msg        char(50);
     // Datatypes supported
     callProcedureAllTypes();
 
+    // Level of complexity supported
+    callProcedureComplex();
 
     // That's it..
     *inlr = *on;
@@ -175,6 +177,35 @@ dcl-proc callProcedureAllTypes;
     EndIf;
 
     json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmalltypes.json':1208:*OFF);
+
+
+    // Dump the result
+    json_joblog(pOut);
+
+    // Always clean up
+    json_delete(pIn);
+    json_delete (pOut);
+
+end-proc;
+
+
+dcl-proc callProcedureComplex;
+
+    Dcl-S pIn        Pointer;
+    Dcl-S pOut       Pointer;
+    Dcl-s msg        char(50);
+
+    // Setup an object and call
+    pIn = json_newObject();
+    json_setInt  (pIn: 'id'     : 123456789);
+
+    pOut  = json_CallProcedure  ('*LIBL' : 'HELOSRVPGM' : 'COMPLEX' : pIn : JSON_GRACEFUL_ERROR);
+    If json_Error(pOut) ;
+        msg = json_Message(pOut);
+        dsply msg;
+    EndIf;
+
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmcomplex.json':1208:*OFF);
 
 
     // Dump the result

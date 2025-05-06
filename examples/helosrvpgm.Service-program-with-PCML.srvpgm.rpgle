@@ -24,15 +24,6 @@ ctl-opt copyright('Sitemule.com  (C), 2023');
 ctl-opt decEdit('0,') datEdit(*YMD.);
 ctl-opt debug(*yes);
 
-dcl-ds employee_t template;
-    id        int(10);
-    name      char(50);
-    age       int(3);
-    income    packed(9:2);
-    birthDate date;
-    birthTime time;
-    updated   timestamp;
-end-ds;
 // ------------------------------------------------------------------------------------
 // nameage
 // ------------------------------------------------------------------------------------
@@ -120,22 +111,34 @@ dcl-proc alltypes export;
 
 end-proc;
 
+// ------------------------------------------------------------------------------------
 dcl-proc complex export;
+
+    dcl-ds employee_t template qualified;
+        id        int(10);
+        name      char(50);
+        age       int(10);
+        income    packed(9:2);
+        birthDate date;
+        birthTime time;
+        updated   timestamp;
+        isMale    ind;
+    end-ds;
+
 
     dcl-pi *n ;
         id        int(10) const ;
-        employee  likeds(employee_t);
+        employee  likeds(employee_t) ;
     end-pi;
 
-    // clear employee;
-    // employee.id = id;
-    // employee.name = 'John Doe';
-    // employee.age = 25;
-    // employee.income = 12345.67;
-    // employee.birthDate = %date();
-    // employee.birthTime = %time();
-    // employee.updated = %timestamp();
-    // employee.isMale = *on;
-//
+    clear employee;
+    employee.id = id;
+    employee.name = 'John Doe';
+    employee.age = 25;
+    employee.income = 12345.67;
+    employee.birthDate = %date();
+    employee.birthTime = %time();
+    employee.updated = %timestamp();
+    employee.isMale = *on;
     return ;
 end-proc;
