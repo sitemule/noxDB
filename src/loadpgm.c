@@ -428,6 +428,11 @@ PJXNODE  jx_ProgramMeta ( PUCHAR library , PUCHAR Program)
    pcml = buffer + pet->Offset_Interface_Info;
    pcml [pet->Interface_Info_Length_Ret] = '\0';
    pPcml  = jx_ParseString(pcml, "");
+
+   if (*library == '*') {
+      memcpy ( library , pet->Module_Library, 10);
+   }
+
    return  pPcml;
 }
 /* --------------------------------------------------------------------------- *\
@@ -712,9 +717,11 @@ PJXNODE  jx_CallProgram (PUCHAR library , PUCHAR program, PJXNODE parmsP, ULONG 
    ULONG   options = (pParms->OpDescList->NbrOfParms >= 4 ) ? optionsP : 0;
 
    memset ( &pgm , 0 , sizeof(pgm));
-   strcpy(pgm.library   , library);
-   strcpy(pgm.program   , program);
-   pgm.pMetaNode  = jx_ProgramMeta(pgm.library, pgm.program);
+   strtrimncpy (pgm.library   , library , 10);
+   strtrimncpy (pgm.program   , program  , 10);
+   strtrimncpy (pgm.procedure , "*PGM" , PROC_NAME_MAX );
+
+   pgm.pMetaNode = jx_ApplicationMetaJson (pgm.library , pgm.program , pgm.procedure );
 
    pgm.userMethodIsProgram = TRUE;
    pgm.userMethod = jx_loadProgram ( pgm.library, pgm.program);
