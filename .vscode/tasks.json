@@ -93,6 +93,89 @@
             "problemMatcher": [
                 "$gcc"
             ]
+        },
+        {
+            "label": "Synchronize local to remote",
+            "type": "shell",
+            "command": "${workspaceFolder}/.sitemule/rsync.sh",
+            "options": {
+                "env": {
+                    "FILE_BASE_NAME": "${fileBasename}",
+                    "FILE_REL_PATH": "${relativeFile}",
+                    "FOLDER_BASE_NAME": "${workspaceFolderBasename}",
+                    "FOLDER_ROOT": "${workspaceRoot}"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Compile current unit test file",
+            "type": "shell",
+            "dependsOn": [
+                "Synchronize local to remote"
+            ],
+            "command": "${workspaceFolder}/.sitemule/remote_run.sh ${workspaceFolder}/.sitemule/unittests.sh",
+            "options": {
+                "env": {
+                    "FILE_BASE_NAME": "${fileBasename}",
+                    "FILE_REL_PATH": "${relativeFile}",
+                    "FOLDER_BASE_NAME": "${workspaceFolderBasename}",
+                    "FOLDER_ROOT": "${workspaceRoot}"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": "unittests/*.rpgle",
+            },
+            "problemMatcher": {
+                "owner": "RPG",
+                "fileLocation": ["relative", "${workspaceRoot}/unittests"],
+                "pattern": {
+                    // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
+                    "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    // "severity": 4,
+                    "message": 4
+                }
+            }
+        },
+        {
+            "label": "Build all from local",
+            "type": "shell",
+            "dependsOn": [
+                "Synchronize local to remote"
+            ],
+            "command": "${workspaceFolder}/.sitemule/remote_run.sh ${workspaceFolder}/.sitemule/build_noxdb.sh",
+            "options": {
+                "env": {
+                    "FILE_BASE_NAME": "${fileBasename}",
+                    "FILE_REL_PATH": "${relativeFile}",
+                    "FOLDER_BASE_NAME": "${workspaceFolderBasename}",
+                    "FOLDER_ROOT": "${workspaceRoot}"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "RPG",
+                "fileLocation": ["relative", "${workspaceRoot}"],
+                "pattern": {
+                    // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
+                    "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    // "severity": 4,
+                    "message": 4
+                }
+            }
         }
 
     ]
