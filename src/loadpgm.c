@@ -208,10 +208,10 @@ static int buildArgBufferArray (PJXMETHOD pMethod, PJXNODE pParms, PVOID argArra
          }
          case JX_DTYPE_VARCHAR: {
             ULONG actlen = min(strlen (pValue), pMethodParm->length);
-            if (pMethodParm->precision == 2) {
-               *(PUSHORT) pBuf = actlen;
-            } else {
+            if (pMethodParm->precision == 4) {
                *(PULONG)  pBuf = actlen;
+            } else {
+               *(PUSHORT) pBuf = actlen;
             }
             memcpy ( pBuf + pMethodParm->precision, pValue , actlen); // include the zero term
             break;
@@ -291,7 +291,7 @@ static PJXNODE buildReturnObject (PJXMETHOD  pMethod, PJXNODE pParms, PVOID argA
                break;
             }
             case JX_DTYPE_VARCHAR: {
-               int actlen =  (pMethodParm->precision == 2) ?  *(PUSHORT) pParmBuffer : *(PULONG) pParmBuffer;
+               int actlen =  (pMethodParm->precision == 4) ? *(PULONG) pParmBuffer : *(PUSHORT) pParmBuffer ;
                substr (data  , pParmBuffer + pMethodParm->precision ,actlen);
                break;
             }
@@ -381,7 +381,7 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
    args = buildArgBufferArray ( pMethod, pParms, argArray, &pArgBuffer);
 
    if ( pMethod->userMethodIsProgram) {
-      _CALLPGMV ( &pMethod->userMethod , argArray , args );
+      jx_callPgm ( pMethod->userMethod , argArray , args );
    } else {
       jx_callProc (pMethod->userMethod , argArray , args);
    }
@@ -429,9 +429,10 @@ PJXNODE  jx_ProgramMeta ( PUCHAR library , PUCHAR Program)
    pcml [pet->Interface_Info_Length_Ret] = '\0';
    pPcml  = jx_ParseString(pcml, "");
 
-   if (*library == '*') {
-      memcpy ( library , pet->Module_Library, 10);
-   }
+   // would yield QTEMP - where it is build
+   // if (*library == '*') {
+   //    memcpy ( library , pet->Module_Library, 10);
+   // }
 
    return  pPcml;
 }
@@ -467,9 +468,11 @@ PJXNODE  jx_ProcedureMeta ( PUCHAR library , PUCHAR Program , PUCHAR Procedure)
       pcml = buffer + pet->Offset_Interface_Info;
       pcml [pet->Interface_Info_Length_Ret] = '\0';
       pPcml  = jx_ParseString(pcml, "");
-      if (*library == '*') {
-         memcpy ( library , pet->Module_Library, 10);
-      }
+
+      // would yield QTEMP - where it is build
+      // if (*library == '*') {
+      //    memcpy ( library , pet->Module_Library, 10);
+      // }
 
       return  pPcml;
       // TODO !! pOpenAPI->ccsid = pet->Interface_Info_CCSID;
@@ -566,8 +569,16 @@ PJXNODE  jx_ApplicationMetaJson ( PUCHAR library , PUCHAR program , PUCHAR objec
    UCHAR   tempProc [256];
 
    if (objectType[1] == 'P') {
+      if ( *library == '*' ) {
+         _SYSPTR pPgm = jx_loadProgram (library, program);
+         getLibraryForSysPtr ( pPgm , library);
+      }
       pPcml = jx_ProgramMeta ( library , program );
    } else {
+      if ( *library == '*' ) {
+         _SYSPTR pPgm = jx_loadServiceProgram (library, program);
+         getLibraryForSysPtr ( pPgm , library);
+      }
       pPcml = jx_ProcedureMeta ( library , program , "*ALL");
    }
 
@@ -608,7 +619,7 @@ PJXNODE  jx_ApplicationMetaJson ( PUCHAR library , PUCHAR program , PUCHAR objec
             &&   0 == strcmp (parmMetaValue ( pChild2, "name") ,"string"))) {
                int lenlen = atoi(parmMetaValue ( pChild1, "length"));
                int size   = atoi(parmMetaValue ( pParmMeta, "outputsize"));
-               pMethodParm->precision = lenlen;
+               pMethodParm->precision = lenlen == 0 ? 2 : lenlen;
                pMethodParm->dType = JX_DTYPE_VARCHAR;
                pMethodParm->length = size - lenlen;
                pMethodParm->size = size;
@@ -720,11 +731,9 @@ PJXNODE  jx_CallProgram (PUCHAR library , PUCHAR program, PJXNODE parmsP, ULONG 
    strtrimncpy (pgm.library   , library , 10);
    strtrimncpy (pgm.program   , program  , 10);
    strtrimncpy (pgm.procedure , "*PGM" , PROC_NAME_MAX );
-
-   pgm.pMetaNode = jx_ApplicationMetaJson (pgm.library , pgm.program , pgm.procedure );
-
-   pgm.userMethodIsProgram = TRUE;
    pgm.userMethod = jx_loadProgram ( pgm.library, pgm.program);
+   pgm.pMetaNode  = jx_ApplicationMetaJson (pgm.library , pgm.program , pgm.procedure );
+   pgm.userMethodIsProgram = TRUE;
    pResult = call (&pgm, parms , options);
    jx_NodeDelete( pgm.pMetaNode );
    return pResult;
@@ -747,10 +756,11 @@ PJXNODE  jx_CallProcedure (PUCHAR library, PUCHAR srvPgm, PUCHAR procedure, PJXN
    strtrimncpy (pgm.library   , library , 10);
    strtrimncpy (pgm.program   , srvPgm , 10);
    strtrimncpy (pgm.procedure , procedure , PROC_NAME_MAX );
-   pgm.pMetaNode = jx_ApplicationMetaJson (pgm.library , pgm.program , pgm.procedure );
-   pgm.userMethodIsProgram = FALSE;
 
    pgm.userMethod = jx_loadServiceProgramProc ( pgm.library, pgm.program , pgm.procedure);
+   pgm.pMetaNode  = jx_ApplicationMetaJson (pgm.library , pgm.program , pgm.procedure );
+   pgm.userMethodIsProgram = FALSE;
+
    pResult = call (&pgm, parms , options);
    jx_NodeDelete( pgm.pMetaNode);
    return pResult;

@@ -1930,6 +1930,33 @@ End-PR;
 
 
 ///
+// Programs and procedures : Load program as procedure pointer
+//
+//
+// @param Library where the ILE program exists or *LIBL
+// @param Program name of the ILE program
+// @return procedure pointer or null and wrap it in a MONITOR
+//
+///
+Dcl-PR jx_LoadProgram pointer(*proc) extproc(*CWIDEN : 'jx_loadProgram');
+  library        char(10) const;
+  program        char(10) const;
+End-PR;
+
+///
+// Programs and procedures : Call program  - lo level
+// @param procedure pointer to the program  to call
+// @param parms pointer to array of addresse to parameters to pass to the procedure
+// @param numberOfParms number of parameters to pass to the procedure
+///
+Dcl-PR jx_CallPgm extproc(*CWIDEN : 'jx_callPgm');
+  procedure      pointer (*PROC) value;
+  parms          pointer value  ;
+  numberOfParms  int(10) value  ;
+End-PR;
+
+
+///
 // Programs and procedures : Program meta
 //
 // Returns the parameter meta information as a noxDb object graph accordin to the PCML format
@@ -1974,6 +2001,34 @@ Dcl-PR jx_CallProcedure pointer extproc(*CWIDEN : 'jx_CallProcedure');
   formatOptions  int(10) value options(*nopass) ;
 End-PR;
 
+
+///
+// Programs and procedures : Load service program procedure as procedure pointer
+//
+//
+// @param Library where the ILE service program exists or *LIBL
+// @param Program name of the ILE service program
+// @return procedure pointer or null and wrap it in a MONITOR
+//
+///
+Dcl-PR jx_LoadServiceProgramProc pointer(*proc) extproc(*CWIDEN : 'jx_loadServiceProgramProc');
+  library        char(10) const;
+  program        char(10) const;
+  procedure      pointer     value  options(*string);
+
+End-PR;
+
+///
+// Programs and procedures : Call procedure - lo level
+// @param procedure pointer to the procedure to call
+// @param parms pointer to array of addresse to parameters to pass to the procedure
+// @param numberOfParms number of parameters to pass to the procedure
+///
+Dcl-PR jx_CallProc extproc(*CWIDEN : 'jx_callProc');
+  procedure      pointer (*PROC) value;
+  parms          pointer value  ;
+  numberOfParms  int(10) value  ;
+End-PR;
 
 ///
 // Programs and procedures : Program meta

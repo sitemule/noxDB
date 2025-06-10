@@ -31,6 +31,7 @@ end-pi;
 
 text = 'hello ' + name;
 age = 25;
+return;
 
 // PCML Structure similar to this:
 // <pcml version="6.0">
@@ -57,4 +58,4 @@ age = 25;
 //       <data name="SALARY" type="packed" length="5" precision="0" usage="inputoutput" />
 //    </program>
 // </pcml>
-// 
+//

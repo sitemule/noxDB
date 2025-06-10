@@ -245,6 +245,10 @@ _SYSPTR jx_loadProc (_SYSPTR srvPgm ,  PUCHAR procName);
 _SYSPTR jx_loadServiceProgramProc (PUCHAR lib , PUCHAR srvPgm, PUCHAR procName);
 _SYSPTR jx_loadProgram (PUCHAR lib , PUCHAR pgm);
 void jx_callProc ( _SYSPTR proc , void * args [64] , SHORT parms);
+void jx_callPgm  ( _SYSPTR proc , void * args  [] , SHORT parms);
+void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib);
+
+
 
 
 #pragma enum (1)
