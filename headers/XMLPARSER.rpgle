@@ -2233,6 +2233,23 @@ Dcl-PR xml_sqlResultRow pointer extproc(*CWIDEN: 'jx_sqlResultRow');
 End-PR;
 
 ///
+// SQL : Execute SQL statement "Values"
+//
+// Returns an value or an array of values like the  "values into" - being array, object or value
+//
+// @param SQL statement valid for a SET statmet
+// @param Template values (context)
+// @param Result value format options
+// @return Result object of values : array, object or single values value
+///
+Dcl-PR xml_sqlValues pointer extproc(*CWIDEN: 'jx_sqlValues');
+  statement pointer value options(*string);
+  templateValues pointer value options(*string : *nopass);
+  formatOptions int(10) value options(*nopass);
+End-PR;
+
+
+///
 // SQL : Execute SQL statement (multiple rows)
 //
 // Executes the statement and returns the result set. The result set

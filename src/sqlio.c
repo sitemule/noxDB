@@ -1800,6 +1800,41 @@ static LONG currentLength (PPROCPARM p, LONG length)
    }
 }
 /* ------------------------------------------------------------- */
+PJXNODE jx_sqlValues ( PUCHAR sqlstmt, PJXNODE pSqlParmsP , LONG formatP)
+{
+
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 2) ? pSqlParmsP : NULL;
+   LONG    format    = (pParms->OpDescList->NbrOfParms >= 3) ? formatP    : 0;
+   PJXNODE pResult;
+   PJXNODE pChild ;
+   UCHAR   stmtBuf [32760];
+
+   //sprintf (stmtBuf, "select (%s) from sysibm.sysdummy1", sqlstmt);
+   sprintf (stmtBuf, "values (%s)", sqlstmt);
+
+   pResult =  jx_sqlResultRow ( stmtBuf, pSqlParms , format);
+
+   pChild  = jx_GetNodeChild (pResult);
+   // more that one return values? then array
+   // Note: Since we "move" the value into an object it will be poped from the
+   // top - so we get the next from the top by the  jx_GetNodeChild (pResult)
+   if (jx_GetNodeNext(pChild)) {
+      PJXNODE pNode;
+      PJXNODE pArray = jx_NewArray (NULL);
+      for (pNode = pChild; pNode; pNode = jx_GetNodeChild (pResult)) {
+         jx_ArrayPush (pArray, pNode, false);
+      }
+      jx_NodeDelete (pResult);
+      return pArray;
+   } else {
+      jx_NodeUnlink ( pChild);
+      jx_NodeDelete (pResult);
+      return pChild; // Only one value
+   }
+
+}
+/* ------------------------------------------------------------- */
 // Note: Only works on qualified procedure calls
 /* ------------------------------------------------------------- */
 PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)

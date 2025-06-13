@@ -183,6 +183,7 @@ STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('JSONXML01')
   EXPORT SYMBOL("jx_loadServiceProgramProc")
   EXPORT SYMBOL("jx_callPgm")
   EXPORT SYMBOL("jx_callProc")
+  EXPORT SYMBOL("jx_sqlValues")
 
 
 ENDPGMEXP
