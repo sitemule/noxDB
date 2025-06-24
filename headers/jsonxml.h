@@ -245,6 +245,10 @@ _SYSPTR jx_loadProc (_SYSPTR srvPgm ,  PUCHAR procName);
 _SYSPTR jx_loadServiceProgramProc (PUCHAR lib , PUCHAR srvPgm, PUCHAR procName);
 _SYSPTR jx_loadProgram (PUCHAR lib , PUCHAR pgm);
 void jx_callProc ( _SYSPTR proc , void * args [64] , SHORT parms);
+void jx_callPgm  ( _SYSPTR proc , void * args  [] , SHORT parms);
+void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib);
+
+
 
 
 #pragma enum (1)
@@ -692,6 +696,9 @@ PJXNODE jx_sqlResultRowAt ( PUCHAR sqlstmt, LONG startAt , PJXNODE pSqlParmsP , 
 
 PJXNODE jx_sqlResultSet( PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PJXNODE pSqlParmsP );
 #pragma descriptor ( void jx_sqlResultSet   (void))
+
+PJXNODE jx_sqlValues ( PUCHAR sqlstmt, PJXNODE pSqlParmsP , LONG format) ;
+#pragma descriptor ( void jx_sqlValues   (void))
 
 PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG startP , LONG limitP );
 #pragma descriptor ( void jx_sqlOpen        (void))

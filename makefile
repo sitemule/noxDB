@@ -44,6 +44,15 @@ current:
 	system "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/$(MODULE))"
 endif
 
+ifeq ($(GIT_SHORT),)
+GIT_SHORT := $(shell git rev-parse --short HEAD)
+endif
+
+ifeq ($(GIT_HASH),)
+GIT_HASH := $(shell git rev-parse --verify HEAD)
+endif
+
+TS := $(shell date +'%F-%H.%M.%S' )
 
 all:  $(BIN_LIB).lib link hdr githash jsonxml.srvpgm jsonxml.bnddir
 
@@ -57,9 +66,9 @@ jsonxml.srvpgm: initialize.cpp noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlseria
 # QOAR are for unknow reasons not in /QIBM/include
 link:
 	-mkdir -p ./headers/qoar/h
-	-ln -s  /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./headers/qoar/h/qrntypes
-	-ln -s  /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./headers/qoar/h/qrndtagen
-	-ln -s  /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./headers/qoar/h/qrndtainto
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./headers/qoar/h/qrntypes
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./headers/qoar/h/qrndtagen
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./headers/qoar/h/qrndtainto
 
 hdr:
 	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
@@ -80,10 +89,8 @@ hdr:
 
 # get the git hash and put it into the version file so it becomes part of the copyright notice in the service program
 githash:
-	-$(eval gitshort := $(shell git rev-parse --short HEAD))
-	-$(eval githash := $(shell git rev-parse --verify HEAD))
-	-$(eval ts := $(shell date +'%F-%H.%M.%S' ))
-	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(gitshort) (hash: $(githash) ) build: $(ts)\")" > src/githash.c
+	touch src/githash.c
+	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(GIT_SHORT) (hash: $(GIT_HASH) ) build: $(TS)\")" > src/githash.c
 
 %.bnddir:
 	@-system -q "DLTBNDDIR BNDDIR($(BIN_LIB)/$*)"

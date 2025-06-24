@@ -22,10 +22,6 @@
 // ------------------------------------------------------------- *
 Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
 /include qrpgleRef,noxdb
-Dcl-S pMeta      Pointer;
-Dcl-S pIn        Pointer;
-Dcl-S pOut       Pointer;
-Dcl-s msg        char(50);
 
 
     // This is not neede, but illustrates that you can pull the meta data as PCML (XML)

@@ -1800,6 +1800,41 @@ static LONG currentLength (PPROCPARM p, LONG length)
    }
 }
 /* ------------------------------------------------------------- */
+PJXNODE jx_sqlValues ( PUCHAR sqlstmt, PJXNODE pSqlParmsP , LONG formatP)
+{
+
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 2) ? pSqlParmsP : NULL;
+   LONG    format    = (pParms->OpDescList->NbrOfParms >= 3) ? formatP    : 0;
+   PJXNODE pResult;
+   PJXNODE pChild ;
+   UCHAR   stmtBuf [32760];
+
+   //sprintf (stmtBuf, "select (%s) from sysibm.sysdummy1", sqlstmt);
+   sprintf (stmtBuf, "values (%s)", sqlstmt);
+
+   pResult =  jx_sqlResultRow ( stmtBuf, pSqlParms , format);
+
+   pChild  = jx_GetNodeChild (pResult);
+   // more that one return values? then array
+   // Note: Since we "move" the value into an object it will be poped from the
+   // top - so we get the next from the top by the  jx_GetNodeChild (pResult)
+   if (jx_GetNodeNext(pChild)) {
+      PJXNODE pNode;
+      PJXNODE pArray = jx_NewArray (NULL);
+      for (pNode = pChild; pNode; pNode = jx_GetNodeChild (pResult)) {
+         jx_ArrayPush (pArray, pNode, false);
+      }
+      jx_NodeDelete (pResult);
+      return pArray;
+   } else {
+      jx_NodeUnlink ( pChild);
+      jx_NodeDelete (pResult);
+      return pChild; // Only one value
+   }
+
+}
+/* ------------------------------------------------------------- */
 // Note: Only works on qualified procedure calls
 /* ------------------------------------------------------------- */
 PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
@@ -2508,7 +2543,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    while (pNode) {
       PUCHAR val;
       name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÿB
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELùB
       val = jx_GetValuePtr(pNode , "" ,null);
       if (val == null) {
          stmt += sprintf (stmt , "%s%s=>null"  , comma , temp);
@@ -2932,7 +2967,7 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
    for ( colno=1; pNode; colno++) {
       if (! isIdColumn(hMetastmt, colno)) {
          name  = jx_GetNodeNamePtr   (pNode);
-         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÿB
+         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELùB
          if  (nodeisnull(pNode)) {
             stmt += sprintf (stmt , "%s%s=NULL" , comma , temp);
          } else if  (nodeisblank(pNode)) {
@@ -2968,7 +3003,7 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
       if (! isIdColumn(hMetaStmt, colno)) {
          if (!nodeisnull(pNode)) {
             name     = jx_GetNodeNamePtr   (pNode);
-            str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÿB
+            str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELùB
             stmt    += sprintf (stmt , "%s%s" , comma , temp);
             if  (nodeisblank(pNode)) {
                pMarker+= sprintf (pMarker , "%sdefault" , comma);    // because timesstamp / date can be set as ''
@@ -3492,7 +3527,7 @@ static PJXSQL buildMetaStmt (PUCHAR table, PJXNODE pRow)
    pNode    =  jx_GetNodeChild (pRow);
    while (pNode) {
       name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÿB
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELùB
       stmt += sprintf (stmt , "%s%s" , comma , temp);
       comma = ",";
       pNode = jx_GetNodeNext(pNode);

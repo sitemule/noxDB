@@ -32,3 +32,30 @@ end-pi;
 text = 'hello ' + name;
 age = 25;
 return;
+
+// PCML Structure similar to this:
+// <pcml version="6.0">
+//    <!-- RPG program: NTUT99  -->
+//    <!-- created: 2025-05-20-16.21.26 -->
+//    <!-- source: /prj/noxdb-tutorials/ntut99.rpgle -->
+//    <!-- 5824 -->
+//    <program name="NTUT99" path="/QSYS.LIB/QGPL.LIB/NTUT99.PGM">
+//       <data name="JOB" type="char" length="10" usage="input" />
+//       <data name="YEARS" type="packed" length="3" precision="0" usage="input" />
+//       <data name="SALARY" type="packed" length="5" precision="0" usage="inputoutput" />
+//    </program>
+// </pcml>
+
+// Or:
+// <pcml version="6.0">
+//    <!-- RPG program: NTUT99  -->
+//    <!-- created: 2025-05-20-16.17.40 -->
+//    <!-- source: /prj/noxdb-tutorials/ntut99.rpgle -->
+//    <!-- 5820 -->
+//    <program name="MAIN">
+//       <data name="JOB" type="char" length="10" usage="input" />
+//       <data name="YEARS" type="packed" length="3" precision="0" usage="input" />
+//       <data name="SALARY" type="packed" length="5" precision="0" usage="inputoutput" />
+//    </program>
+// </pcml>
+//
