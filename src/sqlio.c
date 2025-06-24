@@ -1828,7 +1828,7 @@ PJXNODE jx_sqlValues ( PUCHAR sqlstmt, PJXNODE pSqlParmsP , LONG formatP)
       jx_NodeDelete (pResult);
       return pArray;
    } else {
-      jx_NodeUnlink ( pChild);
+      jx_NodeUnlink (pChild);
       jx_NodeDelete (pResult);
       return pChild; // Only one value
    }

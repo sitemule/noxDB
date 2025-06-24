@@ -37,7 +37,9 @@
 
 
 static PJXNODE * ppRoot;
+static PUCHAR genOptions;
 static iconv_t iconvCd;
+static UCHAR prefix [64] = "";
 
 typedef void (*JX_DATAGEN)();
 
@@ -179,10 +181,36 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
     }
 }
 
-/* 	---------------------------------------------------------------------------
-    --------------------------------------------------------------------------- */
-JX_DATAGEN jx_dataGen (PJXNODE * ppNode)
+// ---------------------------------------------------------------------------
+// Get a parameter value from the options string
+// The options string is expected to be in the format: "numprefix=1234,other=5678"
+// where 'numprefix' is the parameter name and '1234' is its value.
+// If the parameter is not found, it returns an empty string.
+// The parameter name should not contain spaces or commas.
+// The value is expected to be a single word without spaces.
+// If the parameter is found, it copies the value into parmValue and null-terminates it.
+// ---------------------------------------------------------------------------
+static void getParmValue (PUCHAR parmValue , PUCHAR parmName , PUCHAR options)
 {
+    PUCHAR p = strstr(options, parmName);
+    if (p == NULL) {
+        *parmValue = '\0';
+        return; // Not found
+    }
+    p += strlen(parmName) + 1; // Skip the '='
+    while (*p != ' ' && *p != ',' && *p != '\0') {
+        *parmValue++ = *p++;
+    }
+    *parmValue = '\0'; // Null terminate the string
+}
+// ---------------------------------------------------------------------------
+// The main entry point for the data generation
+// ---------------------------------------------------------------------------
+JX_DATAGEN jx_dataGen (PJXNODE * ppNode, PUCHAR optionsP)
+{
+    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+    genOptions = (pParms->OpDescList->NbrOfParms >= 2) ? optionsP : "";
+    getParmValue( prefix , "numprefix" , genOptions);
     ppRoot = ppNode; // not reentrant
     return &jx_dataGenMapper;
 }

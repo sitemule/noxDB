@@ -14,7 +14,6 @@
 #include <mih/stsppo.h>
 #include <mih/setsppo.h>
 #include <mih/callpgmv.h>
-#include <mih/matptr.h>
 #include <qwtsetp.h>
 #include <miptrnam.h>
 #include <qsygetph.h>
@@ -32,15 +31,6 @@
 
 typedef _SYSPTR (*ILEPROC)(PVOID, ...);
 typedef _SYSPTR (*ILEPROC0)();
-
-// -------------------------------------------------------------
-void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib)
-{
-   _MPTR_Template_T op;
-   op.Obj_Ptr.Template_Size = sizeof(op);
-   matptr (&op, proc);
-   memcpy (lib , &op.Obj_Ptr.Library_ID.Name , 10);
-}
 
 // -------------------------------------------------------------
 

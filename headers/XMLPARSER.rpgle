@@ -718,7 +718,8 @@ End-PR;
 //       user of this function.
 ///
 Dcl-PR xml_dataGen pointer(*proc) extproc(*CWIDEN : 'jx_dataGen');
-  node pointer; // Note: This is passed by reference pointer to noxDB tree
+  node    pointer; // Note: This is passed by reference pointer to noxDB tree
+  options pointer value options(*string : *nopass);
 End-PR;
 
 ///

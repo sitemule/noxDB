@@ -253,16 +253,17 @@ void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib);
 
 #pragma enum (1)
 typedef enum {
-	JX_DTYPE_CHAR     = 'C',
-	JX_DTYPE_VARCHAR  = 'V',
-	JX_DTYPE_INT      = 'I',
-	JX_DTYPE_BYTE     = 'B',
-	JX_DTYPE_PACKED   = 'P',
-	JX_DTYPE_ZONED    = 'Z',
-	JX_DTYPE_DATE     = 'D',
-	JX_DTYPE_TIME     = 'T',
+	JX_DTYPE_CHAR       = 'C',
+	JX_DTYPE_VARCHAR    = 'V',
+	JX_DTYPE_INT        = 'I',
+	JX_DTYPE_BYTE       = 'B',
+	JX_DTYPE_BOOL       = 'b',
+	JX_DTYPE_PACKED     = 'P',
+	JX_DTYPE_ZONED      = 'Z',
+	JX_DTYPE_DATE       = 'D',
+	JX_DTYPE_TIME       = 'T',
 	JX_DTYPE_TIME_STAMP = 'S',
-	JX_DTYPE_UNKNOWN  = '?'
+	JX_DTYPE_UNKNOWN    = '?'
 } JX_DTYPE, *PJX_DTYPE;
 #pragma enum (pop)
 

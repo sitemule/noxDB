@@ -14,6 +14,7 @@
 #include <mih/stsppo.h>
 #include <mih/setsppo.h>
 #include <mih/MIDTTM.h>
+#include <mih/matptr.h>
 #include <qwtsetp.h>
 #include <miptrnam.h>
 #include <qsygetph.h>
@@ -35,6 +36,14 @@ extern UCHAR BraBeg;
 extern UCHAR BraEnd;
 extern UCHAR Masterspace;
 
+// -------------------------------------------------------------
+void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib)
+{
+   _MPTR_Template_T op;
+   op.Obj_Ptr.Template_Size = sizeof(op);
+   matptr (&op, proc);
+   memcpy (lib , &op.Obj_Ptr.Library_ID.Name , 10);
+}
 
 /* ------------------------------------------------------------- */
 _SYSPTR jx_loadServiceProgram (PUCHAR lib , PUCHAR srvPgm)
@@ -247,6 +256,10 @@ static int buildArgBufferArray (PJXMETHOD pMethod, PJXNODE pParms, PVOID argArra
             memcpy ( pBuf , pValue , min(strlen(pValue), pMethodParm->length));
             break;
          }
+         case JX_DTYPE_BOOL: {
+            *(PUCHAR) pBuf = (*pValue == '\0' || *pValue == '0' || *pValue == 'f') ? '0' : '1';
+            break;
+         }
          case JX_DTYPE_UNKNOWN: {
             break;
          }
@@ -325,11 +338,15 @@ static PJXNODE buildReturnObject (PJXMETHOD  pMethod, PJXNODE pParms, PVOID argA
                substr  ( data  ,  pParmBuffer , pMethodParm->length);
                break;
             }
+            case JX_DTYPE_BOOL: {
+               strcpy ( data , (*pParmBuffer == '1') ? "true" : "false");
+               break;
+            }
             case JX_DTYPE_UNKNOWN: {
                break;
             }
          }
-         jx_SetValueByName( pReturnObject , str2lower (temp, pMethodParm->name ) , pData , pMethodParm->graphDataType );
+         jx_SetValueByName( pReturnObject , pMethodParm->name , pData , pMethodParm->graphDataType );
       }
       argIx++;
       pParmObj = jx_GetNodeNext(pParmObj);
@@ -338,24 +355,43 @@ static PJXNODE buildReturnObject (PJXMETHOD  pMethod, PJXNODE pParms, PVOID argA
    return pReturnObject;
 }
 /* --------------------------------------------------------------------------- *\
-   parse PCML:
-   <pcml version="7.0">
-      <program name="ALLTYPES" entrypoint="ALLTYPES">
-         <data name="CHAR" type="char" length="10" usage="inputoutput"/>
-         <data name="INT" type="int" length="8" precision="63" usage="inputoutput"/>
-         <data name="PACKED" type="packed" length="9" precision="2" usage="inputoutput"/>
-         <data name="IND" type="char" length="1" usage="inputoutput"/>
-         <data name="DATE" type="date" dateformat="ISO" dateseparator="hyphen" usage="inputoutput"/>
-         <data name="TIME" type="time" timeformat="ISO" timeseparator="period" usage="inputoutput"/>
-         <data name="TIMESTAMP" type="timestamp" usage="inputoutput"/>
-      </program>
-      <program name="NAMEAGE" entrypoint="NAMEAGE">
-         <data name="NAME" type="char" length="10" usage="input"/>
-         <data name="TEXT" type="char" length="200" usage="inputoutput"/>
-         <data name="AGE" type="packed" length="5" precision="0" usage="inputoutput"/>
-      </program>
-   </pcml>
-\* --------------------------------------------------------------------------- */
+<?xml version="1.0" encoding="UTF-8" ?>
+<pcml version="8.0">
+  <struct name="employee_t">
+    <data name="id" type="int" length="4" precision="31" usage="inherit"/>
+    <data name="name" type="char" length="50" usage="inherit"/>
+    <data name="age" type="int" length="4" precision="31" usage="inherit"/>
+    <data name="income" type="packed" length="9" precision="2" usage="inherit"/>
+    <data name="birthDate" type="date" dateformat="ISO" dateseparator="hyphen" usage="inherit"/>
+    <data name="birthTime" type="time" timeformat="ISO" timeseparator="period" usage="inherit"/>
+    <data name="updated" type="timestamp" usage="inherit"/>
+    <data name="isMale" type="char" length="1" boolean="true" usage="inherit"/>
+  </struct>
+  <program name="complex" entrypoint="COMPLEX">
+    <data name="id" type="int" length="4" precision="31" usage="input"/>
+    <data name="employee" type="struct" struct="employee_t" usage="inputoutput"/>
+  </program>
+  <program name="allTypes" entrypoint="ALLTYPES">
+    <data name="char" type="char" length="10" usage="inputoutput"/>
+    <data name="varchar" type="varchar" length="10" usage="inputoutput"/>
+    <data name="int8" type="int" length="8" precision="63" usage="inputoutput"/>
+    <data name="int4" type="int" length="4" precision="31" usage="inputoutput"/>
+    <data name="uns8" type="int" length="8" precision="64" usage="inputoutput"/>
+    <data name="uns4" type="int" length="4" precision="32" usage="inputoutput"/>
+    <data name="uns2" type="byte" length="1" usage="inputoutput"/>
+    <data name="packed" type="packed" length="9" precision="2" usage="inputoutput"/>
+    <data name="zoned" type="zoned" length="9" precision="2" usage="inputoutput"/>
+    <data name="ind" type="char" length="1" boolean="true" usage="inputoutput"/>
+    <data name="date" type="date" dateformat="ISO" dateseparator="hyphen" usage="inputoutput"/>
+    <data name="time" type="time" timeformat="ISO" timeseparator="period" usage="inputoutput"/>
+    <data name="timestamp" type="timestamp" usage="inputoutput"/>
+  </program>
+  <program name="nameAge" entrypoint="NAMEAGE">
+    <data name="Name" type="char" length="10" usage="input"/>
+    <data name="Text" type="char" length="200" usage="inputoutput"/>
+    <data name="Age" type="packed" length="5" precision="0" usage="inputoutput"/>
+  </program>
+</pcml>\* --------------------------------------------------------------------------- */
 
 /* --------------------------------------------------------------------------- *\
     Call the plain program resolved by the system pointer:
@@ -524,8 +560,13 @@ PMETHODPARM newMethodParm ( PJXNODE pParmMeta)
    memset (pMethodParm , 0, sizeof(METHODPARM));
    pMethodParm->isStructure  = (0 == strcmp("struct" ,jx_GetNodeNamePtr (pParmMeta)));
    strcpy(pMethodParm->name , parmMetaValue ( pParmMeta, "name"));
-   pMethodParm->dType      = convertDataType(parmMetaValue ( pParmMeta, "type"));
-   pMethodParm->use        =  (0 == strcmp(parmMetaValue ( pParmMeta, "usage") , "inputoutput")) ? 'B' : 'I';
+   p = parmMetaValue ( pParmMeta, "boolean");
+   if (p && *p == 't') {
+      pMethodParm->dType = JX_DTYPE_BOOL;
+   } else {
+      pMethodParm->dType = convertDataType(parmMetaValue ( pParmMeta, "type"));
+   }
+   pMethodParm->use    =  (0 == strcmp(parmMetaValue ( pParmMeta, "usage") , "inputoutput")) ? 'B' : 'I';
    p = parmMetaValue ( pParmMeta, "length");
    pMethodParm->length =  p  ? atoi(p) : 0;
    p = parmMetaValue ( pParmMeta, "precision");
@@ -550,7 +591,7 @@ PJXNODE buildMethodParmObject ( PMETHODPARM pMethodParm)
    jx_SetIntByName  (pParmObject  , "prec" ,  pMethodParm->precision, OFF);
    jx_SetValueByName(pParmObject  , "format", pMethodParm->format   , VALUE);
    jx_SetCharByName (pParmObject  , "separator",  pMethodParm->separatorChar , VALUE);
-   jx_SetValueByName (pParmObject  , "parm" , (PUCHAR) pMethodParm  , NOXDB_POINTER);
+   jx_SetValueByName(pParmObject  , "parm" , (PUCHAR) pMethodParm  , NOXDB_POINTER);
 
    return pParmObject;
 }
@@ -598,7 +639,7 @@ PJXNODE  jx_ApplicationMetaJson ( PUCHAR library , PUCHAR program , PUCHAR objec
    strtrimncpy ( tempLib  , library , 10);
 
    while (pPcmlProgram) {
-      PUCHAR  entrypoint     = parmMetaValue ( pPcmlProgram, "entrypoint");
+      PUCHAR  procedureName     = parmMetaValue ( pPcmlProgram, "name");
       args = 0;
       offset = 0;
 
@@ -629,13 +670,21 @@ PJXNODE  jx_ApplicationMetaJson ( PUCHAR library , PUCHAR program , PUCHAR objec
          } else {
 
             switch ( pMethodParm->dType) {
-               case JX_DTYPE_CHAR:
+               case JX_DTYPE_CHAR:{
+                  pMethodParm->graphDataType = VALUE;
+                  break;
+               }
                case JX_DTYPE_VARCHAR: {
                   pMethodParm->graphDataType = VALUE;
+                  if (pMethodParm->precision == 0) {
+                     pMethodParm->precision = 2;
+                  }
+                  pMethodParm->size = pMethodParm->precision + pMethodParm->length;
                   break;
                }
                case JX_DTYPE_INT:
                case JX_DTYPE_BYTE:
+               case JX_DTYPE_BOOL:
                case JX_DTYPE_ZONED: {
                   pMethodParm->graphDataType = LITERAL;
                   break;
@@ -697,7 +746,7 @@ PJXNODE  jx_ApplicationMetaJson ( PUCHAR library , PUCHAR program , PUCHAR objec
          pProcedure    = jx_NewObject(NULL);
          jx_SetIntByName ( pProcedure , "buflen", offset , OFF);
          jx_NodeMoveInto ( pProcedure , "parms" , pParms);
-         strtrimncpy ( tempProc , entrypoint , PROC_NAME_MAX);
+         strtrimncpy ( tempProc , procedureName , PROC_NAME_MAX);
          jx_NodeMoveInto ( pProgram , tempProc, pProcedure);
       }
 

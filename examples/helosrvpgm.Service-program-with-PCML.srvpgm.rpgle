@@ -1,38 +1,28 @@
 **FREE
 
 ///
-// Routing to a program adding openAPI ( swagger)
+// This example shows how traditional service programs compiled with
+//    ctl-opt pgminfo(*PCML:*MODULE:*DCLCASE:*V8);
+// can be dynamically called from a noxDb
 //
-// This example shows how traditional programs compiled with
-//    ctl-opt pgminfo(*PCML:*MODULE) thread(*CONCURRENT);
-// can be used with ILEastic, and also serve the openAPI.json ( yet to come)
-//
-// The routing is shown in swagroute.rpgle
-//
-// Start it:
-// SBMJOB CMD(CALL PGM(SWAGROUTE)) JOB(SWAGROUTE) JOBQ(QSYSNOMAX) ALWMLTTHD(*YES)
-//
-// The web service can be tested with the browser by entering the following URL:
-// http://my_ibm_i:44045/hello?name=john
-//
-// @info: It requires your RPG code to be reentrant and compiled for
-//        multithreading. Each client request is handled by a seperate thread.
+// Adding an extra thread(*CONCURRENT) to the ctl-opt
+// it can even be used with ILEastic, and also serve the openAPI.json ( yet to come)
 ///
-ctl-opt pgminfo(*PCML:*MODULE:*DCLCASE) thread(*CONCURRENT);
+ctl-opt pgminfo(*PCML:*MODULE:*DCLCASE:*V8) thread(*CONCURRENT);
 ctl-opt nomain;
-ctl-opt copyright('Sitemule.com  (C), 2023');
+ctl-opt copyright('Sitemule.com (C), 2023-2025');
 ctl-opt decEdit('0,') datEdit(*YMD.);
 ctl-opt debug(*yes);
 
 // ------------------------------------------------------------------------------------
 // nameage
 // ------------------------------------------------------------------------------------
-dcl-proc nameage export;
+dcl-proc nameAge export;
 
-    dcl-pi nameage ;
-        name char (10) const;
-        text char(200);
-        age  packed(5:0);
+    dcl-pi nameAge ;
+        Name char (10) const;
+        Text char(200);
+        Age  packed(5:0);
     end-pi;
 
     text = 'hello ' + name;
@@ -71,9 +61,9 @@ end-proc;
 //    </program>
 //  </pcml>
 // ------------------------------------------------------------------------------------
-dcl-proc alltypes export;
+dcl-proc allTypes export;
 
-    dcl-pi alltypes ;
+    dcl-pi allTypes ;
         char      char (10);
         varchar   varchar (10);
         int8     int(20);

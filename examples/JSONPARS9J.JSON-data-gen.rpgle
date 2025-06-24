@@ -22,10 +22,13 @@
 Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt:*nounref) ALWNULL(*USRCTL);
 /include qrpgleRef,noxdb
 
+dcl-ds employee_t    extname('CORPDATA/EMPLOYEE') qualified template end-ds;
+
     example1();
     example2();
     example3();
     example4();
+    example5();
 
     *INLR = *ON;
 
@@ -207,5 +210,47 @@ dcl-proc example4;
 
     // Always remember to delete used memory !!
     json_delete(pJson);
+
+end-proc;
+// ------------------------------------------------------------------------------------
+// Generating JSON or XML by placing the datastructure in the objectgraph
+// ------------------------------------------------------------------------------------
+dcl-proc example5;
+
+
+    dcl-ds rows qualified inz;
+        counter_employee int(10);
+        dcl-ds employee   likeds(employee_t) dim(100) ;
+    end-ds;
+
+	dcl-s pInputRows   pointer;
+	dcl-s pOutputRows  pointer;
+	dcl-s dummy        char(1);
+    Dcl-DS list        likeds(json_iterator);
+
+	pInputRows = json_sqlResultSet(' -
+		select *                -
+		from corpdata.employee  -
+		limit 100               -
+	');
+
+    list = json_setIterator(pInputRows);
+    DoW json_ForEach(list);
+        rows.employee(list.count).EMPNO    = json_getStr(list.this : 'EMPNO');
+        rows.employee(list.count).FIRSTNME = json_getStr(list.this : 'FIRSTNME');
+    EndDo;
+
+    rows.counter_employee = json_getLength(pInputRows);
+
+    data-gen rows
+        %data(dummy)
+        %gen(json_DataGen(pOutputRows:'numprefix=counter_'));
+
+    // Let's see what we got
+    json_WriteJsonStmf(pOutputRows:'/prj/noxdb/testout/datagen5.json':1208:*OFF);
+
+
+    // Always remember to delete used memory !!
+    json_delete(pOutputRows);
 
 end-proc;
