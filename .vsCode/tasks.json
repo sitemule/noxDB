@@ -83,6 +83,28 @@
             "problemMatcher": []
         },
         {
+            "label": "Compile current unit test file",
+            "command": "${workspaceFolder}/.sitemule/unittests.sh \"${workspaceRoot}\" \"${workspaceFolderBasename}\" \"${relativeFile}\" \"${fileBasename}\"",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "c",
+                "fileLocation": ["relative", "${workspaceRoot}/unittests"],
+                "pattern": {
+                    // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
+                    "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    // "severity": 4,
+                    "message": 4
+                }
+            }
+        },
+        {
             "label": "Make release savefile",
             "command": "ssh MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/;gmake release'",
             "type": "shell",

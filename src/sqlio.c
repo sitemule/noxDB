@@ -752,7 +752,8 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    //// huxi !! need uncomitted read for blob fields
    // and IBM i does not support statement attribute to set the pr statement. :/
    // so we simply append the "with ur" uncommited read options
-   if (0 != memicmp ( sqlTempStmt , "call", 4)) {
+   if ((0 != memicmp ( sqlTempStmt , "call"  , 4))
+   &&  (0 != memicmp ( sqlTempStmt , "values", 6))) {
       PUCHAR lookFrom = finalSQLPart (sqlTempStmt);
       static BOOL compilereg = true;
       static regex_t hasLimitReg;

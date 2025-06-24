@@ -19,7 +19,7 @@ RU_LIB=*LIBL
 # This library contains the ILEASTIC modules.
 NOXDB_LIB=NOXDB
 
-TARGET_CCSID=*JOB
+#TARGET_CCSID=*JOB
 
 #
 # User-defined part end
@@ -35,17 +35,17 @@ compile: $(OBJECTS)
 
 noxdbut1:
 	system -i "CHGATR OBJ('noxdbut1.rpgle') ATR(*CCSID) VALUE(1252)"
-	system -i "CRTRPGMOD MODULE($(BIN_LIB)/noxdbut1) SRCSTMF('noxdbut1.rpgle') INCDIR('$(RUINCDIR)') DBGVIEW(*source) STGMDL(*SNGLVL) TGTCCSID($(TARGET_CCSID))"
+	system -i "CRTRPGMOD MODULE($(BIN_LIB)/noxdbut1) SRCSTMF('noxdbut1.rpgle') INCDIR('$(RUINCDIR)') DBGVIEW(*source) STGMDL(*SNGLVL)"
 	system -i "CRTSRVPGM $(BIN_LIB)/noxdbut1 MODULE(($(BIN_LIB)/noxdbut1)) STGMDL(*SNGLVL) BNDSRVPGM($(SRVPGMS)) EXPORT(*ALL) OPTION(*DUPPROC)"
 
 noxdbut2:
 	system -i "CHGATR OBJ('noxdbut2.rpgle') ATR(*CCSID) VALUE(1252)"
-	system -i "CRTRPGMOD MODULE($(BIN_LIB)/noxdbut2) SRCSTMF('noxdbut2.rpgle') INCDIR('$(RUINCDIR)') DBGVIEW(*source) STGMDL(*SNGLVL) TGTCCSID($(TARGET_CCSID))"
+	system -i "CRTRPGMOD MODULE($(BIN_LIB)/noxdbut2) SRCSTMF('noxdbut2.rpgle') INCDIR('$(RUINCDIR)') DBGVIEW(*source) STGMDL(*SNGLVL)"
 	system -i "CRTSRVPGM $(BIN_LIB)/noxdbut2 MODULE(($(BIN_LIB)/noxdbut2)) STGMDL(*SNGLVL) BNDSRVPGM($(SRVPGMS)) EXPORT(*ALL) OPTION(*DUPPROC)"
 
 noxdbut3:
 	system -i "CHGATR OBJ('noxdbut3.rpgle') ATR(*CCSID) VALUE(1252)"
-	system -i "CRTRPGMOD MODULE($(BIN_LIB)/noxdbut3) SRCSTMF('noxdbut3.rpgle') INCDIR('$(RUINCDIR)') DBGVIEW(*source) STGMDL(*SNGLVL) TGTCCSID($(TARGET_CCSID))"
+	system -i "CRTRPGMOD MODULE($(BIN_LIB)/noxdbut3) SRCSTMF('noxdbut3.rpgle') INCDIR('$(RUINCDIR)') DBGVIEW(*source) STGMDL(*SNGLVL)"
 	system -i "CRTSRVPGM $(BIN_LIB)/noxdbut3 MODULE(($(BIN_LIB)/noxdbut3)) STGMDL(*SNGLVL) BNDSRVPGM($(SRVPGMS)) EXPORT(*ALL) OPTION(*DUPPROC)"
 
 clean:
@@ -55,4 +55,3 @@ clean:
 	-system -i "DLTSRVPGM $(BIN_LIB)/noxdbut2"
 	-system -i "DLTMOD $(BIN_LIB)/noxdbut3"
 	-system -i "DLTSRVPGM $(BIN_LIB)/noxdbut3"
-	
