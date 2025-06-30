@@ -18,18 +18,28 @@
 
 // Using the "data-gen"
 
+// This sample uses the demo SQL schema made from ACS run SQL scripts:
+// call qsys.create_sql_sample('CORPDATA');
+
+// Set your job ccsid to 500 - just for the example:
+// CHGJOB ccsid(500)
+
 // ------------------------------------------------------------- *
 Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt:*nounref) ALWNULL(*USRCTL);
 /include qrpgleRef,noxdb
 
-dcl-ds employee_t    extname('CORPDATA/EMPLOYEE') qualified template end-ds;
+// Templates can be used
+dcl-ds employee_t    extname('CORPDATA/EMPLOYEE')   qualified template end-ds;
+dcl-ds empprojact_t  extname('CORPDATA/EMPPROJACT') qualified template end-ds;
 
-    //example1();
-    //example2();
-    //example3();
-    //example4();
-    //example5();
+    example1();
+    example2();
+    example3();
+    example4();
+    example5();
     example6();
+    example7();
+    json_sqlDisconnect();
 
     *INLR = *ON;
 
@@ -58,10 +68,10 @@ dcl-proc example1;
     endfor;
 
     // Now the magic: the pJson pointer is send to the mapper and returns as an object graph
-    data-gen rows %data(handle: '') %gen(json_DataGen(pJson));
+    data-gen rows %data(handle) %gen(json_DataGen(pJson));
 
     // Let's see what we got
-    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/dump-payload.json':1208:*OFF);
+    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/datagen1.json':1208:*OFF);
 
 
     // Always remember to delete used memory !!
@@ -124,10 +134,10 @@ dcl-proc example2;
     //alltypes.dynarr(*next) = 'c';
 
     // Now the magic: the pJson pointer is send to the mapper and returns as an object graph
-    data-gen alltypes %data(handle: '') %gen(json_DataGen(pJson));
+    data-gen alltypes %data(handle) %gen(json_DataGen(pJson));
 
     // Let's see what we got
-    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/dump-payload2.json':1208:*OFF);
+    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/datagen2.json':1208:*OFF);
 
     // Always remember to delete used memory !!
     json_delete(pJson);
@@ -160,14 +170,14 @@ dcl-proc example3;
         row.name = 'John ' + %char(i);
 
         // Now the magic: the pJson pointer is send to the mapper and returns as an object graph
-        data-gen row %data(handle: '') %gen(json_DataGen(pRow));
+        data-gen row %data(handle) %gen(json_DataGen(pRow));
         json_arrayPush (pArr : pRow);
 
     endfor;
 
 
     // Let's see what we got
-    json_WriteJsonStmf(pArr:'/prj/noxdb/testout/dump-payload3.json':1208:*OFF);
+    json_WriteJsonStmf(pArr:'/prj/noxdb/testout/datagen3.json':1208:*OFF);
 
 
     // Always remember to delete used memory. pArr "owns" all object generated
@@ -203,71 +213,27 @@ dcl-proc example4;
     row.text = 'Smørrebrødspålæg';
 
     // Now the magic: the pJson pointer is send to the mapper and returns as an object graph
-    data-gen row %data(handle: '') %gen(json_DataGen(pJson));
+    data-gen row %data(handle) %gen(json_DataGen(pJson));
 
     // Let's see what we got
-    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/ccsid-test.json':1208:*OFF);
+    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/datagen4.json':1208:*OFF);
 
 
     // Always remember to delete used memory !!
     json_delete(pJson);
 
 end-proc;
+
 // ------------------------------------------------------------------------------------
-// Generating JSON or XML by placing the datastructure in the objectgraph
+// Generating JSON simple *AUTO array
 // ------------------------------------------------------------------------------------
 dcl-proc example5;
 
-
-    dcl-ds rows qualified inz;
-        counter_employee int(10);
-        dcl-ds employee   likeds(employee_t) dim(100) ;
-    end-ds;
+    dcl-s names  varchar(256) dim(*auto: 100) ;
 
 	dcl-s pInputRows   pointer;
 	dcl-s pOutputRows  pointer;
-	dcl-s dummy        char(1);
-    Dcl-DS list        likeds(json_iterator);
-
-	pInputRows = json_sqlResultSet(' -
-		select *                -
-		from corpdata.employee  -
-		limit 100               -
-	');
-
-    list = json_setIterator(pInputRows);
-    DoW json_ForEach(list);
-        rows.employee(list.count).EMPNO    = json_getStr(list.this : 'EMPNO');
-        rows.employee(list.count).FIRSTNME = json_getStr(list.this : 'FIRSTNME');
-    EndDo;
-
-    rows.counter_employee = json_getLength(pInputRows);
-
-    data-gen rows
-        %data(dummy)
-        %gen(json_DataGen(pOutputRows:'numprefix=counter_'));
-
-    // Let's see what we got
-    json_WriteJsonStmf(pOutputRows:'/prj/noxdb/testout/datagen5.json':1208:*OFF);
-
-
-    // Always remember to delete used memory !!
-    json_delete(pOutputRows);
-
-end-proc;
-
-// ------------------------------------------------------------------------------------
-// Generating JSON or XML by placing the datastructure in the objectgraph
-// ------------------------------------------------------------------------------------
-dcl-proc example6;
-
-
-    // dcl-ds employee   likeds(employee_t) dim(*AUTO:100) ;
-    dcl-s names  varchar(256) dim(*var : 100) ;
-
-	dcl-s pInputRows   pointer;
-	dcl-s pOutputRows  pointer;
-	dcl-s dummy        char(1);
+	dcl-s handle       char(1);
     Dcl-DS list        likeds(json_iterator);
 
 	pInputRows = json_sqlResultSet(' -
@@ -283,14 +249,162 @@ dcl-proc example6;
 
 
     data-gen names
-        %data(dummy)
+        %data(handle)
+        %gen(json_DataGen(pOutputRows));
+
+    // Let's see what we got
+    json_WriteJsonStmf(pOutputRows:'/prj/noxdb/testout/datagen5.json':1208:*OFF);
+
+
+    // Always remember to delete used memory !!
+    json_delete(pOutputRows);
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// Generating JSON complex array
+// First level is *AUTO
+// Next level is using the number prefix
+// note the "countprefix" on data-gen : %data(handle:'countprefix=num_')
+// ------------------------------------------------------------------------------------
+dcl-proc example6;
+
+
+    dcl-ds employee  qualified  dim(*AUTO:100) ;
+        name varchar(256);
+        num_projects int(5);
+        dcl-ds projects  dim(50) ;
+            projNo varchar(256);
+        end-ds;
+    end-ds;
+
+	dcl-s pEmp         pointer;
+	dcl-s pProj        pointer;
+	dcl-s pOutputRows  pointer;
+	dcl-s handle        char(1);
+    Dcl-DS empList     likeds(json_iterator);
+    Dcl-DS projList    likeds(json_iterator);
+
+	pEmp = json_sqlResultSet(' -
+		select *                -
+		from corpdata.employee  -
+		limit 100               -
+	');
+
+    empList = json_setIterator(pEmp);
+    DoW json_ForEach(empList);
+        employee(*next).name = json_getStr(empList.this : 'FIRSTNME');
+   	    pProj = json_sqlResultSet('  -
+   		    select PROJNO                 -
+   		    from corpdata.empprojact -
+            where empNo = ' + quote(json_getStr(emplist.this:'EMPNO')) + '-
+   		    limit 50                -
+   	    ');
+        projList = json_setIterator(pProj);
+        DoW json_ForEach(projList);
+            employee(%elem(employee)).projects(projList.count).projNo = json_getStr(projList.this:'PROJNO');
+        Enddo;
+        employee(%elem(employee)).num_projects = json_getLength(pProj);
+        json_delete(pProj);
+
+    EndDo;
+
+
+    data-gen employee
+        %data(handle:'countprefix=num_')
         %gen(json_DataGen(pOutputRows));
 
     // Let's see what we got
     json_WriteJsonStmf(pOutputRows:'/prj/noxdb/testout/datagen6.json':1208:*OFF);
 
-
+on-exit;
     // Always remember to delete used memory !!
-    json_delete(pOutputRows);
+	json_delete(pEmp);
+	json_delete(pProj);
+	json_delete(pOutputRows);
+
+
+end-proc;
+// ------------------------------------------------------------------------------------
+// Generating JSON complex array
+// All levels are using the number prefix
+// note the "countprefix" on data-gen : %data(handle:'countprefix=num_')
+// ------------------------------------------------------------------------------------
+dcl-proc example7;
+
+    dcl-ds empproj_t  qualified template;
+        info likeds(employee_t) ;
+        num_projects int(5);
+        projects  likeds(empprojact_t) dim(50) ;
+    end-ds;
+
+
+    dcl-ds response qualified ;
+        num_employees int(5);
+        employees likeds(empproj_t) dim(100) ;
+    end-ds;
+
+
+	dcl-s pEmp         pointer;
+	dcl-s pProj        pointer;
+	dcl-s pOutputRows  pointer;
+	dcl-s handle        char(1);
+    Dcl-DS empList     likeds(json_iterator);
+    Dcl-DS projList    likeds(json_iterator);
+
+	pEmp = json_sqlResultSet(' -
+		select *                -
+		from corpdata.employee  -
+		limit 100               -
+	');
+
+    empList = json_setIterator(pEmp);
+    DoW json_ForEach(empList);
+        clear response.employees(empList.count).info;
+        response.employees(empList.count).info.firstnme  = json_getStr(empList.this : 'FIRSTNME');
+        response.employees(empList.count).info.lastname  = json_getStr(empList.this : 'LASTNAME');
+   	    pProj = json_sqlResultSet('  -
+   		    select PROJNO                 -
+   		    from corpdata.empprojact -
+            where empNo = ' + quote(json_getStr(emplist.this:'EMPNO')) + '-
+   		    limit 50                -
+   	    ');
+        projList = json_setIterator(pProj);
+        DoW json_ForEach(projList);
+            clear response.employees(empList.count).projects(projList.count);
+            response.employees(empList.count).projects(projList.count).projNo = json_getStr(projList.this:'PROJNO');
+        Enddo;
+        response.employees(empList.count).num_projects = json_getLength(pProj);
+        json_delete(pProj);
+    EndDo;
+    response.num_employees = json_getLength(pEmp);
+
+
+    data-gen response
+        %data(handle:'countprefix=num_')
+        %gen(json_DataGen(pOutputRows));
+
+    // Let's see what we got
+    json_WriteJsonStmf(pOutputRows:'/prj/noxdb/testout/datagen7.json':1208:*OFF);
+
+on-exit;
+    // Always remember to delete used memory !!
+	json_delete(pEmp       );
+	json_delete(pProj      );
+	json_delete(pOutputRows);
+
+
+end-proc;
+// -------------------------------------------------------------
+// quote helper function to ensure sql injection is not possible
+// This function will add quotes around the string and escape any quotes inside the string
+// --------------------------------------------------------------
+dcl-proc quote;
+    dcl-pi *n varchar(256);
+        str varchar(256) const options(*varsize);
+    end-pi;
+    dcl-c  q '''';
+
+    return q + %scanrpl (q:q+q:str) + q;
 
 end-proc;
