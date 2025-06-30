@@ -104,8 +104,8 @@ dcl-proc example2;
       'select -
           sku,-
           department ,-
-  		  main_category,-
-  		  sub_category -
+          main_category,-
+          sub_category -
         from noxdb.stock '
     );
 
