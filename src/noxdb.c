@@ -1500,7 +1500,9 @@ void jx_NodeInsertSiblingBefore( PJXNODE pRef, PJXNODE pSibling)
     pSibling->pNodeSibling = pRef;
     pPrev->pNodeSibling    = pSibling;
 
-//  to do ... renumber seq.
+   if (pRef->pNodeParent->type == ARRAY) {
+       pRef->pNodeParent->Count ++;
+   }
 
 }
 // ---------------------------------------------------------------------------
@@ -1515,7 +1517,10 @@ void jx_NodeInsertSiblingAfter( PJXNODE pRef, PJXNODE pSibling)
    pSibling->pNodeSibling = pRef->pNodeSibling;
    pRef->pNodeSibling     = pSibling;
 
-//    to do ... renumber seq.
+   if (pRef->pNodeParent->type == ARRAY) {
+       pRef->pNodeParent->Count ++;
+   }
+
 }
 // ---------------------------------------------------------------------------
 PJXNODE  jx_nodeInsert(PJXNODE pDest, PJXNODE pSource, REFLOC refloc)

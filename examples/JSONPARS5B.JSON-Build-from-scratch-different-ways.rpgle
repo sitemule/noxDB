@@ -268,7 +268,7 @@ dcl-proc example3;
             )
         );
 
-        // just a demo: if we have size=55 the the text size will insertetd afther it
+        // just a demo: if we have size=55 the text size will inserted after it
         // so we can have a mixed array of numbers and text
         // If we have sizes, we will add them to the stock item
         pSize55  = json_lookupValue(pNumberSizes :  '55' : JSON_IGNORE_CASE);
