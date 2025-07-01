@@ -53,9 +53,6 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 // Globlas: TODO !!! remove to make code reintrant
 extern UCHAR jxMessage[512];
 extern BOOL  jxError;
-extern UCHAR BraBeg;
-extern UCHAR CurBeg;
-extern UCHAR Dollar;
 
 extern UCHAR jobSlash       ;
 extern UCHAR jobBackSlash   ;
@@ -443,7 +440,7 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PJXNODE parms)
 {
   PUCHAR p, pMarker, res = out;
   PJXNODE pParms = parms;
-  int markerLen ;
+  int markerLen , inLen;
   UCHAR marker [64];
 
   if (parms == NULL) {
@@ -454,12 +451,18 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PJXNODE parms)
   if (OFF == jx_isNode (parms)) {
     pParms =  jx_ParseString((PUCHAR) parms, NULL);
   }
-
   while (*in) {
-     if (*in == Dollar) {
+     if (*in == jobDollar) {
        pMarker = ++in;
-       for (;isalnum(*in) || *in=='.' || *in=='/' || *in=='_' ; in++);
-       markerLen = in - pMarker ;
+       if (*pMarker == jobCurBeg) {
+         pMarker = ++in; // skip the {
+         for (;*in && *in != jobCurEnd ;in++);
+         markerLen = in - pMarker ;
+         if (*in) in++; // skip the } when not end of string
+       } else {
+         for (;isalnum(*in) || *in=='.' || *in=='/' || *in=='_' ; in++);
+         markerLen = in - pMarker ;
+       }
        if (markerLen > 0) {
           substr(marker , pMarker , markerLen );
           out += insertMarkerValue (out , marker, pParms );

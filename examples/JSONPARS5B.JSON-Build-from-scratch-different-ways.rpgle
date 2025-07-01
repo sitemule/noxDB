@@ -94,10 +94,9 @@ dcl-proc example2;
 
     Dcl-S  pJson           Pointer;
     Dcl-S  pStock          Pointer;
-    Dcl-S  pSizes          Pointer;
-    Dcl-s  pSubSizes Pointer;
+    Dcl-S  pNumberSizes    Pointer;
+    Dcl-s  pTextSizes      Pointer;
     Dcl-S  pColurs         Pointer;
-    Dcl-S  pCategory       Pointer;
     dcl-ds stockList       likeds(json_iterator);
 
 
@@ -136,9 +135,10 @@ dcl-proc example2;
 
         // For each stock item, we will add the sizes and colours
         // We use the main_category to find the sizes and colours
-        pSizes = convertObjectToValues(
+        pNumberSizes= convertObjectToValues(
             json_sqlResultset (
-                'select number from noxdb.sizes -
+                'select number -
+                 from noxdb.sizes -
                  where main_category = ' + quote(
                     json_getStr(stockList.this:'main_category')
                 ) +
@@ -146,9 +146,10 @@ dcl-proc example2;
             )
         );
 
-        pSubSizes = convertObjectToValues(
+        pTextSizes = convertObjectToValues(
            json_sqlResultset (
-               'select text from noxdb.sizes -
+               'select text -
+                from noxdb.sizes -
                 where main_category = ' + quote(
                     json_getStr(stockList.this:'main_category')
                 ) +
@@ -157,18 +158,19 @@ dcl-proc example2;
         );
 
         // If we have sub sizes, we will add them to the sizes array
-        if json_getLength(pSubSizes) > 0;
-            json_ArrayPush (pSizes : pSubSizes);
+        if json_getLength(pTextSizes) > 0;
+            json_ArrayPush (pNumberSizes: pTextSizes);
         endif;
 
         // If we have sizes, we will add them to the stock item
-        if json_getLength(pSizes) > 0;
-            json_MoveObjectInto (stockList.this : 'Sizes' : pSizes);
+        if json_getLength(pNumberSizes) > 0;
+            json_MoveObjectInto (stockList.this : 'Sizes' : pNumberSizes);
         endif;
 
         pColurs = convertObjectToValues(
             json_sqlResultset (
-                'select colur_name from noxdb.Colurs -
+                'select colur_name -
+                 from noxdb.Colurs -
                  where main_category = ' + quote(
                     json_getStr(stockList.this:'main_category')
                 )
@@ -189,7 +191,7 @@ dcl-proc example2;
 
     json_WriteJsonStmf(pJson:'/prj/noxdb/testout/stock2.json':1208:*OFF);
 
-// Since everythin is contained in the pJson object
+// Since everything is contained in the pJson object
 // we can delete only the final result
 on-exit;
     json_delete(pJson);
@@ -205,10 +207,9 @@ dcl-proc example3;
 
     Dcl-S  pJson           Pointer;
     Dcl-S  pStock          Pointer;
-    Dcl-S  pSizes          Pointer;
-    Dcl-s  pSubSizes Pointer;
+    Dcl-S  pNumberSizes    Pointer;
+    Dcl-s  pTextSizes      Pointer;
     Dcl-S  pColurs         Pointer;
-    Dcl-S  pCategory       Pointer;
     dcl-ds stockList       likeds(json_iterator);
 
 
@@ -234,7 +235,7 @@ dcl-proc example3;
         json_nodeRename ( json_locate(stockList.this : 'department'): 'Department');
         json_nodeRename ( json_locate(stockList.this : 'sku')       : 'SKU');
 
-        // Here we directly rearange the nodes my moving them around
+        // Here we directly rearange the nodes by moving them around
         json_moveValue (stockList.this: 'Category.MainCategory' :stockList.this: 'main_category');
         json_moveValue (stockList.this: 'Category.Sub-Category' :stockList.this: 'sub_category');
 
@@ -242,48 +243,49 @@ dcl-proc example3;
         // For each stock item, we will add the sizes and colours
         // We use the main_category to find the sizes and colours
         // Here we uses the built-in function to conver the SQL resultset
-        // Note - now we have rearanged the nodes, so we can use the
-        // json_getStr function to get the value of the main_category
-        pSizes = json_arrayConvertList (
+        // Note - now we have rearanged the nodes, so we can pick
+        // key values for the SQL directly from  the stoc row:
+        pNumberSizes= json_arrayConvertList (
             json_sqlResultset (
-                'select number from noxdb.sizes -
+                'select number -
+                 from noxdb.sizes -
                  where main_category = ${Category.MainCategory} -
-                 and number is not null': // only first level  stock
-                1:JSON_ALLROWS:JX_ROWARRAY: // All rows as an simple array array
-                stockList.this // from where to pick the values
+                 and number is not null':     // Sizer with numbers first
+                1:JSON_ALLROWS:JSON_ROWARRAY: // All rows as an simple array
+                stockList.this                // from where to pick the key-values
             )
         );
 
-        pSubSizes = json_arrayConvertList(
+        pTextSizes = json_arrayConvertList(
            json_sqlResultset (
-               'select text from noxdb.sizes -
-                where main_category = ' + json_strQuote(
-                    json_getStr(stockList.this:'Category.MainCategory')
-                ) +
-                ' and text is not null' // only nextlevel  stock
-                1:JSON_ALLROWS:JX_ROWARRAY:
-                stockList.this // from where to pick the values
+               'select text -
+                from noxdb.sizes -
+                where main_category = ${Category.MainCategory} -
+                and text is not null':        // Sizer with text next
+                1:JSON_ALLROWS:JSON_ROWARRAY: // All rows as an simple array
+                stockList.this                // from where to pick the key-values
             )
         );
 
         // If we have sub sizes, we will add them to the sizes array
-        if json_getLength(pSubSizes) > 0;
-            json_ArrayPush (pSizes : pSubSizes);
+        if json_getLength(pTextSizes) > 0;
+            json_ArrayPush (pNumberSizes: pTextSizes);
         endif;
 
         // If we have sizes, we will add them to the stock item
-        if json_getLength(pSizes) > 0;
-            json_MoveObjectInto (stockList.this : 'Sizes' : pSizes);
+        if json_getLength(pNumberSizes) > 0;
+            json_MoveObjectInto (stockList.this : 'Sizes' : pNumberSizes);
         endif;
 
         // In this version we always produce the colour array - even if it has no elements
         json_MoveObjectInto (stockList.this : 'Colurs' :
             json_arrayConvertList(
                 json_sqlResultset (
-                    'select colur_name from noxdb.Colurs -
-                     where main_category = ' + json_strQuote(
-                        json_getStr(stockList.this:'Category.MainCategory')
-                    )
+                    'select colur_name -
+                     from noxdb.Colurs -
+                     where main_category = ${Category.MainCategory} ':
+                    1:JSON_ALLROWS:JSON_ROWARRAY: // All rows as an simple array
+                    stockList.this                // from where to pick the key-values
                 )
             )
         );
@@ -298,7 +300,7 @@ dcl-proc example3;
 
     json_WriteJsonStmf(pJson:'/prj/noxdb/testout/stock3.json':1208:*OFF);
 
-// Since everythin is contained in the pJson object
+// Since everything is contained in the pJson object
 // we can delete only the final result
 on-exit;
     json_delete(pJson);
