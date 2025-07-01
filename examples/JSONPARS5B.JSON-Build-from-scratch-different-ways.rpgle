@@ -210,6 +210,7 @@ dcl-proc example3;
     Dcl-S  pNumberSizes    Pointer;
     Dcl-s  pTextSizes      Pointer;
     Dcl-S  pColurs         Pointer;
+    Dcl-S  pSize55         Pointer;
     dcl-ds stockList       likeds(json_iterator);
 
 
@@ -267,9 +268,20 @@ dcl-proc example3;
             )
         );
 
-        // If we have sub sizes, we will add them to the sizes array
-        if json_getLength(pTextSizes) > 0;
-            json_ArrayPush (pNumberSizes: pTextSizes);
+        // just a demo: if we have size=55 the the text size will insertetd afther it
+        // so we can have a mixed array of numbers and text
+        // If we have sizes, we will add them to the stock item
+        pSize55  = json_lookupValue(pNumberSizes :  '55' : JSON_IGNORE_CASE);
+        if pSize55 <> *null and json_getLength(pTextSizes) > 0;
+            // If we have a size 55, we will add the text sizes after it
+            // This is just a demo to show how to manipulate the graph
+            json_nodeInsert (pSize55 : pTextSizes: JSON_AFTER_SIBLING);
+        else;
+
+            // If we have sub sizes, we will add them to the sizes array
+            if json_getLength(pTextSizes) > 0;
+                json_ArrayPush (pNumberSizes: pTextSizes);
+            endif;
         endif;
 
         // If we have sizes, we will add them to the stock item
