@@ -1005,7 +1005,7 @@ End-PR;
 ///
 // Copy node value
 //
-// Copies the value of a node to an existing node.
+// Copies the value of a node to an new or existing node.
 // <br><br>
 // If the source node is an object or array (type json_ARRAY or json_OBJECT) the
 // object or array will be cloned to the destination value.
@@ -1028,6 +1028,34 @@ Dcl-PR json_copyValue pointer extproc(*CWIDEN : 'jx_CopyValue');
   sourceNode pointer value;
   sourceName pointer value options(*string);
 End-PR;
+
+///
+// Move node value
+//
+// Moves the value of a node to an new or existing node.
+// <br><br>
+// If the source node is an object or array (type json_ARRAY or json_OBJECT) the
+// object or array will be moved ( with children) to the destination value.
+// <br><br>
+// If the source node does not exist nothing will be moved and <code>*null</code>
+// is returned.
+// <br><br>
+// If the source or destination is relative to the node the node path expression
+// can be used to specify the location.
+//
+// @param Destination node
+// @param Destination node path expression
+// @param Source node
+// @param Source node path expression
+// @return New node (Destination) or <code>*null</code> if the operation could not be executed
+///
+Dcl-PR json_moveValue pointer extproc(*CWIDEN : 'jx_MoveValue');
+  destNode pointer value;
+  destName pointer value options(*string);
+  sourceNode pointer value;
+  sourceName pointer value options(*string);
+End-PR;
+
 
 ///
 // Copy node
@@ -1337,6 +1365,20 @@ Dcl-PR json_arraySort pointer extproc(*CWIDEN : 'jx_ArraySort');
 End-PR;
 
 ///
+// Convert an array of objects OR an object into a simple array
+//
+// @param Array of objects or an object
+// @param Copy operation mode. json_MOVE_UNLINK (default) removes the "input array of object"
+//        node. json_COPY_CLONE leaves the node
+// @return New array with the "converted" nodes
+///
+Dcl-PR json_arrayConvertList pointer extproc(*CWIDEN : 'jx_ArrayConvertList' );
+  array pointer value options(*string);
+  copyMode uns(5) value options(*nopass);
+End-PR;
+
+
+///
 // Array Sort : array nodes comparison using current locale
 ///
 Dcl-C json_USE_LOCALE const(1);
@@ -1540,6 +1582,20 @@ End-PR;
 Dcl-PR json_AsJsonText16M Like(VARCHAR16M)  rtnparm
         extproc(*CWIDEN : 'jx_AsJsonText16M');
   node pointer value;
+End-PR;
+
+///
+// String quote - escapes quotes into double quotes and add leading and trailing
+// Curticy function to avoid SQL injection attacks
+//
+// Returns quote escaped string
+//
+// @param String to be quoted
+// @return Quoted string
+///
+Dcl-PR json_strQuote  varchar(32767)  rtnparm
+        extproc(*CWIDEN : 'jx_strQuote');
+  stringToQuote varchar(32767) const  options(*varsize);
 End-PR;
 
 

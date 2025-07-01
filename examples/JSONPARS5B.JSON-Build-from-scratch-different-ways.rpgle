@@ -34,6 +34,7 @@ dcl-proc main;
 
     example1();
     example2();
+    example3();
     json_sqlDisconnect();
 
 
@@ -193,6 +194,116 @@ dcl-proc example2;
 on-exit;
     json_delete(pJson);
 end-proc;
+// -------------------------------------------------------------
+// This example is similar to example2, but it uses a yet
+// simpler aproach by manipulating the graph
+// It uses the SQL resultset to build the JSON object.
+// by appending substructures by nested logic;
+// Note: This example uses noxDb >= '2026-07-01'
+// -------------------------------------------------------------
+dcl-proc example3;
+
+    Dcl-S  pJson           Pointer;
+    Dcl-S  pStock          Pointer;
+    Dcl-S  pSizes          Pointer;
+    Dcl-s  pSubSizes Pointer;
+    Dcl-S  pColurs         Pointer;
+    Dcl-S  pCategory       Pointer;
+    dcl-ds stockList       likeds(json_iterator);
+
+
+    pStock = json_sqlResultset (
+      'select -
+          sku,-
+          department ,-
+          main_category,-
+          sub_category -
+        from noxdb.stock '
+    );
+
+    // Test errors:
+    If json_Error(pStock) ;
+        json_joblog(json_Message(pStock));
+        Return;
+    EndIf;
+
+    stockList = json_setIterator(pStock);
+    DoW json_ForEach(stockList);
+
+        // Need to rename Db2 names for final result:
+        json_nodeRename ( json_locate(stockList.this : 'department'): 'Department');
+        json_nodeRename ( json_locate(stockList.this : 'sku')       : 'SKU');
+
+        // Here we directly rearange the nodes my moving them around
+        json_moveValue (stockList.this: 'Category.MainCategory' :stockList.this: 'main_category');
+        json_moveValue (stockList.this: 'Category.Sub-Category' :stockList.this: 'sub_category');
+
+
+        // For each stock item, we will add the sizes and colours
+        // We use the main_category to find the sizes and colours
+        // Here we uses the built-in function to conver the SQL resultset
+        // Note - now we have rearanged the nodes, so we can use the
+        // json_getStr function to get the value of the main_category
+        pSizes = json_arrayConvertList (
+            json_sqlResultset (
+                'select number from noxdb.sizes -
+                 where main_category = ${Category.MainCategory} -
+                 and number is not null': // only first level  stock
+                1:JSON_ALLROWS:JX_ROWARRAY: // All rows as an simple array array
+                stockList.this // from where to pick the values
+            )
+        );
+
+        pSubSizes = json_arrayConvertList(
+           json_sqlResultset (
+               'select text from noxdb.sizes -
+                where main_category = ' + json_strQuote(
+                    json_getStr(stockList.this:'Category.MainCategory')
+                ) +
+                ' and text is not null' // only nextlevel  stock
+                1:JSON_ALLROWS:JX_ROWARRAY:
+                stockList.this // from where to pick the values
+            )
+        );
+
+        // If we have sub sizes, we will add them to the sizes array
+        if json_getLength(pSubSizes) > 0;
+            json_ArrayPush (pSizes : pSubSizes);
+        endif;
+
+        // If we have sizes, we will add them to the stock item
+        if json_getLength(pSizes) > 0;
+            json_MoveObjectInto (stockList.this : 'Sizes' : pSizes);
+        endif;
+
+        // In this version we always produce the colour array - even if it has no elements
+        json_MoveObjectInto (stockList.this : 'Colurs' :
+            json_arrayConvertList(
+                json_sqlResultset (
+                    'select colur_name from noxdb.Colurs -
+                     where main_category = ' + json_strQuote(
+                        json_getStr(stockList.this:'Category.MainCategory')
+                    )
+                )
+            )
+        );
+    EndDo;
+
+    // Now we have a complete stock object with sizes and colours
+    // We can write it to a stream file in the IFS
+    // BUT - we need it in a final object called stock:
+    pJson = json_newObject();
+    json_MoveObjectInto (pJson : 'Stock' : pStock);
+
+
+    json_WriteJsonStmf(pJson:'/prj/noxdb/testout/stock3.json':1208:*OFF);
+
+// Since everythin is contained in the pJson object
+// we can delete only the final result
+on-exit;
+    json_delete(pJson);
+end-proc;
+
 // -------------------------------------------------------------
 // quote helper function to ensure sql injection is not possible
 // This function will add quotes around the string and escape any quotes inside the string

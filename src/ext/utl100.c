@@ -887,6 +887,23 @@ FIXEDDEC num(PVARCHAR Str, PUCHAR DecPointP)
    return str2dec(Str->String,dc);
 }
 /* ------------------------------------------------------------- */
+void jx_strQuote (PVARCHAR out, PVARCHAR in)
+{
+   PUCHAR os = out->String;
+   PUCHAR is = in->String;
+   int i;
+
+   *os++ = '\'';
+   for (i=0;i<in->Length;i++) {
+      if (*is == '\'') *os++ = '\'';
+      *os++ = *is++;
+
+   }
+   *os++ = '\'';
+   *os++ = '\0';
+   out->Length = os - out->String -1;
+}
+/* ------------------------------------------------------------- */
 PUCHAR stripLeadingZeros(PUCHAR out, PUCHAR s)
 {
    PUCHAR p = s;

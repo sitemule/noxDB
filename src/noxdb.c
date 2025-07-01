@@ -870,6 +870,21 @@ PJXNODE  jx_CopyValue (PJXNODE pDest , PUCHAR destName , PJXNODE pSource , PUCHA
    return pDest ;
 }
 /* --------------------------------------------------------------------------- */
+PJXNODE  jx_MoveValue (PJXNODE pDest , PUCHAR destName , PJXNODE pSource , PUCHAR sourceName)
+{
+   PJXNODE pRes;
+
+   pSource = jx_GetNode  (pSource  , sourceName );
+   if (pSource == NULL) return NULL;
+
+   pDest = jx_GetOrCreateNode (pDest, destName);
+   if (pDest  == NULL) return NULL;
+
+   jx_NodeMoveAndReplace (pDest, pSource);
+
+   return pDest ;
+}
+/* --------------------------------------------------------------------------- */
 static void  jx_MergeObj  (PJXNODE pDest, PJXNODE pSource, PJWRITE pjWrite, MERGEOPTION merge)
 {
    PJXNODE  p;
@@ -3008,6 +3023,32 @@ PJXNODE  jx_ArraySlice   (PJXNODE pSource , int from , int to, BOOL16 copyP)
    }
 
    return pOut;
+}
+/* --------------------------------------------------------------------------- */
+PJXNODE  jx_ArrayConvertList (PJXNODE pList , BOOL16 copyP)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   BOOL copy = (pParms->OpDescList->NbrOfParms >= 2) ? copyP : false;
+
+   PJXNODE pArray;
+   PJXNODE pNode;
+
+   if (pList == NULL) return NULL;
+
+   pArray = jx_NewArray(NULL);
+
+   for (pNode = pList->pNodeChildHead; pNode ; pNode = pNode->pNodeSibling) {
+      if (pNode->pNodeChildHead) {
+         jx_ArrayPush (pArray , pNode->pNodeChildHead  , false);
+      }
+   }
+
+   if (!copy ) {
+      jx_NodeDelete(pList);
+   }
+
+   return pArray;
+
 }
 /* ---------------------------------------------------------------------------
    Find node by name, by parsing a name string and traverse the array list

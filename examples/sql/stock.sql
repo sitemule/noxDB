@@ -25,6 +25,7 @@ create or replace table noxdb.colurs (
 
 
 -- Load data into the stock table
+truncate table noxdb.stock;
 insert into noxdb.stock (sku, department, main_category, sub_category, description, price) values
 ('Cycles', 'Sports', 'Bikes', 'racing', 'Fiber 21 gears', 399.99),
 ('Cycles', 'Mountain', 'E-bikes', 'MTB', 'Mountain bike with 21 gears', 299.99),
@@ -46,7 +47,7 @@ insert into noxdb.sizes (main_category, stock_level, text, number) values
 ('E-bikes', 1, null, 58),
 ('E-bikes', 1, null, 60);
 
-
+truncate table noxdb.colurs;
 insert into noxdb.colurs (main_category, colur_name) values
 ('E-bikes', 'White'),
 ('E-bikes', 'Black'),
