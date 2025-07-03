@@ -140,7 +140,7 @@ dcl-proc example2;
                 'select number -
                  from noxdb.sizes -
                  where main_category = ' + quote(
-                    json_getStr(stockList.this:'main_category')
+                    json_getStr(stockList.this:'Category.MainCategory')
                 ) +
                 ' and number is not null' // only first level  stock
             )
@@ -151,7 +151,7 @@ dcl-proc example2;
                'select text -
                 from noxdb.sizes -
                 where main_category = ' + quote(
-                    json_getStr(stockList.this:'main_category')
+                    json_getStr(stockList.this:'Category.MainCategory')
                 ) +
                 ' and text is not null' // only nextlevel  stock
             )
@@ -172,7 +172,7 @@ dcl-proc example2;
                 'select colur_name -
                  from noxdb.Colurs -
                  where main_category = ' + quote(
-                    json_getStr(stockList.this:'main_category')
+                    json_getStr(stockList.this:'Category.MainCategory')
                 )
             )
         );
