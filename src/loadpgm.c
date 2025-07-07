@@ -595,16 +595,114 @@ PJXNODE buildMethodParmObject ( PMETHODPARM pMethodParm)
 
    return pParmObject;
 }
+PJXNODE buildParmElements(PJXNODE pPcmlProgram, PSHORT offset)
+{
+
+   PJXNODE pParms    = jx_NewArray (NULL);
+   PJXNODE pParmMeta = jx_GetNode  (pPcmlProgram , "data");
+   while (pParmMeta) {
+      PJXNODE     pParm;
+      PMETHODPARM pMethodParm = newMethodParm ( pParmMeta);
+
+      // Struct? (No types no structs)
+      if ( pMethodParm->isStructure) {
+         // Is it a varchar
+         PJXNODE pChild1 = jx_GetNodeChild ( pParmMeta);
+         PJXNODE pChild2 = jx_GetNodeNext  ( pChild1 );
+
+         if ((pChild1 && pChild2)
+         && ( 0 == strcmp (parmMetaValue ( pChild1, "name") ,"length")
+         &&   0 == strcmp (parmMetaValue ( pChild2, "name") ,"string"))) {
+            int lenlen = atoi(parmMetaValue ( pChild1, "length"));
+            int size   = atoi(parmMetaValue ( pParmMeta, "outputsize"));
+            pMethodParm->precision = lenlen == 0 ? 2 : lenlen;
+            pMethodParm->dType = JX_DTYPE_VARCHAR;
+            pMethodParm->length = size - lenlen;
+            pMethodParm->size = size;
+         } else {
+            pMethodParm->object = buildParmElements(PJXNODE pPcmlProgram, PSHORT offset)
+            // Other struct -- TODO CALL
+         }
+      } else {
+
+         switch ( pMethodParm->dType) {
+            case JX_DTYPE_CHAR:{
+               pMethodParm->graphDataType = VALUE;
+               break;
+            }
+            case JX_DTYPE_VARCHAR: {
+               pMethodParm->graphDataType = VALUE;
+               if (pMethodParm->precision == 0) {
+                  pMethodParm->precision = 2;
+               }
+               pMethodParm->size = pMethodParm->precision + pMethodParm->length;
+               break;
+            }
+            case JX_DTYPE_INT:
+            case JX_DTYPE_BYTE:
+            case JX_DTYPE_BOOL:
+            case JX_DTYPE_ZONED: {
+               pMethodParm->graphDataType = LITERAL;
+               break;
+            }
+            case JX_DTYPE_PACKED: {
+               pMethodParm->graphDataType = LITERAL;
+               pMethodParm->size = (pMethodParm->length + 1) / 2;
+               break;
+            }
+            case JX_DTYPE_DATE:  {
+               PUCHAR p = parmMetaValue ( pParmMeta, "dateformat");
+               strcpy ( pMethodParm->format , p ? p: "");
+               pMethodParm->graphDataType = VALUE;
+               pMethodParm->separatorChar = convertSeperator(
+                  parmMetaValue ( pParmMeta, "dateseparator")
+               );
+               pMethodParm->length = pMethodParm->size  = 10 ; // TODO More?
+               break;
+            }
+
+            case JX_DTYPE_TIME:  {
+               PUCHAR p = parmMetaValue ( pParmMeta, "timeformat");
+               strcpy ( pMethodParm->format , p ? p:"");
+               pMethodParm->graphDataType = VALUE;
+               pMethodParm->separatorChar = convertSeperator(
+                  parmMetaValue ( pParmMeta, "timeseparator")
+               );
+               pMethodParm->length = pMethodParm->size = 8 ;
+               break;
+            }
+            case JX_DTYPE_TIME_STAMP: {
+               if ( NULL == parmMetaValue ( pParmMeta, "precision") ) {
+                  pMethodParm->precision = 6;
+               }
+               pMethodParm->length = 20 + pMethodParm->precision;
+               pMethodParm->size = pMethodParm->length;
+               break;
+            }
+
+            default:
+               pMethodParm->graphDataType = VALUE;
+         }
+      }
+
+      pMethodParm->offset = *offset;
+
+      pParm = buildMethodParmObject (pMethodParm);
+
+      jx_ArrayPush ( pParms , pParm , FALSE);
+
+      pParmMeta = jx_GetNodeNext(pParmMeta);
+      *offset += pMethodParm->size;
+   }
+   return pParms;
+}
 /* --------------------------------------------------------------------------- *\
    Convert pcml to uniform json used for both programs and service programs
 \* --------------------------------------------------------------------------- */
 PJXNODE  jx_ApplicationMetaJson ( PUCHAR library , PUCHAR program , PUCHAR objectType)
 {
-   PJXNODE pResultObject;
-   PJXNODE pPcml , pParmMeta , pParms, pParm, pLib, pProgram, pProcedure , pPcmlProgram , pPcmlParms;
+   PJXNODE pResultObject, pPcml , pParmMeta , pParms, pParm, pLib, pProgram, pProcedure , pPcmlProgram , pPcmlParms, pPcmlStruct;
 
-   int     args;
-   int     offset;
    UCHAR   tempPgm [11];
    UCHAR   tempLib [11];
    UCHAR   tempProc [256];
@@ -638,106 +736,27 @@ PJXNODE  jx_ApplicationMetaJson ( PUCHAR library , PUCHAR program , PUCHAR objec
    strtrimncpy ( tempPgm  , program , 10);
    strtrimncpy ( tempLib  , library , 10);
 
-   while (pPcmlProgram) {
-      PUCHAR  procedureName     = parmMetaValue ( pPcmlProgram, "name");
-      args = 0;
-      offset = 0;
+   // Load all complex (if any) datatypes and make a __structs__ node
+   pPcmlStruct = jx_GetNode  (pPcml , "/pcml/struct");
+   if (pPcmlStruct) {
 
-      pParms    = jx_NewArray (NULL);
-      pParmMeta = jx_GetNode  (pPcmlProgram , "data");
-      while (pParmMeta) {
-         PJXNODE    pParm;
-         PMETHODPARM pMethodParm = newMethodParm ( pParmMeta);
+      PJXNODE pStructs  = jx_NewObject(NULL);
 
-         // Struct? (No types no structs)
-         if ( pMethodParm->isStructure) {
-            // Is it a varchar
-            PJXNODE pChild1 = jx_GetNodeChild ( pParmMeta);
-            PJXNODE pChild2 = jx_GetNodeNext  ( pChild1 );
-
-            if ((pChild1 && pChild2)
-            && ( 0 == strcmp (parmMetaValue ( pChild1, "name") ,"length")
-            &&   0 == strcmp (parmMetaValue ( pChild2, "name") ,"string"))) {
-               int lenlen = atoi(parmMetaValue ( pChild1, "length"));
-               int size   = atoi(parmMetaValue ( pParmMeta, "outputsize"));
-               pMethodParm->precision = lenlen == 0 ? 2 : lenlen;
-               pMethodParm->dType = JX_DTYPE_VARCHAR;
-               pMethodParm->length = size - lenlen;
-               pMethodParm->size = size;
-            } else {
-               // Other struct -- TODO CALL
-            }
-         } else {
-
-            switch ( pMethodParm->dType) {
-               case JX_DTYPE_CHAR:{
-                  pMethodParm->graphDataType = VALUE;
-                  break;
-               }
-               case JX_DTYPE_VARCHAR: {
-                  pMethodParm->graphDataType = VALUE;
-                  if (pMethodParm->precision == 0) {
-                     pMethodParm->precision = 2;
-                  }
-                  pMethodParm->size = pMethodParm->precision + pMethodParm->length;
-                  break;
-               }
-               case JX_DTYPE_INT:
-               case JX_DTYPE_BYTE:
-               case JX_DTYPE_BOOL:
-               case JX_DTYPE_ZONED: {
-                  pMethodParm->graphDataType = LITERAL;
-                  break;
-               }
-               case JX_DTYPE_PACKED: {
-                  pMethodParm->graphDataType = LITERAL;
-                  pMethodParm->size = (pMethodParm->length + 1) / 2;
-                  break;
-               }
-               case JX_DTYPE_DATE:  {
-                  PUCHAR p = parmMetaValue ( pParmMeta, "dateformat");
-                  strcpy ( pMethodParm->format , p ? p: "");
-                  pMethodParm->graphDataType = VALUE;
-                  pMethodParm->separatorChar = convertSeperator(
-                     parmMetaValue ( pParmMeta, "dateseparator")
-                  );
-                  pMethodParm->length = pMethodParm->size  = 10 ; // TODO More?
-                  break;
-               }
-
-               case JX_DTYPE_TIME:  {
-                  PUCHAR p = parmMetaValue ( pParmMeta, "timeformat");
-                  strcpy ( pMethodParm->format , p ? p:"");
-                  pMethodParm->graphDataType = VALUE;
-                  pMethodParm->separatorChar = convertSeperator(
-                     parmMetaValue ( pParmMeta, "timeseparator")
-                  );
-                  pMethodParm->length = pMethodParm->size = 8 ;
-                  break;
-               }
-               case JX_DTYPE_TIME_STAMP: {
-                  if ( NULL == parmMetaValue ( pParmMeta, "precision") ) {
-                     pMethodParm->precision = 6;
-                  }
-                  pMethodParm->length = 20 + pMethodParm->precision;
-                  pMethodParm->size = pMethodParm->length;
-                  break;
-               }
-
-               default:
-                  pMethodParm->graphDataType = VALUE;
-            }
-         }
-
-         pMethodParm->offset = offset;
-
-         pParm = buildMethodParmObject (pMethodParm);
-
-         jx_ArrayPush ( pParms , pParm , FALSE);
-
-         pParmMeta = jx_GetNodeNext(pParmMeta);
-         offset += pMethodParm->size;
+      while ( pPcmlStruct && 0==strcmp(jx_GetNodeNamePtr(pPcmlStruct),"struct")) {
+         PUCHAR  structureName = parmMetaValue ( pPcmlStruct, "name");
+         SHORT   offset = 0;
+         PJXNODE pElements = buildParmElements(pPcmlStruct , &offset);
+         jx_NodeMoveInto (pStructs, structureName, pElements );
+         pPcmlStruct = jx_GetNodeNext(pPcmlStruct);
       }
+      jx_NodeMoveInto (pProgram, "__structs__", pStructs );
+   }
+
+
+   while (pPcmlProgram && 0==strcmp(jx_GetNodeNamePtr(pPcmlStruct),"program")) {
+      PUCHAR  procedureName     = parmMetaValue ( pPcmlProgram, "name");
+      SHORT   offset = 0;
+      pParms = buildParmElements(pPcmlProgram , &offset);
 
       if (objectType[1] == 'P') { // *PGM
          jx_SetIntByName ( pProgram , "buflen", offset , OFF);
