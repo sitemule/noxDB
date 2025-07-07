@@ -620,7 +620,7 @@ PJXNODE buildParmElements(PJXNODE pPcmlProgram, PSHORT offset)
             pMethodParm->length = size - lenlen;
             pMethodParm->size = size;
          } else {
-            pMethodParm->object = buildParmElements(PJXNODE pPcmlProgram, PSHORT offset)
+            //pMethodParm->object = buildParmElements(PJXNODE pPcmlProgram, PSHORT offset)
             // Other struct -- TODO CALL
          }
       } else {
