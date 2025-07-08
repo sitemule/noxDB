@@ -103,6 +103,8 @@ dcl-proc callProcedureByObject;
         dsply msg;
     EndIf;
 
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmNameAge1.json':1208:*OFF);
+
     // Dump the result
     json_joblog(pOut);
 
@@ -132,6 +134,8 @@ dcl-proc callProcedureByString;
         msg = json_Message(pOut);
         dsply msg;
     EndIf;
+
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmNameAge2.json':1208:*OFF);
 
     // Dump the result
     json_joblog(pOut);
@@ -192,8 +196,21 @@ dcl-proc callProcedureComplex;
     Dcl-s msg        char(50);
 
     // Setup an object and call
-    pIn = json_newObject();
-    json_setInt  (pIn: 'id'     : 123456789);
+    pIn = json_parseString (
+        '{-
+            "id" : 9876543210, -
+    	    "employee":{ -
+    	    	"id":123456789, -
+    	    	"name":"John Doe", -
+    	    	"age":25, -
+    	    	"income":12345.67, -
+    	    	"birthDate":"2025-07-08", -
+    	    	"birthTime":"15.36.26", -
+    	    	"updated":"2025-07-08-15.36.26.416393", -
+    	    	"isMale":"1" -
+    	    } -
+    	}'
+    );
 
     pOut  = json_CallProcedure  ('*LIBL' : 'HELOSRVPGM' : 'COMPLEX' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;

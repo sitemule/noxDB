@@ -52,9 +52,9 @@ static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
 		}
 		else if  (c  == pJw->backSlash) {
 			// Dont double escape unicode escape sequence
-			if (strlen(in) < 6 || in[1] != 'u'   
+			if (strlen(in) < 6 || in[1] != 'u'
 				|| !isxdigit(in[2]) || !isxdigit(in[3])
-				|| !isxdigit(in[4]) || !isxdigit(in[5])) {  
+				|| !isxdigit(in[4]) || !isxdigit(in[5])) {
 				stream_putc(p,pJw->backSlash);
 			}
 		}
@@ -209,6 +209,10 @@ static void  jsonStreamPrintNode (PJXNODE pNode, PSTREAM pStream, SHORT level)
 		case VALUE:
 		case POINTER_VALUE:
 			jsonStreamPrintValue   (pNode, pStream);
+			break;
+
+		case NOXDB_SUBGRAPH:
+			jsonStreamPrintNode   ((PJXNODE) pNode->Value, pStream, level);
 			break;
 
 		default:

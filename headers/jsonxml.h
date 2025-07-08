@@ -67,11 +67,12 @@ typedef enum {
 	CLONE               = 18,  // Obsolete ... NO
 	EVALUATE            = 19,  // Obsolete ??
 	NOXDB_POINTER 	    = 20,  // Internal objects
+	NOXDB_SUBGRAPH      = 21,  // Sub-graph, will be serialized but maintained elsewhere
 	OBJMOVE             = 2048,
 	// Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
 	// Note: "Merge options" are fit in here... from belowe
 	NT_MOVE             =2048,  // Unlink the source and move it to destination
-	NT_ALLOW_PRIMITIVES =4096   // Allow strings ints and other valyes to evaluate with PARSE_STRING
+	NT_ALLOW_PRIMITIVES =4096   // Allow strings ints and other values to evaluate with PARSE_STRING
 
 } NODETYPE, *PNODETYPE;
 typedef NODETYPE  JSTATE, *PJSTATE;
@@ -263,6 +264,7 @@ typedef enum {
 	JX_DTYPE_DATE       = 'D',
 	JX_DTYPE_TIME       = 'T',
 	JX_DTYPE_TIME_STAMP = 'S',
+	JX_DTYPE_STRUCTURE  = 's',
 	JX_DTYPE_UNKNOWN    = '?'
 } JX_DTYPE, *PJX_DTYPE;
 #pragma enum (pop)
@@ -280,12 +282,14 @@ typedef struct _JXMETHOD  {
 	UCHAR   null2;
     UCHAR   procedure [PROC_NAME_MAX];
 	UCHAR   null3;
+	PJXNODE pLib;
+	PJXNODE pPgm;
+	PJXNODE pProc;
 } JXMETHOD, * PJXMETHOD;
 
 typedef struct _JXMETHODPARM  {
 	UCHAR    signature; // always hex 00
 	UCHAR    name[PROC_NAME_MAX];
-	BOOL     isStructure;
 	JX_DTYPE dType;
 	UCHAR    use;
 	ULONG    offset;
@@ -296,7 +300,8 @@ typedef struct _JXMETHODPARM  {
 	UCHAR    format[10];
 	UCHAR    separatorChar;
 	NODETYPE graphDataType;
-} METHODPARM, * PMETHODPARM;
+	PJXNODE  pStructure;
+} JXMETHODPARM, * PJXMETHODPARM;
 
 
 
