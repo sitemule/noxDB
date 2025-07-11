@@ -36,9 +36,6 @@ extern UCHAR BraBeg;
 extern UCHAR BraEnd;
 extern UCHAR Masterspace;
 
-//  local prototype:
-static void  copyNodeIntoBuffer (PJXMETHODPARM pMethodParm , PUCHAR pParmBuffer , PJXNODE pParms  );
-
 // -------------------------------------------------------------
 void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib)
 {
@@ -271,28 +268,17 @@ static void  copyArrayIntoBuffer (PJXMETHODPARM pMethodParm , PUCHAR pParmBuffer
    PJXNODE pArray =  jx_GetNode   (pParms , pMethodParm->name);
    pArray = (jx_GetNodeType (pArray) == ARRAY) ? jx_GetNodeChild (pArray) :  NULL;
 
-   if (pMethodParm->dType == JX_DTYPE_STRUCTURE) {
-      for (int i=0; i < pMethodParm->dim ; i++) {
-         PJXNODE pStructParm = jx_GetNode ( pArray , pMethodParm->name);
-         PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
-         while (pStructObj) {
-            PJXMETHODPARM pDef = getParmDefinition (pStructObj);
-            copyNodeIntoBuffer ( pDef , pParmBuffer + pDef->offset , pStructParm);
-            pStructObj = jx_GetNodeNext(pStructObj);
-         }
-      }
-   } else {
-      for (int i=0; i < pMethodParm->dim ; i++) {
-         PUCHAR pValue  = jx_GetNodeValuePtr (pArray,"");
-         copyValueIntoBuffer(pMethodParm , pParmBuffer, pValue );
-         pParmBuffer += pMethodParm->size;
-         pArray = jx_GetNodeNext(pArray);
-      }
+   for (int i=0; i < pMethodParm->dim ; i++) {
+      PUCHAR pValue  = jx_GetNodeValuePtr (pArray,"");
+      copyValueIntoBuffer(pMethodParm , pParmBuffer, pValue );
+      pParmBuffer += pMethodParm->size;
+      pArray = jx_GetNodeNext(pArray);
    }
+
 }
 static void  copyNodeIntoBuffer (PJXMETHODPARM pMethodParm , PUCHAR pParmBuffer , PJXNODE pParms  )
 {
-   if (pMethodParm->dim > 0) {
+   if (pMethodParm->dim > = 0) {
       copyArrayIntoBuffer (pMethodParm , pParmBuffer , pParms);
    } else {
 

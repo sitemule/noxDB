@@ -295,8 +295,12 @@ dcl-proc callProcedureCustomer;
     Dcl-S pOut       Pointer;
     Dcl-s msg        char(50);
 
+    pIn = json_newObject();
+    // Move the result set from a SQL statement into the JSON object
     // This result in an array of object with customers
-    pIn = json_sqlResultSet ('select * from QIWS/QCUSTCDT');
+    json_moveObjectInto (pIn : 'customer_in' :json_sqlResultSet ('select * from QIWS/QCUSTCDT'));
+    json_WriteJsonStmf(pIb:'/prj/noxdb/testout/srvpgmCustomerIn.json':1208:*OFF);
+
 
     pOut  = json_CallProcedure  ('*LIBL' : 'HELOSRVPGM' : 'CUSTOMER' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
@@ -306,7 +310,7 @@ dcl-proc callProcedureCustomer;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmCustomer.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmCustomerOut.json':1208:*OFF);
 
 // Always clean up
 on-exit;
