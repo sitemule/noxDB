@@ -359,8 +359,8 @@ static void setReturnNode (PJXNODE pReturnObject, PJXMETHODPARM pMethodParm, PUC
    jx_SetValueByName( pReturnObject , pMethodParm->name , data , pMethodParm->graphDataType );
 
 }
-
-/* ------------------------------------------------------------- */
+/* original works !!
+/ * ------------------------------------------------------------- * /
 static void  buildReturnStructure (PJXNODE pReturnObject, PJXMETHODPARM pMethodStructParm , PUCHAR pParmBuffer )
 {
    PJXNODE pReturnStruct = jx_NewObject(NULL);
@@ -378,7 +378,7 @@ static void  buildReturnStructure (PJXNODE pReturnObject, PJXMETHODPARM pMethodS
 
    jx_NodeMoveInto (pReturnObject , pMethodStructParm->name , pReturnStruct);
 }
-/* ------------------------------------------------------------- */
+/ * ------------------------------------------------------------- * /
 static PJXNODE buildReturnObject (PJXMETHOD  pMethod, PJXNODE pParms, PVOID argArray [256], int args)
 {
    int argIx= 0;
@@ -403,6 +403,47 @@ static PJXNODE buildReturnObject (PJXMETHOD  pMethod, PJXNODE pParms, PVOID argA
 
    return pReturnObject;
 }
+*/
+
+/* ------------------------------------------------------------- */
+static void  setReturnObject (PJXNODE pReturnObject, PJXMETHODPARM pMethodParm , PUCHAR pParmBuffer )
+{
+   if (pMethodParm->dType == JX_DTYPE_STRUCTURE) {
+      PJXNODE pReturnStruct = jx_NewObject(NULL);
+      PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
+      while (pStructObj) {
+         PJXMETHODPARM pStructParm = (PJXMETHODPARM) jx_GetValuePtr  (pStructObj , "def" , NULL);
+         PUCHAR pBuf = pParmBuffer + pStructParm->offset;
+         setReturnObject ( pReturnStruct , pStructParm, pBuf);
+         pStructObj = jx_GetNodeNext(pStructObj);
+      }
+      jx_NodeMoveInto (pReturnObject , pMethodParm->name , pReturnStruct);
+   } else {
+      setReturnNode (pReturnObject , pMethodParm,  pParmBuffer);
+   }
+}
+/* ------------------------------------------------------------- */
+static PJXNODE buildReturnObject (PJXMETHOD  pMethod, PJXNODE pParms, PVOID argArray [256], int args)
+{
+   int argIx= 0;
+   PJXNODE pInterface, pParmObj;
+   PJXNODE pReturnObject = jx_NewObject(NULL);
+
+   pInterface = (pMethod->pProc == NULL) ? pMethod->pPgm : pMethod->pProc;
+
+   pParmObj = jx_GetNodeChild(jx_GetNode ( pInterface , "parms"));
+   while (pParmObj) {
+      PJXMETHODPARM pMethodParm = (PJXMETHODPARM) jx_GetValuePtr  (pParmObj , "def" , NULL);
+      if (pMethodParm->use == 'B') { // BOTH .. TODO in enum
+         setReturnObject (pReturnObject , pMethodParm,  argArray [argIx]);
+      }
+      argIx++;
+      pParmObj = jx_GetNodeNext(pParmObj);
+   }
+
+   return pReturnObject;
+}
+
 /* --------------------------------------------------------------------------- *\
 <?xml version="1.0" encoding="UTF-8" ?>
 <pcml version="8.0">
