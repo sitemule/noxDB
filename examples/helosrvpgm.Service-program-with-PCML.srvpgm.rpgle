@@ -7,12 +7,31 @@
 //
 // Adding an extra thread(*CONCURRENT) to the ctl-opt
 // it can even be used with ILEastic, and also serve the openAPI.json ( yet to come)
+// My copiler is complined with:
+//    ctl-opt pgminfo(*PCML:*MODULE:*DCLCASE:*V8)
+// The parameter for keyword PGMINFO is not *DCLCASE, *MODULE, *V6, or *V7.
+// Enven on V7R5, the default is *V8, so you can use that.
 ///
-ctl-opt pgminfo(*PCML:*MODULE:*DCLCASE:*V8) thread(*CONCURRENT);
+ctl-opt pgminfo(*PCML:*MODULE:*DCLCASE:*V7) thread(*CONCURRENT);
 ctl-opt nomain;
 ctl-opt copyright('Sitemule.com (C), 2023-2025');
 ctl-opt decEdit('0,') datEdit(*YMD.);
 ctl-opt debug(*yes);
+
+dcl-ds employee_t template qualified;
+    id        int(10);
+    name      char(50);
+    age       int(10);
+    income    packed(9:2);
+    birthDate date;
+    birthTime time;
+    updated   timestamp;
+    isMale    ind;
+end-ds;
+
+// The template for the customer  structure
+dcl-ds customer_t    extname('QIWS/QCUSTCDT') qualified template end-ds;
+
 
 // ------------------------------------------------------------------------------------
 // nameage
@@ -104,24 +123,12 @@ end-proc;
 // ------------------------------------------------------------------------------------
 dcl-proc complex export;
 
-    dcl-ds employee_t template qualified;
-        id        int(10);
-        name      char(50);
-        age       int(10);
-        income    packed(9:2);
-        birthDate date;
-        birthTime time;
-        updated   timestamp;
-        isMale    ind;
-    end-ds;
-
 
     dcl-pi *n ;
         id        int(10) const ;
         employee  likeds(employee_t) ;
     end-pi;
 
-    clear employee;
     employee.id = id;
     employee.name = 'John Doe';
     employee.age = 25;
@@ -130,5 +137,32 @@ dcl-proc complex export;
     employee.birthTime = %time();
     employee.updated = %timestamp();
     employee.isMale = *on;
-    return ;
+end-proc;
+
+// ------------------------------------------------------------------------------------
+dcl-proc echo export;
+
+
+    dcl-pi *n ;
+        employee_in   likeds(employee_t) const;
+        employee_out  likeds(employee_t) ;
+    end-pi;
+
+    employee_out = employee_in;
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+dcl-proc customer export;
+
+    dcl-pi *n ;
+        customer_in   likeds(customer_t) dim(100) const;
+        customer_out  likeds(customer_t) dim(100);
+    end-pi;
+
+    // Copy the input to the output
+    // Note that the input is an array of 100 elements, so we copy all
+    // we do some magic later.
+    customer_out = customer_in;
+
 end-proc;

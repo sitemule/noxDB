@@ -42,6 +42,13 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
     // Level of complexity supported
     callProcedureComplex();
 
+    // Structure in - structure out
+    callProcedureEcho();
+
+    // External described ds
+    callProcedureCustomer();
+
+
     // That's it..
     *inlr = *on;
 
@@ -57,10 +64,11 @@ dcl-proc getTheMeta;
     // Note - this will be in PCML format a.k.a XML, but in the object graph
     pMeta = json_ProcedureMeta ('*LIBL' : 'HELOSRVPGM': '*ALL');
 
-    // Just dump the result since it is XML by nature:
+    // Just dump the result to both joblog and IFS stream file since it is XML by nature:
     json_WriteXMLStmf(pMeta:'/prj/noxdb/testout/srvpgmmeta.xml':1208:*OFF);
 
-    // Always clean up
+// Always clean up
+on-exit;
     json_delete(pMeta);
 
 end-proc;
@@ -75,10 +83,11 @@ dcl-proc getTheMetaJson;
     // Note - this will be in PCML format a.k.a XML, but in the object graph
     pMeta = json_ApplicationMetaJson ('*LIBL' : 'HELOSRVPGM': '*SRVPGM');
 
-    // Just dump the result since it is XML by nature:
+    // Just dump the result to both joblog and IFS stream file since it is XML by nature:
     json_WriteJsonStmf(pMeta:'/prj/noxdb/testout/srvpgmmeta.json':1208:*OFF);
 
-    // Always clean up
+// Always clean up
+on-exit;
     json_delete(pMeta);
 
 end-proc;
@@ -101,14 +110,16 @@ dcl-proc callProcedureByObject;
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
+        return;
     EndIf;
 
+
+    // Dump the result to both joblog and IFS stream file
+    json_joblog(pOut);
     json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmNameAge1.json':1208:*OFF);
 
-    // Dump the result
-    json_joblog(pOut);
-
-    // Always clean up
+// Always clean up
+on-exit;
     json_delete(pIn);
     json_delete (pOut);
 
@@ -133,14 +144,15 @@ dcl-proc callProcedureByString;
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
+        return;
     EndIf;
 
+    // Dump the result to both joblog and IFS stream file
+    json_joblog(pOut);
     json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmNameAge2.json':1208:*OFF);
 
-    // Dump the result
-    json_joblog(pOut);
-
-    // Always clean up
+// Always clean up
+on-exit;
     json_delete (pOut);
 
 end-proc;
@@ -174,21 +186,24 @@ dcl-proc callProcedureAllTypes;
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
+        return;
     EndIf;
 
+    // Dump the result to both joblog and IFS stream file
+    json_joblog(pOut);
     json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmalltypes.json':1208:*OFF);
 
 
-    // Dump the result
-    json_joblog(pOut);
-
-    // Always clean up
+// Always clean up
+on-exit;
     json_delete(pIn);
     json_delete (pOut);
 
 end-proc;
 
-
+// ------------------------------------------------------------------------------------
+// Structure as input/output
+// ------------------------------------------------------------------------------------
 dcl-proc callProcedureComplex;
 
     Dcl-S pIn        Pointer;
@@ -207,7 +222,7 @@ dcl-proc callProcedureComplex;
     	    	"birthDate":"2025-07-08", -
     	    	"birthTime":"15.36.26", -
     	    	"updated":"2025-07-08-15.36.26.416393", -
-    	    	"isMale":"1" -
+    	    	"isMale":true -
     	    } -
     	}'
     );
@@ -218,13 +233,83 @@ dcl-proc callProcedureComplex;
         dsply msg;
     EndIf;
 
+    // Dump the result to both joblog and IFS stream file
+    json_joblog(pOut);
     json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmcomplex.json':1208:*OFF);
 
+// Always clean up
+on-exit;
+    json_delete(pIn);
+    json_delete (pOut);
 
-    // Dump the result
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// Structure input / Structure output
+// ------------------------------------------------------------------------------------
+dcl-proc callProcedureEcho;
+
+    Dcl-S pIn        Pointer;
+    Dcl-S pOut       Pointer;
+    Dcl-s msg        char(50);
+
+    // Setup an object and call
+    pIn = json_parseString (
+        '{-
+    	    "employee_in":{ -
+    	    	"id":123456789, -
+    	    	"name":"John Doe", -
+    	    	"age":25, -
+    	    	"income":12345.67, -
+    	    	"birthDate":"2025-07-08", -
+    	    	"birthTime":"15.36.26", -
+    	    	"updated":"2025-07-08-15.36.26.416393", -
+    	    	"isMale":true -
+    	    } -
+    	}'
+    );
+
+    pOut  = json_CallProcedure  ('*LIBL' : 'HELOSRVPGM' : 'ECHO' : pIn : JSON_GRACEFUL_ERROR);
+    If json_Error(pOut) ;
+        msg = json_Message(pOut);
+        dsply msg;
+    EndIf;
+
+    // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmecho.json':1208:*OFF);
 
-    // Always clean up
+// Always clean up
+on-exit;
+    json_delete(pIn);
+    json_delete (pOut);
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// External described datastructures
+// ------------------------------------------------------------------------------------
+dcl-proc callProcedureCustomer;
+
+    Dcl-S pIn        Pointer;
+    Dcl-S pOut       Pointer;
+    Dcl-s msg        char(50);
+
+    // This result in an array of object with customers
+    pIn = json_sqlResultSet ('select * from QIWS/QCUSTCDT');
+
+    pOut  = json_CallProcedure  ('*LIBL' : 'HELOSRVPGM' : 'CUSTOMER' : pIn : JSON_GRACEFUL_ERROR);
+    If json_Error(pOut) ;
+        msg = json_Message(pOut);
+        dsply msg;
+    EndIf;
+
+    // Dump the result to both joblog and IFS stream file
+    json_joblog(pOut);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmCustomer.json':1208:*OFF);
+
+// Always clean up
+on-exit;
     json_delete(pIn);
     json_delete (pOut);
 
