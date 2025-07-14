@@ -24,8 +24,8 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
 /include qrpgleRef,noxdb
 
 
-    //callHelloProgram1();
-    callHelloProgram2();
+    //callServiceProgramProcedure1();
+    //callServiceProgramProcedure2();
 
     // That's it..
     *inlr = *on;
@@ -35,7 +35,7 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
 // call Hello Program - new version of RPG allowing functionpointer for programs
 // Note: This will not work on older versions of RPG, however will compile
 // ------------------------------------------------------------------------------------
-dcl-proc callHelloProgram1;
+dcl-proc callServiceProgramProcedure1;
 
     dcl-pr HelloProgram pointer extproc(pHelloProgram);
 	    name char (10) const;
@@ -49,9 +49,9 @@ dcl-proc callHelloProgram1;
 
     dcl-s pHelloProgram	pointer (*PROC) static;
 
-    pHelloProgram = json_LoadProgram ('*LIBL' : 'HELLOPGM');
+    pHelloProgram = json_LoadProgram ('*LIBL' : 'JSONPGM0A');
     if pHelloProgram = *null;
-        json_joblog('Could not load program HELLOPGM');
+        json_joblog('Could not load program JSONPGM0A');
         return;
     endif;
 
@@ -60,7 +60,7 @@ dcl-proc callHelloProgram1;
     text = 'Hello world from RPG';
     age  = 25;
     HelloProgram ('Niels': text: age);
-    json_joblog ('Called HELLOPGM returns: text: ' + %trim(text) + ', age: ' + %char(age));
+    json_joblog ('Called JSONPGM0A returns: text: ' + %trim(text) + ', age: ' + %char(age));
 
 
 end-proc;
@@ -68,7 +68,7 @@ end-proc;
 // ------------------------------------------------------------------------------------
 // call Hello Program
 // ------------------------------------------------------------------------------------
-dcl-proc callHelloProgram2;
+dcl-proc callServiceProgramProcedure2;
 
     dcl-s pHelloProgram			pointer (*PROC) static;
     dcl-s pHelloParms pointer dim(3) static;
@@ -78,9 +78,9 @@ dcl-proc callHelloProgram2;
     dcl-s msg  char(50);
 
 
-    pHelloProgram = json_LoadProgram ('*LIBL' : 'HELLOPGM');
+    pHelloProgram = json_LoadProgram ('*LIBL' : 'JSONPGM0A');
     if pHelloProgram = *null;
-        json_joblog('Could not load program HELLOPGM');
+        json_joblog('Could not load program JSONPGM0A');
         return;
     endif;
 
@@ -94,7 +94,7 @@ dcl-proc callHelloProgram2;
     text = 'Hello world from RPG';
     age  = 25;
     json_callPgm ( pHelloProgram : %addr(pHelloParms) : 3); // 3 is the number of parameters
-    json_joblog ('Called HELLOPGM returns: text: ' + %trim(text) + ', age: ' + %char(age));
+    json_joblog ('Called JSONPGM0A returns: text: ' + %trim(text) + ', age: ' + %char(age));
 
 
 end-proc;

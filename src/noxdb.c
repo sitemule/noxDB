@@ -1222,7 +1222,7 @@ static PJXNODE  SelectParser (PJXCOM pJxCom)
 {
    PJXNODE pRoot;
    CheckBufSize(pJxCom);
-   pJxCom->pNodeRoot = pRoot = NewNode (NULL, NULL, OBJECT);
+   pJxCom->pNodeRoot = pRoot = jx_NewNode (NULL, NULL, OBJECT);
    pJxCom->pWorkBuf = pJxCom->pStreamBuf;
    pJxCom->State = XML_FIND_START_TOKEN;
    pJxCom->LineCount = 1;
@@ -1626,7 +1626,7 @@ PJXNODE jx_NodeCopy (PJXNODE pDest, PJXNODE pSource, REFLOC refloc)
 
 }
 // ---------------------------------------------------------------------------
-PJXNODE NewNode  (PUCHAR Name , PUCHAR Value, NODETYPE type)
+PJXNODE jx_NewNode  (PUCHAR Name , PUCHAR Value, NODETYPE type)
 {
    PJXNODE  pNode;
    static int id = 0;
@@ -1652,7 +1652,7 @@ PJXNODE NewNode  (PUCHAR Name , PUCHAR Value, NODETYPE type)
 // ---------------------------------------------------------------------------
 PJXNODE jx_NodeAdd (PJXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type)
 {
-   PJXNODE  pNewNode  = NewNode  (Name , Value, type);
+   PJXNODE  pNewNode  = jx_NewNode  (Name , Value, type);
    jx_nodeInsert(pDest, pNewNode, refloc);
    return pNewNode;
 }
@@ -2932,13 +2932,13 @@ PJXNODE  jx_ArrayPush (PJXNODE pDest, PJXNODE pSource , BOOL16 copyP)
    if (pSource == NULL)  {
    // TODO - rather have NULL as value, that literal null,
    // But this requires to check the serialized .....
-   // pNewNode  = NewNode  (NULL  , NULL , VALUE);
-      pNewNode  = NewNode  (NULL  , "null" , LITERAL);
+   // pNewNode  = jx_NewNode  (NULL  , NULL , VALUE);
+      pNewNode  = jx_NewNode  (NULL  , "null" , LITERAL);
    } else if (pSource->signature != NODESIG) {
       if (*(PUCHAR) pSource == BraBeg || *(PUCHAR) pSource == CurBeg ) {
           pNewNode = jx_ParseString((PUCHAR) pSource, "");
       } else {
-          pNewNode  = NewNode  (NULL  , (PUCHAR) pSource , VALUE);
+          pNewNode  = jx_NewNode  (NULL  , (PUCHAR) pSource , VALUE);
       }
    } else if (copy) {
       pNewNode = jx_NodeClone (pSource);
@@ -2961,13 +2961,13 @@ PJXNODE  jx_ArrayAppend  (PJXNODE pDest, PJXNODE pSource , BOOL16 copyP)
    if (pSource == NULL)  {
    // TODO - rather have NULL as value, that literal null,
    // But this requires to check the serialized .....
-   // pNewNode  = NewNode  (NULL  , NULL , VALUE);
-      pNewNode  = NewNode  (NULL  , "null" , LITERAL);
+   // pNewNode  = jx_NewNode  (NULL  , NULL , VALUE);
+      pNewNode  = jx_NewNode  (NULL  , "null" , LITERAL);
    } else if (pSource->signature != NODESIG) {
       if (*(PUCHAR) pSource == BraBeg || *(PUCHAR) pSource == CurBeg ) {
           pNewNode = jx_ParseString((PUCHAR) pSource, "");
       } else {
-          pNewNode  = NewNode  (NULL  , (PUCHAR) pSource , VALUE);
+          pNewNode  = jx_NewNode  (NULL  , (PUCHAR) pSource , VALUE);
       }
    } else if (copy) {
       pNewNode = jx_NodeClone (pSource);
@@ -3753,7 +3753,7 @@ PJXNODE ensureNode (PJXNODE pNode)
    if (pNode->signature == NODESIG) {
       return pNode;
    } else {
-      return  NewNode  (NULL  , (PUCHAR) pNode, VALUE);
+      return  jx_NewNode  (NULL  , (PUCHAR) pNode, VALUE);
    }
 }
 // -------------------------------------------------------------
@@ -3786,12 +3786,12 @@ PJXNODE jx_Int  (INT64 value)
 {
    UCHAR temp [256];
    sprintf (temp ,"%lld", value);
-   return NewNode  (NULL, temp , LITERAL);
+   return jx_NewNode  (NULL, temp , LITERAL);
 }
 // -------------------------------------------------------------
 PJXNODE jx_Str  (PUCHAR value)
 {
-   return NewNode  (NULL, value , VALUE);
+   return jx_NewNode  (NULL, value , VALUE);
 }
 // -------------------------------------------------------------
 LGL  jx_Error (PJXNODE  pNode)

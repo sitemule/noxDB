@@ -551,7 +551,7 @@ BOOL    JSON_Parse(PJXCOM pJxCom);
 BOOL    jsonParseNode(PJXCOM pJxCom, JSTATE state,  PUCHAR name , PJXNODE pCurNode) ;
 void    AddNode(PJXNODE pDest, PJXNODE pSource, REFLOC refloc);
 PJXNODE DupNode(PJXNODE pSource);
-PJXNODE NewNode (PUCHAR Name , PUCHAR Value, NODETYPE type);
+PJXNODE jx_NewNode (PUCHAR Name , PUCHAR Value, NODETYPE type);
 PJXNODE CloneNode  (PJXNODE pSource);
 PJXNODE NewRoot(void);
 

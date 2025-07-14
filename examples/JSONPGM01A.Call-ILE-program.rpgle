@@ -40,7 +40,7 @@ dcl-proc getTheMeta;
 
     // Get meta info from a ILE program:
     // Note - this will be in PCML format a.k.a XML, but in the object graph
-    pMeta = json_ProgramMeta ('*LIBL' : 'HELLOPGM');
+    pMeta = json_ProgramMeta ('*LIBL' : 'JSONPGM0A');
 
     // Just dump the result since it is XML by nature:
     json_WriteXMLStmf(pMeta:'/prj/noxdb/testout/pgmmeta.xml':1208:*OFF);
@@ -64,7 +64,7 @@ dcl-proc callByObject;
     json_setInt (pIn: 'age' : 25);
 
 
-    pOut  = json_CallProgram  ('*LIBL' : 'HELLOPGM' : pIn);
+    pOut  = json_CallProgram  ('*LIBL' : 'JSONPGM0A' : pIn);
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
@@ -92,7 +92,7 @@ dcl-proc callByJsonString;
    json_setDelimitersByCcsid(500);
 
     // here we let the call parse he string and do the cleanup of it
-    pOut  = json_CallProgram  ( '*LIBL':'HELLOPGM' :
+    pOut  = json_CallProgram  ( '*LIBL':'JSONPGM0A' :
         '{ -
             "name":"Niels", -
             "age" : 25 -

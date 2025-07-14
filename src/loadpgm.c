@@ -336,7 +336,7 @@ static int buildArgBufferArray (PJXMETHOD pMethod, PJXNODE pParms, PVOID argArra
    return args;
 }
 
-static void setReturnNode (PJXNODE pReturnObject, PJXMETHODPARM pMethodParm, PUCHAR pParmBuffer )
+static PJXNODE newReturnNode (PJXMETHODPARM pMethodParm, PUCHAR pParmBuffer )
 {
 
    UCHAR data [32000]; // TODO - dynamic size
@@ -392,9 +392,11 @@ static void setReturnNode (PJXNODE pReturnObject, PJXMETHODPARM pMethodParm, PUC
          break;
       }
    }
-   jx_SetValueByName( pReturnObject , pMethodParm->name , data , pMethodParm->graphDataType );
+   return jx_NewNode(pMethodParm->name , data , pMethodParm->graphDataType );
 
 }
+/* ------------------------------------------------------------- */
+/* TODO only work one level !!! */
 /* ------------------------------------------------------------- */
 static void  setReturnObject (PJXNODE pReturnObject, PJXMETHODPARM pMethodParm , PUCHAR pParmBuffer )
 {
@@ -407,8 +409,15 @@ static void  setReturnObject (PJXNODE pReturnObject, PJXMETHODPARM pMethodParm ,
          pStructObj = jx_GetNodeNext(pStructObj);
       }
       jx_NodeMoveInto (pReturnObject , pMethodParm->name , pReturnStruct);
+   } else if (pMethodParm->dim > 0) {
+      PJXNODE pReturnArray = jx_NewArray(NULL);
+      for (int i = 0 ; i< pMethodParm->dim ; i++) {
+         jx_ArrayPush ( pReturnArray , newReturnNode (pMethodParm,  pParmBuffer),FALSE);
+         pParmBuffer += pMethodParm->size;
+      }
+      jx_NodeMoveInto (pReturnObject , pMethodParm->name , pReturnArray);
    } else {
-      setReturnNode (pReturnObject , pMethodParm,  pParmBuffer);
+      jx_NodeMoveInto (pReturnObject , pMethodParm->name  , newReturnNode (pMethodParm,  pParmBuffer));
    }
 }
 /* ------------------------------------------------------------- */

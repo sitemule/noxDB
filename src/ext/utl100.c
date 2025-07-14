@@ -1013,7 +1013,7 @@ PUCHAR str2integerMem ( PUCHAR out , PUCHAR in , SHORT len , BOOL isSigned )
       switch (len) {
          case 8: *(long long *) out = atoll (in); break;
          case 4: *(long *)      out = atol  (in); break;
-         case 2: *(int *)       out = atoi  (in); break;
+         case 2: *(short int *)       out = atoi  (in); break;
          case 1: *(char *)      out = atoi  (in); break;
       }
    } else {
@@ -1021,7 +1021,7 @@ PUCHAR str2integerMem ( PUCHAR out , PUCHAR in , SHORT len , BOOL isSigned )
       switch (len) {
          case 8: *(unsigned long long *) out = atoll (in); break;
          case 4: *(unsigned long *)      out = atoll (in); break;
-         case 2: *(unsigned int *)       out = atol  (in); break;
+         case 2: *(unsigned short int *)       out = atol  (in); break;
          case 1: *(unsigned char *)      out = atoi  (in); break;
       }
    }
