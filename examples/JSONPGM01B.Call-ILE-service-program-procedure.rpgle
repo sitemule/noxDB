@@ -23,6 +23,10 @@
 Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
 /include qrpgleRef,noxdb
 
+    // External described ds
+    callProcedureCustomer();
+    *inlr = *ON;
+    return;
 
     // This is not neede, but illustrates that you can pull the meta data as PCML (XML)
     getTheMeta();
@@ -30,28 +34,30 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
     // This is not neede, but illustrates that you can pull the meta data as JSON (converted)
     getTheMetaJson();
 
-    // Datatypes supported
+    // Arrays
     callSimpleArray();
+
+    // Nested Arrays
+    callSimpleNestedArray();
 
 
     // this does the real job
-    //*callProcedureByObject();
+    callProcedureByObject();
 
     // another way to do the same:
-    //*callProcedureByString();
+    callProcedureByString();
 
     // Datatypes supported
-    //*callProcedureAllTypes();
+    callProcedureAllTypes();
 
     // Level of complexity supported
-    //*callProcedureComplex();
+    callProcedureComplex();
 
     // Structure in - structure out
-    //*callProcedureEcho();
+    callProcedureEcho();
 
     // External described ds
-    //*callProcedureCustomer();
-
+    callProcedureCustomer();
 
     // That's it..
     *inlr = *on;
@@ -66,7 +72,7 @@ dcl-proc getTheMeta;
 
     // Get meta info from a ILE program:
     // Note - this will be in PCML format a.k.a XML, but in the object graph
-    pMeta = json_ProcedureMeta ('*LIBL' : 'JSONPGM0B': '*ALL');
+    pMeta = json_ProcedureMeta ('*LIBL' : 'JSONPGM00B': '*ALL');
 
     // Just dump the result to both joblog and IFS stream file since it is XML by nature:
     json_WriteXMLStmf(pMeta:'/prj/noxdb/testout/srvpgmmeta.xml':1208:*OFF);
@@ -85,7 +91,7 @@ dcl-proc getTheMetaJson;
 
     // Get meta info from a ILE program:
     // Note - this will be in PCML format a.k.a XML, but in the object graph
-    pMeta = json_ApplicationMetaJson ('*LIBL' : 'JSONPGM0B': '*SRVPGM');
+    pMeta = json_ApplicationMetaJson ('*LIBL' : 'JSONPGM00B': '*SRVPGM');
 
     // Just dump the result to both joblog and IFS stream file since it is XML by nature:
     json_WriteJsonStmf(pMeta:'/prj/noxdb/testout/srvpgmmeta.json':1208:*OFF);
@@ -110,7 +116,7 @@ dcl-proc callProcedureByObject;
     json_setInt (pIn: 'age' : 25);
 
 
-    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM0B' : 'nameAge' : pIn : JSON_GRACEFUL_ERROR);
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'nameAge' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
@@ -141,7 +147,7 @@ dcl-proc callProcedureByString;
    json_setDelimitersByCcsid(500);
 
 
-    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM0B' : 'nameAge' :
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'nameAge' :
         '{"name":"John","age":41}':
         JSON_GRACEFUL_ERROR
     );
@@ -172,7 +178,7 @@ dcl-proc callSimpleArray;
     pIn = json_parseString ('{"myArrayIn":[1,2,3,4,5]}');
     json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmSimpleArrayIn.json':1208:*OFF);
 
-    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM0B' : 'simpleArray' : pIn : JSON_GRACEFUL_ERROR);
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'simpleArray' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
@@ -181,6 +187,44 @@ dcl-proc callSimpleArray;
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
     json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmSimpleArrayOut.json':1208:*OFF);
+
+// Always clean up
+on-exit;
+    json_delete(pIn);
+    json_delete (pOut);
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// Simple array
+// ------------------------------------------------------------------------------------
+dcl-proc callSimpleNestedArray;
+
+    Dcl-S pIn        Pointer;
+    Dcl-S pOut       Pointer;
+    Dcl-s msg        char(50);
+
+    pIn = json_parseString ('-
+    {-
+       "myArrayIn":[-
+           {"intArray":[1,2]}, -
+           {"intArray":[3,4]}, -
+           {"intArray":[5,6]}, -
+           {"intArray":[7,8]}, -
+           {"intArray":[9,0]}, -
+        ] -
+    }');
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmSimpleNestedArrayIn.json':1208:*OFF);
+
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'simpleNestedArray' : pIn : JSON_GRACEFUL_ERROR);
+    If json_Error(pOut) ;
+        msg = json_Message(pOut);
+        dsply msg;
+    EndIf;
+
+    // Dump the result to both joblog and IFS stream file
+    json_joblog(pOut);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmSimpleNestedArrayOut.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -215,7 +259,7 @@ dcl-proc callProcedureAllTypes;
     json_setTime (pIn: 'time'   : %time());
     json_setTimeStamp  (pIn: 'timestamp'   : %timestamp());
 
-    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM0B' : 'allTypes' : pIn : JSON_GRACEFUL_ERROR);
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'allTypes' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
@@ -260,7 +304,7 @@ dcl-proc callProcedureComplex;
     	}'
     );
 
-    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM0B' : 'complex' : pIn : JSON_GRACEFUL_ERROR);
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'complex' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
@@ -302,7 +346,7 @@ dcl-proc callProcedureEcho;
     	}'
     );
 
-    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM0B' : 'echo' : pIn : JSON_GRACEFUL_ERROR);
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'echo' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
@@ -335,7 +379,7 @@ dcl-proc callProcedureCustomer;
     json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmCustomerIn.json':1208:*OFF);
 
 
-    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM0B' : 'customer' : pIn : JSON_GRACEFUL_ERROR);
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'customer' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;

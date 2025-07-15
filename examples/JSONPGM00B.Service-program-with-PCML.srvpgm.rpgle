@@ -158,15 +158,36 @@ dcl-proc simpleArray export;
         myArrayOut char(5)  dim(5) ;
     end-pi;
 
-    // Copy the input to the output
-    // Note that the input is an array of 100 elements, so we copy all
-    // we do some magic later.
+    dcl-s i int(5);
 
-    myArrayOut(1) = %char(myArrayIn(1));
-    myArrayOut(2) = %char(myArrayIn(2));
-    myArrayOut(3) = %char(myArrayIn(3));
-    myArrayOut(4) = %char(myArrayIn(4));
-    myArrayOut(5) = %char(myArrayIn(5));
+    // Copy the input to the output in reveser order
+    for i = 1 to %elem(myArrayOut);
+        myArrayOut(6-i) = %char(myArrayIn(i));
+    endfor;
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+dcl-proc simpleNestedArray export;
+
+    dcl-pi simpleNestedArray extproc(*dclcase);
+        myArrayIn  likeds(intArray_t) dim(5) const;
+        myArrayOut likeds(intArray_t) dim(5) ;
+    end-pi;
+
+    dcl-ds intArray_t template qualified;
+        intArray  int(5)   dim(2) ;
+    end-ds;
+
+    dcl-s i int(5);
+    dcl-s j int(5);
+
+    // Copy the input to the output in reveser order
+    for i = 1 to %elem(myArrayOut);
+        for j = 1 to %elem(myArrayOut.intArray);
+            myArrayOut(6-i).intArray(3-j) = myArrayIn(i).intArray(j);
+        endfor;
+    endfor;
 
 end-proc;
 

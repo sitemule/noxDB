@@ -24,8 +24,8 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
 /include qrpgleRef,noxdb
 
 
-    //callServiceProgramProcedure1();
-    //callServiceProgramProcedure2();
+    callServiceProgramProcedure1();
+    callServiceProgramProcedure2();
 
     // That's it..
     *inlr = *on;
@@ -49,9 +49,9 @@ dcl-proc callServiceProgramProcedure1;
 
     dcl-s pHelloProgram	pointer (*PROC) static;
 
-    pHelloProgram = json_LoadProgram ('*LIBL' : 'JSONPGM0A');
+    pHelloProgram = json_LoadProgram ('*LIBL' : 'JSONPGM00A');
     if pHelloProgram = *null;
-        json_joblog('Could not load program JSONPGM0A');
+        json_joblog('Could not load program JSONPGM00A');
         return;
     endif;
 
@@ -60,7 +60,7 @@ dcl-proc callServiceProgramProcedure1;
     text = 'Hello world from RPG';
     age  = 25;
     HelloProgram ('Niels': text: age);
-    json_joblog ('Called JSONPGM0A returns: text: ' + %trim(text) + ', age: ' + %char(age));
+    json_joblog ('Called JSONPGM00A returns: text: ' + %trim(text) + ', age: ' + %char(age));
 
 
 end-proc;
@@ -78,9 +78,9 @@ dcl-proc callServiceProgramProcedure2;
     dcl-s msg  char(50);
 
 
-    pHelloProgram = json_LoadProgram ('*LIBL' : 'JSONPGM0A');
+    pHelloProgram = json_LoadProgram ('*LIBL' : 'JSONPGM00A');
     if pHelloProgram = *null;
-        json_joblog('Could not load program JSONPGM0A');
+        json_joblog('Could not load program JSONPGM00A');
         return;
     endif;
 
@@ -94,7 +94,7 @@ dcl-proc callServiceProgramProcedure2;
     text = 'Hello world from RPG';
     age  = 25;
     json_callPgm ( pHelloProgram : %addr(pHelloParms) : 3); // 3 is the number of parameters
-    json_joblog ('Called JSONPGM0A returns: text: ' + %trim(text) + ', age: ' + %char(age));
+    json_joblog ('Called JSONPGM00A returns: text: ' + %trim(text) + ', age: ' + %char(age));
 
 
 end-proc;

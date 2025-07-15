@@ -37,7 +37,7 @@ extern UCHAR BraEnd;
 extern UCHAR Masterspace;
 
 //  local prototype:
-static void  copyNodeIntoBuffer (PJXMETHODPARM pMethodParm , PUCHAR pParmBuffer , PJXNODE pParms  );
+static void  copyNodeIntoBuffer (PJXNODE pParmMeta , PUCHAR pParmBuffer , PJXNODE pParmValue, BOOL isArray);
 
 // -------------------------------------------------------------
 void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib)
@@ -266,48 +266,84 @@ static void copyValueIntoBuffer(PJXMETHODPARM pMethodParm , PUCHAR pBuf, PUCHAR 
       }
    }
 }
-static void  copyArrayIntoBuffer (PJXMETHODPARM pMethodParm , PUCHAR pParmBuffer , PJXNODE pParms)
+/* nice on arrays !!
+static void  copyNodeIntoBuffer (PJXNODE pParmMeta , PUCHAR pParmBuffer , PJXNODE pParmValueNode  )
 {
-   PJXNODE pArray =  jx_GetNode   (pParms , pMethodParm->name);
-   pArray = (jx_GetNodeType (pArray) == ARRAY) ? jx_GetNodeChild (pArray) :  NULL;
+   PJXMETHODPARM pMethodMeta = getParmDefinition (pParmMeta);
 
-   if (pMethodParm->dType == JX_DTYPE_STRUCTURE) {
-      for (int i=0; i < pMethodParm->dim ; i++) {
-         PJXNODE pStructParm = jx_GetNode ( pArray , pMethodParm->name);
-         PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
-         while (pStructObj) {
-            PJXMETHODPARM pDef = getParmDefinition (pStructObj);
-            copyNodeIntoBuffer ( pDef , pParmBuffer + pDef->offset , pStructParm);
-            pStructObj = jx_GetNodeNext(pStructObj);
-         }
-      }
-   } else {
-      for (int i=0; i < pMethodParm->dim ; i++) {
-         PUCHAR pValue  = jx_GetNodeValuePtr (pArray,"");
-         copyValueIntoBuffer(pMethodParm , pParmBuffer, pValue );
-         pParmBuffer += pMethodParm->size;
-         pArray = jx_GetNodeNext(pArray);
-      }
-   }
-}
-static void  copyNodeIntoBuffer (PJXMETHODPARM pMethodParm , PUCHAR pParmBuffer , PJXNODE pParms  )
-{
-   if (pMethodParm->dim > 0) {
-      copyArrayIntoBuffer (pMethodParm , pParmBuffer , pParms);
-   } else {
-
-      if (pMethodParm->dType == JX_DTYPE_STRUCTURE) {
-         PJXNODE pStructParm = jx_GetNode ( pParms , pMethodParm->name);
-         PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
-         while (pStructObj) {
-            PJXMETHODPARM pDef = getParmDefinition (pStructObj);
-            copyNodeIntoBuffer ( pDef , pParmBuffer + pDef->offset , pStructParm);
-            pStructObj = jx_GetNodeNext(pStructObj);
+   if (pMethodMeta->dim > 0 ) {
+      PJXNODE pArray =  jx_GetNode   (pParmValueNode , pMethodMeta->name);
+      PJXNODE pArrayElement = jx_GetNodeChild (pArray);
+      if (pMethodMeta->pStructure) {
+         PJXNODE pParmMetaArray = jx_GetNodeChild(pMethodMeta->pStructure) ;
+         for (int i=0; i < pMethodMeta->dim ; i++) {
+            copyNodeIntoBuffer(pParmMetaArray , pParmBuffer, pArrayElement );
+            pParmBuffer += pMethodMeta->size;
+            pArrayElement = jx_GetNodeNext(pArrayElement);
          }
       } else {
-         PUCHAR pValue  = jx_GetValuePtr   (pParms , pMethodParm->name , "");
-         copyValueIntoBuffer(pMethodParm , pParmBuffer, pValue );
+         for (int i=0; i < pMethodMeta->dim ; i++) {
+            PUCHAR pValue  = jx_GetNodeValuePtr  (pArrayElement , "");
+            copyValueIntoBuffer(pMethodMeta , pParmBuffer, pValue );
+            pParmBuffer += pMethodMeta->size;
+            pArrayElement = jx_GetNodeNext(pArrayElement);
+         }
       }
+   } else if (pMethodMeta->dType == JX_DTYPE_STRUCTURE) {
+      PJXNODE pValueNode = jx_GetNodeChild ( pParmValueNode);
+      PJXNODE pStructObj = jx_GetNodeChild(pMethodMeta->pStructure);
+      while (pStructObj) {
+         PJXMETHODPARM pDef = getParmDefinition (pStructObj);
+         PJXNODE pStructParmValue = jx_GetNode ( pParmValueNode , pDef->name);
+         copyNodeIntoBuffer ( pStructObj , pParmBuffer , pValueNode);
+         pParmBuffer += pMethodMeta->size;
+         pStructObj = jx_GetNodeNext(pStructObj);
+      }
+
+   } else {
+      PUCHAR pValue  = jx_GetValuePtr   (pParmValueNode , pMethodMeta->name , "");
+      copyValueIntoBuffer(pMethodMeta , pParmBuffer, pValue );
+   }
+}
+*/
+
+static void  copyNodeIntoBuffer (PJXNODE pParmMeta , PUCHAR pParmBuffer , PJXNODE pParmValueNode , BOOL isArray )
+{
+   PJXMETHODPARM pMethodMeta = getParmDefinition (pParmMeta);
+
+   if (pMethodMeta->pStructure && isArray == FALSE && pMethodMeta->dim > 0 ) {
+      PJXNODE pArray =  jx_GetNode   (pParmValueNode , pMethodMeta->name);
+      PJXNODE pArrayElement = jx_GetNodeChild (pArray);
+      PJXNODE pParmMetaArray = jx_GetNodeChild(pMethodMeta->pStructure) ;
+      for (int i=0; i < pMethodMeta->dim ; i++) {
+         copyNodeIntoBuffer(pParmMetaArray , pParmBuffer, pArrayElement , TRUE);
+         pParmBuffer += pMethodMeta->size;
+         pArrayElement = jx_GetNodeNext(pArrayElement);
+      }
+   } else if (pMethodMeta->dim > 0 ) {
+      PJXNODE pArray =  jx_GetNode   (pParmValueNode , pMethodMeta->name);
+      PJXNODE pArrayElement = jx_GetNodeChild (pArray);
+      for (int i=0; i < pMethodMeta->dim ; i++) {
+         PUCHAR pValue  = jx_GetNodeValuePtr  (pArrayElement , "");
+         copyValueIntoBuffer(pMethodMeta , pParmBuffer, pValue );
+         pParmBuffer += pMethodMeta->size;
+         pArrayElement = jx_GetNodeNext(pArrayElement);
+      }
+   } else if (pMethodMeta->pStructure ) {
+      PJXNODE pStructObj = jx_GetNodeChild(pMethodMeta->pStructure);
+      pStructObj = pMethodMeta->pStructure; // TODO test whe real structure
+      while (pStructObj) {
+         PJXMETHODPARM pDef = getParmDefinition (pStructObj);
+         PJXNODE pValueNode = jx_GetNode ( pParmValueNode , pDef->name);
+         copyNodeIntoBuffer ( pStructObj , pParmBuffer , pValueNode, FALSE);
+         int size = pDef->size; // to avoid compiler optimizer !!! IBM Bug !!
+         pParmBuffer += size ;
+         pStructObj = jx_GetNodeNext(pStructObj);
+      }
+
+   } else {
+      PUCHAR pValue  = jx_GetNodeValuePtr   (pParmValueNode , "");
+      copyValueIntoBuffer(pMethodMeta , pParmBuffer, pValue );
    }
 }
 static int buildArgBufferArray (PJXMETHOD pMethod, PJXNODE pParms, PVOID argArray [256] , PUCHAR * ppArgBuffer)
@@ -330,7 +366,7 @@ static int buildArgBufferArray (PJXMETHOD pMethod, PJXNODE pParms, PVOID argArra
       PJXMETHODPARM pMethodParm = getParmDefinition (pParmObj);
       PUCHAR pBuf = pParmBuffer + pMethodParm->offset;
       argArray [args++] = pBuf;
-      copyNodeIntoBuffer (pMethodParm , pBuf, pParms);
+      copyNodeIntoBuffer (pParmObj , pBuf, pParms, FALSE);
       pParmObj = jx_GetNodeNext(pParmObj);
    }
    return args;
@@ -396,28 +432,39 @@ static PJXNODE newReturnNode (PJXMETHODPARM pMethodParm, PUCHAR pParmBuffer )
 
 }
 /* ------------------------------------------------------------- */
-/* TODO only work one level !!! */
-/* ------------------------------------------------------------- */
 static void  setReturnObject (PJXNODE pReturnObject, PJXMETHODPARM pMethodParm , PUCHAR pParmBuffer )
 {
-   if (pMethodParm->dType == JX_DTYPE_STRUCTURE) {
-      PJXNODE pReturnStruct = jx_NewObject(NULL);
+   if (pMethodParm->dim > 0) {
+      PJXNODE pReturnArray = jx_NewArray(NULL);
+      jx_NodeRename (pReturnArray , pMethodParm->name);
+      if (pMethodParm->pStructure) {
+         PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
+         PJXMETHODPARM pStructParm = getParmDefinition (pStructObj);
+         for (int i = 0 ; i< pMethodParm->dim ; i++) {
+            PJXNODE pReturnStruct = jx_NewObject(NULL);
+            setReturnObject ( pReturnStruct  , pStructParm , pParmBuffer);
+            jx_NodeInsertChildTail ( pReturnArray , pReturnStruct);
+            pParmBuffer += pMethodParm->size;
+         }
+      } else {
+         for (int i = 0 ; i< pMethodParm->dim ; i++) {
+            jx_NodeInsertChildTail  ( pReturnArray , newReturnNode (pMethodParm,  pParmBuffer));
+            pParmBuffer += pMethodParm->size;
+         }
+      }
+      jx_NodeInsertChildTail (pReturnObject , pReturnArray );
+   } else if (pMethodParm->dType == JX_DTYPE_STRUCTURE) {
       PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
+      PJXNODE pReturnStruct = jx_NewObject(NULL);
+      jx_NodeRename (pReturnStruct , pMethodParm->name);
       while (pStructObj) {
          PJXMETHODPARM pStructParm = getParmDefinition (pStructObj);
          setReturnObject ( pReturnStruct , pStructParm, pParmBuffer + pStructParm->offset);
          pStructObj = jx_GetNodeNext(pStructObj);
       }
-      jx_NodeMoveInto (pReturnObject , pMethodParm->name , pReturnStruct);
-   } else if (pMethodParm->dim > 0) {
-      PJXNODE pReturnArray = jx_NewArray(NULL);
-      for (int i = 0 ; i< pMethodParm->dim ; i++) {
-         jx_ArrayPush ( pReturnArray , newReturnNode (pMethodParm,  pParmBuffer),FALSE);
-         pParmBuffer += pMethodParm->size;
-      }
-      jx_NodeMoveInto (pReturnObject , pMethodParm->name , pReturnArray);
+      jx_NodeInsertChildTail (pReturnObject , pReturnStruct );
    } else {
-      jx_NodeMoveInto (pReturnObject , pMethodParm->name  , newReturnNode (pMethodParm,  pParmBuffer));
+      jx_NodeInsertChildTail (pReturnObject , newReturnNode (pMethodParm,  pParmBuffer));
    }
 }
 /* ------------------------------------------------------------- */
@@ -726,9 +773,11 @@ PJXNODE buildParmElements(PJXNODE pPcmlProgram, PSHORT offset, PJXNODE pProgram)
                pMethodParm->pStructure  = jx_GetNode  (pProgram , nodeName);
                pMethodParm->length = 0;
                for (PJXNODE pElements = jx_GetNodeChild ( pMethodParm->pStructure ) ; pElements ; pElements =  jx_GetNodeNext  (pElements )) {
-                  pMethodParm->length += atoi(jx_GetValuePtr (pElements, "size", "0"));
+                  int dim  = atoi(jx_GetValuePtr (pElements, "dim" , "0"));
+                  int size = atoi(jx_GetValuePtr (pElements, "size", "0"));
+                  pMethodParm->length += (dim > 0) ? size * dim : size;
                }
-               pMethodParm->size = (pMethodParm->dim > 0) ? pMethodParm->dim * pMethodParm->length : pMethodParm->length;
+               pMethodParm->size = pMethodParm->length;
             }
             break;
          }
