@@ -23,10 +23,7 @@
 Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
 /include qrpgleRef,noxdb
 
-    // External described ds
-    callProcedureCustomer();
-    *inlr = *ON;
-    return;
+
 
     // This is not neede, but illustrates that you can pull the meta data as PCML (XML)
     getTheMeta();
@@ -38,7 +35,7 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') ;
     callSimpleArray();
 
     // Nested Arrays
-    callSimpleNestedArray();
+    callNestedArray();
 
 
     // this does the real job
@@ -198,7 +195,7 @@ end-proc;
 // ------------------------------------------------------------------------------------
 // Simple array
 // ------------------------------------------------------------------------------------
-dcl-proc callSimpleNestedArray;
+dcl-proc callNestedArray;
 
     Dcl-S pIn        Pointer;
     Dcl-S pOut       Pointer;

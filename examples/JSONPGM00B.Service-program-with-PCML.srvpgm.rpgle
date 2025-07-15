@@ -196,12 +196,12 @@ end-proc;
 dcl-proc customer  export;
 
     dcl-pi customer extproc(*dclcase) ;
-        customerIn   likeds(customer_t) dim(100) const;
-        customerOut  likeds(customer_t) dim(100);
+        customerIn   likeds(customer_t) dim(20) const;
+        customerOut  likeds(customer_t) dim(20);
     end-pi;
 
     // Copy the input to the output
-    // Note that the input is an array of 100 elements, so we copy all
+    // Note that the input is an array of 20 elements, so we copy all
     // we do some magic later.
     customerOut = customerIn;
 
