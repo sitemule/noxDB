@@ -503,8 +503,13 @@ VARCHAR  jx_GetNodeAttrValueVC   (PJXNODE pNode ,PUCHAR AttrName, PUCHAR Default
 #pragma descriptor ( void jx_GetNodeAttrValueVC                                   (void))
 FIXEDDEC jx_GetNodeAttrValueNum  (PJXNODE pNode , PUCHAR AttrName, FIXEDDEC DefaultValue);
 #pragma descriptor ( void jx_GetNodeAttrValueNum                                  (void))
+INT64    jx_GetNodeAttrValueInt  (PJXNODE pNode , PUCHAR AttrName, INT64 DefaultValue);
+#pragma descriptor ( void jx_GetNodeAttrValueInt                                  (void))
 
 VOID     jx_SetNodeAttrValue     (PJXNODE pNode , PUCHAR AttrName, PUCHAR Value);
+VOID     jx_SetNodeAttrValueInt  (PJXNODE pNode , PUCHAR AttrName, INT64  Value);
+VOID     jx_SetNodeAttrValuePtr  (PJXNODE pNode , PUCHAR AttrName, PUCHAR Value);
+
 void     jx_SetCcsid(int pInputCcsid, int pOutputCcsid);
 
 // Get value variants:

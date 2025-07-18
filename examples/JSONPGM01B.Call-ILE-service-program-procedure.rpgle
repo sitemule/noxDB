@@ -32,6 +32,7 @@ dcl-proc main;
     getTheMetaJson();
 
     // Arrays
+    if 1=2;
     callSimpleArray();
 
     // Nested Arrays
@@ -58,7 +59,7 @@ dcl-proc main;
     // External described ds and *VAR structures
     // Need some stuff from IBM
     callProcedureCustomerVar();
-
+    endif;
     // Nested datastructure
     callProcedureCustomerNested();
 

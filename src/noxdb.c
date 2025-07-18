@@ -2720,13 +2720,30 @@ VOID jx_SetNodeAttrValue  (PJXNODE pNode , PUCHAR AttrName, PUCHAR Value)
    pAttr = jx_AttributeLookup   (pNode, AttrName);
    if (pAttr == NULL) {
       jx_NodeAddAttributeValue( pNode , AttrName, Value);
-      return;
    } else {
       memFree(&pAttr->Value);
       pAttr->Value = memStrDup(Value);
-      return;
    }
 }
+VOID jx_SetNodeAttrValueInt  (PJXNODE pNode , PUCHAR AttrName, INT64 Value)
+{
+   UCHAR temp [32];
+   sprintf ( temp , "%lld" , Value );
+   jx_SetNodeAttrValue  (pNode ,AttrName, temp);
+}
+VOID jx_SetNodeAttrValuePtr  (PJXNODE pNode , PUCHAR AttrName, PUCHAR Value)
+{
+   PXMLATTR pAttr;
+
+   pAttr = jx_AttributeLookup   (pNode, AttrName);
+   if (pAttr == NULL) {
+      pAttr = jx_NodeAddAttributeValue( pNode , AttrName, NULL);
+   } else if ( pAttr->Value) {
+      memFree(&pAttr->Value);
+   }
+   pAttr->Value = Value;
+}
+
 /* ---------------------------------------------------------------------------
    X-path: Find node by name, by parsing a name string and traverse the tree
    It can be relative by giging either a Nodeent or a XML-common pointer
@@ -3641,6 +3658,20 @@ FIXEDDEC jx_GetNodeAttrValueNum (PJXNODE pNode , PUCHAR AttrName, FIXEDDEC Defau
       return ( dft );
    } else {
       return jx_Num(pAttr->Value);
+   }
+}
+// -------------------------------------------------------------
+INT64 jx_GetNodeAttrValueInt (PJXNODE pNode , PUCHAR AttrName, INT64 DefaultValue)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   INT64 dft = (pParms->OpDescList->NbrOfParms >= 2) ? DefaultValue : 0;
+   PXMLATTR pAttr = jx_AttributeLookup   (pNode, AttrName);
+
+   if (pAttr == NULL
+   ||  pAttr->Value == NULL) {
+      return ( dft );
+   } else {
+      return atoll(pAttr->Value);
    }
 }
 // -------------------------------------------------------------

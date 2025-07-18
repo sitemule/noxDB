@@ -202,7 +202,7 @@ static int min(int a, int b)
 /* ------------------------------------------------------------- */
 static PJXPARMMETA getParmDefinition( PJXNODE pNode)
 {
-   return (PJXPARMMETA) jx_GetValuePtr  (pNode , "def" , NULL);
+   return (PJXPARMMETA) jx_GetNodeAttrValuePtr  (pNode , "def" , NULL);
 }
 /* ------------------------------------------------------------- */
 static void copyValueIntoBuffer(PJXPARMMETA pMethodParm , PUCHAR pBuf, PUCHAR  pValue )
@@ -721,6 +721,20 @@ JX_DTYPE convertDataType (PUCHAR type)
       return JX_DTYPE_UNKNOWN;
    }
 }
+/* --------------------------------------------------------------------------- *\
+   Recursivlu run throug each node 
+\* --------------------------------------------------------------------------- */
+static LONG getTotalStructSize(PJXNODE pStructure) {
+   LONG totalSize = 0 ;
+   for (PJXNODE pElements = jx_GetNodeChild ( pStructure ) ; pElements ; pElements =  jx_GetNodeNext  (pElements )) {
+      PJXPARMMETA pMeta = (PJXPARMMETA) jx_GetNodeAttrValuePtr ( pElements, "def" , NULL);
+      if  (pMeta->pStructure) {
+         totalSize += getTotalStructSize (pElements);
+      }
+      totalSize += (pMeta->dim > 0) ? pMeta->size * pMeta->dim : pMeta->size;
+   }
+   return totalSize;
+}
 
 /* --------------------------------------------------------------------------- *\
    Create a new method parameter object
@@ -771,15 +785,18 @@ PJXNODE buildMethodParmObject ( PJXPARMMETA pMethodParm)
    if (pMethodParm->dim > 0) {
       jx_SetIntByName  (pParmObject  , "dim" ,  pMethodParm->dim, OFF);
    }
-   jx_SetValueByName(pParmObject  , "def" , (PUCHAR) pMethodParm  , NOXDB_POINTER);
+   jx_SetNodeAttrValuePtr(pParmObject  , "def" , (PUCHAR) pMethodParm);
+
    if (pMethodParm->pStructure) {
+      jx_SetIntByName  (pParmObject  , "bufSize"  , getTotalStructSize (pMethodParm->pStructure), OFF);
       jx_SetValueByName(pParmObject  , "struct" , (PUCHAR) pMethodParm->pStructure  , NOXDB_SUBGRAPH);
    }
 
 
    return pParmObject;
 }
-PJXNODE buildParmElements(PJXNODE pPcmlProgram, PSHORT offset, PJXNODE pProgram)
+
+static PJXNODE buildParmElements(PJXNODE pPcmlProgram, PLONG offset, PLONG size, PJXNODE pProgram)
 {
 
    PJXNODE pParms    = jx_NewArray (NULL);
@@ -806,13 +823,7 @@ PJXNODE buildParmElements(PJXNODE pPcmlProgram, PSHORT offset, PJXNODE pProgram)
                UCHAR nodeName [256];
                sprintf ( nodeName , "__structs__/%s", parmMetaValue ( pParmMeta , "struct"));
                pMethodParm->pStructure  = jx_GetNode  (pProgram , nodeName);
-               pMethodParm->length = 0;
-               for (PJXNODE pElements = jx_GetNodeChild ( pMethodParm->pStructure ) ; pElements ; pElements =  jx_GetNodeNext  (pElements )) {
-                  int dim  = atoi(jx_GetValuePtr (pElements, "dim" , "0"));
-                  int size = atoi(jx_GetValuePtr (pElements, "size", "0"));
-                  pMethodParm->length += (dim > 0) ? size * dim : size;
-               }
-               pMethodParm->size = pMethodParm->length;
+               pMethodParm->length = pMethodParm->size = getTotalStructSize(pMethodParm->pStructure);
             }
             break;
          }
@@ -874,23 +885,22 @@ PJXNODE buildParmElements(PJXNODE pPcmlProgram, PSHORT offset, PJXNODE pProgram)
 
       pMethodParm->offset = *offset;
 
+      LONG totSize = pMethodParm->dim > 0 ? pMethodParm->size * pMethodParm->dim : pMethodParm->size;
+      *offset += totSize;
+      *size   += totSize;
+
       pParm = buildMethodParmObject (pMethodParm);
 
       jx_ArrayPush ( pParms , pParm , FALSE);
 
       pParmMeta = jx_GetNodeNext(pParmMeta);
-      if (pMethodParm->dim > 0) {
-         *offset += pMethodParm->size * pMethodParm->dim;
-      } else {
-         *offset += pMethodParm->size;
-      }
    }
    return pParms;
 }
 /* --------------------------------------------------------------------------- *\
    Load all complex (if any) datatypes and make a __structs__ node
 \* --------------------------------------------------------------------------- */
-void buildStructures ( PJXNODE pProgram , PJXNODE pPcml)
+static void buildStructures ( PJXNODE pProgram , PJXNODE pPcml)
 {
    PJXNODE pPcmlStruct = jx_GetNode  (pPcml , "/pcml/struct");
    if (pPcmlStruct) {
@@ -899,14 +909,47 @@ void buildStructures ( PJXNODE pProgram , PJXNODE pPcml)
 
       while ( pPcmlStruct && 0==strcmp(jx_GetNodeNamePtr(pPcmlStruct),"struct")) {
          PUCHAR  structureName = parmMetaValue ( pPcmlStruct, "name");
-         SHORT   offset = 0;
-         PJXNODE pElements = buildParmElements(pPcmlStruct , &offset , pProgram);
+         LONG   offset = 0;
+         LONG   size   = 0;
+         PJXNODE pElements = buildParmElements(pPcmlStruct , &offset, &size, pProgram);
+         jx_SetNodeAttrValueInt (pElements , "size", size);
          jx_NodeMoveInto (pStructs, structureName, pElements );
          pPcmlStruct = jx_GetNodeNext(pPcmlStruct);
       }
       jx_NodeMoveInto (pProgram, "__structs__", pStructs );
    }
 }
+/* --------------------------------------------------------------------------- *\
+   Load all program/procedure entry points
+\* --------------------------------------------------------------------------- */
+static void buildParameters ( PJXNODE pProgram , PJXNODE pPcml , BOOL isProgram )
+{
+
+   PJXNODE pPcmlProgram = jx_GetNode  (pPcml , "/pcml/program");
+
+   while (pPcmlProgram && 0==strcmp(jx_GetNodeNamePtr(pPcmlProgram),"program")) {
+      PUCHAR  procedureName  = parmMetaValue ( pPcmlProgram, "name");
+      LONG    offset = 0;
+      LONG    size   = 0;
+      PJXNODE pParms = buildParmElements(pPcmlProgram , &offset, &size, pProgram);
+
+      if (isProgram ) { // *PGM
+         jx_SetIntByName ( pProgram , "buflen" , size  , OFF);
+         jx_NodeMoveInto ( pProgram , "parms" , pParms);
+      } else {
+         UCHAR tempProc [PROC_NAME_MAX];
+         PJXNODE pProcedure    = jx_NewObject(NULL);
+         jx_SetIntByName ( pProcedure , "buflen" , size , OFF);
+         jx_NodeMoveInto ( pProcedure , "parms"  , pParms);
+         strtrimncpy ( tempProc , procedureName , PROC_NAME_MAX);
+         jx_NodeMoveInto ( pProgram , tempProc, pProcedure);
+      }
+
+      pPcmlProgram = jx_GetNodeNext(pPcmlProgram);
+
+   }
+}
+
 /* --------------------------------------------------------------------------- *\
    Convert pcml to uniform json used for both programs and service programs
 \* --------------------------------------------------------------------------- */
@@ -948,27 +991,8 @@ PJXNODE  jx_ApplicationMeta ( PUCHAR library , PUCHAR program , PUCHAR objectTyp
    strtrimncpy ( tempLib  , library , 10);
 
    buildStructures ( pProgram , pPcml);
+   buildParameters ( pProgram , pPcml , objectType[1] == 'P');
 
-
-   while (pPcmlProgram && 0==strcmp(jx_GetNodeNamePtr(pPcmlProgram),"program")) {
-      PUCHAR  procedureName     = parmMetaValue ( pPcmlProgram, "name");
-      SHORT   offset = 0;
-      PJXNODE pParms = buildParmElements(pPcmlProgram , &offset, pProgram);
-
-      if (objectType[1] == 'P') { // *PGM
-         jx_SetIntByName ( pProgram , "buflen", offset , OFF);
-         jx_NodeMoveInto ( pProgram , "parms" , pParms);
-      } else {
-         pProcedure    = jx_NewObject(NULL);
-         jx_SetIntByName ( pProcedure , "buflen", offset , OFF);
-         jx_NodeMoveInto ( pProcedure , "parms" , pParms);
-         strtrimncpy ( tempProc , procedureName , PROC_NAME_MAX);
-         jx_NodeMoveInto ( pProgram , tempProc, pProcedure);
-      }
-
-      pPcmlProgram = jx_GetNodeNext(pPcmlProgram);
-
-   }
 
    jx_NodeMoveInto ( pLib          , tempPgm , pProgram);
    jx_NodeMoveInto ( pResultObject , tempLib , pLib);
