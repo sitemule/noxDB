@@ -32,6 +32,22 @@ end-ds;
 // The template for the customer  structure
 dcl-ds customer_t    extname('QIWS/QCUSTCDT') qualified template end-ds;
 
+// *VAR array of customers - need some stuff from IBM
+dcl-ds customerList_t    extname('QIWS/QCUSTCDT') dim(*var:20) qualified template end-ds;
+
+// Nested customer structure
+dcl-ds CustomerNested_t qualified template;
+    id packed(4: 0);
+    name char(30);
+    dcl-ds address;
+        Street char(30);
+        City   char(30);
+        State  char(2);
+        Postal char(10);
+    end-ds;
+end-ds;
+
+
 
 // ------------------------------------------------------------------------------------
 // nameage
@@ -198,6 +214,40 @@ dcl-proc customer  export;
     dcl-pi customer extproc(*dclcase) ;
         customerIn   likeds(customer_t) dim(20) const;
         customerOut  likeds(customer_t) dim(20);
+    end-pi;
+
+    // Copy the input to the output
+    // Note that the input is an array of 20 elements, so we copy all
+    // we do some magic later.
+    customerOut = customerIn;
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// need some stuff from IBM
+// ------------------------------------------------------------------------------------
+dcl-proc customerVar  export;
+
+    dcl-pi customerVar extproc(*dclcase) ;
+        customerIn   likeds(customerList_t) const options(*varsize);
+        customerOut  likeds(customerList_t) options(*varsize);
+    end-pi;
+
+    // Copy the input to the output
+    // Note that the input is an array of 20 elements, so we copy all
+    // we do some magic later.
+
+    customerOut = customerIn;
+    // %elem(customerOut) = 2;
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+dcl-proc customerNested  export;
+
+    dcl-pi customerNested extproc(*dclcase) ;
+        customerIn   likeds(customerNested_t) dim(20) const;
+        customerOut  likeds(customernested_t) dim(20);
     end-pi;
 
     // Copy the input to the output

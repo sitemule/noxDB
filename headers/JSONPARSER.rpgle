@@ -2124,7 +2124,7 @@ End-PR;
 //       of the returned noxDB object tree by calling <em>jx_delete(node)</em>.
 ///
 
-Dcl-PR json_ApplicationMetaJson pointer extproc(*CWIDEN : 'jx_ApplicationMetaJson');
+Dcl-PR json_ApplicationMeta pointer extproc(*CWIDEN : 'jx_ApplicationMeta');
   library        char(10)  const;
   program        char(10)  const;
   procedure      pointer   value options(*string);

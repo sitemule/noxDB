@@ -287,7 +287,7 @@ typedef struct _JXMETHOD  {
 	PJXNODE pProc;
 } JXMETHOD, * PJXMETHOD;
 
-typedef struct _JXMETHODPARM  {
+typedef struct _JXPARMMETA  {
 	UCHAR    signature; // always hex 00
 	UCHAR    name[PROC_NAME_MAX];
 	JX_DTYPE dType;
@@ -301,7 +301,7 @@ typedef struct _JXMETHODPARM  {
 	UCHAR    separatorChar;
 	NODETYPE graphDataType;
 	PJXNODE  pStructure;
-} JXMETHODPARM, * PJXMETHODPARM;
+} JXPARMMETA, * PJXPARMMETA;
 
 
 
