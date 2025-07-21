@@ -12,7 +12,8 @@
 // The parameter for keyword PGMINFO is not *DCLCASE, *MODULE, *V6, or *V7.
 // Enven on V7R5, the default is *V8, so you can use that.
 ///
-ctl-opt pgminfo(*PCML:*MODULE:*DCLCASE:*V7) thread(*CONCURRENT);
+ctl-opt pgminfo(*PCML:*MODULE:*DCLCASE:*V7);
+ctl-opt thread(*CONCURRENT);
 ctl-opt nomain;
 ctl-opt copyright('Sitemule.com (C), 2023-2025');
 ctl-opt decEdit('0,') datEdit(*YMD.);
@@ -37,8 +38,14 @@ dcl-ds customerList_t    extname('QIWS/QCUSTCDT') dim(*var:20) qualified templat
 
 // Nested customer structure
 dcl-ds CustomerNested_t qualified template;
-    id packed(4: 0);
-    name char(30);
+    id   packed(8: 0);
+    name varchar(30);
+    dcl-ds cmsInfo;
+        creditLimit uns(10);
+        chargeCode  packed(1);
+        balanceDue  zoned(10:2);
+        creditDue   packed(9:2);
+    end-ds;
     dcl-ds address;
         Street char(30);
         City   char(30);
@@ -64,9 +71,7 @@ dcl-proc nameAge export;
     age = 25;
     return;
 
-
 end-proc;
-
 // ------------------------------------------------------------------------------------
 // alltypes - following produces:
 //  <?xml version="1.0" encoding="UTF-8" ?>
@@ -115,7 +120,6 @@ dcl-proc allTypes export;
         timestamp    timestamp;
     end-pi;
 
-
     char    = 'xyz';
     varchar = 'Test';
     int8     = -456789012345;
@@ -153,7 +157,6 @@ dcl-proc complex export;
     employee.updated = %timestamp();
     employee.isMale = *on;
 end-proc;
-
 // ------------------------------------------------------------------------------------
 dcl-proc echo export;
 

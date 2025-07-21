@@ -25,6 +25,11 @@ Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE')  main(main);
 
 dcl-proc main;
 
+    // Set your delimiter according to your CCSID of your source file if you parse any strings.
+    // This is only requires if job ccsid and source file ccsid is not the same.
+    // Note the "makefile" is set to international - ccsid 500 for all source files in the examples
+    json_setDelimitersByCcsid(500);
+
     // This is not neede, but illustrates that you can pull the meta data as PCML (XML)
     getTheMeta();
 
@@ -32,7 +37,6 @@ dcl-proc main;
     getTheMetaJson();
 
     // Arrays
-    if 1=2;
     callSimpleArray();
 
     // Nested Arrays
@@ -59,13 +63,21 @@ dcl-proc main;
     // External described ds and *VAR structures
     // Need some stuff from IBM
     callProcedureCustomerVar();
-    endif;
+
     // Nested datastructure
     callProcedureCustomerNested();
 
+on-exit;
+    // Disconnect from the database
+    json_sqlDisconnect();
+
+    // Reset delimiters to default when you are done: 0= job ccsid
+    json_setDelimitersByCcsid(0);
+
+
 end-proc;
 // ------------------------------------------------------------------------------------
-// getTheMeta
+// getTheMeta - is not need but show the PCML we have in the noxDb graph
 // ------------------------------------------------------------------------------------
 dcl-proc getTheMeta;
 
@@ -84,7 +96,9 @@ on-exit;
 
 end-proc;
 // ------------------------------------------------------------------------------------
-// getTheMeta
+// getTheMeta as JSON - is not need but show the nested JSON-like graph
+// This is based on the PCML, but put in a nested JSON-like graph for easy
+// use and works for both service programs and "normal" programs.
 // ------------------------------------------------------------------------------------
 dcl-proc getTheMetaJson;
 
@@ -144,9 +158,6 @@ dcl-proc callProcedureByString;
     dcl-s pOut       pointer;
     dcl-s msg        char(50);
 
-   // Set your delimiter according to your CCSID of your source file if you parse any strings.
-   // Note the "makefile" is set to international - ccsid 500 for all source files in the examples
-   json_setDelimitersByCcsid(500);
 
 
     pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'nameAge' :
@@ -347,6 +358,7 @@ dcl-proc callProcedureEcho;
     	    } -
     	}'
     );
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmechoin.json':1208:*OFF);
 
     pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'echo' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
@@ -356,7 +368,7 @@ dcl-proc callProcedureEcho;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmecho.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmechoout.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -444,7 +456,7 @@ dcl-proc callProcedureCustomerNested;
     dcl-s msg        char(50);
     dcl-ds list               likeds(json_iterator);
 
-    pRows = json_sqlResultSet ('select * from QIWS/QCUSTCDT');
+    pRows = json_sqlResultSet ('select * from QIWS.QCUSTCDT');
     pCustArray = json_newArray();
 
     // reformat the flat list in t array with objects
@@ -457,6 +469,10 @@ dcl-proc callProcedureCustomerNested;
         json_setStr (pCust:'address.City': json_getStr(list.this:'CITY'));
         json_setStr (pCust:'address.State': json_getStr(list.this:'STATE'));
         json_setStr (pCust:'address.Postal': json_getStr(list.this:'ZIPCOD'));
+        json_setInt (pCust:'cmsInfo.creditLimit': json_getInt(list.this:'CDTLMT'));
+        json_setInt (pCust:'cmsInfo.chargeCode': json_getInt(list.this:'CHGCOD'));
+        json_setNum (pCust:'cmsInfo.balanceDue': json_getNum(list.this:'BALDUE'));
+        json_setNum (pCust:'cmsInfo.creditDue': json_getNum(list.this:'CDTDUE'));
         json_arrayPush (pCustArray : pCust);
     EndDo;
 
@@ -465,13 +481,14 @@ dcl-proc callProcedureCustomerNested;
     // Move the result set from a SQL statement into the JSON object
     // This result in an array of object with customers
     json_moveObjectInto (pIn : 'customerIn' :pCustArray);
-    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmCustomerNested.json':1208:*OFF);
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmCustomerNestedIn.json':1208:*OFF);
 
 
     pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'customerNested' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
+        return;
     EndIf;
 
     // Dump the result to both joblog and IFS stream file

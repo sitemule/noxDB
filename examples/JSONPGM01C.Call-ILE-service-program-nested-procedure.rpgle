@@ -35,6 +35,10 @@ dcl-proc main;
     // Nested datastructure
     callProcedureCustomerNested();
 
+on-exit;
+    // Disconnect from the database
+    json_sqlDisconnect();
+
 end-proc;
 // ------------------------------------------------------------------------------------
 // getTheMeta
@@ -101,6 +105,10 @@ dcl-proc callProcedureCustomerNested;
         json_setStr (pCust:'address.City': json_getStr(list.this:'CITY'));
         json_setStr (pCust:'address.State': json_getStr(list.this:'STATE'));
         json_setStr (pCust:'address.Postal': json_getStr(list.this:'ZIPCOD'));
+        json_setInt (pCust:'cmsInfo.creditLimit': json_getInt(list.this:'CDTLMT'));
+        json_setInt (pCust:'cmsInfo.chargeCode': json_getInt(list.this:'CHGCOD'));
+        json_setNum (pCust:'cmsInfo.balanceDue': json_getNum(list.this:'BALDUE'));
+        json_setNum (pCust:'cmsInfo.creditDue': json_getNum(list.this:'CDTDUE'));
         json_arrayPush (pCustArray : pCust);
     EndDo;
 
@@ -109,13 +117,15 @@ dcl-proc callProcedureCustomerNested;
     // Move the result set from a SQL statement into the JSON object
     // This result in an array of object with customers
     json_moveObjectInto (pIn : 'customerIn' :pCustArray);
-    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmCustomerNested.json':1208:*OFF);
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmCustomerNestedIn.json':1208:*OFF);
 
 
     pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00C' : 'customerNested' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
+        return;
+
     EndIf;
 
     // Dump the result to both joblog and IFS stream file
