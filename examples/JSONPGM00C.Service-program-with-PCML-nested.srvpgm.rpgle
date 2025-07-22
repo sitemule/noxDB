@@ -7,7 +7,7 @@
 //
 // Adding an extra thread(*CONCURRENT) to the ctl-opt
 // it can even be used with ILEastic, and also serve the openAPI.json ( yet to come)
-// My copiler is complaining with:
+// My compiler is complaining with:
 //    ctl-opt pgminfo(*PCML:*MODULE:*DCLCASE:*V8)
 // The parameter for keyword PGMINFO is not *DCLCASE, *MODULE, *V6, or *V7.
 // Enven on V7R5, the default is *V8, so you can use that.
