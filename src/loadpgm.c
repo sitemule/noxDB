@@ -273,12 +273,16 @@ static void  copyNodeValueIntoBuffer (PUCHAR pParmBuffer, PJXPARMMETA pDef, PJXN
    PUCHAR pValue  = jx_GetValuePtr   (pValueNode , pDef->name , "");
    copyValueIntoBuffer (pParmBuffer, pDef,  pValue );
 }
-
+// name suffix is ___ then it is Anonymous Array
+static BOOL isAnonymousArray (PUCHAR name) {
+   int l = strlen(name);
+   return (l > 3 && 0==memcmp(name + l -3 ,"___", 3 ));
+}
 static void  copyNodeIntoBuffer (PUCHAR pParmBuffer , PJXPARMMETA pParentMeta , PJXPARMMETA pMeta ,  PJXNODE pParmValueNode )
 {
 
    if (pMeta->dim > 0 ) {
-      PJXNODE pArray =  jx_GetNode   (pParmValueNode , pMeta->name);
+      PJXNODE pArray =  isAnonymousArray (pMeta->name) ? pParmValueNode :jx_GetNode   (pParmValueNode , pMeta->name);
       PJXNODE pArrayElement = jx_GetNodeChild (pArray);
       if (pMeta->pStructure) {
          PJXNODE pStructObj = jx_GetNodeChild (pMeta->pStructure);
@@ -417,38 +421,50 @@ static void  setReturnObject (PJXNODE pReturnObject, PJXNODE pParmObj , PUCHAR p
    PJXPARMMETA pMethodParm = getParmDefinition (pParmObj);
 
    if (pMethodParm->dim > 0 && isArray == FALSE) {
-      PJXNODE pReturnArray = jx_NewArray(NULL);
-      jx_NodeRename (pReturnArray , pMethodParm->name);
-      if (pMethodParm->pStructure) {
-         PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
-         for (int i = 0 ; i< pMethodParm->dim ; i++) {
-            setReturnObject ( pReturnArray  , pStructObj , pParmBuffer, TRUE);
-            pParmBuffer += pMethodParm->size;
+      if (isAnonymousArray(pMethodParm->name)) {
+         if (pMethodParm->pStructure) {
+            PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
+            for (int i = 0 ; i< pMethodParm->dim ; i++) {
+               setReturnObject ( pReturnObject  , pStructObj , pParmBuffer, TRUE);
+               pParmBuffer += pMethodParm->size;
+            }
+         } else {
+            for (int i = 0 ; i< pMethodParm->dim ; i++) {
+               jx_NodeInsertChildTail  ( pReturnObject , newReturnNode (pMethodParm, pParmBuffer));
+               pParmBuffer += pMethodParm->size;
+            }
          }
       } else {
-         for (int i = 0 ; i< pMethodParm->dim ; i++) {
-            jx_NodeInsertChildTail  ( pReturnArray , newReturnNode (pMethodParm, pParmBuffer));
-            pParmBuffer += pMethodParm->size;
+         PJXNODE pReturnArray = jx_NewArray(NULL);
+         jx_NodeRename (pReturnArray , pMethodParm->name);
+         if (pMethodParm->pStructure) {
+            PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
+            for (int i = 0 ; i< pMethodParm->dim ; i++) {
+               setReturnObject ( pReturnArray  , pStructObj , pParmBuffer, TRUE);
+               pParmBuffer += pMethodParm->size;
+            }
+         } else {
+            for (int i = 0 ; i< pMethodParm->dim ; i++) {
+               jx_NodeInsertChildTail  ( pReturnArray , newReturnNode (pMethodParm, pParmBuffer));
+               pParmBuffer += pMethodParm->size;
+            }
          }
+         jx_NodeInsertChildTail (pReturnObject , pReturnArray );
       }
-      jx_NodeInsertChildTail (pReturnObject , pReturnArray );
    } else if (isArray) {
-      PJXNODE pStructObj = pParmObj;
-      PJXNODE pReturnStruct = jx_NewObject(NULL);
-      while (pStructObj) {
-         PJXPARMMETA pStructParm = getParmDefinition (pStructObj);
-         setReturnObject ( pReturnStruct , pStructObj, pParmBuffer + pStructParm->offset, FALSE);
-         pStructObj = jx_GetNodeNext(pStructObj);
+      PJXNODE pReturnStruct = isAnonymousArray(pMethodParm->name) ? jx_NewArray(NULL) : jx_NewObject(NULL);
+      for (; pParmObj ; pParmObj = jx_GetNodeNext(pParmObj)) {
+         PJXPARMMETA pStructParm = getParmDefinition (pParmObj);
+         setReturnObject ( pReturnStruct , pParmObj, pParmBuffer + pStructParm->offset, FALSE);
       }
       jx_NodeInsertChildTail (pReturnObject , pReturnStruct );
    } else if (pMethodParm->dType == JX_DTYPE_STRUCTURE) {
       PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
-      PJXNODE pReturnStruct = jx_NewObject(NULL);
+      PJXNODE pReturnStruct = isAnonymousArray(pMethodParm->name) ? jx_NewArray(NULL) : jx_NewObject(NULL);
       jx_NodeRename (pReturnStruct , pMethodParm->name);
-      while (pStructObj) {
+      for (; pStructObj ; pStructObj = jx_GetNodeNext(pStructObj)) {
          PJXPARMMETA pStructParm = getParmDefinition (pStructObj);
          setReturnObject ( pReturnStruct , pStructObj, pParmBuffer + pStructParm->offset, FALSE);
-         pStructObj = jx_GetNodeNext(pStructObj);
       }
       jx_NodeInsertChildTail (pReturnObject , pReturnStruct );
    } else {
@@ -458,20 +474,18 @@ static void  setReturnObject (PJXNODE pReturnObject, PJXNODE pParmObj , PUCHAR p
 /* ------------------------------------------------------------- */
 static PJXNODE buildReturnObject (PJXMETHOD  pMethod, PJXNODE pParms, PVOID argArray [256], int args)
 {
-   int argIx= 0;
-   PJXNODE pInterface, pParmObj;
-   PJXNODE pReturnObject = jx_NewObject(NULL);
+   PJXNODE pReturnObject = NULL ;
+   PJXNODE pInterface = (pMethod->pProc == NULL) ? pMethod->pPgm : pMethod->pProc;
+   PJXNODE pParmObj = jx_GetNodeChild(jx_GetNode ( pInterface , "parms"));
 
-   pInterface = (pMethod->pProc == NULL) ? pMethod->pPgm : pMethod->pProc;
-
-   pParmObj = jx_GetNodeChild(jx_GetNode ( pInterface , "parms"));
-   while (pParmObj) {
+   for (int argIx= 0; pParmObj ;  argIx++, pParmObj = jx_GetNodeNext(pParmObj)) {
       PJXPARMMETA pMethodParm = getParmDefinition (pParmObj);
       if (pMethodParm->use == 'B') { // BOTH .. TODO in enum
+         if (pReturnObject == NULL) {
+            pReturnObject = isAnonymousArray(pMethodParm->name) ? jx_NewArray(NULL) : jx_NewObject(NULL);
+         }
          setReturnObject (pReturnObject , pParmObj,  argArray [argIx], FALSE);
       }
-      argIx++;
-      pParmObj = jx_GetNodeNext(pParmObj);
    }
 
    return pReturnObject;

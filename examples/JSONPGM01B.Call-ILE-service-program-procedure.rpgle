@@ -42,6 +42,9 @@ dcl-proc main;
     // Nested Arrays
     callNestedArray();
 
+    // anonymous Arrays ( experimental)
+    callAnonymousArray();
+
     // this does the real job
     callProcedureByObject();
 
@@ -69,6 +72,9 @@ dcl-proc main;
 
     // Nested array of datastructure
     callProcedureCustomerNestedList();
+
+    // Call a procedure that return an anonymous array with objects
+    callCustomerAnonymousArray();
 
 on-exit;
     // Disconnect from the database
@@ -212,7 +218,7 @@ on-exit;
 end-proc;
 
 // ------------------------------------------------------------------------------------
-// Simple array
+// Simple nested array
 // ------------------------------------------------------------------------------------
 dcl-proc callNestedArray;
 
@@ -230,9 +236,9 @@ dcl-proc callNestedArray;
            {"intArray":[9,0]}, -
         ] -
     }');
-    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/jsonpgm01b-SimpleNestedArrayIn.json':1208:*OFF);
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/jsonpgm01b-NestedArrayIn.json':1208:*OFF);
 
-    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'simpleNestedArray' : pIn : JSON_GRACEFUL_ERROR);
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'nestedArray' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
@@ -240,7 +246,7 @@ dcl-proc callNestedArray;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-SimpleNestedArrayOut.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-NestedArrayOut.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -248,6 +254,36 @@ on-exit;
     json_delete (pOut);
 
 end-proc;
+
+// ------------------------------------------------------------------------------------
+// Anonymous Arrays
+// ------------------------------------------------------------------------------------
+dcl-proc callAnonymousArray;
+
+    dcl-s pIn        pointer;
+    dcl-s pOut       pointer;
+    dcl-s msg        char(50);
+
+    pIn = json_parseString ('[[1,2], [3,4], [5,6], [7,8], [9,0]]');
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/jsonpgm01b-AnonymousArrayIn.json':1208:*OFF);
+
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'anonymousArray' : pIn : JSON_GRACEFUL_ERROR);
+    If json_Error(pOut) ;
+        msg = json_Message(pOut);
+        dsply msg;
+    EndIf;
+
+    // Dump the result to both joblog and IFS stream file
+    json_joblog(pOut);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-AnonymousArrayOut.json':1208:*OFF);
+
+// Always clean up
+on-exit;
+    json_delete(pIn);
+    json_delete (pOut);
+
+end-proc;
+
 
 // ------------------------------------------------------------------------------------
 // callProcedureAllTypes
@@ -550,6 +586,65 @@ dcl-proc callProcedureCustomerNestedList;
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
     json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-CustomerNestedListOut.json':1208:*OFF);
+
+// Always clean up
+on-exit;
+    json_delete(pRows);
+    json_delete(pIn);
+    json_delete (pOut);
+
+end-proc;
+// ------------------------------------------------------------------------------------
+// returns a nested datastructure with an anonymous array of objects
+// ------------------------------------------------------------------------------------
+dcl-proc callCustomerAnonymousArray;
+
+    dcl-s pRows      pointer;
+    dcl-s pCust      pointer;
+    dcl-s pCustArray pointer;
+    dcl-s pIn        pointer;
+    dcl-s pOut       pointer;
+    dcl-s msg        char(50);
+    dcl-ds list               likeds(json_iterator);
+
+    pRows = json_sqlResultSet ('select * from QIWS.QCUSTCDT');
+    pCustArray = json_newArray();
+
+    // reformat the flat list in t array with objects
+    list = json_setIterator(pRows);
+    DoW json_ForEach(list);
+        pCust = json_newObject();
+        json_setInt (pCust:'id'  : json_getInt(list.this:'CUSNUM'));
+        json_setStr (pCust:'name': json_getStr(list.this:'LSTNAM'));
+        json_setStr (pCust:'address.Street': json_getStr(list.this:'STREET'));
+        json_setStr (pCust:'address.City': json_getStr(list.this:'CITY'));
+        json_setStr (pCust:'address.State': json_getStr(list.this:'STATE'));
+        json_setStr (pCust:'address.Postal': json_getStr(list.this:'ZIPCOD'));
+        json_setInt (pCust:'cmsInfo.creditLimit': json_getInt(list.this:'CDTLMT'));
+        json_setInt (pCust:'cmsInfo.chargeCode': json_getInt(list.this:'CHGCOD'));
+        json_setNum (pCust:'cmsInfo.balanceDue': json_getNum(list.this:'BALDUE'));
+        json_setNum (pCust:'cmsInfo.creditDue': json_getNum(list.this:'CDTDUE'));
+        json_arrayPush (pCustArray : pCust);
+    EndDo;
+
+    pIn = json_newObject();
+
+    // Move the result set from a SQL statement into the JSON object
+    // This result in an array of object with customers
+    json_moveObjectInto (pIn : 'customerIn' :pCustArray);
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/jsonpgm01b-CustomerAnonymousArray.json':1208:*OFF);
+
+
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'customerAnonymousArray' : pIn : JSON_GRACEFUL_ERROR);
+    If json_Error(pOut) ;
+        msg = json_Message(pOut);
+        dsply msg;
+        return;
+    EndIf;
+
+    // Dump the result to both joblog and IFS stream file
+    json_joblog(pOut);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-CustomerAnonymousArray.json':1208:*OFF);
 
 // Always clean up
 on-exit;

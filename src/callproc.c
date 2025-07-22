@@ -42,7 +42,7 @@ void jx_callPgm  ( _SYSPTR proc , void *  argArray[] , SHORT parms)
     This looks ugly, however, we need to set the numbers of parameters
     correctly so we can not simply apply the vector, and no API
     exists to do this AFAIN, _CALLPGMV "only" works for programs - not for
-    preocedures, so we have to live with this for now
+    procedures, so we have to live with this for now
 \* --------------------------------------------------------------------------- */
 void jx_callProc ( _SYSPTR proc , void *  p[64] , SHORT parms)
 {

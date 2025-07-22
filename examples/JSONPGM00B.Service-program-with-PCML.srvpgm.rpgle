@@ -19,13 +19,19 @@ ctl-opt copyright('Sitemule.com (C), 2023-2025');
 ctl-opt decEdit('0,') datEdit(*YMD.);
 ctl-opt debug(*yes);
 
-// Exper
+// anonymous !! Experimental !!!
 // anonymous array, will take the values from the anonumous input array
 // and receive and return it without object structure arround it.
 // The trick is to sufix with 3 under scores:
 dcl-ds anonymousArray_t template qualified;
     intArray___  int(5)   dim(2) ;
 end-ds;
+
+// regular array - always received and send with the object structure around it
+dcl-ds intArray_t template qualified;
+    intArray  int(5)   dim(2) ;
+end-ds;
+
 
 dcl-ds employee_t template qualified;
     id        int(10);
@@ -195,9 +201,9 @@ dcl-proc simpleArray export;
 end-proc;
 
 // ------------------------------------------------------------------------------------
-dcl-proc simpleNestedArray export;
+dcl-proc nestedArray export;
 
-    dcl-pi simpleNestedArray extproc(*dclcase);
+    dcl-pi nestedArray extproc(*dclcase);
         myArrayIn  likeds(intArray_t) dim(5) const;
         myArrayOut likeds(intArray_t) dim(5) ;
     end-pi;
@@ -221,7 +227,7 @@ end-proc;
 // The trick ire to sufix with 3 under scores:
 dcl-proc anonymousArray export;
 
-    dcl-pi annomousArray extproc(*dclcase);
+    dcl-pi anonymousArray extproc(*dclcase);
         myArrayIn___  likeds(anonymousArray_t) dim(5) const;
         myArrayOut___ likeds(anonymousArray_t) dim(5) ;
     end-pi;
@@ -230,9 +236,9 @@ dcl-proc anonymousArray export;
     dcl-s j int(5);
 
     // Copy the input to the output in reveser order
-    for i = 1 to %elem(___myArrayIn);
-        for j = 1 to %elem(___myArrayIn.intArray);
-            ___myArrayOut(6-i).intArray(3-j) = ___myArrayIn(i).intArray(j);
+    for i = 1 to %elem(myArrayIn___);
+        for j = 1 to %elem(myArrayIn___.intArray___);
+            myArrayOut___(6-i).intArray___(3-j) = myArrayIn___(i).intArray___(j);
         endfor;
     endfor;
 
@@ -301,5 +307,25 @@ dcl-proc customerNestedList  export;
     // Note that the input is an array of 20 elements, so we copy all
     // we do some magic later.
     customerOut = customerIn;
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// Input is an object, but resule is an array of objects
+// This is a bit tricky, as the input is an object, but the output is an
+// array of objects.
+// notice the sufix with 3 under scores, this is a trick to make it anonymous
+// ------------------------------------------------------------------------------------
+dcl-proc customerAnonymousArray  export;
+
+    dcl-pi customerAnonymousArray extproc(*dclcase) ;
+        customerIn      likeds(customerNested_t) dim(20) const;
+        customerOut___  likeds(customernested_t) dim(20);
+    end-pi;
+
+    // Copy the input to the output
+    // Note that the input is an array of 20 elements, so we copy all
+    // we do some magic later.
+    customerOut___ = customerIn;
 
 end-proc;
