@@ -19,6 +19,14 @@ ctl-opt copyright('Sitemule.com (C), 2023-2025');
 ctl-opt decEdit('0,') datEdit(*YMD.);
 ctl-opt debug(*yes);
 
+// Exper
+// anonymous array, will take the values from the anonumous input array
+// and receive and return it without object structure arround it.
+// The trick is to sufix with 3 under scores:
+dcl-ds anonymousArray_t template qualified;
+    intArray___  int(5)   dim(2) ;
+end-ds;
+
 dcl-ds employee_t template qualified;
     id        int(10);
     name      char(50);
@@ -33,7 +41,7 @@ end-ds;
 // The template for the customer  structure
 dcl-ds customer_t    extname('QIWS/QCUSTCDT') qualified template end-ds;
 
-// *VAR array of customers - need some stuff from IBM
+// *VAR and *AUTO array of customers - need some stuff from IBM, notsupported yet
 dcl-ds customerList_t    extname('QIWS/QCUSTCDT') dim(*var:20) qualified template end-ds;
 
 // Nested customer structure
@@ -194,9 +202,6 @@ dcl-proc simpleNestedArray export;
         myArrayOut likeds(intArray_t) dim(5) ;
     end-pi;
 
-    dcl-ds intArray_t template qualified;
-        intArray  int(5)   dim(2) ;
-    end-ds;
 
     dcl-s i int(5);
     dcl-s j int(5);
@@ -205,6 +210,29 @@ dcl-proc simpleNestedArray export;
     for i = 1 to %elem(myArrayOut);
         for j = 1 to %elem(myArrayOut.intArray);
             myArrayOut(6-i).intArray(3-j) = myArrayIn(i).intArray(j);
+        endfor;
+    endfor;
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// Annoymous array, will take the values from the anonumous input array
+// and receive and return it without object structure arround it.
+// The trick ire to sufix with 3 under scores:
+dcl-proc anonymousArray export;
+
+    dcl-pi annomousArray extproc(*dclcase);
+        myArrayIn___  likeds(anonymousArray_t) dim(5) const;
+        myArrayOut___ likeds(anonymousArray_t) dim(5) ;
+    end-pi;
+
+    dcl-s i int(5);
+    dcl-s j int(5);
+
+    // Copy the input to the output in reveser order
+    for i = 1 to %elem(___myArrayIn);
+        for j = 1 to %elem(___myArrayIn.intArray);
+            ___myArrayOut(6-i).intArray(3-j) = ___myArrayIn(i).intArray(j);
         endfor;
     endfor;
 
@@ -227,7 +255,8 @@ dcl-proc customer  export;
 end-proc;
 
 // ------------------------------------------------------------------------------------
-// need some stuff from IBM
+// *VAR and *AUTO need some stuff from IBM
+// Not supported yet
 // ------------------------------------------------------------------------------------
 dcl-proc customerVar  export;
 
@@ -249,6 +278,21 @@ end-proc;
 dcl-proc customerNested  export;
 
     dcl-pi customerNested extproc(*dclcase) ;
+        customerIn   likeds(customerNested_t) const;
+        customerOut  likeds(customernested_t) ;
+    end-pi;
+
+    // Copy the input to the output
+    // Note that the input is an array of 20 elements, so we copy all
+    // we do some magic later.
+    customerOut = customerIn;
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+dcl-proc customerNestedList  export;
+
+    dcl-pi customerNestedList extproc(*dclcase) ;
         customerIn   likeds(customerNested_t) dim(20) const;
         customerOut  likeds(customernested_t) dim(20);
     end-pi;

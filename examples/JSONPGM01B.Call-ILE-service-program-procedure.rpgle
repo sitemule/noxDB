@@ -67,6 +67,9 @@ dcl-proc main;
     // Nested datastructure
     callProcedureCustomerNested();
 
+    // Nested array of datastructure
+    callProcedureCustomerNestedList();
+
 on-exit;
     // Disconnect from the database
     json_sqlDisconnect();
@@ -88,7 +91,7 @@ dcl-proc getTheMeta;
     pMeta = json_ProcedureMeta ('*LIBL' : 'JSONPGM00B': '*ALL');
 
     // Just dump the result to IFS stream file since it is XML by nature:
-    json_WriteXMLStmf(pMeta:'/prj/noxdb/testout/srvpgmmeta.xml':1208:*OFF);
+    json_WriteXMLStmf(pMeta:'/prj/noxdb/testout/jsonpgm01b-meta.xml':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -110,7 +113,7 @@ dcl-proc getTheMetaJson;
     pMeta = json_ApplicationMeta ('*LIBL' : 'JSONPGM00B': '*SRVPGM');
 
     // Just dump the result to IFS JSON stream file since it is JSON by nature:
-    json_WriteJsonStmf(pMeta:'/prj/noxdb/testout/srvpgmmeta.json':1208:*OFF);
+    json_WriteJsonStmf(pMeta:'/prj/noxdb/testout/jsonpgm01b-meta.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -142,7 +145,7 @@ dcl-proc callProcedureByObject;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmNameAge1.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-NameAge1.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -172,7 +175,7 @@ dcl-proc callProcedureByString;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmNameAge2.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-NameAge2.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -189,7 +192,7 @@ dcl-proc callSimpleArray;
     dcl-s msg        char(50);
 
     pIn = json_parseString ('{"myArrayIn":[1,2,3,4,5]}');
-    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmSimpleArrayIn.json':1208:*OFF);
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/jsonpgm01b-SimpleArrayIn.json':1208:*OFF);
 
     pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'simpleArray' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
@@ -199,7 +202,7 @@ dcl-proc callSimpleArray;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmSimpleArrayOut.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-SimpleArrayOut.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -227,7 +230,7 @@ dcl-proc callNestedArray;
            {"intArray":[9,0]}, -
         ] -
     }');
-    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmSimpleNestedArrayIn.json':1208:*OFF);
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/jsonpgm01b-SimpleNestedArrayIn.json':1208:*OFF);
 
     pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'simpleNestedArray' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
@@ -237,7 +240,7 @@ dcl-proc callNestedArray;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmSimpleNestedArrayOut.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-SimpleNestedArrayOut.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -281,7 +284,7 @@ dcl-proc callProcedureAllTypes;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmalltypes.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-alltypes.json':1208:*OFF);
 
 
 // Always clean up
@@ -325,7 +328,7 @@ dcl-proc callProcedureComplex;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmcomplex.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-complex.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -358,7 +361,7 @@ dcl-proc callProcedureEcho;
     	    } -
     	}'
     );
-    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmechoin.json':1208:*OFF);
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/jsonpgm01b-echoIn.json':1208:*OFF);
 
     pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'echo' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
@@ -368,7 +371,7 @@ dcl-proc callProcedureEcho;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmechoout.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-echoOut.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -390,7 +393,7 @@ dcl-proc callProcedureCustomer;
     // Move the result set from a SQL statement into the JSON object
     // This result in an array of object with customers
     json_moveObjectInto (pIn : 'customerIn' :json_sqlResultSet ('select * from QIWS/QCUSTCDT'));
-    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmCustomerIn.json':1208:*OFF);
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/jsonpgm01b-CustomerIn.json':1208:*OFF);
 
 
     pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'customer' : pIn : JSON_GRACEFUL_ERROR);
@@ -401,7 +404,7 @@ dcl-proc callProcedureCustomer;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmCustomerOut.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-CustomerOut.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -423,7 +426,7 @@ dcl-proc callProcedureCustomerVar;
     // Move the result set from a SQL statement into the JSON object
     // This result in an array of object with customers
     json_moveObjectInto (pIn : 'customerIn' :json_sqlResultSet ('select * from QIWS/QCUSTCDT'));
-    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmCustomerVarIn.json':1208:*OFF);
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/jsonpgm01b-CustomerVarIn.json':1208:*OFF);
 
 
     pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'customerVar' : pIn : JSON_GRACEFUL_ERROR);
@@ -434,7 +437,7 @@ dcl-proc callProcedureCustomerVar;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmCustomerVarOut.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-CustomerVarOut.json':1208:*OFF);
 
 // Always clean up
 on-exit;
@@ -447,6 +450,59 @@ end-proc;
 // Nested datastructures
 // ------------------------------------------------------------------------------------
 dcl-proc callProcedureCustomerNested;
+
+    dcl-s pRow      pointer;
+    dcl-s pCust      pointer;
+    dcl-s pIn        pointer;
+    dcl-s pOut       pointer;
+    dcl-s msg        char(50);
+
+    pRow = json_sqlResultRow ('select * from QIWS.QCUSTCDT');
+
+    // reformat the flat list in t array with objects
+    pCust = json_newObject();
+    json_setInt (pCust:'id'  : json_getInt(pRow:'CUSNUM'));
+    json_setStr (pCust:'name': json_getStr(pRow:'LSTNAM'));
+    json_setStr (pCust:'address.Street': json_getStr(pRow:'STREET'));
+    json_setStr (pCust:'address.City': json_getStr(pRow:'CITY'));
+    json_setStr (pCust:'address.State': json_getStr(pRow:'STATE'));
+    json_setStr (pCust:'address.Postal': json_getStr(pRow:'ZIPCOD'));
+    json_setInt (pCust:'cmsInfo.creditLimit': json_getInt(pRow:'CDTLMT'));
+    json_setInt (pCust:'cmsInfo.chargeCode': json_getInt(pRow:'CHGCOD'));
+    json_setNum (pCust:'cmsInfo.balanceDue': json_getNum(pRow:'BALDUE'));
+    json_setNum (pCust:'cmsInfo.creditDue': json_getNum(pRow:'CDTDUE'));
+
+    pIn = json_newObject();
+
+    // Move the result set from a SQL statement into the JSON object
+    // This result in an object with a customer
+    json_moveObjectInto (pIn : 'customerIn' :pCust);
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/jsonpgm01b-CustomerNestedIn.json':1208:*OFF);
+
+
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'customerNested' : pIn : JSON_GRACEFUL_ERROR);
+    If json_Error(pOut) ;
+        msg = json_Message(pOut);
+        dsply msg;
+        return;
+    EndIf;
+
+    // Dump the result to both joblog and IFS stream file
+    json_joblog(pOut);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-CustomerNestedOut.json':1208:*OFF);
+
+// Always clean up
+on-exit;
+    json_delete(pRow);
+    json_delete(pIn);
+    json_delete (pOut);
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// Nested datastructures
+// ------------------------------------------------------------------------------------
+dcl-proc callProcedureCustomerNestedList;
 
     dcl-s pRows      pointer;
     dcl-s pCust      pointer;
@@ -481,10 +537,10 @@ dcl-proc callProcedureCustomerNested;
     // Move the result set from a SQL statement into the JSON object
     // This result in an array of object with customers
     json_moveObjectInto (pIn : 'customerIn' :pCustArray);
-    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/srvpgmCustomerNestedIn.json':1208:*OFF);
+    json_WriteJsonStmf(pIn:'/prj/noxdb/testout/jsonpgm01b-CustomerNestedListIn.json':1208:*OFF);
 
 
-    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'customerNested' : pIn : JSON_GRACEFUL_ERROR);
+    pOut  = json_CallProcedure  ('*LIBL' : 'JSONPGM00B' : 'customerNestedList' : pIn : JSON_GRACEFUL_ERROR);
     If json_Error(pOut) ;
         msg = json_Message(pOut);
         dsply msg;
@@ -493,7 +549,7 @@ dcl-proc callProcedureCustomerNested;
 
     // Dump the result to both joblog and IFS stream file
     json_joblog(pOut);
-    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/srvpgmCustomerNestedOut.json':1208:*OFF);
+    json_WriteJsonStmf(pOut:'/prj/noxdb/testout/jsonpgm01b-CustomerNestedListOut.json':1208:*OFF);
 
 // Always clean up
 on-exit;
