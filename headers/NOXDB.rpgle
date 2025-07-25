@@ -102,6 +102,8 @@ Dcl-PR json_setDelimiters extproc(*CWIDEN : 'jx_SetDelimiters2');
   delimiters pointer value options(*string);
 End-PR;
 
+// 1M minus length of 4 bytes
+Dcl-S json_UTF8 varchar(1048572) CCSID(*UTF8) Template;
 ///
 // Default delimiters for JSON and XML data strings.
 ///
@@ -534,6 +536,27 @@ Dcl-PR json_setStr pointer extproc(*CWIDEN : 'jx_SetStrByName');
 End-PR;
 
 ///
+// Set UTF-8 string value
+//
+// Sets the passed value to the node pointed to by the passed path expression.
+//
+// @param Node
+// @param Node path expression (UTF-8 encoded)
+// @param New string value (UTF-8 encoded)
+// @param If this is *ON the value will be set to null regardless of the values
+// @return Changed node
+///
+Dcl-PR json_setStrUtf8 Pointer extproc(*CWIDEN : 'jx_SetStrUtf8ByName');
+  pNode          Pointer    value;
+  Expression     Like( json_UTF8 ) const options(*nopass:*varsize);
+  Defaultvalue   Like( json_UTF8 ) const options(*nopass:*varsize);
+  nullIf         ind value options(*nopass);
+End-PR;
+
+
+
+
+///
 // Set integer value
 //
 // Sets the passed value to the node pointed to by the passed path expression.
@@ -873,13 +896,29 @@ End-PR;
 //
 // @param Node
 // @param Node path expression (default: current node)
-// @param Default value
+// @param Default value , if not found
 // @return String value or the default value if the node does not exist
 ///
 Dcl-PR json_getStr varchar(32767) extproc(*CWIDEN : 'jx_GetValueVC');
   node pointer value;
   nodePath pointer value options(*string : *nopass);
   defaultValue pointer value options(*string : *nopass);
+End-PR;
+
+///
+// get UTF-8 string value
+//
+// Returns the string value of the node pointed to by the passed expression.
+//
+// @param Node
+// @param Node path expression
+// @param Default value , if not found
+// @return String value or the default value if the node does not exist in UTF-8 encoding
+///
+Dcl-PR json_getStrUtf8 Like( json_UTF8 ) rtnparm extproc(*CWIDEN : 'jx_GetStrUtf8ByName');
+  pNode          Pointer    value;
+  Expression     Like( json_UTF8 ) const options(*nopass:*varsize);
+  Defaultvalue   Like( json_UTF8 ) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -3060,6 +3099,8 @@ Dcl-PR xml_setDelimiters extproc(*CWIDEN : 'jx_SetDelimiters2');
   delimiters pointer value options(*string);
 End-PR;
 
+// 1M minus length of 4 bytes
+Dcl-S xml_UTF8 varchar(1048572) CCSID(*UTF8) Template;
 ///
 // Default delimiters for JSON and XML data strings.
 ///
@@ -3492,6 +3533,27 @@ Dcl-PR xml_setStr pointer extproc(*CWIDEN : 'jx_SetStrByName');
 End-PR;
 
 ///
+// Set UTF-8 string value
+//
+// Sets the passed value to the node pointed to by the passed path expression.
+//
+// @param Node
+// @param Node path expression (UTF-8 encoded)
+// @param New string value (UTF-8 encoded)
+// @param If this is *ON the value will be set to null regardless of the values
+// @return Changed node
+///
+Dcl-PR xml_setStrUtf8 Pointer extproc(*CWIDEN : 'jx_SetStrUtf8ByName');
+  pNode          Pointer    value;
+  Expression     Like( xml_UTF8 ) const options(*nopass:*varsize);
+  Defaultvalue   Like( xml_UTF8 ) const options(*nopass:*varsize);
+  nullIf         ind value options(*nopass);
+End-PR;
+
+
+
+
+///
 // Set integer value
 //
 // Sets the passed value to the node pointed to by the passed path expression.
@@ -3831,13 +3893,29 @@ End-PR;
 //
 // @param Node
 // @param Node path expression (default: current node)
-// @param Default value
+// @param Default value , if not found
 // @return String value or the default value if the node does not exist
 ///
 Dcl-PR xml_getStr varchar(32767) extproc(*CWIDEN : 'jx_GetValueVC');
   node pointer value;
   nodePath pointer value options(*string : *nopass);
   defaultValue pointer value options(*string : *nopass);
+End-PR;
+
+///
+// get UTF-8 string value
+//
+// Returns the string value of the node pointed to by the passed expression.
+//
+// @param Node
+// @param Node path expression
+// @param Default value , if not found
+// @return String value or the default value if the node does not exist in UTF-8 encoding
+///
+Dcl-PR xml_getStrUtf8 Like( xml_UTF8 ) rtnparm extproc(*CWIDEN : 'jx_GetStrUtf8ByName');
+  pNode          Pointer    value;
+  Expression     Like( xml_UTF8 ) const options(*nopass:*varsize);
+  Defaultvalue   Like( xml_UTF8 ) const options(*nopass:*varsize);
 End-PR;
 
 ///

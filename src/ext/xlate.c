@@ -96,17 +96,17 @@ PUCHAR XlateStringQ (PUCHAR out, PUCHAR in, int FromCCSID, int ToCCSID)
    return out;
 }
 /* ------------------------------------------------------------- */
-LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen ) 
+LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen )
 {
    size_t inbytesleft = inLen;
    size_t outbytesleft =  LONG_MAX;
    PUCHAR pIn = in;
    PUCHAR pOut = out;
    size_t rc = iconv (cd, &pIn, &inbytesleft, &pOut, &outbytesleft);
-   
+
    return (rc < 0) ? -1: LONG_MAX - outbytesleft;
- 
-} 
+
+}
 /* ------------------------------------------------------------- *\
    Single byte charset (SBCS) can not carrie all unicode. And in
    that case we escape with the \uXXXX unicode notation used in JSON.
@@ -114,7 +114,7 @@ LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen )
    If invalid char sequence is encounted in the UTF-8 data stream
    it will default to latin-1 (windows 1252)
 
-   note: output is assumed to be som kind of EBCDIC for the unicode escape. 
+   note: output is assumed to be som kind of EBCDIC for the unicode escape.
 
    note the bitshifting below. It is based on (omiting the bit test after the first byte)
 
@@ -274,7 +274,7 @@ BOOL XlateGetStaticConversionTables  (PUCHAR e2a , PUCHAR a2e , int AsciiCcsid ,
 
    cd = XlateOpenDescriptor ( AsciiCcsid, EbcdicCcsid, FALSE);
    if (cd.return_value == -1) {
-      EbcdicCcsid = 277; // Fallback if jobccsid = 65535 and for backwards compatibility, noxDb was originally build in ccsid 277 
+      EbcdicCcsid = 277; // Fallback if jobccsid = 65535 and for backwards compatibility, noxDb was originally build in ccsid 277
       cd = XlateOpenDescriptor ( AsciiCcsid, EbcdicCcsid, FALSE);
    }
    if (cd.return_value == -1) {
@@ -286,11 +286,11 @@ BOOL XlateGetStaticConversionTables  (PUCHAR e2a , PUCHAR a2e , int AsciiCcsid ,
 
    if (len == -1) {
       return true;
-   } 
+   }
 
    cd = XlateOpenDescriptor ( EbcdicCcsid , AsciiCcsid, FALSE);
    if (cd.return_value == -1) {
-      EbcdicCcsid = 277; // Fallback if jobccsid = 65535 and for backwards compatibility, noxDb was originally build in ccsid 277 
+      EbcdicCcsid = 277; // Fallback if jobccsid = 65535 and for backwards compatibility, noxDb was originally build in ccsid 277
       cd = XlateOpenDescriptor ( EbcdicCcsid , AsciiCcsid, FALSE);
    }
    if (cd.return_value == -1) {
@@ -300,10 +300,9 @@ BOOL XlateGetStaticConversionTables  (PUCHAR e2a , PUCHAR a2e , int AsciiCcsid ,
 
    if (len == -1) {
       return true;
-   } 
+   }
 
    iconv_close (cd);
 
    return (error);
 }
-

@@ -56,7 +56,7 @@ TS := $(shell date +'%F-%H.%M.%S' )
 
 all:  $(BIN_LIB).lib link hdr githash jsonxml.srvpgm jsonxml.bnddir
 
-jsonxml.srvpgm: initialize.cpp noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlserial.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c loadpgm.c callproc.c trace.clle githash.c ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
+jsonxml.srvpgm: initialize.cpp noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlserial.c jsonparser.c serialize2.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c loadpgm.c callproc.c trace.clle githash.c ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
 
 #-----------------------------------------------------------
 

@@ -24,71 +24,171 @@
 #include "utl100.h"
 #include "mem001.h"
 #include "varchar.h"
+#include "streamer.h"
 #include "jsonxml.h"
 
 
 extern int   OutputCcsid;
 
+LONG serializer_flush(PSTREAM pStream);
 
+// ----------------------------------------------------------------------------
+PSTREAM serializer_new(ULONG size)
+{
+    PSTREAM pStream = memAlloc(sizeof(STREAM));
+    memset( pStream , 0,   sizeof(STREAM));
+    pStream->buffer = memAlloc(size);
+    pStream->pos = pStream->buffer;
+    pStream->size = size;
+    pStream->end = pStream->pos + size;
+    return pStream;
+}
+PSTREAM serializer_newExistingMem(PUCHAR buf, ULONG size)
+{
+    PSTREAM pStream = memAlloc(sizeof(STREAM));
+    memset( pStream , 0,   sizeof(STREAM));
+    pStream->buffer = buf;
+    pStream->pos = pStream->buffer;
+    pStream->size = size;
+    pStream->end = pStream->pos + size;
+    return pStream;
+}
+// ----------------------------------------------------------------------------
+void serializer_delete(PSTREAM pStream)
+{
+    serializer_flush(pStream);
+    memFree (&pStream->buffer);
+    free (pStream);
+}
+// ----------------------------------------------------------------------------
+LONG serializer_write(PSTREAM pStream, PUCHAR buf , ULONG len)
+{
+	PJWRITE pjWrite = pStream->handle;
+	PUCHAR input = buf;
+	size_t inbytesleft  = len;
+	PUCHAR output = pStream->pos;
+	size_t outbytesleft = pStream->end - pStream->pos;
+	size_t rc = iconv ( pjWrite->iconv , &input , &inbytesleft, &output , &outbytesleft);
+    LONG outlen  =  (pStream->end - pStream->pos) - outbytesleft;
+    pStream->pos += outlen;
+    return outlen;
+}
+// ----------------------------------------------------------------------------
+LONG serializer_writeBin(PSTREAM pStream, PUCHAR buf , ULONG len)
+{
+    memcpy ( pStream->pos , buf , len);
+    pStream->pos += len;
+    return len;
+}
+// ----------------------------------------------------------------------------
+LONG serializer_flush(PSTREAM pStream)
+{
+    int len = pStream->pos - pStream->buffer;
+    if  ( len > 0) {
+       pStream->writer(pStream, pStream->buffer , len);
+       pStream->pos = pStream->buffer;
+    }
+    return len;
+}
+// ----------------------------------------------------------------------------
+LONG serializer_putc(PSTREAM pStream, UCHAR c)
+{
+    return serializer_write(pStream , &c , 1);
+}
+// ----------------------------------------------------------------------------
+LONG serializer_printf (PSTREAM pStream , const char * ctlstr, ...)
+{
+   va_list arg_ptr;
+   UCHAR   buf[65535];
+   LONG    len;
 
+   // Build a temp string with the formated data
+   va_start(arg_ptr, ctlstr);
+   len = vsprintf(buf, ctlstr, arg_ptr);
+   va_end(arg_ptr);
+   return  serializer_write (pStream , buf, len );
+}
+// ----------------------------------------------------------------------------
+LONG serializer_puts  (PSTREAM pStream , PUCHAR s)
+{
+   LONG len = strlen(s);
+   return  serializer_write (pStream , s , len );
+}
 
+// TODO write binary - stream writer has no binary option now
+// TODO Have to optimize this - keep the iconv open
+static void putUtf8forUnicode (PSTREAM pStream, PUCHAR hexStr)
+{
+   UCHAR binmem[2];
+   UCHAR outUtf8 [10];
+   iconv_t unicodeToUtf8 = XlateOpenDescriptor (13488 , 1208, 0);
+
+   hex2BinMem (binmem , hexStr , 4);
+   LONG len = XlateBuffer (unicodeToUtf8, outUtf8 , binmem , 2 );
+   serializer_writeBin(pStream, outUtf8 , len);
+   iconv_close (unicodeToUtf8);
+}
+static void putUnicode (PSTREAM pStream, PUCHAR hexStr)
+{
+   UCHAR binmem[2];
+   hex2BinMem (binmem , hexStr , 4);
+   serializer_writeBin (pStream , binmem , 2);
+}
 /* ---------------------------------------------------------------------------
 	--------------------------------------------------------------------------- */
-static void   jx_EncodeJsonStream (PSTREAM p , PUCHAR in)
+static void   jx_EncodeJsonStream (PSTREAM pStream , PUCHAR in)
 {
-	PJWRITE pJw = p->handle;
+	PJWRITE pJw = pStream->handle;
 
 	while (*in) {
 		UCHAR c =  *in;
 		if (c == '\n' ||  c == '\r' || c == '\t' || c == '\"' ) {
-			stream_putc(p,pJw->backSlash);
+			serializer_putc(pStream,pJw->backSlash);
 			switch (c) {
 				case '\n': c = 'n' ; break ;
 				case '\r': c = 'r' ; break ;
 				case '\t': c = 't' ; break ;
 				case '\"': c = '"' ; break ;
 			}
+			serializer_putc(pStream,c);
+			in++;
 		}
 		else if  (c  == pJw->backSlash) {
 			// Dont double escape unicode escape sequence
-			if (strlen(in) < 6 || in[1] != 'u'
-				|| !isxdigit(in[2]) || !isxdigit(in[3])
-				|| !isxdigit(in[4]) || !isxdigit(in[5])) {
-				stream_putc(p,pJw->backSlash);
+			// no need for testing the length - zero termination will catch that
+			if (in[1] == 'u'
+				&& isxdigit(in[2]) && isxdigit(in[3])
+				&& isxdigit(in[4]) && isxdigit(in[5])) {
+				// if target is unicode or UTF-8 we can write that converted:
+				if (pJw->iconv.cd[1] == 1208) {
+					putUtf8forUnicode(pStream,&in[2]);
+					in += 6;
+				} else if (pJw->iconv.cd[1] == 13488) {
+					putUnicode(pStream,&in[2]);
+					in += 6;
+				} else {
+					serializer_putc(pStream,pJw->backSlash);
+					in++;
+				}
+				// otherwise do noting to NOT double escape unicode escape sequence
+
+			} else {
+				// Escape the backSlash
+				serializer_putc(pStream,pJw->backSlash);
+				serializer_putc(pStream,pJw->backSlash);
+				in++;
 			}
 		}
 		else if  (c  < ' ') {
-			c = ' ';
-		}
-		stream_putc(p,c);
-		in++;
-	}
-}
-/* In the stream - only  ...
-	static PUCHAR jx_EncodeJson (PUCHAR out , PUCHAR in)
-	{
-		PUCHAR ret = out;
-		while (*in) {
-			UCHAR c =  *in;
-			if (c == '\n' ||  c == '\r' || c == '\t' || c == '\"' ) {
-				*(out++) = p->(PJWRITE)handle->backSlash;
-			}
-			else if  (c  == p->(PJWRITE)handle->backSlash) {
-				if (in[1] != 'u') {  // Dont double escape unicode escape sequence
-					*(out++) = p->(PJWRITE)handle->backSlash;
-				}
-			}
-			else if  (c  < ' ') {
-				c = ' ';
-			}
-			*(out++) = c;
+			serializer_putc(pStream, ' '); // Blank for printable
+			in++;
+		} else {
+			serializer_putc(pStream,c);
 			in++;
 		}
-		*(out++) = '\0';
-		return ret;
 	}
-....
-*/
+}
+/* --------------------------------------------------------------------------- */
 static void indent (PSTREAM pStream , int indent)
 {
 	int i;
@@ -98,10 +198,10 @@ static void indent (PSTREAM pStream , int indent)
 	//if(!pjWrite->wasHere) {
 	//   pjWrite->wasHere = true;
 	//} else {
-		stream_putc(pStream, '\n');
+		serializer_putc(pStream, '\n');
 	//}
 	for(i=0;i<indent; i++) {
-		stream_putc(pStream, '\t');
+		serializer_putc(pStream, '\t');
 	}
 }
 /* --------------------------------------------------------------------------- */
@@ -126,16 +226,16 @@ static void  jsonStreamPrintObject  (PJXNODE pParent, PSTREAM pStream, SHORT lev
 	SHORT nextLevel = level +1;
 
 	// indent (pStream ,level);
-	stream_putc (pStream, pJw->curBeg);
+	serializer_putc (pStream, pJw->curBeg);
 	for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
 		indent (pStream ,nextLevel);
-		stream_printf (pStream, "%c%s%c:",pJw->quote, pNode->Name, pJw->quote);
+		serializer_printf (pStream, "%c%s%c:",pJw->quote, pNode->Name, pJw->quote);
 		checkParentRelation(pNode , pParent);
 		jsonStreamPrintNode (pNode , pStream, nextLevel);
-		if (pNode->pNodeSibling) stream_putc  (pStream, ',' );
+		if (pNode->pNodeSibling) serializer_putc  (pStream, ',' );
 	}
 	indent (pStream , level);
-	stream_putc (pStream, pJw->curEnd);
+	serializer_putc (pStream, pJw->curEnd);
 }
 /* --------------------------------------------------------------------------- */
 static void  jsonStreamPrintArray (PJXNODE pParent, PSTREAM pStream, SHORT level)
@@ -145,17 +245,17 @@ static void  jsonStreamPrintArray (PJXNODE pParent, PSTREAM pStream, SHORT level
 	SHORT nextLevel = level +1;
 
 	// indent (pStream ,level);
-	stream_putc (pStream, pJw->braBeg);
+	serializer_putc (pStream, pJw->braBeg);
 
 	indent (pStream ,nextLevel);
 	for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
 		// indent (pStream ,nextLevel);
 		checkParentRelation(pNode , pParent);
 		jsonStreamPrintNode (pNode , pStream, nextLevel);
-		if (pNode->pNodeSibling) stream_putc  (pStream, ',' );
+		if (pNode->pNodeSibling) serializer_putc  (pStream, ',' );
 	}
 	indent (pStream , level);
-	stream_putc (pStream, pJw->braEnd);
+	serializer_putc (pStream, pJw->braEnd);
 }
 /* --------------------------------------------------------------------------- */
 static void jsonStreamPrintValue   (PJXNODE pNode, PSTREAM pStream)
@@ -164,18 +264,18 @@ static void jsonStreamPrintValue   (PJXNODE pNode, PSTREAM pStream)
 	// Has value?
 	if (pNode->Value && pNode->Value[0] > '\0') {
 		if (pNode->isLiteral) {
-			stream_puts (pStream, pNode->Value);
+			serializer_puts (pStream, pNode->Value);
 		} else {
-			stream_putc(pStream , pJw->quote);
+			serializer_putc(pStream , pJw->quote);
 			jx_EncodeJsonStream(pStream ,pNode->Value);
-			stream_putc(pStream , pJw->quote);
+			serializer_putc(pStream , pJw->quote);
 		}
 	// Else it is some kind of null: Strings are "". Literals will return "null"
 	} else {
 		if (pNode->isLiteral) {
-			stream_puts (pStream, "null");
+			serializer_puts (pStream, "null");
 		} else {
-			stream_printf (pStream, "%c%c", pJw->quote, pJw->quote);
+			serializer_printf (pStream, "%c%c", pJw->quote, pJw->quote);
 		}
 	}
 }
@@ -222,7 +322,7 @@ static void  jsonStreamPrintNode (PJXNODE pNode, PSTREAM pStream, SHORT level)
 void  jx_AsJsonStream (PJXNODE pNode, PSTREAM pStream)
 {
 	if (pNode == NULL) {
-		stream_puts (pStream, "null");
+		serializer_puts (pStream, "null");
 	} else {
 
 		// Issue #87
@@ -254,26 +354,12 @@ static LONG jx_memWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 }
 
 // ----------------------------------------------------------------------------
-static LONG jx_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
+static LONG jx_fileWriter  (PSTREAM pStream , PUCHAR buf , ULONG len)
 {
-	PJWRITE pjWrite = p->handle;
-	int outlen = 4 * len;
-	size_t inbytesleft, outbytesleft, rc;
-	PUCHAR temp , input , output ;
-
-	input = buf;
-	inbytesleft  = len;
-
-	output = temp = malloc   (outlen);
-	outbytesleft = outlen;
-
-	rc = iconv ( pjWrite->iconv , &input , &inbytesleft, &output , &outbytesleft);
-	outlen = output - temp;
-	fwrite (temp  , 1 , outlen , pjWrite->outFile);
-	free (temp);
+	PJWRITE pjWrite = pStream->handle;
+	LONG rc = fwrite (pStream->buffer  , 1 , len , pjWrite->outFile);
 	return rc;
 }
-
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
 LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
@@ -290,27 +376,29 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 		return strlen(buf);
 	}
 
-	pStream = stream_new (4096);
+	pStream = serializer_newExistingMem  (buf, maxLenP);
 	pStream->writer  = jx_memWriter;
 	pStream->handle = pjWrite = jx_newWriter();
 	pjWrite->buf = buf;
 	pjWrite->doTrim = true;
 	pjWrite->maxSize =   pParms->OpDescList == NULL
 					|| (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3) ? maxLenP : MEMMAX;
-
+	pjWrite->iconv  = XlateOpenDescriptor(0 , 0 , false);
 	jx_AsJsonStream (pNode , pStream);
-	len = pStream->totalSize;
-	stream_putc   (pStream,'\0');
-	stream_delete (pStream);
+	len = pStream->pos - pStream->buffer;
+	serializer_putc   (pStream,'\0');
+	serializer_delete (pStream);
+	iconv_close(pjWrite->iconv);
 	jx_deleteWriter(pjWrite);
+
 	return  len;
 
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
-void jx_AsJsonText16M ( PVARCHAR_16M result , PJXNODE pNode)
+void jx_AsJsonText16M ( PLVARCHAR result , PJXNODE pNode)
 {
-	result->Length = jx_AsJsonTextMem (pNode, result->String , sizeof(VARCHAR_16M)-4);
+	result->Length = jx_AsJsonTextMem (pNode, result->String , sizeof(LVARCHAR)-4);
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
@@ -327,7 +415,7 @@ PSTREAM jx_Stream  (PJXNODE pNode)
 	 LONG     len;
 	 PJWRITE  pjWrite;
 
-	 pStream = stream_new (4096);
+	 pStream = serializer_new (0);
 	 pStream->handle = pjWrite = jx_newWriter();
 	 pjWrite->doTrim  = true;
 	 pjWrite->maxSize = MEMMAX;
@@ -383,7 +471,7 @@ void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, P
 
 	pjWrite = jx_newWriter();
 
-	pStream = stream_new (4096);
+	pStream = serializer_new (12000000);
 	pStream->writer = jx_fileWriter;
 
 	sprintf(mode , "wb,o_ccsid=%d", Ccsid);
@@ -419,7 +507,7 @@ void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, P
 
 	jx_AsJsonStream (pNode , pStream);
 
-	stream_delete (pStream);
+	serializer_delete (pStream);
 	fclose(pjWrite->outFile);
 	iconv_close(pjWrite->iconv);
 	jx_deleteWriter(pjWrite);

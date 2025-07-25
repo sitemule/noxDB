@@ -214,3 +214,35 @@ BOOL vpcIsEqual(PVARPUCHAR p1, PVARPUCHAR p2)
    &&  (memicmp (p1->String , p2->String ,p2->Length) == 0)
    );
 }
+PLVARCHAR lvcCopy(PLVARCHAR out, PLVARCHAR in)
+{
+   out->Length = in->Length;
+   memcpy ( out->String , in->String, out->Length);
+   out->String[out->Length] = '\0';
+}
+
+
+PLVARCHAR lcvStrCopy(PLVARCHAR out, PUCHAR in)
+{
+   out->Length = strlen (in);
+   memcpy ( out->String , in, out->Length);
+   out->String[out->Length] = '\0';
+
+}
+/* --------------------------------------------------------------------------- */
+void lvcPrintf  (PLVARCHAR out, PUCHAR Ctlstr , ...)
+{
+   va_list arg_ptr;
+
+/* Build a temp string with the formated data  */
+   va_start(arg_ptr, Ctlstr);
+   out->Length = vsprintf(out->String, Ctlstr, arg_ptr);
+   va_end(arg_ptr);
+}
+/* --------------------------------------------------------------------------- */
+void  lvcCatstr (PLVARCHAR out , PUCHAR s   )
+{
+   int l = strlen (s);
+   memcpy(out->String + out->Length , s , l );
+   out->Length += l;
+}

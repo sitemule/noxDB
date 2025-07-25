@@ -39,6 +39,7 @@
 // Global
 UCHAR jxMessage[512];
 BOOL  jxError = false;
+PLVARCHAR PLVARCHAR_EMPTY = (PVOID) "\000\000\000\000";
 
 
 
@@ -2811,6 +2812,26 @@ static void jx_joinArray2vc (PVARCHAR pRes , PJXNODE pNode , PUCHAR delimiter)
       p = p->pNodeSibling;
    }
 }
+// Working towards always using this LONG version
+static void jx_joinArray2lvc (PLVARCHAR pRes , PJXNODE pNode , PUCHAR delimiter)
+{
+   PJXNODE p = pNode->pNodeChildHead;
+   int len;
+   BOOL first = TRUE;
+   pRes->Length = 0;
+   while (p) {
+      PUCHAR v = p->Value;
+      if (v  && *v) {
+         if (first) {
+            first = FALSE;
+         } else {
+            lvcCatstr(pRes , delimiter);
+         }
+         lvcCatstr(pRes , v);
+      }
+      p = p->pNodeSibling;
+   }
+}
 /* --------------------------------------------------------------------------- */
 static void str2vcXlate (PJXNODE pNode , PVARCHAR pRes , PUCHAR str)
 {
@@ -2896,6 +2917,48 @@ void jx_CopyValueByNameVC (PVARCHAR pRes, PJXNODE pNodeRoot, PUCHAR Name, PUCHAR
       str2vcXlate(pNode, pRes , pNode->Value);
    }
 }
+// Working towards using this in all cases, it provides longvarchar and UTF-8
+void jx_CopyValueByNameLVC (PLVARCHAR pRes, PJXNODE pNodeRoot, PUCHAR Name, PLVARCHAR Default , BOOL joinString , PUCHAR delimiter, BOOL toUtf8)
+{
+   PUCHAR    pNodeKey, pAtrKey;
+   PXMLATTR  pAtr;
+   PJXNODE   pNode;
+
+   // Assume : Not found
+   lvcCopy (pRes , Default);
+
+   if (pNodeRoot == NULL) return;
+
+   pAtrKey = jx_splitAtrFromName (Name);
+
+   pNode = jx_GetNode  (pNodeRoot , Name);
+   if (pNode == NULL) return;
+
+   if (pAtrKey) {
+      pAtr =  jx_AttributeLookup   (pNode, pAtrKey);
+      if (pAtr == NULL)        return;
+      if (pAtr->Value == NULL) return;
+      lcvStrCopy(pRes , pAtr->Value);
+
+   } else if (pNode->doCount) {
+      lvcPrintf( pRes, "%ld" , pNode->Count);
+
+   } else if (joinString &&  pNode->type == ARRAY) {
+      jx_joinArray2lvc (pRes , pNode , delimiter);
+      if (pRes->Length == 0) { // No data found when joining arrays as string - Now serialize it as usual
+         pRes->Length  = jx_AsJsonTextMem (pNode , pRes->String , 32760);
+      }
+
+   } else if (pNode->type == OBJECT ||  pNode->type == ARRAY ) {
+      pRes->Length  = jx_AsJsonTextMem (pNode , pRes->String, 32760);
+
+   } else if (pNode->Value) {
+      // The graph will for now only have SBSC unicode escaped values
+      // str2lvcXlate(pNode, pRes , pNode->Value, toUtf8);
+   }
+
+}
+
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
 void  jx_SetByParseString (PJXNODE pDest , PUCHAR pSourceStr , MERGEOPTION merge , BOOL move)
@@ -3404,6 +3467,26 @@ PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
    }
 }
 /* -------------------------------------------------------------
+   Set UTF-8 String by name
+   ------------------------------------------------------------- */
+PJXNODE  jx_SetStrUtf8ByName (PJXNODE pNode, PLVARCHAR Name, PLVARCHAR Value, LGL nullIf)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PUCHAR uName = memAlloc( Name->Length * 6); // 6 since each char is like this \u5F20
+   LONG nameLen  = XlateUtf8ToSbcs (uName , Name->String , Name->Length , 0);
+   PJXNODE pReturnNode;
+   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
+      pReturnNode = jx_SetValueByName(pNode , uName , NULL , LITERAL );
+   } else {
+      PUCHAR uValue = memAlloc( Value->Length * 6); // 6 since each char is like this \u5F20
+      LONG valueLen = XlateUtf8ToSbcs (uValue, Value->String , Value->Length , 0);
+      pReturnNode = jx_SetValueByName(pNode , uName , uValue , VALUE );
+      memFree ( &uValue);
+   }
+   memFree ( &uName);
+   return pReturnNode;
+}
+/* -------------------------------------------------------------
    Set Date by name
    ------------------------------------------------------------- */
 PJXNODE  jx_SetDateByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nullIf)
@@ -3482,6 +3565,13 @@ VARCHAR jx_GetValueVC(PJXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP)
    VARCHAR res;
    jx_CopyValueByNameVC ( &res , pNodeRoot, Name , Default , false , "") ;
    return (res);
+}
+void jx_GetValueUtf8(PLVARCHAR result, PJXNODE pNodeRoot, PUCHAR NameP, PLVARCHAR DefaultP)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PUCHAR  Name    = (pParms->OpDescList->NbrOfParms >= 2) ? NameP    : "";
+   PLVARCHAR  Default = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultP : PLVARCHAR_EMPTY;
+   jx_CopyValueByNameLVC ( result , pNodeRoot, Name , Default , false , "", true) ;
 }
 // -------------------------------------------------------------
 VARCHAR jx_GetStrJoinVC(PJXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP , PUCHAR delimiterP)

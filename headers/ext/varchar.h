@@ -29,3 +29,9 @@ PVARCHAR  vcListNext  (PVARCHARLIST pVcl, PVAR_CHAR pVc);
 PUCHAR  vpc2string(PUCHAR res, PVARPUCHAR pvpc );
 VARPUCHAR vpcSetString(PUCHAR s);
 BOOL vpcIsEqual(PVARPUCHAR p1, PVARPUCHAR p2);
+
+// long version:
+PLVARCHAR lvcCopy(PLVARCHAR out, PLVARCHAR in);
+PLVARCHAR lvcStrCopy(PLVARCHAR out, PUCHAR in);
+void lvcPrintf  (PLVARCHAR , PUCHAR Ctlstr , ...);
+void lvcCatstr  (PLVARCHAR out , PUCHAR s   );
