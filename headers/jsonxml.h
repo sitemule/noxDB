@@ -474,8 +474,13 @@ VARCHAR  jx_GetNodeValueVC  (PJXNODE pNode , PUCHAR DefaultValue);
 #pragma descriptor ( void jx_GetNodeValueVC                                       (void))
 FIXEDDEC jx_GetNodeValueNum (PJXNODE pNode , FIXEDDEC DefaultValue);
 #pragma descriptor ( void jx_GetNodeValueNum                                      (void))
+PUCHAR  jx_GetNodeValueStr  (PUCHAR value, PJXNODE pNode , PUCHAR DefaultValue);
+#pragma descriptor ( void jx_GetNodeValueStr                                      (void))
+
 PUCHAR   jx_GetNodeNamePtr  (PJXNODE pNode);
 VARCHAR  jx_GetNodeNameVC   (PJXNODE pNode);
+PUCHAR  jx_GetNodeNameStr   (PUCHAR name , PJXNODE pNode);
+
 
 PJXNODE  jx_NodeAdd (PJXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type) ;
 void     jx_NodeSet (PJXNODE pNode , PUCHAR Value);
@@ -499,12 +504,22 @@ FIXEDDEC jx_GetAttrValueNum  (PXMLATTR pAttr, FIXEDDEC dftParm);
 // Get Node Attribute value variants:
 PUCHAR   jx_GetNodeAttrValuePtr  (PJXNODE pNode, PUCHAR AttrName, PUCHAR DefaultValue);
 #pragma descriptor ( void jx_GetNodeAttrValuePtr                                  (void))
+
 VARCHAR  jx_GetNodeAttrValueVC   (PJXNODE pNode ,PUCHAR AttrName, PUCHAR DefaultValue);
 #pragma descriptor ( void jx_GetNodeAttrValueVC                                   (void))
+
 FIXEDDEC jx_GetNodeAttrValueNum  (PJXNODE pNode , PUCHAR AttrName, FIXEDDEC DefaultValue);
 #pragma descriptor ( void jx_GetNodeAttrValueNum                                  (void))
+
 INT64    jx_GetNodeAttrValueInt  (PJXNODE pNode , PUCHAR AttrName, INT64 DefaultValue);
 #pragma descriptor ( void jx_GetNodeAttrValueInt                                  (void))
+
+PUCHAR  jx_GetNodeAttrValueStr  (PUCHAR value, PJXNODE pNode , PUCHAR AttrName, PUCHAR DefaultValue);
+#pragma descriptor ( void jx_GetNodeAttrValueStr                                  (void))
+
+LGL jx_GetNodeAttrValueBool  (PJXNODE pNode , PUCHAR AttrName, LGL DefaultValue);
+#pragma descriptor ( void jx_GetNodeAttrValueBool                                 (void))
+
 
 VOID     jx_SetNodeAttrValue     (PJXNODE pNode , PUCHAR AttrName, PUCHAR Value);
 VOID     jx_SetNodeAttrValueInt  (PJXNODE pNode , PUCHAR AttrName, INT64  Value);
@@ -521,6 +536,10 @@ VARCHAR jx_GetValueVC (PJXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP);
 
 FIXEDDEC jx_GetValueNum (PJXNODE pNode , PUCHAR Name  , FIXEDDEC dftParm);
 #pragma descriptor ( void jx_GetValueNum    (void))
+
+PUCHAR jx_GetValueStr (PUCHAR value , PJXNODE pNode , PUCHAR nameP, PUCHAR  defaultP);
+#pragma descriptor ( void jx_GetValueStr    (void))
+
 
 /* Setters variants */
 PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value , LGL nullIf);

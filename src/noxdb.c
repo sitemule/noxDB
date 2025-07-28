@@ -2676,6 +2676,20 @@ PUCHAR  jx_GetNodeValuePtr  (PJXNODE pNode , PUCHAR DefaultValue)
 }
 /* -------------------------------------------------------------
    returns the value of the node
+   NOTE: pNode->Value == NULL returns true from proc pointers
+   ------------------------------------------------------------- */
+PUCHAR  jx_GetNodeValueStr  (PUCHAR value, PJXNODE pNode , PUCHAR DefaultValue)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   if (pNode != NULL) {
+      strcpy( value , pNode->Value);
+   } else {
+      strcpy( value , pParms->OpDescList->NbrOfParms >= 2 ? DefaultValue : "");
+   }
+   return value;
+}
+/* -------------------------------------------------------------
+   returns the value of the node
    ------------------------------------------------------------- */
 PUCHAR  jx_GetNodeAttrValuePtr  (PJXNODE pNode , PUCHAR AttrName, PUCHAR DefaultValue)
 {
@@ -2688,6 +2702,22 @@ PUCHAR  jx_GetNodeAttrValuePtr  (PJXNODE pNode , PUCHAR AttrName, PUCHAR Default
    } else {
       return pAttr->Value;
    }
+}
+/* -------------------------------------------------------------
+   returns the value of the node
+   ------------------------------------------------------------- */
+PUCHAR  jx_GetNodeAttrValueStr  (PUCHAR value, PJXNODE pNode , PUCHAR AttrName, PUCHAR DefaultValue)
+{
+   PXMLATTR pAttr;
+
+   pAttr = jx_AttributeLookup   (pNode, AttrName);
+   if (pAttr == NULL
+   ||  pAttr->Value == NULL) {
+      strcpy ( value , DefaultValue);
+   } else {
+      strcpy ( value , pAttr->Value);
+   }
+   return value;
 }
 /* -------------------------------------------------------------
    Add a attribute to the end of the attribute list for an Nodeent
@@ -3494,6 +3524,24 @@ VARCHAR jx_GetStrJoinVC(PJXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP , PUCHA
    jx_CopyValueByNameVC ( &res , pNodeRoot, Name , Default , true , delimiter) ;
    return (res);
 }
+// -------------------------------------------------------------
+PUCHAR jx_GetValueStr (PUCHAR value , PJXNODE pNode , PUCHAR nameP, PUCHAR  defaultP)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PUCHAR   dftval   =  (pParms->OpDescList->NbrOfParms >= 4) ? defaultP : "";
+   PUCHAR   name     =  (pParms->OpDescList->NbrOfParms >= 3) ? nameP    : "";
+
+   PUCHAR  pValue;
+
+   pValue = jx_GetValuePtr    (pNode , name , NULL ) ;
+   if (pValue == NULL) {
+      strcpy( value , dftval);
+   } else {
+      strcpy( value , pValue);
+
+   }
+   return value;
+}
 
 // -------------------------------------------------------------
 FIXEDDEC jx_GetValueNum (PJXNODE pNode , PUCHAR Name  , FIXEDDEC dftParm)
@@ -3624,6 +3672,12 @@ PUCHAR  jx_GetNodeNamePtr (PJXNODE pNode)
    return (pNode && pNode->Name) ? pNode->Name : "";
 }
 // -------------------------------------------------------------
+PUCHAR  jx_GetNodeNameStr (PUCHAR name , PJXNODE pNode)
+{
+   strcpy(name, pNode && pNode->Name ? pNode->Name : "");
+   return (name);
+}
+// -------------------------------------------------------------
 VARCHAR jx_GetNodeNameVC (PJXNODE pNode)
 {
    VARCHAR res;
@@ -3672,6 +3726,20 @@ INT64 jx_GetNodeAttrValueInt (PJXNODE pNode , PUCHAR AttrName, INT64 DefaultValu
       return ( dft );
    } else {
       return atoll(pAttr->Value);
+   }
+}
+// -------------------------------------------------------------
+LGL jx_GetNodeAttrValueBool  (PJXNODE pNode , PUCHAR AttrName, LGL DefaultValue)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   LGL dft = (pParms->OpDescList->NbrOfParms >= 2) ? DefaultValue : OFF;
+   PXMLATTR pAttr = jx_AttributeLookup   (pNode, AttrName);
+
+   if (pAttr == NULL
+   ||  pAttr->Value == NULL) {
+      return ( dft );
+   } else {
+      return ( 0 == strcmp(pAttr->Value,"false") || 0 == strcmp(pAttr->Value,"null")) ? OFF:ON;
    }
 }
 // -------------------------------------------------------------
