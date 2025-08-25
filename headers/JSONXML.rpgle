@@ -96,7 +96,7 @@ Dcl-PR jx_getDelimiters Pointer extproc(*CWIDEN : 'jx_GetDelimiters') End-PR;
 // Sets the delimiters used for parsing the JSON and XML data.
 // For the default delimiters see constant JX_DELIMITERS.
 //
-// @param Delimiters
+// @param (input) Delimiters
 ///
 Dcl-PR jx_setDelimiters extproc(*CWIDEN : 'jx_SetDelimiters2');
   delimiters pointer value options(*string);
@@ -201,8 +201,8 @@ Dcl-C JX_CHILD_LIST const('[0]');
 // Parses a JSON or XML stream file. The encodings ASCII, UTF8, 1252 and
 // EBCDIC of the current job are supported.
 //
-// @param Path to the XML or JSON file (null-terminated)
-// @param Options are no longer supported (deprecated)
+// @param (input) Path to the XML or JSON file (null-terminated)
+// @param (input) Options are no longer supported (deprecated)
 // @return Pointer to the root node of the noxDB object tree or
 //         <code>*null</code> if the file is not readable.
 ///
@@ -216,8 +216,8 @@ End-PR;
 //
 // Parses a JSON or XML string.
 //
-// @param JSON or XML string
-// @param Options are no longer supported (deprecated)
+// @param (input) JSON or XML string
+// @param (input) Options are no longer supported (deprecated)
 // @return Pointer to the root node of the noxDB object tree
 ///
 Dcl-PR jx_parseString pointer extproc(*CWIDEN : 'jx_ParseString');
@@ -230,8 +230,8 @@ End-PR;
 //
 // Parses a JSON or XML string.
 //
-// @param JSON or XML string
-// @param CCSID of the passed string
+// @param (input) JSON or XML string
+// @param (input) CCSID of the passed string
 // @return Pointer to the root node of the noxDB object tree
 ///
 Dcl-PR jx_parseStringCcsid pointer extproc(*CWIDEN : 'jx_parseStringCcsid');
@@ -244,7 +244,7 @@ End-PR;
 //
 // Set , or . for decimal separator.
 //
-// @param Decimal separator character
+// @param (input) Decimal separator character
 ///
 Dcl-PR jx_setDecPoint extproc(*CWIDEN : 'jx_SetDecPoint');
   decimalSeparator pointer value options(*string);
@@ -256,7 +256,7 @@ End-PR;
 // Sets the delimiters for the selectors for parsing JSON and XML to
 // the default values translated to the passed CCSID.
 //
-// @param CCSID for the selectors
+// @param (input) CCSID for the selectors
 ///
 Dcl-PR jx_setDelimitersByCcsid extproc(*CWIDEN : 'jx_setDelimitersByCcsid');
   ccsid int(10) value;
@@ -268,7 +268,7 @@ End-PR;
 //
 // Checks if the last operation resulted in an error.
 //
-// @param Node
+// @param (input) Node
 // @return *on if the last operation resulted in an error else *off
 ///
 Dcl-PR jx_error ind extproc(*CWIDEN : 'jx_Error');
@@ -280,7 +280,7 @@ End-PR;
 //
 // Returns the error description for the last error.
 //
-// @param Node (omit for last error message)
+// @param (input) Node (omit for last error message)
 // @return Error description or <code>*blank</code> if no error occured
 ///
 Dcl-PR jx_message varchar(1024) extproc(*CWIDEN : 'jx_Message');
@@ -295,8 +295,8 @@ End-PR;
 // the last error message. Otherwise the object will contain the attribute "msgId"
 // with the passed message id and "msgDta" with the passed message data.
 //
-// @param Message id
-// @param Message data
+// @param (input) Message id
+// @param (input) Message data
 // @return New noxDB object tree with error message
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -312,6 +312,8 @@ End-PR;
 //
 // Convenience function which returns a {"success":true} object.
 //
+// @param (input) Message id
+// @param (input) Message data
 // @return New noxDB object tree with success attribute
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -327,8 +329,8 @@ End-PR;
 //
 // Returns the node at the passed expression.
 //
-// @param Node
-// @param Node path expression
+// @param (input) Node
+// @param (input) Node path expression
 // @return Located node or <code>*null</code> of no node is located at the
 //         passed expression
 ///
@@ -344,8 +346,8 @@ End-PR;
 // passed expression a new node will be created at the passed path expression
 // and returned.
 //
-// @param Node
-// @param Node path expression
+// @param (input) Node
+// @param (input) Node path expression
 // @return Node at the passed path expression (either the existing one or a new one)
 ///
 Dcl-PR jx_locateOrCreate pointer extproc(*CWIDEN : 'jx_GetOrCreateNode');
@@ -358,8 +360,8 @@ End-PR;
 //
 // Returns <code>*on</code> if node exists.
 //
-// @param Node
-// @param Node path expression
+// @param (input) Node
+// @param (input) Node path expression
 // @return <code>*on</code> if node exists else <code>*off</code>
 ///
 Dcl-PR jx_has ind extproc(*CWIDEN : 'jx_Has');
@@ -380,8 +382,8 @@ End-PR;
 //   <li>node does not exist</li>
 // </ul>
 //
-// @param Node
-// @param Node path expression
+// @param (input) Node
+// @param (input) Node path expression
 // @return <code>*on</code> if node value is not "falsy" else <code>*off</code>
 ///
 Dcl-PR jx_isTrue ind extproc(*CWIDEN : 'jx_IsTrue');
@@ -394,7 +396,7 @@ End-PR;
 //
 // Returns <code>*on</code> if the passed node is a literal.
 //
-// @param Node
+// @param (input) Node
 // @return <code>*on</code> if node is literale else <code>*off</code>
 ///
 Dcl-PR jx_isLiteral ind extproc(*CWIDEN : 'jx_IsLiteral');
@@ -407,8 +409,8 @@ End-PR;
 // Returns <code>*on</code> if the node does not exist or its value is
 // <code>*null</code>.
 //
-// @param Node
-// @param Node path expression
+// @param (input) Node
+// @param (input) Node path expression
 // @return <code>*on</code> if node does not exist or has
 //         <code>*null</code> value
 ///
@@ -422,7 +424,7 @@ End-PR;
 //
 // Returns <code>*on</code> if the passed pointer is a valid node.
 //
-// @param Node
+// @param (input) Node
 // @return <code>*on</code> if pointer is valid node else <code>*off</code>
 ///
 Dcl-PR jx_isNode ind extproc(*CWIDEN : 'jx_isNode');
@@ -434,8 +436,8 @@ End-PR;
 //
 // Renames the passed node.
 //
-// @param Node
-// @param New node name
+// @param (input) Node
+// @param (input) New node name
 ///
 Dcl-PR jx_nodeRename extproc(*CWIDEN : 'jx_NodeRename');
   node pointer value;
@@ -449,7 +451,7 @@ End-PR;
 // be the next attribute on the same level. For arrays that would be the next
 // element.
 //
-// @param Node
+// @param (input) Node
 // @return Sibling node or <code>*null</code> if there is sibling
 ///
 Dcl-PR jx_getNext pointer extproc(*CWIDEN : 'jx_GetNodeNext');
@@ -461,7 +463,7 @@ End-PR;
 //
 // Returns the first child node of the passed node.
 //
-// @param Node
+// @param (input) Node
 // @return First child node or <code>*null</code> if there is no child node
 ///
 Dcl-PR jx_getChild pointer extproc(*CWIDEN : 'jx_GetNodeChild');
@@ -473,7 +475,7 @@ End-PR;
 //
 // Returns the parent node.
 //
-// @param Node
+// @param (input) Node
 // @return Parent node or <code>*null</code> if the passed node
 //         is the root node
 ///
@@ -487,8 +489,8 @@ End-PR;
 // Creates a node at the passed path with the value <code>*null</code>.
 // Any existing node will be replaced by this new node.
 //
-// @param Node
-// @param Node path expression
+// @param (input) Node
+// @param (input) Node path expression
 // @return New node
 ///
 Dcl-PR jx_setNull pointer extproc(*CWIDEN : 'jx_SetNullByName');
@@ -504,9 +506,9 @@ End-PR;
 // be parsed to a new object tree and added to the node. If the node already contains a node
 // at the specified path the attributes of the nodes will be merged.
 //
-// @param Node
-// @param Node path expression
-// @param New string value
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) New string value
 // @return Changed node
 ///
 Dcl-PR jx_setEval pointer extproc(*CWIDEN : 'jx_SetEvalByName');
@@ -520,10 +522,10 @@ End-PR;
 //
 // Sets the passed value to the node pointed to by the passed path expression.
 //
-// @param Node
-// @param Node path expression
-// @param New string value
-// @param If this is *ON the value will be set to null regardless of the values
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) New string value
+// @param (input) If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setStr pointer extproc(*CWIDEN : 'jx_SetStrByName');
@@ -538,10 +540,10 @@ End-PR;
 //
 // Sets the passed value to the node pointed to by the passed path expression.
 //
-// @param Node
-// @param Node path expression
-// @param New value
-// @param If this is *ON the value will be set to null regardless of the values
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) New value
+// @param (input) If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setInt pointer extproc(*CWIDEN : 'jx_SetIntByName2');
@@ -560,10 +562,10 @@ End-PR;
 //
 // Sets the passed value to the node pointed to by the passed path expression.
 //
-// @param Node
-// @param Node path expression
-// @param New value
-// @param If this is *ON the value will be set to null regardless of the values
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) New value
+// @param (input) If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setNum pointer extproc(*CWIDEN : 'jx_SetDecByName');
@@ -578,10 +580,10 @@ End-PR;
 //
 // Sets the passed value to the node pointed to by the passed path expression.
 //
-// @param Node
-// @param Node path expression
-// @param New value
-// @param If this is *ON the value will be set to null regardless of the values
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) New value
+// @param (input) If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setBool pointer extproc(*CWIDEN : 'jx_SetBoolByName');
@@ -596,10 +598,10 @@ End-PR;
 //
 // Set the passed value to the node pointed to by the passed path expression.
 //
-// @param Node
-// @param Node path expression
-// @param New value
-// @param If this is *ON the value will be set to null regardless of the values
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) New value
+// @param (input) If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setDate pointer extproc(*CWIDEN: 'jx_SetDateByName');
@@ -614,10 +616,10 @@ End-PR;
 //
 // Set the passed value to the node pointed to by the passed path expression.
 //
-// @param Node
-// @param Node path expression
-// @param New value
-// @param If this is *ON the value will be set to null regardless of the values
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) New value
+// @param (input) If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setTime pointer extproc(*CWIDEN : 'jx_SetTimeByName');
@@ -632,10 +634,10 @@ End-PR;
 //
 // Set the passed value to the node pointed to by the passed path expression.
 //
-// @param Node
-// @param Node path expression
-// @param New value
-// @param If this is *ON the value will be set to null regardless of the values
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) New value
+// @param (input) If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
 Dcl-PR jx_setTimeStamp pointer extproc(*CWIDEN : 'jx_SetTimeStampByName');
@@ -651,10 +653,10 @@ End-PR;
 // Set the passed value as is to the node pointed to by the passed path
 // expression.
 //
-// @param Node
-// @param Node path expression
-// @param Value
-// @param <code>*on</code> = pointer points to a string and stringifies the
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) Value
+// @param (input) <code>*on</code> = pointer points to a string and stringifies the
 //        value (add double quotes),
 //        <code>*off</code> = contents is already formatted JSON (default)
 //        and will be added as is
@@ -675,10 +677,10 @@ End-PR;
 //
 // Sets the passed value to the node pointed to by the passed path expression.
 //
-// @param Node
-// @param Node path expression
-// @param Procedure pointer
-// @param Is string (deprecated)
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) Procedure pointer
+// @param (input) Is string (deprecated)
 // @return Changed node
 //
 // @info Procedure pointers are not intended to be serialized.
@@ -696,7 +698,7 @@ End-PR;
 // This implemenation of a <em>data-into</em> parser takes a noxDB object tree
 // and maps it to a data structure.
 //
-// @param Node to be mapped to a data structure
+// @param (input) Node to be mapped to a data structure
 // @return Procedure pointer of the data-into parser
 ///
 Dcl-PR jx_dataInto pointer(*proc) extproc(*CWIDEN : 'jx_dataInto');
@@ -710,7 +712,8 @@ End-PR;
 // and maps it to a noxDB object tree. The noxDB object tree will be created by
 // this function an does not need to exist.
 //
-// @param noxDB object tree (output parameter)
+// @param (input) noxDB object tree (output parameter)
+// @param (input) options, check IBM documentation for data-gen for possible options
 // @return Procedure pointer of the data-gen generator function
 //
 // @info The noxDB object tree returned by this procedure through the output
@@ -727,10 +730,10 @@ End-PR;
 //
 // Sets the passed value to the node pointed to by the passed path expression.
 //
-// @param Node
-// @param Node path expression
-// @param Value (default: empty string)
-// @param Node type (see node type constants, default JX_UNKNOWN)
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) Value (default: empty string)
+// @param (input) Node type (see node type constants, default JX_UNKNOWN)
 // @return Changed node
 ///
 Dcl-PR jx_setValue Pointer extproc(*CWIDEN: 'jx_SetValueByName');
@@ -745,8 +748,8 @@ End-PR;
 //
 // Returns the value of the passed node.
 //
-// @param Node
-// @param Default value
+// @param (input) Node
+// @param (input) Default value
 // @return String value or the default value (or an empty string) if the node
 //         does not exist
 ///
@@ -760,8 +763,8 @@ End-PR;
 //
 // Returns the value of the passed node.
 //
-// @param Node
-// @param Default value
+// @param (input) Node
+// @param (input) Default value
 // @return Decimal value or the default value (or 0) if the node does not exist
 ///
 Dcl-PR jx_getValueNum packed(30:15) extproc(*CWIDEN : 'jx_GetNodeValueNum');
@@ -774,8 +777,8 @@ End-PR;
 //
 // Returns the value of the passed node.
 //
-// @param Node
-// @param Default value
+// @param (input) Node
+// @param (input) Default value
 // @return Integer value or the default value (or 0) if the node does not exist
 ///
 Dcl-PR jx_getValueInt int(20) extproc(*CWIDEN : 'jx_GetNodeValueInt');
@@ -788,8 +791,8 @@ End-PR;
 //
 // Returns the value of the passed node.
 //
-// @param Node
-// @param Default value
+// @param (input) Node
+// @param (input) Default value
 // @return Pointer value or the default value (or *null) if the node does not
 //         exist
 ///
@@ -809,7 +812,7 @@ End-PR;
 //
 // Returns the name of the node.
 //
-// @param Node
+// @param (input) Node
 // @return Node name
 ///
 Dcl-PR jx_getName varchar(32767) extproc(*CWIDEN : 'jx_GetNodeNameVC');
@@ -821,8 +824,8 @@ End-PR;
 //
 // Returns the node path expression for the passed node, f. e. /item/price .
 //
-// @param Node
-// @param Node path element delimiter (for example . or /)
+// @param (input) Node
+// @param (input) Node path element delimiter (for example . or /)
 // @return Node path expression
 ///
 Dcl-PR jx_getNameAsPath varchar(32767) extproc(*CWIDEN :'jx_GetNodeNameAsPath');
@@ -835,7 +838,7 @@ End-PR;
 //
 // Returns the node type of the passed node.
 //
-// @param Node
+// @param (input) Node
 // @return Node type constant
 ///
 Dcl-PR jx_nodeType int(5) extproc(*CWIDEN : 'jx_GetNodeType');
@@ -857,8 +860,8 @@ Dcl-C JX_FORMAT_CDATA const(1);
 // Sets the node format options which will among other things affect how the
 // node will be output by the serializers.
 //
-// @param Node
-// @param Format option (JX_FORMAT_DEFAULT, JX_FORMAT_CDATA)
+// @param (input) Node
+// @param (input) Format option (JX_FORMAT_DEFAULT, JX_FORMAT_CDATA)
 // @return Passed node (first parameter)
 ///
 Dcl-PR jx_setNodeOptions pointer extproc(*CWIDEN : 'jx_SetNodeOptions');
@@ -871,9 +874,9 @@ End-PR;
 //
 // Returns the string value of the node pointed to by the passed expression.
 //
-// @param Node
-// @param Node path expression (default: current node)
-// @param Default value
+// @param (input) Node
+// @param (input) Node path expression (default: current node)
+// @param (input) Default value
 // @return String value or the default value if the node does not exist
 ///
 Dcl-PR jx_getStr varchar(32767) extproc(*CWIDEN : 'jx_GetValueVC');
@@ -890,10 +893,10 @@ End-PR;
 // [12.345, "-", 6, 7, true, { "id" : 358 }] will result in the string
 // 12.345-67true . Any object nodes will be ignored.
 //
-// @param Node
-// @param Node path expression to the array node (default: current node)
-// @param Default value
-// @param Delimiter variable length string
+// @param (input) Node
+// @param (input) Node path expression to the array node (default: current node)
+// @param (input) Default value
+// @param (input) Delimiter variable length string
 // @return String with all values from the array nodes
 ///
 Dcl-PR jx_getStrJoin varchar(32767) extproc(*CWIDEN : 'jx_GetStrJoinVC');
@@ -908,9 +911,9 @@ End-PR;
 //
 // Returns the decimal value of the node pointed to by the passed expression.
 //
-// @param Node
-// @param Node path expression (default: current node)
-// @param Default value
+// @param (input) Node
+// @param (input) Node path expression (default: current node)
+// @param (input) Default value
 // @return Decimal value or the default value if the node does not exist
 ///
 Dcl-PR jx_getNum packed(30:15) extproc(*CWIDEN : 'jx_GetValueNum');
@@ -924,9 +927,9 @@ End-PR;
 //
 // Returns the integer value of the node pointed to by the passed expression.
 //
-// @param Node
-// @param Node path expression (default: current node)
-// @param Default value
+// @param (input) Node
+// @param (input) Node path expression (default: current node)
+// @param (input) Default value
 // @return Integer value or the default value if the node does not exist
 ///
 Dcl-PR jx_getInt int(20) extproc(*CWIDEN : 'jx_GetValueInt');
@@ -941,9 +944,9 @@ End-PR;
 // This is equivalent to <em>jx_isTrue</em> but with additional support
 // for a default value.
 //
-// @param Node
-// @param Node path expression (default: current node)
-// @param Default value
+// @param (input) Node
+// @param (input) Node path expression (default: current node)
+// @param (input) Default value
 // @return Node value is not "falsy" or
 //         the default value if the node does not exist
 ///
@@ -958,9 +961,9 @@ End-PR;
 //
 // Returns the date value of the node pointed to by the passed expression.
 //
-// @param Node
-// @param Node path expression
-// @param Default value
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) Default value
 // @return Date value or the default value if the node does not exist
 ///
 Dcl-PR jx_getDate date(*ISO) extproc(*CWIDEN : 'jx_GetValueDate');
@@ -974,9 +977,9 @@ End-PR;
 //
 // Returns the time value of the node pointed to by the passed expression.
 //
-// @param Node
-// @param Node path expression
-// @param Default value
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) Default value
 // @return Time value or the default value if the node does not exist
 ///
 Dcl-PR jx_getTime time(*ISO)  extproc(*CWIDEN : 'jx_GetValueTime');
@@ -990,9 +993,9 @@ End-PR;
 //
 // Returns the timestamp value of the node pointed to by the passed expression.
 //
-// @param Node
-// @param Node path expression
-// @param Default value
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) Default value
 // @return Timestamp value or the default value if the node does not exist
 ///
 Dcl-PR jx_getTimeStamp timestamp extproc(*CWIDEN : 'jx_GetValueTimeStamp');
@@ -1016,10 +1019,10 @@ End-PR;
 // If the source or destination is relative to the node the node path expression
 // can be used to specify the location.
 //
-// @param Destination node
-// @param Destination node path expression
-// @param Source node
-// @param Source node path expression
+// @param (output) Destination node
+// @param (output) Destination node path expression
+// @param (input) Source node
+// @param (input) Source node path expression
 // @return New node or <code>*null</code> if the operation could not be executed
 ///
 Dcl-PR jx_copyValue pointer extproc(*CWIDEN : 'jx_CopyValue');
@@ -1043,10 +1046,10 @@ End-PR;
 // If the source or destination is relative to the node the node path expression
 // can be used to specify the location.
 //
-// @param Destination node
-// @param Destination node path expression
-// @param Source node
-// @param Source node path expression
+// @param (output) Destination node
+// @param (output) Destination node path expression
+// @param (input) Source node
+// @param (input) Source node path expression
 // @return New node (Destination) or <code>*null</code> if the operation could not be executed
 ///
 Dcl-PR jx_moveValue pointer extproc(*CWIDEN : 'jx_MoveValue');
@@ -1071,9 +1074,9 @@ End-PR;
 //   <li>JX_AFTER_SIBLING</li>
 // </ul>
 //
-// @param Node
-// @param Source node
-// @param Reference location
+// @param (output) Node
+// @param (input) Source node
+// @param (input) Reference location
 // @return New node or <code>*null</code> if source or destination is
 //         <code>*null</code>.
 ///
@@ -1098,9 +1101,9 @@ End-PR;
 //   <li>JX_AFTER_SIBLING</li>
 // </ul>
 //
-// @param Node
-// @param Source node
-// @param Reference location
+// @param (output) Node
+// @param (input) Source node
+// @param (input) Reference location
 // @return the source node  <code>*null</code> if source or destination is
 //         <code>*null</code>.
 ///
@@ -1133,7 +1136,7 @@ Dcl-C JX_AFTER_SIBLING const(4);
 //
 // Deep clone of the passed node.
 //
-// @param Node
+// @param (input) Node
 // @return Clone of the passed node
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -1148,11 +1151,11 @@ End-PR;
 //
 // Adds new node to object tree.
 //
-// @param Node
-// @param Reference location (see Node Copy - Reference locations)
-// @param New node name
-// @param New node value (value or expression)
-// @param New node type
+// @param (output) Node
+// @param (input) Reference location (see Node Copy - Reference locations)
+// @param (input) New node name
+// @param (input) New node value (value or expression)
+// @param (input) New node type
 // @return New node
 ///
 Dcl-PR jx_nodeAdd Pointer extproc(*CWIDEN : 'jx_NodeAdd');
@@ -1169,7 +1172,7 @@ End-PR;
 // The passed node and all child nodes are remove from the noxDB object tree.
 // The memory is freed and the pointer is set to <code>*null</code>.
 //
-// @param Node (<code>*null</code> will be ignored)
+// @param (input) Node (<code>*null</code> will be ignored)
 ///
 Dcl-PR jx_nodeDelete extproc(*CWIDEN : 'jx_NodeDelete');
   node pointer value;
@@ -1180,7 +1183,7 @@ End-PR;
 //
 // Alias for <em>jx_nodeDelete</em>.
 //
-// @param Node (<code>*null</code> will be ignored)
+// @param (input) Node (<code>*null</code> will be ignored)
 ///
 Dcl-PR jx_delete extproc(*CWIDEN : 'jx_NodeDelete');
   node pointer value;
@@ -1190,10 +1193,10 @@ End-PR;
 ///
 // Unlink node from tree
 //
-// Unlinks the passed node from the tree. The unlinked node will be promoted to
+// Unlinks the passed node from the tree. The unlinked node will be promoted as
 // a new root node and functions as a new object tree.
 //
-// @param Node (<code>*null</code> will be ignored)
+// @param (input) Node (<code>*null</code> will be ignored)
 // @return Unlinked node
 //
 // @info The unlinked node is no longer connected to its former object tree
@@ -1210,7 +1213,7 @@ End-PR;
 // Nodes with <code>null</code> values or no values at all will be removed from
 // the noxDB object tree.
 //
-// @param Node
+// @param (input/output) Node
 ///
 Dcl-PR jx_nodeSanitize extproc(*CWIDEN : 'jx_NodeSanitize');
   node pointer value;
@@ -1222,7 +1225,7 @@ End-PR;
 // Creates a checksum of all node names and values. Names and values
 // of <code>*null</code> are ignored.
 //
-// @param Node
+// @param (input) Node
 // @return Checksum
 ///
 Dcl-PR jx_nodeCheckSum uns(10) extproc(*CWIDEN : 'jx_NodeCheckSum');
@@ -1234,7 +1237,7 @@ End-PR;
 //
 // Creates a new noxDB object tree.
 //
-// @param The new object node will be appended to this node.
+// @param (input) The new object node will be appended to this node.
 // @return New object tree or new node if the destination is passed
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -1243,6 +1246,7 @@ End-PR;
 Dcl-PR jx_newObject pointer extproc(*CWIDEN : 'jx_NewObject');
   destination pointer value options(*nopass);
 End-PR;
+
 Dcl-PR jx_Obj pointer extproc(*CWIDEN : 'jx_Object');
   p00 pointer value options(*nopass:*string);
   p01 pointer value options(*nopass:*string);
@@ -1261,7 +1265,7 @@ End-PR;
 //
 // Creates a new array.
 //
-// @param The new array node will be appended to this node.
+// @param (input) The new array node will be appended to this node.
 // @return New array or new node if the destination is passed
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -1270,6 +1274,7 @@ End-PR;
 Dcl-PR jx_newArray pointer extproc(*CWIDEN : 'jx_NewArray');
   node pointer value options(*nopass);
 End-PR;
+
 Dcl-PR jx_Arr pointer extproc(*CWIDEN : 'jx_Array');
   p00 pointer value options(*nopass:*string);
   p01 pointer value options(*nopass:*string);
@@ -1291,9 +1296,9 @@ End-PR;
 // (starting with { or [) it will be parsed else the string will be appended to
 // the array as it.
 //
-// @param Array
-// @param Node to be appended to the end of the array
-// @param Push operation mode (JX_MOVE_UNLINK (default) or JX_COPY_CLONE)
+// @param (output) Array
+// @param (input) Node to be appended to the end of the array
+// @param (input) Push operation mode (JX_MOVE_UNLINK (default) or JX_COPY_CLONE)
 // @return New node added to the end of the array
 ///
 Dcl-PR jx_arrayPush pointer extproc(*CWIDEN : 'jx_ArrayPush');
@@ -1316,9 +1321,9 @@ Dcl-C JX_COPY_CLONE const(1);
 //
 // Appends all nodes from one array to another array.
 //
-// @param Destination array (to)
-// @param Source array (from)
-// @param Push operation mode (JX_MOVE_UNLINK (default) or JX_COPY_CLONE)
+// @param (output) Destination array (to)
+// @param (input) Source array (from)
+// @param (input) Push operation mode (JX_MOVE_UNLINK (default) or JX_COPY_CLONE)
 // @return Destination array
 ///
 Dcl-PR jx_arrayAppend pointer extproc(*CWIDEN : 'jx_ArrayAppend');
@@ -1333,10 +1338,10 @@ End-PR;
 // Removes nodes from an array. The node specified on the "to" parameter is
 // included (also removed).
 //
-// @param Array or JSON array string
-// @param From index (1-based)
-// @param To index (-1 = all nodes from "from" index to till the end)
-// @param Copy operation mode. JX_MOVE_UNLINK (default) removes the "sliced"
+// @param (input) Array or JSON array string
+// @param (input) From index (1-based)
+// @param (input) To index (-1 = all nodes from "from" index to till the end)
+// @param (input) Copy operation mode. JX_MOVE_UNLINK (default) removes the "sliced"
 //        nodes from the source array. JX_COPY_CLONE leaves the nodes in
 //        the source array and just copies the nodes to the new array.
 // @return New array with the "sliced" nodes
@@ -1353,9 +1358,9 @@ End-PR;
 //
 // Sorts the array nodes "in place".
 //
-// @param Array
-// @param Object attributes to compare
-// @param Compare options (0 = use JSON numeric (default) or JX_USE_LOCALE)
+// @param (input/output) Array
+// @param (input) Object attributes to compare
+// @param (input) Compare options (0 = use JSON numeric (default) or JX_USE_LOCALE)
 // @return Sorted array
 ///
 Dcl-PR jx_arraySort pointer extproc(*CWIDEN : 'jx_ArraySort');
@@ -1367,8 +1372,8 @@ End-PR;
 ///
 // Convert an array of objects OR an object into a simple array
 //
-// @param Array of objects or an object
-// @param Copy operation mode. JX_MOVE_UNLINK (default) removes the "input array of object"
+// @param (input/output) Array of objects or an object
+// @param (input) Copy operation mode. JX_MOVE_UNLINK (default) removes the "input array of object"
 //        node. JX_COPY_CLONE leaves the node
 // @return New array with the "converted" nodes
 ///
@@ -1388,9 +1393,9 @@ Dcl-C JX_USE_LOCALE const(1);
 //
 // Returns the first node which matches the passed expression.
 //
-// @param Array or object
-// @param Search value
-// @param Case sensitivity (JX_SAME_CASE or JX_IGNORE_CASE)
+// @param (input) Array or object
+// @param (input) Search value
+// @param (input) Case sensitivity (JX_SAME_CASE or JX_IGNORE_CASE)
 // @return First node which matches the expression else <code>*null</code>
 //
 // @info The search will not be done recursivly. Only the first level (depth)
@@ -1416,7 +1421,7 @@ Dcl-C JX_IGNORE_CASE const(1);
 //
 // Returns the number of nodes in an array or object.
 //
-// @param Node
+// @param (input) Node
 // @return Number of nodes or -1 if the passed node is no array or
 //         object node type.
 ///
@@ -1430,9 +1435,9 @@ End-PR;
 // Merges all nodes from the <em>source</em> object into the
 // <em>destination</em> object tree.
 //
-// @param Destination
-// @param Source
-// @param Merge option
+// @param (input/output) Destination
+// @param (input) Source
+// @param (input) Merge option
 // @deprecated Replaced by jx_mergeObjects
 ///
 Dcl-PR jx_merge extproc(*CWIDEN : 'jx_NodeMerge');
@@ -1461,9 +1466,9 @@ Dcl-C JX_REPLACE const(1);
 // The options parameter determines what happens if a node with the same name
 // exists in both object trees.
 //
-// @param Destination object tree
-// @param Source object tree
-// @param Merge option:  MO_MERGE_NEW,MO_MERGE_MATCH,MO_MERGE_REPLACE,MO_MERGE_MOVE )
+// @param (input/output) Destination object tree
+// @param (input) Source object tree
+// @param (input) Merge option:  MO_MERGE_NEW,MO_MERGE_MATCH,MO_MERGE_REPLACE,MO_MERGE_MOVE )
 
 ///
 Dcl-PR jx_mergeObjects extproc(*CWIDEN : 'jx_MergeObjects');
@@ -1486,9 +1491,9 @@ End-PR;
 // Any existing node with the passed name in the destination object will be
 // replaced by the source object.
 //
-// @param Destination object
-// @param New node name
-// @param Source object
+// @param (input/output) Destination object
+// @param (input) New node name
+// @param (input) Source object
 // @return Source object
 //
 // @info The <em>name</em> parameter is <b>no</b> node path expression!
@@ -1506,9 +1511,9 @@ End-PR;
 //
 // Moves a node into an existing object tree.
 //
-// @param Destination node
-// @param Source node
-// @param Destination location (see Node Copy - Reference locations  )
+// @param (output) Destination node
+// @param (input) Source node
+// @param (input) Destination location (see Node Copy - Reference locations  )
 // @return Destination node
 //
 // @info The source node pointer will be <code>*null</code> after this function
@@ -1525,7 +1530,7 @@ End-PR;
 //
 // Outputs the object tree of the passed node via <em>printf</em>.
 //
-// @param Node
+// @param (input) Node
 ///
 Dcl-PR jx_dump extproc(*CWIDEN : 'jx_Dump');
   node pointer value;
@@ -1536,12 +1541,12 @@ End-PR;
 //
 // Writes the object tree as a JSON string to a stream file in the IFS.
 //
-// @param Node
-// @param File name (either a literal or null-terminated in a variable)
-// @param CCSID of the output file
-// @param <code>*off</code> = output will be pretty printed else
+// @param (input) Node
+// @param (input) File name (either a literal or null-terminated in a variable)
+// @param (input) CCSID of the output file
+// @param (input) <code>*off</code> = output will be pretty printed else
 //        <code>*on</code> (default)
-// @param Object tree node with options (not supported atm)
+// @param (input) Object tree node with options (not supported atm)
 //
 // @info By default a BOM will be prepended for unicode data. If no BOM is
 //       needed then the CCSID should be stated as a negative number, like
@@ -1564,7 +1569,7 @@ End-PR;
 //
 // Returns the passed object tree as a JSON string.
 //
-// @param Node
+// @param (input) Node
 // @return Object tree representation as a JSON string
 ///
 Dcl-PR jx_asJsonText varchar(32767) extproc(*CWIDEN : 'jx_AsJsonText');
@@ -1576,7 +1581,7 @@ End-PR;
 //
 // Returns the passed object tree as a JSON string.
 //
-// @param Node
+// @param (input) Node
 // @return Object tree representation as a JSON string
 ///
 Dcl-PR jx_AsJsonText16M Like(VARCHAR16M)  rtnparm
@@ -1586,11 +1591,11 @@ End-PR;
 
 ///
 // String quote - escapes quotes into double quotes and add leading and trailing
-// Curticy function to avoid SQL injection attacks
+// Courtesy function to avoid SQL injection attacks
 //
 // Returns quote escaped string
 //
-// @param String to be quoted
+// @param (input) String to be quoted
 // @return Quoted string
 ///
 Dcl-PR jx_strQuote  varchar(32767)  rtnparm
@@ -1604,9 +1609,9 @@ End-PR;
 //
 // Places the passed object tree as a JSON string into the passed buffer.
 //
-// @param Node
-// @param Buffer
-// @param Buffer length (in bytes)
+// @param (input) Node
+// @param (output) Buffer
+// @param (input) Buffer length (in bytes)
 // @return Length of the serialized JSON string
 //
 // @info If no buffer length is passed the procedure will assume the default
@@ -1625,12 +1630,12 @@ End-PR;
 // A XML header including the used encoding will be written at the
 // start of the XML file.
 //
-// @param Node
-// @param File name (either a literal or null-terminated in a variable)
-// @param CCSID of the output file
-// @param <code>*off</code> = output will be pretty printed else
+// @param (input) Node
+// @param (input) File name (either a literal or null-terminated in a variable)
+// @param (input) CCSID of the output file
+// @param (input) <code>*off</code> = output will be pretty printed else
 //        <code>*on</code> (default)
-// @param Object tree node with options (not supported atm)
+// @param (input) Object tree node with options (not supported atm)
 //
 // @info Following CCSIDs are supported: 1200, 1208, 819, 1252. Every
 //       other CCSID defaults to 1252.
@@ -1653,7 +1658,7 @@ End-PR;
 //
 // Returns the passed object tree as a XML string.
 //
-// @param Node
+// @param (input) Node
 // @return Object tree representation as a XML string
 ///
 Dcl-PR jx_asXmlText varchar(32767) extproc(*CWIDEN : 'jx_AsXmlText');
@@ -1665,8 +1670,8 @@ End-PR;
 //
 // Places the passed object tree as a XML string into the passed buffer.
 //
-// @param Node
-// @param Buffer
+// @param (input) Node
+// @param (output) Buffer
 // @return Length of the serialized XML string
 //
 // @warning Buffer length is not checked.
@@ -1681,7 +1686,7 @@ End-PR;
 //
 // Creates a stream object to be used by the noxDB serializers.
 //
-// @param Node
+// @param (input) Node
 // @return Stream object
 ///
 Dcl-PR jx_stream pointer extproc(*CWIDEN : 'jx_Stream');
@@ -1701,11 +1706,11 @@ End-PR;
 //   <li>headers : true = column headers will be written</li>
 // </ul>
 //
-// @param Node
-// @param File name (either a literal or null-terminated in a variable)
-// @param CCSID of the output file
-// @param <code>*on</code> = output will be trimmed else <code>*off</code>
-// @param Options
+// @param (input) Node
+// @param (input) File name (either a literal or null-terminated in a variable)
+// @param (input) CCSID of the output file
+// @param (input) <code>*on</code> = output will be trimmed else <code>*off</code>
+// @param (input) Options
 //
 // @info CCSIDs 1200 and 1208 will get a BOM prepended to the actual values.
 // @info Any existing file will be overwritten.
@@ -1774,8 +1779,8 @@ End-DS;
 //
 // Creates a new iterator instance on the passed object tree.
 //
-// @param Node
-// @param Node path expression to the node which child elements will be iterated
+// @param (input) Node
+// @param (input) Node path expression to the node which child elements will be iterated
 // @return Iterator instance
 //
 // @info This iterator should be used with the function <em>jx_forEach</em>
@@ -1792,8 +1797,8 @@ End-PR;
 // will not stop iterating when the end is reached but will restart at the
 // given start node.
 //
-// @param Node
-// @param Node path expression to the node which child elements will be iterated
+// @param (input) Node
+// @param (input) Node path expression to the node which child elements will be iterated
 // @return Iterator instance
 ///
 Dcl-PR jx_setRecursiveIterator likeds( jx_iterator)
@@ -1815,7 +1820,7 @@ End-PR;
 // The iteration can be interrupted either by leaving the loop or by setting
 // iterator.break to *on.
 //
-// @param Iterator
+// @param (input) Iterator
 // @return *on if there is another entry , *off if the iteration ended
 ///
 Dcl-PR jx_forEach ind extproc(*CWIDEN : 'jx_ForEach');
@@ -1832,9 +1837,9 @@ End-PR;
 //
 // Returns the attribute value of the attribute from the passed node.
 //
-// @param Node
-// @param Attribute name
-// @param Default value
+// @param (input) Node
+// @param (input) Attribute name
+// @param (input) Default value
 // @return Attribute value or default value if no attriute exists
 ///
 Dcl-PR jx_getNodeAttrValue varchar(32767)
@@ -1850,9 +1855,9 @@ End-PR;
 // Sets the attribute on the passed node. Any existing attribute value
 // will be replaced.
 //
-// @param Node
-// @param Attribute name
-// @param Attribute value
+// @param (input) Node
+// @param (input) Attribute name
+// @param (input) Attribute value
 //
 // @info Attributes will be omitted in JSON output.
 ///
@@ -1867,8 +1872,8 @@ End-PR;
 //
 // Returns the value from the passed attribute.
 //
-// @param Attribute
-// @param Default value
+// @param (input) Attribute
+// @param (input) Default value
 // @return Attribute value or default value if the attribute has no value
 ///
 Dcl-PR jx_getAttrValue varchar(32767) extproc(*CWIDEN : 'jx_GetAttrValueVC');
@@ -1883,9 +1888,9 @@ End-PR;
 // list which the passed attribute is part of. Duplicate attribute names
 // are valid.
 //
-// @param Attribute
-// @param Name
-// @param Value
+// @param (input) Attribute
+// @param (input) Name
+// @param (input) Value
 ///
 Dcl-PR jx_setAttrValue extproc(*CWIDEN : 'jx_SetNodeAttrValue');
   attribute pointer value;
@@ -1900,7 +1905,7 @@ End-PR;
 // This can be used for iterating over the attributes of a node in
 // conjunction with the function <em>jx_getAttrNext</em>.
 //
-// @param Node
+// @param (input) Node
 // @return First attribute or <code>*null</code> if the node has no
 //         attributes.
 ///
@@ -1913,7 +1918,7 @@ End-PR;
 //
 // Returns the next attribute of the attribute list.
 //
-// @param Attribute
+// @param (input) Attribute
 // @return Next attribute or <code>*null</code> if there are no more attributes
 ///
 Dcl-PR jx_getAttrNext pointer extproc(*CWIDEN : 'jx_GetAttrNext');
@@ -1925,7 +1930,7 @@ End-PR;
 //
 // Returns the name of the passed attribute.
 //
-// @param Attribute
+// @param (input) Attribute
 // @return Attribute name
 ///
 Dcl-PR jx_getAttrName varchar(32767) extproc(*CWIDEN : 'jx_GetAttrNameVC');
@@ -1942,7 +1947,7 @@ End-PR;
 //
 // Clears the contents of an array or object (deletes all child nodes).
 //
-// @param Node
+// @param (input) Node
 ///
 Dcl-PR jx_clear extproc(*CWIDEN : 'jx_Clear');
   node pointer value;
@@ -1953,7 +1958,7 @@ End-PR;
 //
 // Frees all resources allocated by this object tree.
 //
-// @param Node
+// @param (input) Node
 //
 // @info The passed node does not necessarily has to be the root node of the
 //       tree. Any node of the tree will suffice.
@@ -1968,10 +1973,10 @@ End-PR;
 //
 // Call ILE program compiled with ctl-opt pgminfo(*PCML:*MODULE)
 //
-// @param Library where the ILE program exists or *LIBL
-// @param Program name of the ILE program
-// @param parms   input parameters for the program in a json object mached by names
-// @param options formating and runtime options AND/added togeter
+// @param (input) Library where the ILE program exists or *LIBL
+// @param (input) Program name of the ILE program
+// @param (input) parms   input parameters for the program in a json object mached by names
+// @param (input) options formating and runtime options AND/added togeter
 // @return noxDB object tree with output from the program call
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -1990,8 +1995,8 @@ End-PR;
 // Programs and procedures : Load program as procedure pointer
 //
 //
-// @param Library where the ILE program exists or *LIBL
-// @param Program name of the ILE program
+// @param (input) Library where the ILE program exists or *LIBL
+// @param (input) Program name of the ILE program
 // @return procedure pointer or null and wrap it in a MONITOR
 //
 ///
@@ -2002,9 +2007,9 @@ End-PR;
 
 ///
 // Programs and procedures : Call program  - lo level
-// @param procedure pointer to the program  to call
-// @param parms pointer to array of addresse to parameters to pass to the procedure
-// @param numberOfParms number of parameters to pass to the procedure
+// @param (input) procedure pointer to the program  to call
+// @param (input) parms pointer to array of addresse to parameters to pass to the procedure
+// @param (input) numberOfParms number of parameters to pass to the procedure
 ///
 Dcl-PR jx_CallPgm extproc(*CWIDEN : 'jx_callPgm');
   procedure      pointer (*PROC) value;
@@ -2018,9 +2023,9 @@ End-PR;
 //
 // Returns the parameter meta information as a noxDb object graph accordin to the PCML format
 //
-// @param Library where the ILE program exists or *LIBL
-// @param Program name of the ILE program
-// @param options formating and runtime options AND/added togeter
+// @param (input) Library where the ILE program exists or *LIBL
+// @param (input) Program name of the ILE program
+// @param (input) options formating and runtime options AND/added togeter
 // @return noxDB object tree with output from the program call
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -2039,11 +2044,11 @@ End-PR;
 //
 // Call ILE service program procedure compiled with ctl-opt pgminfo(*PCML:*MODULE)
 //
-// @param Library where the ILE service program exists or *LIBL
-// @param service Program name
-// @param procedure Name of service program procedure to call
-// @param parms   input parameters for the program in a json object mached by names
-// @param options formating and runtime options AND/added togeter
+// @param (input) Library where the ILE service program exists or *LIBL
+// @param (input) service Program name
+// @param (input) procedure Name of service program procedure to call
+// @param (input) parms   input parameters for the program in a json object mached by names
+// @param (input) options formating and runtime options AND/added togeter
 // @return noxDB object tree with output from the program call
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -2063,8 +2068,8 @@ End-PR;
 // Programs and procedures : Load service program procedure as procedure pointer
 //
 //
-// @param Library where the ILE service program exists or *LIBL
-// @param Program name of the ILE service program
+// @param (input) Library where the ILE service program exists or *LIBL
+// @param (input) Program name of the ILE service program
 // @return procedure pointer or null and wrap it in a MONITOR
 //
 ///
@@ -2077,9 +2082,9 @@ End-PR;
 
 ///
 // Programs and procedures : Call procedure - lo level
-// @param procedure pointer to the procedure to call
-// @param parms pointer to array of addresse to parameters to pass to the procedure
-// @param numberOfParms number of parameters to pass to the procedure
+// @param (input) procedure pointer to the procedure to call
+// @param (input) parms pointer to array of addresse to parameters to pass to the procedure
+// @param (input) numberOfParms number of parameters to pass to the procedure
 ///
 Dcl-PR jx_CallProc extproc(*CWIDEN : 'jx_callProc');
   procedure      pointer (*PROC) value;
@@ -2092,10 +2097,10 @@ End-PR;
 //
 // Returns the parameter meta information as a noxDb object graph according to the PCML format
 //
-// @param Library where the ILE service program exists or *LIBL
-// @param service Program name
-// @param procedure Name of service program procedure or *ALL
-// @param options formating and runtime options AND/added togeter
+// @param (input) Library where the ILE service program exists or *LIBL
+// @param (input) service Program name
+// @param (input) procedure Name of service program procedure or *ALL
+// @param (input) options formating and runtime options AND/added togeter
 // @return noxDB object tree with meta descript in PCML format
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -2115,9 +2120,9 @@ End-PR;
 // Returns the parameter meta information as a noxDb object graph according to the PCML format
 // however in a JSON  format
 //
-// @param Library where the ILE service program exists or *LIBL
-// @param service Program name
-// @param procedure Name of service program procedure or *ALL , or *NULL for programs
+// @param (input) Library where the ILE service program exists or *LIBL
+// @param (input) service Program name
+// @param (input) procedure Name of service program procedure or *ALL , or *NULL for programs
 // @return noxDB object tree with meta description in JSON from the PCML format
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -2165,7 +2170,7 @@ Dcl-PR jx_memUse uns(20) extproc(*CWIDEN : 'jx_MemUse') End-PR;
 // or a node. If a node is passed it will be serialized to a JSON string before
 // being sent to the job log.
 //
-// @param Message text or node
+// @param (input) Message text or node
 ///
 Dcl-PR jx_joblog extproc(*CWIDEN : 'jx_joblog');
   textOrNode pointer value options(*string);
@@ -2183,10 +2188,10 @@ End-PR;
 // false) and "reason" (which contains the cURL error output (to <em>stderr</em>)
 // of the request).
 //
-// @param URL
-// @param HTTP request payload (object tree)
-// @param Extra cURL options
-// @param Format of the request. XML, JSON or TEXT (defaults to JSON). TEXT requires you to set the headers
+// @param (input) URL
+// @param (input) HTTP request payload (object tree)
+// @param (input) Extra cURL options
+// @param (input) Format of the request. XML, JSON or TEXT (defaults to JSON). TEXT requires you to set the headers
 // @return JSON object
 //
 // @info This function uses the curl command.
@@ -2214,7 +2219,7 @@ End-PR;
 // end-pi;
 // </code>
 //
-// @param Trace procedure
+// @param (input) Trace procedure
 ///
 Dcl-PR jx_setTraceProc extproc(*CWIDEN : 'jx_SetTraceProc');
   procedure pointer(*proc) value;
@@ -2250,7 +2255,7 @@ End-PR;
 // are searched in the current schema. <em>false</em> means that system naming
 // is used and the tables are searched in the library list.
 //
-// @param Object tree or JSON string containing SQL options or
+// @param (input) Object tree or JSON string containing SQL options or
 //        <code>*null</code> to use the default options
 ///
 Dcl-PR jx_sqlSetOptions extproc(*CWIDEN : 'jx_sqlSetOptions');
@@ -2266,7 +2271,7 @@ End-PR;
 // By default the result set object will be called "rows",
 // however calling this funtion will override this name
 //
-// @param Name of the root elemt in resultsets when object are returnd
+// @param (input) Name of the root elemt in resultsets when object are returnd
 ///
 Dcl-PR jx_sqlSetRootName extproc(*CWIDEN : 'jx_sqlSetRootName');
   rootName  pointer value options(*string);
@@ -2278,9 +2283,9 @@ End-PR;
 //
 // Returns an object node with one (first) resulting row for the SQL statment.
 //
-// @param SQL statement
-// @param Template values (context)
-// @param Result set format options
+// @param (input) SQL statement
+// @param (input) Template values (context)
+// @param (input) Result set format options
 // @return Result set or <code>*null</code> if the SELECT returns no rows
 ///
 Dcl-PR jx_sqlResultRow pointer extproc(*CWIDEN: 'jx_sqlResultRow');
@@ -2294,9 +2299,9 @@ End-PR;
 //
 // Returns an value or an array of values like the  "values into" - being array, object or value
 //
-// @param SQL statement valid for a SET statmet
-// @param Template values (context)
-// @param Result value format options
+// @param (input) SQL statement valid for a SET statmet
+// @param (input) Template values (context)
+// @param (input) Result value format options
 // @return Result object of values : array, object or single values value
 ///
 Dcl-PR jx_sqlValues pointer extproc(*CWIDEN: 'jx_sqlValues');
@@ -2312,11 +2317,11 @@ End-PR;
 // Executes the statement and returns the result set. The result set
 // structure depends on the passed options.
 //
-// @param SQL statement
-// @param Start ( 1 = first (default) )
-// @param Max. number of rows (default: JX_ALLROWS)
-// @param Result set format options
-// @param Template values (context)
+// @param (input) SQL statement
+// @param (input) Start ( 1 = first (default) )
+// @param (input) Max. number of rows (default: JX_ALLROWS)
+// @param (input) Result set format options
+// @param (input) Template values (context)
 // @return Result set
 ///
 Dcl-PR jx_sqlResultSet pointer extproc(*CWIDEN: 'jx_sqlResultSet');
@@ -2394,9 +2399,9 @@ Dcl-C JX_COLUMN_TEXT   const(256);
 //
 // Opens a cursor for processing the SQL data row by row.
 //
-// @param SQL statement
-// @param Template values (context)
-// @param Result set format options
+// @param (input) SQL statement
+// @param (input) Template values (context)
+// @param (input) Result set format options
 // @return SQL handle
 //
 // @info Any opened cursor needs to be closed with <code>jx_sqlClose</code>.
@@ -2415,8 +2420,8 @@ End-PR;
 //
 // Returns the next row from the SQL data relative to the current cursor position.
 //
-// @param SQL handle
-// @param Additional offset (relative to the current cursor)
+// @param (input) SQL handle
+// @param (input) Additional offset (relative to the current cursor)
 // @return Row object or <code>*null</code> if there are no more rows to fetch
 ///
 Dcl-PR jx_sqlFetchRelative pointer extproc(*CWIDEN: 'jx_sqlFetchRelative');
@@ -2429,7 +2434,7 @@ End-PR;
 //
 // Returns the next row from the SQL data.
 //
-// @param SQL handle
+// @param (input) SQL handle
 // @return Row object or <code>*null</code> if there are no more rows to fetch
 ///
 Dcl-PR jx_sqlFetchNext pointer extproc(*CWIDEN : 'jx_sqlFetchNext');
@@ -2441,7 +2446,7 @@ End-PR;
 //
 // Returns the number of columns included in the result set.
 //
-// @param SQL handle
+// @param (input) SQL handle
 // @return Number of columns or -1 if an error occured
 ///
 Dcl-PR jx_sqlColumns int(10) extproc(*CWIDEN : 'jx_sqlColumns');
@@ -2454,7 +2459,7 @@ End-PR;
 // Returns the number of rows the SQL statement used by the SQL handle will
 // return in total.
 //
-// @param SQL handle
+// @param (input) SQL handle
 // @return Number of rows or -1 if an error occured
 //
 // @info This will run a hidden "select count(*)" which might be a little pricy.
@@ -2468,7 +2473,7 @@ End-PR;
 //
 // Closes the passed SQL cursor.
 //
-// @param SQL handle
+// @param (input) SQL handle
 //
 // @info This function needs to be called for every SQL cursor opened with
 //       <code>jx_sqlOpen</code>.
@@ -2482,8 +2487,8 @@ End-PR;
 //
 // Executes any SQL statement not involving a cursor.
 //
-// @param SQL statement
-// @param Template values (context)
+// @param (input) SQL statement
+// @param (input) Template values (context)
 // @return <code>*on</code> if an error occured else <code>*off</code>
 ///
 Dcl-PR jx_sqlExec ind extproc(*CWIDEN : 'jx_sqlExec');
@@ -2496,8 +2501,8 @@ End-PR;
 //
 // Calls a SQL stored procedure with the passed parameters.
 //
-// @param Qualified SQL procedure name
-// @param noxDB object tree with input parameters
+// @param (input) Qualified SQL procedure name
+// @param (input) noxDB object tree with input parameters
 // @return noxDB object tree with output parameters
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -2513,9 +2518,9 @@ End-PR;
 //
 // Calls a SQL stored procedure / Table Function / value with the passed parameters.
 //
-// @param Qualified SQL procedure / UDTF / value  name
-// @param noxDB object tree with input ( INOUT) parameters
-// @param Result set format options
+// @param (input) Qualified SQL procedure / UDTF / value  name
+// @param (input) noxDB object tree with input ( INOUT) parameters
+// @param (input) Result set format options
 // @return noxDB object tree with output parameters or reult set
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -2538,17 +2543,17 @@ End-PR;
 // directly in the stored procedure. A passed string will be parsed into
 // a new noxDB object tree.
 //
-// @param Qualified SQL procedure name
-// @param JSON or XML strings or noxDB object tree
-// @param JSON or XML strings or noxDB object tree
-// @param JSON or XML strings or noxDB object tree
-// @param JSON or XML strings or noxDB object tree
-// @param JSON or XML strings or noxDB object tree
-// @param JSON or XML strings or noxDB object tree
-// @param JSON or XML strings or noxDB object tree
-// @param JSON or XML strings or noxDB object tree
-// @param JSON or XML strings or noxDB object tree
-// @param JSON or XML strings or noxDB object tree
+// @param (input) Qualified SQL procedure name
+// @param (input) JSON or XML strings or noxDB object tree
+// @param (input) JSON or XML strings or noxDB object tree
+// @param (input) JSON or XML strings or noxDB object tree
+// @param (input) JSON or XML strings or noxDB object tree
+// @param (input) JSON or XML strings or noxDB object tree
+// @param (input) JSON or XML strings or noxDB object tree
+// @param (input) JSON or XML strings or noxDB object tree
+// @param (input) JSON or XML strings or noxDB object tree
+// @param (input) JSON or XML strings or noxDB object tree
+// @param (input) JSON or XML strings or noxDB object tree
 // @return <code>*on</code> if an error occured else <code>*off</code>
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -2573,10 +2578,10 @@ End-PR;
 //
 // Executes an UPDATE TABLE where the row is defined as an object tree.
 //
-// @param SQL table name
-// @param Row data as either object tree or JSON or XML string
-// @param SQL WHERE clause (may include template variables like WHERE id = $id)
-// @param Input parameter object tree for SQL WHERE clause template variables
+// @param (input) SQL table name
+// @param (input) Row data as either object tree or JSON or XML string
+// @param (input) SQL WHERE clause (may include template variables like WHERE id = $id)
+// @param (input) Input parameter object tree for SQL WHERE clause template variables
 //        (f. e. { "id" : 123 } )
 // @return <code>*on</code> if an error occured else <code>*off</code>
 ///
@@ -2592,9 +2597,9 @@ End-PR;
 //
 // Executes an INSERT where the row is defined as an object tree.
 //
-// @param SQL table name
-// @param Row data as either object tree or JSON or XML string
-// @param Input parameter (don't have to pass anything as it is not needed on INSERT)
+// @param (input) SQL table name
+// @param (input) Row data as either object tree or JSON or XML string
+// @param (input) Input parameter (don't have to pass anything as it is not needed on INSERT)
 // @return <code>*on</code> if an error occured else <code>*off</code>
 ///
 Dcl-PR jx_sqlInsert ind extproc(*CWIDEN : 'jx_sqlInsert');
@@ -2611,9 +2616,9 @@ End-PR;
 // does not contain any matching row the passed row will be INSERTed into
 // the table.
 //
-// @param SQL table name
-// @param Row data as either object tree or JSON or XML string
-// @param Input parameter (don't have to pass anything as it is not needed on INSERT)
+// @param (input) SQL table name
+// @param (input) Row data as either object tree or JSON or XML string
+// @param (input) Input parameter (don't have to pass anything as it is not needed on INSERT)
 // @return <code>*on</code> if an error occured else <code>*off</code>
 //
 // @info Depending on the WHERE clause more than one row may be updated by
@@ -2652,7 +2657,7 @@ End-PR;
 //  <li>text   : column text label. If'text' is set in format option </li>
 // </ul>
 //
-// @param SQL SELECT statement with the columns to be queried
+// @param (input) SQL SELECT statement with the columns to be queried
 // @return Object tree (array) with column meta data
 //
 // @info The caller of this procedure needs to take care of freeing the resources
@@ -2668,7 +2673,7 @@ End-PR;
 //
 // Returns a connection object to the local database.
 //
-// @param Options (not supported at the moment)
+// @param (input) Options (not supported at the moment)
 // @return Connection to local database
 ///
 Dcl-PR jx_sqlConnect pointer extproc(*CWIDEN : 'jx_sqlConnect');
@@ -2731,7 +2736,7 @@ Dcl-PR jx_sqlCode int(10) extproc(*CWIDEN : 'jx_sqlCode') End-PR;
 // Sets a trace id at the current connection which will be added to the trace
 // statements in the trace table.
 //
-// @param Trace id
+// @param (input) Trace id
 ///
 Dcl-PR jx_traceSetId extproc(*CWIDEN : 'jx_traceSetId');
   traceId int(20) value;
@@ -2941,9 +2946,9 @@ End-PR;
 // Note: setBool will have same signature as setStr and setInt will have same
 // signature that setNum so they are omitted for now
 //
-// @param Node
-// @param Node path expression
-// @param New value
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) New value
 // @return Changed node
 ///
 Dcl-PR jx_set pointer overload (

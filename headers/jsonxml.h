@@ -508,6 +508,9 @@ PUCHAR   jx_GetNodeAttrValuePtr  (PJXNODE pNode, PUCHAR AttrName, PUCHAR Default
 VARCHAR  jx_GetNodeAttrValueVC   (PJXNODE pNode ,PUCHAR AttrName, PUCHAR DefaultValue);
 #pragma descriptor ( void jx_GetNodeAttrValueVC                                   (void))
 
+PVARCHAR  jx_GetNodeAttrValuePVC   (PVARCHAR value, PJXNODE pNode ,PUCHAR AttrName, PUCHAR DefaultValue);
+#pragma descriptor ( void jx_GetNodeAttrValuePVC                                   (void))
+
 FIXEDDEC jx_GetNodeAttrValueNum  (PJXNODE pNode , PUCHAR AttrName, FIXEDDEC DefaultValue);
 #pragma descriptor ( void jx_GetNodeAttrValueNum                                  (void))
 
