@@ -3542,6 +3542,23 @@ PUCHAR jx_GetValueStr (PUCHAR value , PJXNODE pNode , PUCHAR nameP, PUCHAR  defa
    }
    return value;
 }
+PVARCHAR jx_GetValuePVC (PVARCHAR value , PJXNODE pNode , PUCHAR nameP, PUCHAR  defaultP)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PUCHAR   dftval   =  (pParms->OpDescList->NbrOfParms >= 4) ? defaultP : "";
+   PUCHAR   name     =  (pParms->OpDescList->NbrOfParms >= 3) ? nameP    : "";
+
+   PUCHAR  pValue;
+
+   pValue = jx_GetValuePtr    (pNode , name , NULL ) ;
+   if (pValue == NULL) {
+      str2vc ( &value , dftval);
+   } else {
+      str2vc(  &value , pValue);
+
+   }
+   return value;
+}
 
 // -------------------------------------------------------------
 FIXEDDEC jx_GetValueNum (PJXNODE pNode , PUCHAR Name  , FIXEDDEC dftParm)
@@ -3687,7 +3704,7 @@ VARCHAR jx_GetNodeNameVC (PJXNODE pNode)
       res.Length = strlen(pNode->Name);
       memcpy(res.String , pNode->Name , res.Length);
    }
-   return (res);
+   return res;
 }
 // -------------------------------------------------------------
 VARCHAR jx_GetNodeAttrValueVC (PJXNODE pNode ,PUCHAR AttrName, PUCHAR DefaultValue)
@@ -3698,7 +3715,16 @@ VARCHAR jx_GetNodeAttrValueVC (PJXNODE pNode ,PUCHAR AttrName, PUCHAR DefaultVal
    PUCHAR value =  jx_GetNodeAttrValuePtr  ( pNode , AttrName,  dft) ;
    res.Length = strlen(value);
    memcpy(res.String , value , res.Length);
-   return (res);
+   return res;
+}
+// -------------------------------------------------------------
+PVARCHAR jx_GetNodeAttrValuePVC (PVARCHAR value, PJXNODE pNode ,PUCHAR AttrName, PUCHAR DefaultValue)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PUCHAR  dft = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultValue : "";
+   jx_GetNodeAttrValueStr  ( value->String , pNode , AttrName,  dft) ;
+   value->Length = strlen(value->String);
+   return value;
 }
 // -------------------------------------------------------------
 FIXEDDEC jx_GetNodeAttrValueNum (PJXNODE pNode , PUCHAR AttrName, FIXEDDEC DefaultValue)
