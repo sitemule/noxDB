@@ -4000,6 +4000,21 @@ LGL jx_IsJson(PJXNODE pNode)
 {
    return  (pNode->signature == NODESIG) ? ON : OFF;
 }
+// -------------------------------------------------------------
+// Helper - boolean to logical
+// -------------------------------------------------------------
+LGL jx_Bool2Lgl   (BOOL in)
+{
+   return in ? ON:OFF;
+}
+// -------------------------------------------------------------
+// Helper - logical to boolean
+// -------------------------------------------------------------
+BOOL jx_Lgl2Bool (LGL  in)
+{
+   return in == OFF? FALSE:TRUE;
+}
+
 //---------------------------------------------------------------------------
 LGL jx_MemLeak(VOID)
 {

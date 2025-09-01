@@ -547,16 +547,28 @@ PUCHAR jx_GetValueStr (PUCHAR value , PJXNODE pNode , PUCHAR nameP, PUCHAR  defa
 /* Setters variants */
 PJXNODE  jx_SetStrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value , LGL nullIf);
 #pragma descriptor ( void jx_SetStrByName    (void))
+
 PJXNODE  jx_SetBoolByName (PJXNODE pNode, PUCHAR Name, LGL Value , LGL nullIf);
 #pragma descriptor ( void jx_SetBoolByName    (void))
+
 PJXNODE  jx_SetCharByName (PJXNODE pNode, PUCHAR Name, UCHAR Value , LGL nullIf);
 #pragma descriptor ( void jx_SetCharByName    (void))
+
 PJXNODE  jx_SetDecByName (PJXNODE pNode, PUCHAR Name, FIXEDDEC Value, LGL nullIf);
 #pragma descriptor ( void jx_SetDecByName    (void))
+
 PJXNODE  jx_SetIntByName (PJXNODE pNode, PUCHAR Name, LONG Value, LGL nullIf);
 #pragma descriptor ( void jx_SetIntByName    (void))
-PJXNODE  jx_SetNullByName (PJXNODE pNode, PUCHAR Name);
 
+PJXNODE  jx_SetNullByName (PJXNODE pNode, PUCHAR Name);
+#pragma descriptor ( void jx_SetNullByName    (void))
+
+PJXNODE  jx_SetPtrByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL isStringP);
+#pragma descriptor ( void jx_SetPtrByName    (void))
+
+
+LGL  jx_Bool2Lgl   (BOOL in);
+BOOL jx_Lgl2Bool  (LGL  in);
 
 
 void jx_Close(PJXNODE * pNode);
