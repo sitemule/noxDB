@@ -122,7 +122,7 @@
     checksum = nox_NodeCheckSum(pTopFive);   
 
     // and save it to disk:
-    // You can use UTF8_BOM it you need the BOM-siganture
+    // You can use UTF8_BOM if you need the BOM-siganture
     nox_WriteJsonStmf(pTopFive : './test/documents/ex01Tutorial.json' : 1208 : *OFF);    
 
     // Now what do we need to clean up:

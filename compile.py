@@ -21,6 +21,17 @@ def build_cmod(stmf , cmd ,lib , liblist , obj , flags , include):
 		shell += syscmdlist( cmd + " SRCSTMF('" + stmf + "') MODULE(" + lib + "/" + obj + ") " + flags + " INCDIR(" + include + ")")
 	runscriptAndShowEventfile (stmf, shell, lib , obj)
 
+def build_cppmod(stmf , cmd ,lib , liblist , obj , flags , include):
+#	flags = flags + " OPTION(*EVENTF *EXPMAC *SHOWINC) OUTPUT(*PRINT)"
+	flags = flags + " OPTION(*EVENTF) OUTPUT(*PRINT)"
+	shell =  oscmd("liblist -a " + liblist )
+	shell += oscmd("setccsid 1252 " + stmf)
+	cmd =  (cmd if cmd > ""  else "CRTBNDCPP")
+	if cmd == "CRTBNDCPP":
+		shell += syscmdlist(cmd + " SRCSTMF('" + stmf + "') PGM(" + lib + "/" + obj + ") " + flags + " INCDIR(" + include + ")")
+	else:
+		shell += syscmdlist( cmd + " SRCSTMF('" + stmf + "') MODULE(" + lib + "/" + obj + ") " + flags + " INCDIR(" + include + ")")
+	runscriptAndShowEventfile (stmf, shell, lib , obj)
 
 def build_rpgmod (stmf , cmd ,lib , liblist , obj , flags , include):
 	flags = flags + " OPTION(*NOUNREF *EVENTF)"
@@ -275,6 +286,8 @@ elif extflags > "":
 
 if   ext == 'c':
 	build_cmod (stmf , cmd ,lib,  liblist , obj , flags , include)
+elif   ext == 'cpp':
+	build_cppmod (stmf , cmd ,lib,  liblist , obj , flags , include)
 elif ext == 'rpgle':
 	build_rpgmod (stmf , cmd ,lib, liblist , obj , flags , include)
 elif ext == 'sqlrpgle':

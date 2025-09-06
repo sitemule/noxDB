@@ -2,30 +2,10 @@
 	{
 		"id":12345,
 		"name":"System & Metod A/S",
-		"street":"Håndværkersvinget 8",
-		"city":"Hørsholm",
+		"street":"H}ndv{rkersvinget 8",
+		"city":"H¦rsholm",
 		"greeting":"你奸",
 		"creditLimit":76543.21,
-		"created":"2022-07-19"
-	},{
-		"id":583990,
-		"name":"Abraham",
-		"street":"392 Mill St",
-		"creditLimit":9999
-	},{
-		"id":938485,
-		"name":"Johnson",
-		"street":"3 Alpine Way",
-		"creditLimit":9999
-	},{
-		"id":693829,
-		"name":"Thomas",
-		"street":"3 Dove Circle",
-		"creditLimit":9999
-	},{
-		"id":846283,
-		"name":"Alison",
-		"street":"787 Lake Dr",
-		"creditLimit":5000
+		"created":"2025-09-06"
 	}
 ]

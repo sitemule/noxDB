@@ -45,7 +45,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 // Globals: TODO !!! remove to make code reintrant
 __thread extern UCHAR jxMessage[512];
 __thread extern BOOL  jxError;
-
+PNOXSQLCONNECT pLastConnnection = NULL; 
 
 // !!!!! NOTE every constant in this module is in ASCII
 #pragma convert(1252)
@@ -761,11 +761,11 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 		for (i = 0; i < pSQL->nresultcols; i++) {
 
 			PNOXCOL pCol = &pSQL->cols[i];
+			buflen =0;
 
 			// TODO - Work arround !!! first get the length - if null, the dont try the get data
 			// If it has a pointer value, the API will fail..
 			// For now BLOB and CLOB does not support "not null with default"
-			// buflen =0;
 			// SQLGetCol (pSQL->pstmt->hstmt, i+1, SQL_BLOB, NULL , 0, &buflen);
 			switch (pCol->coltype) {
 			case SQL_BLOB:
@@ -787,8 +787,8 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 				break;
 			default:
 			   // Note: SQLCLI only supports LONG_MAX size of data to be transfered
-            // SQLGetCol (pSQL->pstmt->hstmt, i+1, SQL_CHAR, buf , memSize(buf), &buflen);
-            SQLGetCol (pSQL->pstmt->hstmt, i+1, SQL_CHAR, buf , LONG_MAX, &buflen);
+            SQLGetCol (pSQL->pstmt->hstmt, i+1, SQL_CHAR, buf , memSize(buf), &buflen);
+            //SQLGetCol (pSQL->pstmt->hstmt, i+1, SQL_CHAR, buf , LONG_MAX, &buflen);
 			}
 
 
@@ -980,8 +980,14 @@ void nox_sqlClose (PNOXSQL * ppSQL)
 void nox_sqlDisconnect (PNOXSQLCONNECT * ppCon)
 {
 
-	PNOXSQLCONNECT pCon = *ppCon;
+	PNOXSQLCONNECT pCon;
 	int rc;
+
+	if (ppCon == NULL) {
+		pCon = pLastConnnection; 
+	} else {
+		pCon = *ppCon;
+	}
 
 	if (pCon == NULL) return;
 
@@ -2122,6 +2128,7 @@ PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 	// If required, open the trace table
 	nox_traceOpen (pCon);
 
+	pLastConnnection = pCon;
 	return pCon; // we are ok
 }
 
