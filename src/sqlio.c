@@ -269,6 +269,87 @@ static PNOXSQL nox_sqlNewStatement(PNOXSQLCONNECT pCon, PNOXNODE pSqlParms, BOOL
 	return pSQL;
 }
 /* ------------------------------------------------------------- */
+// ------------------------------------------------------------------
+// https://www.ibm.com/docs/en/i/7.4?topic=program-null-capable-fields
+// ------------------------------------------------------------------
+static PUCHAR getSystemColumnName ( PUCHAR sysColumnName, PUCHAR columnText, PUCHAR schema , PUCHAR table , PUCHAR column )
+{
+
+   #pragma mapinc("QADBILFI", "QSYS/QADBILFI(*all)" , "both key nullflds", "_P", "RecBuf" , "")
+   #include "/QSYS.LIB/QTEMP.LIB/QACYXTRA.FILE/QADBILFI.MBR"
+   typedef QDBIFLD_both_t SYSCOLR, * PSYSCOLR;
+   typedef QDBIFLD_key_t  SYSCOLK;
+
+   _RIOFB_T * fb;
+   SYSCOLR sysColR;
+   SYSCOLK sysColK;
+   int keylen;
+   int i;
+
+   static _RFILE * fSysCol = null;
+   if ((fSysCol = _Ropen ("QSYS/QADBILFI" , "rr,nullcap=Y")) == NULL) {
+      nox_joblog ( "Not able to open QADBILFI: %s",  strerror(errno)) ;
+      return sysColumnName;
+   }
+
+   // memset will not work on "volatile" in null maps
+   for (i=0; i< fSysCol->null_map_len     ; i ++) { fSysCol->in_null_map[i]= '0';}
+   for (i=0; i< fSysCol->null_key_map_len ; i ++) { fSysCol->null_key_map[i]= '0';}
+
+   padncpy  (sysColK.DBILIB , schema , sizeof(sysColK.DBILIB));
+   str2vc   (&sysColK.DBILFI , table  );
+   keylen = sizeof(sysColK.DBILIB) + sysColK.DBILFI.len;
+
+   // Get format and part info  by table / file name:
+   fb = _Rreadk (fSysCol  ,&sysColR , sizeof(SYSCOLR) ,
+                 __KEY_EQ | __NULL_KEY_MAP  , &sysColK , keylen);
+   if (fb->num_bytes == 0) {
+      return NULL;
+   }
+   // Now have the format and part no
+   // now move the format and part into key
+   sysColK.DBIFMP = sysColR.DBIFMP;
+   memcpy   (sysColK.DBIFMT , sysColR.DBIFMT , sizeof ( sysColK.DBIFMT ));
+   str2vc   ((PVAR_CHAR) &sysColK.DBILFL , column );
+
+   // We have the complete key -  get the name for column
+   fb = _Rreadk (fSysCol  ,&sysColR , sizeof(SYSCOLR) , __KEY_EQ  , &sysColK , sizeof(SYSCOLK));
+   if (fb->num_bytes == 0) {
+      return NULL;
+   }
+   strtrimncpy ( sysColumnName , sysColR.DBIINT , sizeof(sysColR.DBIINT));
+   substr ( columnText ,  sysColR.DBITXT.data , sysColR.DBITXT.len);
+
+   return sysColumnName;
+
+}
+
+// ------------------------------------------------------------------
+static PUCHAR  getSysNameForColumn ( PUCHAR sysColumnName, PUCHAR columnText, SQLHSTMT hstmt , SQLSMALLINT columnNo)
+{
+   SQLRETURN     rc;
+   SQLSMALLINT   len1=0, len2=0, len3=0;
+   SQLINTEGER    numlen;
+
+   UCHAR column [256];
+   UCHAR table  [256];
+   UCHAR schema [256];
+
+   rc = SQLColAttribute (hstmt, columnNo , SQL_DESC_BASE_SCHEMA , schema, sizeof(schema), &len1 , &numlen);
+   rc = SQLColAttribute (hstmt, columnNo , SQL_DESC_BASE_TABLE  , table , sizeof(table) , &len2 , &numlen);
+   rc = SQLColAttribute (hstmt, columnNo , SQL_DESC_BASE_COLUMN , column, sizeof(column), &len3 , &numlen);
+
+   if (len1 == 0 || len2 == 0 || len3 == 0 ) {
+      return NULL;
+   }
+
+   schema [len1] = '\0';
+   table  [len2] = '\0';
+   column [len3] = '\0';
+
+   return  getSystemColumnName ( sysColumnName, columnText, schema , table , column);
+}
+
 /* ------------------------------------------------------------- */
 PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scroll)
 {
@@ -331,16 +412,45 @@ PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, B
 	pSQL->cols = memAlloc (pSQL->nresultcols * sizeof(NOXCOL));
 
 	for (i = 0; i < pSQL->nresultcols; i++) {
-
+    	int labelRc;
+      	UCHAR colText  [256];
 		PNOXCOL pCol = &pSQL->cols[i];
 
 		SQLDescribeCol (pSQL->pstmt->hstmt, i+1, pCol->colname, sizeof (pCol->colname),
 			&pCol->colnamelen, &pCol->coltype, &pCol->collen, &pCol->scale, &pCol->nullable);
 
 		pCol->colname[pCol->colnamelen] = '\0';
+		strcpy (pCol->realname , pCol->colname);
 
-		// If all uppsercase ( not given name by .. AS "newName") the lowercase
-		if (OFF == nox_IsTrue (pCon->pOptions ,"uppercasecolname")) {
+		if (format & (NOX_SYSTEM_NAMES | NOX_COLUMN_TEXT)) {
+        	if (NULL == getSysNameForColumn ( pCol->sysname , colText , pSQL->pstmt->hstmt , i+1)) {
+            	strcpy (pCol->sysname , pCol->colname);
+            	strcpy (colText       , pCol->colname);
+        	}
+      	} else {
+         	*pCol->sysname = '\0';
+      	}
+
+		if (format & (NOX_COLUMN_TEXT)) {
+        	strcpy (pCol->text , colText);
+      	} else {
+         	*pCol->text = '\0';
+      	}
+
+		// If all uppercase ( not given name by .. AS "newName") the lowercase
+		if (format & (NOX_SYSTEM_NAMES)) {
+        	if (!(format & (NOX_UPPERCASE))) {
+            	str2lower  (pCol->colname , pCol->sysname);
+         	}  else {
+            	strcpy  (pCol->colname , pCol->sysname);
+         	}
+      	} else if (format & (NOX_CAMEL_CASE)) {
+        	camelCase(pCol->colname, pCol->colname);
+      	} else if (format & (NOX_UPPERCASE)) {
+         // It is upper NOW
+         // jx_sqlUpperCaseNames(pSQL);
+		
+		} else if (OFF == nox_IsTrue (pCon->pOptions ,"uppercasecolname")) {
 			UCHAR temp [256];
 			astr2upper  (temp , pCol->colname);
 			if (strcmp (temp , pCol->colname) == 0) {
@@ -385,11 +495,15 @@ PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, B
 		}
 
 		switch( pCol->coltype) {
+			case SQL_BOOLEAN:
+            	pCol->collen = pCol->collen = 6; // size of "false" + null
+            	break;
+
 			case SQL_BLOB:
 			case SQL_CLOB:
 	//           pCol->collen = pCol->displaysize * 2;
 	//           pCol->data = (SQLCHAR *) malloc (pCol->collen);
-			pCol->collen = 1048576;  // 1MEGABYTES
+				pCol->collen = 1048576L;  // 1MEGABYTES
 	//            pCol->data = (SQLCHAR *) malloc (pCol->collen);  // 1MEGABYTES
 	//            rc = SQLBindCol (pSQL->pstmt->hstmt, i+1, SQL_C_BINARY , pCol->data, pCol->collen, &pCol->outlen);
 			break;
@@ -968,36 +1082,85 @@ PNOXNODE nox_sqlResultSet( PNOXSQLCONNECT pCon ,PUCHAR sqlstmt, LONG start, LONG
 
 }
 // RPG wrapper:
-PNOXNODE nox_sqlResultSetVC( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PNOXNODE pSqlParmsP  )
+PNOXNODE nox_sqlResultSetVC( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP , LONG startP, LONG limitP, LONG formatP )
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	LONG    start     = (pParms->OpDescList->NbrOfParms >= 3) ? startP     : 1;  // From first row
-	LONG    limit     = (pParms->OpDescList->NbrOfParms >= 4) ? limitP     : -1; // All row
-	LONG    format    = (pParms->OpDescList->NbrOfParms >= 5) ? formatP    : 0;  // Arrray only
-	PNOXNODE pSqlParms= (pParms->OpDescList->NbrOfParms >= 6) ? pSqlParmsP : NULL;
+	PNOXNODE pSqlParms= (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
+	LONG    start     = (pParms->OpDescList->NbrOfParms >= 4) ? startP     : 1;  // From first row
+	LONG    limit     = (pParms->OpDescList->NbrOfParms >= 5) ? limitP     : -1; // All row
+	LONG    format    = (pParms->OpDescList->NbrOfParms >= 6) ? formatP    : 0;  // Arrray only
 	return nox_sqlResultSet( pCon, plvc2str(sqlstmt) , start, limit, format , pSqlParms);
 }
 /* ------------------------------------------------------------- */
-PNOXNODE nox_sqlResultRow ( PNOXSQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms, LONG start )
+PNOXNODE nox_sqlResultRow ( PNOXSQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms , LONG start , LONG format)
 {
 	PNOXNODE pRow;
 	PNOXSQL  pSQL;
 
 	pSQL = nox_sqlOpen(pCon , sqlstmt , pSqlParms, start > 1);
+	if ( pSQL == NULL) {
+    	if (format & NOX_GRACEFUL_ERROR) {
+        	return sqlErrorObject(sqlstmt);
+      	} else {
+        	return NULL;
+      	}
+   	}
+
 	pRow  = nox_sqlFetchFirst (pSQL, start);
 	nox_sqlClose (&pSQL);
 	return pRow;
 
 }
 // RPG wrapper
-PNOXNODE nox_sqlResultRowVC ( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt,  PNOXNODE pSqlParmsP , LONG startP )
+PNOXNODE nox_sqlResultRowVC ( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP, LONG startP ,  LONG formatP )
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
 	LONG     start     = (pParms->OpDescList->NbrOfParms >= 4) ? startP     : 1;  // From first row
+	LONG     format    = (pParms->OpDescList->NbrOfParms >= 5) ? formatP    : 0;  // Arrray only
 	return nox_sqlResultRow ( pCon, plvc2str(sqlstmt), pSqlParms, start);
 }
 /* ------------------------------------------------------------- */
+#pragma convert(1252)
+PJXNODE jx_sqlValues ( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PJXNODE pSqlParmsP , LONG formatP)
+{
+
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
+   LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;
+   PJXNODE pResult;
+   PJXNODE pChild ;
+   UCHAR   stmtBuf [32760];
+
+   strcpy (stmtBuf , "values ("); 
+   strcat (stmtBuf , plvc2str(sqlstmt));
+   strcat (stmtBuf , ")");
+
+   pResult =  jx_sqlResultRow ( pCon , stmtBuf, pSqlParms , format);
+
+   pChild  = jx_GetNodeChild (pResult);
+   // more that one return values? then array
+   // Note: Since we "move" the value into an object it will be poped from the
+   // top - so we get the next from the top by the  jx_GetNodeChild (pResult)
+   if (nox_GetNodeNext(pChild)) {
+      PJXNODE pNode;
+      PJXNODE pArray = nox_NewArray (NULL);
+      for (pNode = pChild; pNode; pNode = nox_GetNodeChild (pResult)) {
+         nox_ArrayPush (pArray, pNode, false);
+      }
+      nox_NodeDelete (pResult);
+      return pArray;
+   } else {
+      nox_NodeUnlink (pChild);
+      nox_NodeDelete (pResult);
+      return pChild; // Only one value
+   }
+
+}
+#pragma convert(0)
+/* ------------------------------------------------------------- */
+
+
 PNOXNODE nox_sqlGetMeta (PNOXSQLCONNECT pCon, PUCHAR sqlstmt)
 {
 	int i;

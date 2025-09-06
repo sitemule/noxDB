@@ -732,6 +732,26 @@ LONG packedMem2Int(PUCHAR buf, SHORT bytes)
     return res;
 }
 /* ------------------------------------------------------------- */
+#pragma convert(1252)
+void nox_strQuote (PLVARCHAR out, PLVARCHAR in)
+{
+   PUCHAR os = out->String;
+   PUCHAR is = in->String;
+   int i;
+
+   *os++ = '\'';
+   for (i=0;i<in->Length;i++) {
+      if (*is == '\'') *os++ = '\'';
+      *os++ = *is++;
+
+   }
+   *os++ = '\'';
+   *os++ = '\0';
+   out->Length = os - out->String -1;
+}
+#pragma convert(0)
+
+/* ------------------------------------------------------------- */
 PUCHAR stripLeadingZeros(PUCHAR out, PUCHAR s)
 {
    PUCHAR p = s;
