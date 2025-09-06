@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -16,7 +16,7 @@
 
         //------------------------------------------------------------- *
       
-        pJson = JSON_ParseString (
+        pJson = NOX_ParseString (
            '{  u:"This is a unicode \u00b5 string"  ,   '+
            '   "s":"abc"                            ,   '+
            '   "e":"line1\nline2\rtab\ttabed     "  ,   '+
@@ -28,44 +28,44 @@
            '   }         '+
            '}'
              : '');
-        if JSON_Error(pJson) ;
-           msg = JSON_Message(pJson);
-           JSON_dump(pJson);
-           JSON_Close(pJson);
+        if NOX_Error(pJson) ;
+           msg = NOX_Message(pJson);
+           NOX_dump(pJson);
+           NOX_Close(pJson);
            return;
         endif;
 
-        pNode = JSON_locate(pJson: '/o/n');
-        n     = json_getNum(pNode);
+        pNode = NOX_locate(pJson: '/o/n');
+        n     = nox_getNum(pNode);
 
-        pNode = JSON_locate(pJson: '/a[1]');
-        n     = json_getNum(pNode);
+        pNode = NOX_locate(pJson: '/a[1]');
+        n     = nox_getNum(pNode);
 
-        pNode = JSON_locate(pJson: '/s');
-        value = JSON_getValue(pNode);
+        pNode = NOX_locate(pJson: '/s');
+        value = NOX_getValue(pNode);
 
-        pNode = JSON_locate(pJson: '/u');
-        value = JSON_getValue(pNode);
+        pNode = NOX_locate(pJson: '/u');
+        value = NOX_getValue(pNode);
 
-        pNode = JSON_locate(pJson: '/o/a[2]');
-        n     = json_getNum(pNode);
+        pNode = NOX_locate(pJson: '/o/a[2]');
+        n     = nox_getNum(pNode);
 
         // Loop on the array
-        pArr  = JSON_locate(pJson: '/o/a[0]'); // First array element
+        pArr  = NOX_locate(pJson: '/o/a[0]'); // First array element
         dow (pArr <> *NULL) ;
-          n     = json_getNum(pArr);
-          pArr  = JSON_getNext(pArr);
+          n     = nox_getNum(pArr);
+          pArr  = NOX_getNext(pArr);
         endDo;
 
         // Get Value directly
-        value = json_getStr(pJson : '/u');
+        value = nox_getStr(pJson : '/u');
 
         // Get Value directly relative
-        pNode = JSON_locate(pJson: '/o');
-        value = json_getStr(pNode : 'n');   // This is "n" in "o"
+        pNode = NOX_locate(pJson: '/o');
+        value = nox_getStr(pNode : 'n');   // This is "n" in "o"
 
-        pNode = JSON_locate(pJson: '/a');
-        value = json_getStr(pNode : '[0]');   // The first element
+        pNode = NOX_locate(pJson: '/a');
+        value = nox_getStr(pNode : '[0]');   // The first element
 
-        JSON_Close(pJSON);
+        NOX_Close(pJSON);
         *inlr = *on;

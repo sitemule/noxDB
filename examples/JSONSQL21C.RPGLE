@@ -17,7 +17,7 @@
 
         //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         Dcl-S err          Ind;
         Dcl-S pNote1       Pointer;
@@ -43,22 +43,22 @@
         %subst (text2(1) : 1 : 15   )  = 'Next clob';
         %subst (text2(10) : 1    :  1 )  = x'00';
         pNote2 = %addr(text2);
-        pRow  = json_newObject();
+        pRow  = nox_newObject();
 
-        json_setStr(pRow:  'title'    : 'My first note');
-        json_setPtr(pRow:  'text1'    : pNote1);
-        json_setPtr(pRow:  'text2'    : pNote2);
+        nox_setStr(pRow:  'title'    : 'My first note');
+        nox_setPtr(pRow:  'text1'    : pNote1);
+        nox_setPtr(pRow:  'text2'    : pNote2);
 
-        err = json_sqlInsert  (
+        err = nox_sqlInsert  (
            'qgpl/note2'
            :pRow
         );
 
-        //  id = json_sqlGetId();
+        //  id = nox_sqlGetId();
 
         // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
-        json_close(pRow);
-        json_sqlDisconnect();
+        nox_close(pRow);
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

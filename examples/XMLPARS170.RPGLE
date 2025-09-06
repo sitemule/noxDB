@@ -15,7 +15,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 

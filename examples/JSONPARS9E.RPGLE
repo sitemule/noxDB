@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE');
 
         //------------------------------------------------------------- *
 
@@ -10,26 +10,26 @@
         Dcl-S msg          Varchar(50);
         Dcl-S name         Varchar(10);
         Dcl-S value        Varchar(40);
-        Dcl-DS list  likeds(json_iterator);
+        Dcl-DS list  likeds(nox_iterator);
         End-DS;
 
         //------------------------------------------------------------- *
 
-        pJson = json_ParseString('{ a: 1, b : { c: 2 ,d : 3}}');
+        pJson = nox_ParseString('{ a: 1, b : { c: 2 ,d : 3}}');
 
-        if json_Error(pJson) ;
-           msg = json_Message(pJson);
-           json_dump(pJson);
-           json_Close(pJson);
+        if nox_Error(pJson) ;
+           msg = nox_Message(pJson);
+           nox_dump(pJson);
+           nox_Close(pJson);
            return;
         endif;
 
-        list = json_setRecursiveIterator(pJson);
-        dow json_ForEach(list);
-           name  = json_GetNameAsPath(list.this:'.');
-           value = json_GetValue (list.this);
+        list = nox_setRecursiveIterator(pJson);
+        dow nox_ForEach(list);
+           name  = nox_GetNameAsPath(list.this:'.');
+           value = nox_GetValue (list.this);
            dsply (name + value);
         enddo;
 
-        json_Close(pJSON);
+        nox_Close(pJSON);
         *inlr = *on;

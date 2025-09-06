@@ -14,6 +14,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <iconv.h>
+#include <limits.h>
 #include <QTQICONV.h>
 
 #include "ostypes.h"
@@ -63,6 +64,19 @@ PXLATEDESC XlateXdOpen (int FromCCSID, int ToCCSID)
    }
    return (pXd);  // Number of bytes converted
 }
+/* ------------------------------------------------------------- */
+LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen ) 
+{
+   size_t inbytesleft = inLen;
+   size_t outbytesleft =  LONG_MAX;
+   PUCHAR pIn = in;
+   PUCHAR pOut = out;
+   size_t rc = iconv (cd, &pIn, &inbytesleft, &pOut, &outbytesleft);
+   
+   return (rc < 0) ? -1: LONG_MAX - outbytesleft;
+ 
+} 
+
 /* ------------------------------------------------------------- */
 void XlateXdClose  (PXLATEDESC pXd)
 {

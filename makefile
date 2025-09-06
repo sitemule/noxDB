@@ -11,10 +11,10 @@ SHELL=/QOpenSys/pkgs/bin/bash
 # the rpg modules and the binder source file are also created in BIN_LIB.
 # binder source file and rpg module can be remove with the clean step (make clean)
 .PHONY=all
-BIN_LIB=NOXDB2
+BIN_LIB=NOXDBUTF8
 LIBLIST=$(BIN_LIB) 
 TARGET_CCSID=*JOB
-TARGET_RELEASE=V7R1M0
+TARGET_RELEASE=V7R3M0
 
 # CL - settings
 CLLE_FLAGS=DBGVIEW(*ALL) TGTRLS($(TARGET_RELEASE))
@@ -23,6 +23,7 @@ CLLE_INCLUDE=*SRCFILE
 
 # C - Settings
 C_FLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) DBGVIEW(*ALL) TGTRLS($(TARGET_RELEASE))
+#DEBUG C_FLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO)  TGTRLS($(TARGET_RELEASE))
 C_INCLUDE='/QIBM/include' 'include' 'ext/include'
 
 # RPG - Settings
@@ -61,43 +62,51 @@ CC = $(eval FILEEXT = $(call UC,$(subst .,,$(suffix $@)))) \
 #-----------------------------------------------------------
 
 # Dependency list ---  list all
-EXTERNALS := $(shell find ext -name "*.c" -o -name   "*.clle" )
-SOURCE  := $(shell find src -name "*.c" -o -name   "*.clle" )
+EXTERNALS := $(shell find ext -name "*.c" -o -name  "*.clle" )
+SOURCE  := $(shell find src -name "*.c" -o -name "*.cpp" -o -name "*.clle" )
 
 
 
-all:  $(BIN_LIB).lib hdr $(EXTERNALS) $(SOURCE) noxdb2.srvpgm noxdb2.bnddir
+all:  $(BIN_LIB).lib link hdr $(EXTERNALS) $(SOURCE) noxDbUtf8.srvpgm noxDbUtf8.bnddir
 
 
 %.lib:
 	-system -q "CRTLIB $* TYPE(*TEST)"
 
+# QOAR are for unknow reasons not in /QIBM/include
+link:
+	-mkdir -p ./headers/qoar/h
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./headers/qoar/h/qrntypes
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./headers/qoar/h/qrndtagen
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./headers/qoar/h/qrndtainto
+
+
 $(EXTERNALS) $(SOURCE): FORCE
 	$(CC)
 
-noxdb2.srvpgm: hdr src/noxDB2.c src/sqlio.c src/csv.c src/xmlparser.c src/jsonparser.c src/jsonserial.c src/xmlserial.c src/tostream.c src/reader.c src/iterator.c src/http.c src/generic.c src/trace.clle ext/src/memUtil.c ext/src/parms.c ext/src/sndpgmmsg.c ext/src/stream.c ext/src/timestamp.c ext/src/trycatch.c ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c 
+noxDbUtf8.srvpgm: hdr src/noxDbUtf8.c src/sqlio.c src/csv.c src/xmlparser.c src/jsonparser.c src/jsonserial.c src/xmlserial.c src/tostream.c src/reader.c src/iterator.c src/http.c src/generic.c src/trace.clle ext/src/memUtil.c ext/src/parms.c ext/src/sndpgmmsg.c ext/src/stream.c ext/src/timestamp.c ext/src/trycatch.c ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c 
 	@# You may be wondering what this ugly string is. It's a list of objects created from the dep list that end with .c or .clle.
 	$(eval MODULES = $(notdir $(basename $(filter %.c %.clle , $^))))
 	compile.py --stmf="src/$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" \
 		--flags="MODULE($(MODULES)) ALWLIBUPD(*YES) TGTRLS($(TARGET_RELEASE)) DETAIL(*BASIC)"
 
-noxdb2.bnddir: 
+noxDbUtf8.bnddir: 
 	-system "DLTBNDDIR  BNDDIR($(BIN_LIB)/$(BIN_LIB))"
 	-system "CRTBNDDIR  BNDDIR($(BIN_LIB)/$(BIN_LIB))"
 	-system "ADDBNDDIRE BNDDIR($(BIN_LIB)/$(BIN_LIB)) OBJ(($(BIN_LIB)/$(BIN_LIB) *SRVPGM))"
 
 
 hdr:
-	sed "s/ nox_/ json_/g; s/ NOX_/ JSON_/g" headers/noxDB2.rpgle > headers/noxDB2JSON.rpgle
-	sed "s/ nox_/ xml_/g; s/ NOX_/ XML_/g" headers/noxDB2.rpgle > headers/noxDB2XML.rpgle
+#	sed "s/ nox_/ json_/g; s/ NOX_/ JSON_/g" headers/noxDbUtf8.rpgle > headers/noxDbUtf8JSON.rpgle
+#	sed "s/ nox_/ xml_/g; s/ NOX_/ XML_/g" headers/noxDbUtf8.rpgle > headers/noxDbUtf8XML.rpgle
 
 	-system -i "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(132)"
 	-system -i "CRTSRCPF FILE($(BIN_LIB)/H) RCDLEN(132)"
   
-	system "CPYFRMSTMF FROMSTMF('headers/noxDB2.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDB2.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/noxDB2JSON.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDB2JSON.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/noxDB2XML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDB2XML.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('include/noxDB2.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/noxDB2.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('headers/noxDbUtf8.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDbUtf8.mbr') MBROPT(*REPLACE)"
+#	system "CPYFRMSTMF FROMSTMF('headers/noxDbUtf8JSON.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDbUtf8JSON.mbr') MBROPT(*REPLACE)"
+#	system "CPYFRMSTMF FROMSTMF('headers/noxDbUtf8XML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDbUtf8XML.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('include/noxDbUtf8.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/noxDbUtf8.mbr') MBROPT(*REPLACE)"
 
 all:
 	@echo Build success!
@@ -110,20 +119,20 @@ cleanup:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/TS*)      OBJTYPE(*PGM)"
 
 release: cleanup 
-	@echo " -- Creating noxdb2 release. --"
+	@echo " -- Creating noxDbUtf8 release. --"
 	@echo " -- Creating save file. --"
 	system "CRTSAVF FILE($(BIN_LIB)/RELEASE)"
 	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) DTACPR(*HIGH) OMITOBJ((RELEASE *FILE))"
 	-rm -r release
 	-mkdir release
-	system "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release-noxDB2.savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"
+	system "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release-noxDbUtf8.savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"
 	@echo " -- Cleaning up... --"
 	system "DLTOBJ OBJ($(BIN_LIB)/RELEASE) OBJTYPE(*FILE)"
 	@echo " -- Release created! --"
 	@echo ""
 	@echo "To install the release, run:"
 	@echo "  > CRTLIB $(BIN_LIB)"
-	@echo "  > CPYFRMSTMF FROMSTMF('./release/release-noxDB2.savf') TOMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') MBROPT(*REPLACE) CVTDTA(*NONE)"
+	@echo "  > CPYFRMSTMF FROMSTMF('./release/release-noxDbUtf8.savf') TOMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') MBROPT(*REPLACE) CVTDTA(*NONE)"
 	@echo "  > RSTLIB SAVLIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE)"
 	@echo ""
 	@echo "Or restore into existing application library"

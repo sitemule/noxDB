@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -18,40 +18,40 @@
         *inlr = *on;
 
         // First demo: find attribues which contains objects where attibutes has a value
-        pJson = json_ParseString ('{-
+        pJson = nox_ParseString ('{-
            "__cid__":12,"title":{"da":"Kontakter","en":""},"image":"" -
         }');
 
-        if json_Error(pJson) ;
-           msg = JSON_Message(pJson);
-           JSON_dump(pJson);
-           JSON_Close(pJson);
+        if nox_Error(pJson) ;
+           msg = NOX_Message(pJson);
+           NOX_dump(pJson);
+           NOX_Close(pJson);
            return;
         endif;
 
         // Get the object in the array where the "x" attribute has the value of 2
-        s = json_getStr      (pJson : '/title/da' );
-        s = json_getStr      (pJson : '/title/[0]' );
-        s = json_getStr      (pJson : '/title'     );
+        s = nox_getStr      (pJson : '/title/da' );
+        s = nox_getStr      (pJson : '/title/[0]' );
+        s = nox_getStr      (pJson : '/title'     );
 
-        JSON_Close(pJson);
+        NOX_Close(pJson);
         // Next  demo: find attribues which contains objects where attibutes has a value
-        pJson = json_ParseString ('{-
+        pJson = nox_ParseString ('{-
            "__cid__":12,"title": "Kontakter","image":"" -
         }');
 
-        if json_Error(pJson) ;
-           msg = JSON_Message(pJson);
-           JSON_dump(pJson);
-           JSON_Close(pJson);
+        if nox_Error(pJson) ;
+           msg = NOX_Message(pJson);
+           NOX_dump(pJson);
+           NOX_Close(pJson);
            return;
         endif;
 
         // Get the object in the array where the "x" attribute has the value of 2
-        s = json_getStr      (pJson : '/title/da' );
-        s = json_getStr      (pJson : '/title/[0]' );
-        s = json_getStr      (pJson : '/title'     );
+        s = nox_getStr      (pJson : '/title/da' );
+        s = nox_getStr      (pJson : '/title/[0]' );
+        s = nox_getStr      (pJson : '/title'     );
 
-        JSON_Close(pJson);
+        NOX_Close(pJson);
 
         *inlr = *on;

@@ -25,7 +25,7 @@
 #include "ostypes.h"
 #include "varchar.h"
 #include "xlate.h"
-#include "noxdb2.h"
+#include "noxDbUtf8.h"
 #include "parms.h"
 // #include "rtvsysval.h"
 #include "memUtil.h"

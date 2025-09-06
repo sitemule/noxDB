@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
         
@@ -14,21 +14,21 @@
 
         //------------------------------------------------------------- *
 
-        pJson = json_ParseString ('{e:[ -
+        pJson = nox_ParseString ('{e:[ -
           { "name":"a", "val":"a1"}, -
           { "name":"b", "val":"b2"}, -
           { "name":"c", "val":"c3"} -
         ]}');
 
-        if JSON_Error(pJson) ;
-           msg = JSON_Message(pJson);
-           JSON_dump(pJson);
-           JSON_Close(pJson);
+        if NOX_Error(pJson) ;
+           msg = NOX_Message(pJson);
+           NOX_dump(pJson);
+           NOX_Close(pJson);
            return;
         endif;
 
         // Get the object n the array where the "name" attribute is "b"
-        p = json_locate  (pJson : '/e[name = b]');
-        s = json_getStr      (p : 'val' );
+        p = nox_locate  (pJson : '/e[name = b]');
+        s = nox_getStr      (p : 'val' );
 
         *inlr = *on;

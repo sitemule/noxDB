@@ -1,6 +1,6 @@
 
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE');
 
         //------------------------------------------------------------- *
 
@@ -21,36 +21,36 @@
         //------------------------------------------------------------- *
 
         *inlr = *on;
-        pJson = Json_ParseFile ('./test/documents/simple.json');
+        pJson = Nox_ParseFile ('./test/documents/simple.json');
 
-        if Json_Error(pJson) ;
-           msg = Json_Message(pJson);
-           Json_dump(pJson);
-           Json_Close(pJson);
+        if Nox_Error(pJson) ;
+           msg = Nox_Message(pJson);
+           Nox_dump(pJson);
+           Nox_Close(pJson);
            return;
         endif;
 
         // Locate and return the value:
-        pNode = Json_Locate(pJson: '/price');
-        price = Json_GetNum(pNode);
+        pNode = Nox_Locate(pJson: '/price');
+        price = Nox_GetNum(pNode);
 
         // Or in one go:
-        price = Json_GetNum(pJson: '/price');
-        text  = Json_GetStr(pJson: '/text');
+        price = Nox_GetNum(pJson: '/price');
+        text  = Nox_GetStr(pJson: '/text');
 
         // Or in one go - with deafults if not found
-        id    = Json_GetNum(pJson: '/id'  : -1 );
-        text  = Json_GetStr(pJson: '/desc': 'N/A');
+        id    = Nox_GetNum(pJson: '/id'  : -1 );
+        text  = Nox_GetStr(pJson: '/desc': 'N/A');
 
         // Use ither / or . as you like. It is the same..
-        country1   = Json_GetStr(pJson: '/anObject/country': 'N/A');
-        country2   = Json_GetStr(pJson: '.anObject.country': 'N/A');
+        country1   = Nox_GetStr(pJson: '/anObject/country': 'N/A');
+        country2   = Nox_GetStr(pJson: '.anObject.country': 'N/A');
 
-        Json_Close(pJson);
+        Nox_Close(pJson);
 
         // If needed you can detect leaks here:
-         //if Json_MemLeak();
-           Json_MemStat();
+         //if Nox_MemLeak();
+           Nox_MemStat();
          //endif;
 
         Return;

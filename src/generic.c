@@ -28,7 +28,7 @@
 #include "parms.h"
 // #include "rtvsysval.h"
 #include "memUtil.h"
-#include "noxdb2.h"
+#include "noxDbUtf8.h"
 
 /* --------------------------------------------------------------------------- */
 PUCHAR c2s(UCHAR c)

@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL) */
+// CMD:CRTCMOD 
 /* --------------------------------------------------------------- *
  * Company . . . : System & Method A/S                             *
  * Design  . . . : Niels Liisberg                                  *
@@ -19,12 +19,11 @@
 #include "ostypes.h"
 #include "sndpgmmsg.h"
 #include "trycatch.h"
-#include "rtvsysval.h"
 #include "parms.h"
-#include "utl100.h"
-#include "mem001.h"
+#include "strUtil.h"
+#include "memUtil.h"
 #include "varchar.h"
-#include "jsonxml.h"
+#include "noxDbUtf8.h"
 #include "xlate.h"
 
 #ifdef QOAR_INCLUDE_IFS
@@ -37,7 +36,7 @@
 
 // TODO !!! ensure UTF-8 - Check reintrant 
 
-static PJXNODE * ppRoot;
+static PNOXNODE * ppRoot;
 static iconv_t iconvCd;
 
 typedef void (*NOX_DATAGEN)();
@@ -49,13 +48,13 @@ typedef void (*NOX_DATAGEN)();
     --------------------------------------------------------------------------- */
 void  nox_dataGenMapper (QrnDgParm_T * pParms)
 {
-    static PJXNODE pNode;
+    static PNOXNODE pNode;
     static BOOL first = false;
     static BOOL buildIconv  = true;
 
     if (buildIconv) {
         buildIconv  = false;
-        iconvCd = XlateOpenDescriptor (13488, 0 , false);
+        iconvCd = XlateOpen (13488, 0 , false);
     }
 
     switch ( pParms->event) {
@@ -74,12 +73,12 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
             break;
         }
         case QrnDgEvent_05_StartStruct      : {
-            PJXNODE pObj;
+            PNOXNODE pObj;
             UCHAR name [256];
             LONG namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
-            pObj  = nox_NewObject(NULL);
+            pObj  = nox_NewObject();
             nox_NodeRename(pObj ,  name);
             nox_NodeInsertChildTail (pNode , pObj);
             pNode = pObj;
@@ -94,12 +93,12 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
             break;
         }
         case QrnDgEvent_07_StartScalarArray : {
-            PJXNODE pArr;
+            PNOXNODE pArr;
             UCHAR name [256];
             ULONG namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
-            pArr = nox_NewArray(NULL);
+            pArr = nox_NewArray();
             nox_NodeRename(pArr ,  name);
             nox_NodeInsertChildTail (pNode , pArr);
             pNode = pArr;
@@ -114,12 +113,12 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
             break;
         }
         case QrnDgEvent_09_StartStructArray : {
-            PJXNODE pArr;
+            PNOXNODE pArr;
             UCHAR name [256];
             ULONG namelen = XlateBuffer(iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
-            pArr = nox_NewArray(NULL);
+            pArr = nox_NewArray();
             nox_NodeRename(pArr ,  name);
             nox_NodeInsertChildTail (pNode , pArr);
             pNode = pArr;
@@ -134,7 +133,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
             break;
         }
         case QrnDgEvent_11_ScalarValue      : {
-            PJXNODE pValueNode;
+            PNOXNODE pValueNode;
             UCHAR value [32766];
             ULONG valuelen;
             PUCHAR pValue = value;
@@ -167,7 +166,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
                     break;
             }
 
-            pValueNode = nox_NodeAdd (pNode , RL_LAST_CHILD , name , pValue, type);
+            pValueNode = nox_NodeInsert (pNode , RL_LAST_CHILD , name , pValue, type);
             if (first) {
                 first = false;
                 *ppRoot = pValueNode;
@@ -183,7 +182,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
 // ---------------------------------------------------------------------------
 // The main entry point for the data generation
 // ---------------------------------------------------------------------------
-nox_DATAGEN nox_dataGen (PJXNODE * ppNode, PUCHAR optionsP)
+NOX_DATAGEN  nox_dataGen (PNOXNODE * ppNode, PUCHAR optionsP)
 {
     PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
     ppRoot = ppNode; // not reentrant

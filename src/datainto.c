@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL) */
+// CMD:CRTCMOD 
 /* --------------------------------------------------------------- *
  * Company . . . : System & Method A/S                             *
  * Design  . . . : Niels Liisberg                                  *
@@ -24,7 +24,7 @@
 #include "utl100.h"
 #include "mem001.h"
 #include "varchar.h"
-#include "jsonxml.h"
+#include "noxDbUtf8.h"
 
 
 #ifdef QOAR_INCLUDE_IFS

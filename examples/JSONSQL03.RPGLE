@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -15,28 +15,28 @@
 
         // The destination object for our SQL result row
         // and the array to contain the rows
-        rows    = json_newArray ();
+        rows    = nox_newArray ();
 
         // Open our SQL cursor. Use a simple select
         sql = 'Select * from product';
-        sqlhnd  = json_sqlOpen(sql);
+        sqlhnd  = nox_sqlOpen(sql);
 
         // Now iterate on each row in the resultset
-        pRow = json_sqlFetchNext(sqlhnd) ;
+        pRow = nox_sqlFetchNext(sqlhnd) ;
         dow (pRow <> *NULL );
            // Append the row to the end of the result array. Note ArrayPush will
            // by default move the object ( not copy) to the bottom of the array.
-           json_ArrayPush(rows : pRow);
-           pRow = json_sqlFetchNext(sqlhnd) ;
+           nox_ArrayPush(rows : pRow);
+           pRow = nox_sqlFetchNext(sqlhnd) ;
         enddo;
 
         // Produce a JSON stream file in the root of the IFS
-        json_writeJsonStmf(rows : '/jsonxml/json/demo.json' : 1208 : *ON);
+        nox_writeJsonStmf(rows : '/jsonxml/json/demo.json' : 1208 : *ON);
 
         // Cleanup: Close the SQL cursor, dispose the row and the array
-        json_close(rows);
-        json_sqlClose(sqlhnd);
-        json_sqlDisconnect();
+        nox_close(rows);
+        nox_sqlClose(sqlhnd);
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC)   STGMDL(*SNGLVL) */
+// CMD:CRTCMOD 
 /* ------------------------------------------------------------- */
 /* SYSIFCOPT(*IFSIO) OPTION(*EXPMAC *SHOWINC)                    */
 /* Module  . . . : callproc                                      */

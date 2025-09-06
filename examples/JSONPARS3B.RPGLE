@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
         
         //------------------------------------------------------------- *
 
@@ -19,30 +19,30 @@
 
         //------------------------------------------------------------- *
 
-        pJson = JSON_ParseFile ('/www/systest/demo2.json':'');
+        pJson = NOX_ParseFile ('/www/systest/demo2.json':'');
 
-        if JSON_Error(pJson) ;
-           msg = JSON_Message(pJson);
+        if NOX_Error(pJson) ;
+           msg = NOX_Message(pJson);
            dsply msg;
-           JSON_dump(pJson);
-           JSON_Close(pJson);
+           NOX_dump(pJson);
+           NOX_Close(pJson);
            return;
         endif;
 
 
         // Loop on the array
-        pArr  = JSON_locate(pJson: '/[0]'); // First array element
+        pArr  = NOX_locate(pJson: '/[0]'); // First array element
         dow (pArr <> *NULL) ;
           // Loop all elements in that array element
-          e  = json_GetChild (pArr);
+          e  = nox_GetChild (pArr);
           dow (e  <> *NULL) ;
-            n =  json_getName  (e);
-            v =  json_getValue (e);
-            e  = json_GetNext  (e);
+            n =  nox_getName  (e);
+            v =  nox_getValue (e);
+            e  = nox_GetNext  (e);
           endDo;
-          pArr  = JSON_getNext(pArr);
+          pArr  = NOX_getNext(pArr);
         endDo;
 
-        JSON_dump(pJson);
-        JSON_Close(pJSON);
+        NOX_dump(pJson);
+        NOX_Close(pJSON);
         *inlr = *on;

@@ -296,6 +296,8 @@ int readBlock(PNOXCOM pJxCom , PUCHAR buf, int size)                  ;
 BOOL isTimeStamp(PUCHAR p)                                           ;
 int formatTimeStamp(PUCHAR p , PUCHAR s)                             ;
 UCHAR unicode2ebcdic (USHORT c)                                      ;
+int unicode2utf8 (PUCHAR out, USHORT c);
+
 int parsehex(UCHAR c)                                                ;
 BOOL isTerm(UCHAR c, PUCHAR term);
 
@@ -314,7 +316,12 @@ PUCHAR nox_GetChar(PNOXCOM pJxCom);
 void nox_SetMessage (PUCHAR Ctlstr , ... );
 void nox_NodeFreeNodeOnly(PNOXNODE pNode);
 
+
+
 // Prototypes  - main  - exports
+LGL nox_isNode  (PNOXNODE pNode);
+void nox_NodeRename(PNOXNODE pNode, PUCHAR name);
+PNOXNODE nox_NodeUnlink  (PNOXNODE  pNode);
 void nox_NodeInsertChildHead( PNOXNODE pRoot, PNOXNODE pChild);
 void nox_NodeInsertChildTail( PNOXNODE pRoot, PNOXNODE pChild);
 void nox_NodeInsertSiblingBefore( PNOXNODE pRef, PNOXNODE pSibling);
@@ -487,7 +494,7 @@ ULONG    nox_NodeCheckSum (PNOXNODE pNode);
 PNOXNODE  nox_SetStrByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Value);
 PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR Name, BOOL Value);
 PNOXNODE  nox_SetDecByName (PNOXNODE pNode, PUCHAR Name, FIXEDDEC Value);
-PNOXNODE  nox_SetIntByName (PNOXNODE pNode, PUCHAR Name, LONG Value);
+PNOXNODE  nox_SetIntByName (PNOXNODE pNode, PUCHAR Name, INT64  Value);
 PNOXNODE  nox_NodeMoveInto (PNOXNODE  pDest, PUCHAR Name , PNOXNODE pSource);
 void nox_NodeCloneAndReplace (PNOXNODE pDest , PNOXNODE pSource);
 void nox_Debug(PUCHAR text, PNOXNODE pNode);
@@ -503,6 +510,9 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, BOOL useLocale);
 #define NOXSQLSTMT_MAX  32
 #endif
 
+#define NOXDB_FIRST_ROW 1 
+#define NOXDB_ALL_ROWS -1 
+
 typedef _Packed struct  {
 	 SQLHSTMT      hstmt;
 	 BOOL          allocated;
@@ -511,6 +521,8 @@ typedef _Packed struct  {
 
 typedef _Packed struct  {
 	 SQLCHAR       colname[256]; // !!!! TODO !!! set len to 32!!
+	 SQLCHAR       sysname  [64];
+	 SQLCHAR       realname [64];
 	 SQLSMALLINT   coltype;
 	 SQLSMALLINT   colnamelen;
 	 SQLSMALLINT   nullable;
@@ -521,6 +533,7 @@ typedef _Packed struct  {
 	 SQLINTEGER    displaysize;
 	 NODETYPE      nodeType;
 	 SQLCHAR       header[256];
+	 SQLCHAR       text[128];
 	 BOOL          isId;
 } NOXCOL, * PNOXCOL;
 
@@ -567,6 +580,7 @@ typedef _Packed struct  {
 	 NOXSQLSTMT    stmts[NOXSQLSTMT_MAX];
 	 SHORT         stmtIx;
 	 NOXTRACE      sqlTrace;
+	 BOOL          transaction;
 } NOXSQLCONNECT , * PNOXSQLCONNECT;
 
 typedef _Packed struct  {
@@ -584,16 +598,21 @@ typedef _Packed struct  {
 // BOOL          deleteOptions;
 	 PNOXCOL        cols;
 	 PNOXSQLCONNECT pCon;
+	 LONG           maxColSize;  
 
 } NOXSQL, * PNOXSQL;
 
 
 typedef enum _NOX_RESULTSET {
-	 NOX_META       = 1,
-	 NOX_FIELDS     = 2,
-	 NOX_TOTALROWS  = 4,
-	 NOX_UPPERCASE  = 8,
-	 NOX_APROXIMATE_TOTALROWS = 16
+	NOX_META       = 1,
+	NOX_FIELDS     = 2,
+	NOX_TOTALROWS  = 4,
+	NOX_UPPERCASE  = 8,
+	NOX_APROXIMATE_TOTALROWS = 16,
+	NOX_SYSTEM_NAMES 		= 32,
+	NOX_CAMEL_CASE 			= 64,
+	NOX_GRACEFUL_ERROR 		= 128,
+	NOX_COLUMN_TEXT   		= 256
 } NOX_RESULTSET, *PNOX_RESULTSET;
 
 typedef _Packed struct _SQLCHUNK {
@@ -605,22 +624,20 @@ typedef _Packed struct _SQLCHUNK {
 
 
 VOID TRACE ( UCHAR lib[11] , PLGL doTrace , UCHAR job [32]);
-
-PNOXNODE nox_sqlResultRow ( PNOXSQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParmsP, LONG startAt) ;
+PNOXNODE nox_sqlResultRow ( PNOXSQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms , LONG format , LONG start );
 #pragma descriptor ( void nox_sqlResultRow   (void))
-PNOXNODE nox_sqlResultRowVC ( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt,  PNOXNODE pSqlParmsP , LONG startP);
+
+PNOXNODE nox_sqlResultRowVC ( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP, LONG format ,LONG start );
 #pragma descriptor ( void nox_sqlResultRowVC   (void))
 
-
-PNOXNODE nox_sqlResultSet( PNOXSQLCONNECT pCon, PUCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PNOXNODE pSqlParmsP);
+PNOXNODE nox_sqlResultSet( PNOXSQLCONNECT pCon ,PUCHAR sqlstmt, PNOXNODE pSqlParms, LONG format, LONG start, LONG limit);
 #pragma descriptor ( void nox_sqlResultSet   (void))
-PNOXNODE nox_sqlResultSetVC( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, LONG startP, LONG limitP, LONG formatP , PNOXNODE pSqlParmsP);
+PNOXNODE nox_sqlResultSetVC( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParms, LONG format, LONG start, LONG limit );
 #pragma descriptor ( void nox_sqlResultSetVC   (void))
 
-
-PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParms, BOOL scroll);
+PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParms, LONG format , LONG start , LONG limit);
 #pragma descriptor ( void nox_sqlOpen        (void))
-PNOXSQL nox_sqlOpenVC(PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scrollP);
+PNOXSQL nox_sqlOpenVC(PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt , PNOXNODE pSqlParmsP, LONG format , LONG start , LONG limit);
 #pragma descriptor ( void nox_sqlOpenVC       (void))
 
 
@@ -666,5 +683,12 @@ PNOXSQLCONNECT  nox_sqlConnect(PNOXNODE pSqlParms  );
 void nox_sqlDisconnect (PNOXSQLCONNECT * ppCon);
 void nox_traceOpen (PNOXSQLCONNECT pCon);
 void nox_traceInsert (PNOXSQL pSQL, PUCHAR stmt , PUCHAR sqlState);
+
+typedef void (*NOX_TRACE_PROC) ( PUCHAR text , PNOXNODE pNode);
+typedef void (*NOX_DATAINTO)();
+
+
+void CheckBufSize(PNOXCOM pJxCom);
+
 
 #endif

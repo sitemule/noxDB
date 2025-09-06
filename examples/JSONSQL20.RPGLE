@@ -1,14 +1,14 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 <<<<<<< HEAD
 
         /include 'headers/JSONPARSER.rpgle'
 =======
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 >>>>>>> 29b6dd90e3b0e98eb4661a4449c52f995845c4a1
         Dcl-S err          Ind;
         Dcl-S priceJsStr   Varchar(256);
@@ -18,64 +18,64 @@
         //------------------------------------------------------------- *
 
         // Simple update
-        err = json_sqlExec(
+        err = nox_sqlExec(
            'update product set price = price * 1.01'
         );
 
         // update using json string template
         priceJsStr  = '{ newprice : 1.03 }';
-        err = json_sqlExec(
+        err = nox_sqlExec(
            'update product set price = price * $newprice'
            :priceJsStr
         );
 
         // update using json object
-        priceObj    = json_parseString ('{ newprice : 1.04 }');
-        err = json_sqlExec(
+        priceObj    = nox_parseString ('{ newprice : 1.04 }');
+        err = nox_sqlExec(
            'update product set price = price * $newprice'
            :priceObj
         );
-        json_Close(priceObj);
+        nox_Close(priceObj);
 
         // Advanced: - update using json object as a row
         // This also works for BLOBS and CLOB columns
-        row  = json_parseString ('{  -
+        row  = nox_parseString ('{  -
            manuid: "SAMSUNG",        -
            price: 1234,              -
            stockCnt: 22              -
         }');
 
         // update using object as the row
-        err = json_sqlUpdate (
+        err = nox_sqlUpdate (
            'product'                // table name
            :row                     // row in object form {a:1,b:2} etc..
            :'where prodkey = 120'   // Where clause ( you can omit the "where" )
         );
 
         // update using object as the row: You can omit the "where"
-        err = json_sqlUpdate (
+        err = nox_sqlUpdate (
            'product'                // table name
            :row                     // row in object form {a:1,b:2} etc..
            :'prodkey = 120'         // Where clause
         );
 
         // update using object as the row: The where can be a template / object it self
-        err = json_sqlUpdate (
+        err = nox_sqlUpdate (
            'product'                // table name
            :row                     // row in object form {a:1,b:2} etc..
            :'prodkey = $ID'         // Where clause
            : '{"ID":130}'           // Templte or object
         );
-        json_delete(row);
+        nox_delete(row);
 
         // Simple delete
-        err = json_sqlExec(
+        err = nox_sqlExec(
            'delete from  product where prodkey = 99999'
         );
 
         // Advanced: - insert
         // This also works for BLOBS and CLOB columns
-        row  = json_parseString ('{  -
+        row  = nox_parseString ('{  -
            prodKey:  99999  ,        -
            desc   :  "Test" ,        -
            manuid: "SAMSUNG",        -
@@ -83,29 +83,29 @@
            stockCnt: 12              -
         }');
 
-        err = json_sqlInsert (
+        err = nox_sqlInsert (
            'product'
            :row
         );
-        json_delete(row);
+        nox_delete(row);
 
         // Advanced: - insert
         // nestedet objects is serialized CLOBS / BLOB
-        row  = json_parseString ('{  -
+        row  = nox_parseString ('{  -
            x : {                     -
                abc:123,              -
                sometext : "It auto serialize it .. wow !!" -
            },                                            -
            canBeNull : null                             -
         }');
-        err = json_sqlInsert (
+        err = nox_sqlInsert (
            'blob'
            :row
         );
-        json_delete(row);
+        nox_delete(row);
 
         // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
-        json_sqlDisconnect();
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -16,42 +16,42 @@
         //------------------------------------------------------------- *
 
         // First demo: find attribues which contains objects where attibutes has a value
-        pJson = json_ParseString ('{e:{ -
+        pJson = nox_ParseString ('{e:{ -
           "a": { "x":1 , "y":"11"}, -
           "b": { "x":2 , "y":"22"}, -
           "c": { "x":3 , "y":"33"}  -
         }}');
 
-        if json_Error(pJson) ;
-           msg = JSON_Message(pJson);
-           JSON_dump(pJson);
-           JSON_Close(pJson);
+        if nox_Error(pJson) ;
+           msg = NOX_Message(pJson);
+           NOX_dump(pJson);
+           NOX_Close(pJson);
            return;
         endif;
 
         // Get the object in the array where the "x" attribute has the value of 2
-        p = json_locate  (pJson : '/e[x=2]');
-        n = json_getName(p); // the is the "b" object
-        s = json_getStr      (p : 'y' );
+        p = nox_locate  (pJson : '/e[x=2]');
+        n = nox_getName(p); // the is the "b" object
+        s = nox_getStr      (p : 'y' );
 
-        JSON_Close(pJson);
+        NOX_Close(pJson);
         // Next demo: find attribues in arrays where attibutes has a value
-        pJson = json_ParseString ('{e:[ -
+        pJson = nox_ParseString ('{e:[ -
           { "x":1 , "y":"11"}, -
           { "x":2 , "y":"22"}, -
           { "x":3 , "y":"33"}  -
         ]}');
 
-        if json_Error(pJson) ;
-           msg = json_Message(pJson);
-           json_dump(pJson);
-           json_Close(pJson);
+        if nox_Error(pJson) ;
+           msg = nox_Message(pJson);
+           nox_dump(pJson);
+           nox_Close(pJson);
            return;
         endif;
 
         // Get the object in the array where the "x" attribute has the value of 2
-        p = json_locate  (pJson : '/e[x=2]');
-        n = json_getName(p); // This object has no name since it is an element of an array
-        s = json_getStr      (p : 'y' );
+        p = nox_locate  (pJson : '/e[x=2]');
+        n = nox_getName(p); // This object has no name since it is an element of an array
+        s = nox_getStr      (p : 'y' );
 
         *inlr = *on;

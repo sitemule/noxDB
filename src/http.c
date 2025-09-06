@@ -13,6 +13,8 @@
 #include <decimal.h>
 #include <wchar.h>
 #include <qp2shell.h>   
+#include <unistd.h>   
+
 // #include <errno.h>
 
 #include <sys/stat.h>
@@ -21,7 +23,7 @@
 #include "xlate.h"
 #include "parms.h"
 #include "memUtil.h"
-#include "noxdb2.h"
+#include "noxDbUtf8.h"
 
 // ---------------------------------------------------------------------------
 PUCHAR loadText (PUCHAR file)

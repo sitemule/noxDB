@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
 #include "ostypes.h"
@@ -22,7 +23,7 @@
 #include "parms.h"
 #include "memUtil.h"
 #include "streamer.h"
-#include "noxdb2.h"
+#include "noxDbUtf8.h"
 
 
 // -----------------------------------------------------------------
@@ -102,7 +103,7 @@ void checkParentRelation(PNOXNODE pNode , PNOXNODE pParent)
 {
 	 if (pNode->pNodeParent != pParent) {
 		try {
-			joblog("Invalid parent relation %s , %s for %s",
+			nox_joblog("Invalid parent relation %s , %s for %s",
 				pNode->pNodeParent->Name,
 				pParent->Name,
 				pNode->Name

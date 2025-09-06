@@ -1,7 +1,7 @@
         
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -15,16 +15,16 @@
      C                   parm                    file            128
      C                   parm                    text             64
      C                   parm                    origin            3
-        pJson = JSON_ParseFile   ( file);
-        if JSON_Error(pJson) ;
-           msg = JSON_Message(pJson);
-           JSON_Close(pJson);
+        pJson = NOX_ParseFile   ( file);
+        if NOX_Error(pJson) ;
+           msg = NOX_Message(pJson);
+           NOX_Close(pJson);
            return;
         endif;
 
-        json_SetValue(pJson : '/session/preset/text'  : Text);
-        json_SetValue(pJson : '/session/preset/origin': Origin);
+        nox_SetValue(pJson : '/session/preset/text'  : Text);
+        nox_SetValue(pJson : '/session/preset/origin': Origin);
 
-        json_WriteStmf  (pJson : file  : 1208 : *OFF);
-        JSON_Close(pJSON);
+        nox_WriteStmf  (pJson : file  : 1208 : *OFF);
+        NOX_Close(pJSON);
         *inlr = *on;

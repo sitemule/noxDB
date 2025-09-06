@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -19,27 +19,27 @@
 
         //------------------------------------------------------------- *
         
-        pJson = json_ParseString ('{}');
+        pJson = nox_ParseString ('{}');
 
-        if json_Error(pJson) ;
-           msg = json_Message(pJson);
-           json_dump(pJson);
-           json_Close(pJson);
+        if nox_Error(pJson) ;
+           msg = nox_Message(pJson);
+           nox_dump(pJson);
+           nox_Close(pJson);
            return;
         endif;
 
-        json_SetValue ( pJson : '/o/a[0]': '10');
-        json_SetValue ( pJson : '/o/a[1]': '20');
+        nox_SetValue ( pJson : '/o/a[0]': '10');
+        nox_SetValue ( pJson : '/o/a[1]': '20');
 
-        po = json_Locate   ( pJson : '/o/a') ;  // The array it self
-        value = json_getStr ( po : '[UBOUND]');
-        json_SetValue ( po    : '[3]': '30');
-        value = json_getStr ( po : '[UBOUND]');
-        json_SetValue ( po    : '[UBOUND]': '40'); // This will not work !!!
-        value = json_getStr ( po : '[UBOUND]'); // So UBOUND is still 3
+        po = nox_Locate   ( pJson : '/o/a') ;  // The array it self
+        value = nox_getStr ( po : '[UBOUND]');
+        nox_SetValue ( po    : '[3]': '30');
+        value = nox_getStr ( po : '[UBOUND]');
+        nox_SetValue ( po    : '[UBOUND]': '40'); // This will not work !!!
+        value = nox_getStr ( po : '[UBOUND]'); // So UBOUND is still 3
 
-        json_WriteStmf  (pJson   : './jsonout.json' : 1208 : *OFF);
+        nox_WriteStmf  (pJson   : './jsonout.json' : 1208 : *OFF);
 
-        json_dump(pJson);
-        json_Close(pJSON);
+        nox_dump(pJson);
+        nox_Close(pJSON);
         *inlr = *on;

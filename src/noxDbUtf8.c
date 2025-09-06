@@ -38,7 +38,7 @@
 #include "strUtil.h"
 #include "memUtil.h"
 #include "streamer.h"
-#include "noxdb2.h"
+#include "noxDbUtf8.h"
 #include "e2aa2e.h"
 
 // Global thread vars
@@ -60,7 +60,7 @@ static PLVARCHAR PLVARCHARNULL = (PLVARCHAR) &LVARCHARNULL;
 static const PUCHAR delimiters = DELIMITERS;
 #pragma convert(0)
 
-static NOX_TRACE nox_trace = null;
+static NOX_TRACE_PROC nox_trace = null;
 
 
 // --------------------------------------------------------------------------- 
@@ -82,7 +82,7 @@ void  freeNodeValue(PNOXNODE pNode)
 	}
 }
 // ---------------------------------------------------------------------------
-void nox_SetTraceProc (JX_TRACE  proc) {
+void nox_SetTraceProc (NOX_TRACE_PROC  proc) {
    nox_trace = proc;
 }
 
@@ -839,17 +839,17 @@ PNOXNODE  nox_CopyValueVC (PNOXNODE pDest , PLVARCHAR destName , PNOXNODE pSourc
 	return nox_CopyValue (pDest , plvc2str(destName) , pSource , plvc2str(sourceName));
 }
 /* --------------------------------------------------------------------------- */
-PNOXNODE  jx_MoveValue (PNOXNODE pDest , PUCHAR destName , PNOXNODE pSource , PUCHAR sourceName)
+PNOXNODE  nox_MoveValue (PNOXNODE pDest , PUCHAR destName , PNOXNODE pSource , PUCHAR sourceName)
 {
    PNOXNODE pRes;
 
-   pSource = jx_GetNode  (pSource  , sourceName );
+   pSource = nox_GetNode  (pSource  , sourceName );
    if (pSource == NULL) return NULL;
 
-   pDest = jx_GetOrCreateNode (pDest, destName);
+   pDest = nox_GetOrCreateNode (pDest, destName);
    if (pDest  == NULL) return NULL;
 
-   jx_NodeMoveAndReplace (pDest, pSource);
+   nox_NodeMoveAndReplace (pDest, pSource);
 
    return pDest ;
 }
@@ -920,20 +920,6 @@ void  nox_MergeObjects (PNOXNODE pDest, PNOXNODE pSource , MERGEOPTION merge)
 			nox_InsertByName (pDest , pSourceNode->Name , pSourceNode );
 		}
 		pSourceNode = pSourceNode->pNodeSibling;
-	}
-}
-// --------------------------------------------------------------------------- 
-void  nox_LoadRecursiveList (PNOXNODE pNode, PNOXITERATOR pIter, BOOL first)
-{
-	while (pNode) {
-		if (pIter->length >= pIter->size) {
-			pIter->size += 256;
-			pIter->list = realloc (pIter->list , sizeof(PNOXNODE) * pIter->size);
-		}
-		pIter->list [pIter->length] = pNode;
-		pIter->length++;
-		nox_LoadRecursiveList (pNode->pNodeChildHead , pIter, FALSE);
-		pNode = first ? NULL : pNode->pNodeSibling;
 	}
 }
 // ---------------------------------------------------------------------------
@@ -2677,7 +2663,7 @@ PNOXNODE  nox_ArraySlice   (PNOXNODE pSource , int from , int to, BOOL16 copyP)
 	return pOut;
 }
 /* --------------------------------------------------------------------------- */
-PNOXNODE  jx_ArrayConvertList (PNOXNODE pList , BOOL16 copyP)
+PNOXNODE  nox_ArrayConvertList (PNOXNODE pList , BOOL16 copyP)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    BOOL copy = (pParms->OpDescList->NbrOfParms >= 2) ? copyP : false;
@@ -2687,7 +2673,7 @@ PNOXNODE  jx_ArrayConvertList (PNOXNODE pList , BOOL16 copyP)
 
    if (pList == NULL) return NULL;
 
-   pArray = jx_NewArray(NULL);
+   pArray = nox_NewArray();
 
    for (pNode = pList->pNodeChildHead; pNode ; pNode = pNode->pNodeSibling) {
       if (pNode->pNodeChildHead) {
@@ -2949,22 +2935,23 @@ PNOXNODE  nox_SetIntByName (PNOXNODE pNode, PUCHAR  Name, INT64 Value)
 PNOXNODE  nox_SetIntByNameVC (PNOXNODE pNode, PLVARCHAR  Name, INT64 Value , LGL nullIf)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
-      return jx_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
+	UCHAR  s [32];
+
+	if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
+      return nox_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
 	}
 
-	UCHAR  s [32];
 	sprintf(s , "%lld" , Value);
 	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), LITERAL );
 }
 PNOXNODE  nox_SetDateByNameVC (PNOXNODE pNode, PLVARCHAR  Name, DATE Value , LGL nullIf)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	UCHAR  s [32];
    if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
-      return jx_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
+      return nox_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
 	}
 
-	UCHAR  s [32];
 	substr(s , (PUCHAR) &Value  , sizeof(DATE));
 	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), VALUE );
 }
@@ -2972,11 +2959,11 @@ PNOXNODE  nox_SetDateByNameVC (PNOXNODE pNode, PLVARCHAR  Name, DATE Value , LGL
 PNOXNODE  nox_SetTimeByNameVC (PNOXNODE pNode, PLVARCHAR  Name, TIME Value , LGL nullIf)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	UCHAR  s [32];
    if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
-      return jx_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
+      return nox_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
 	}
 
-	UCHAR  s [32];
 	substr(s , (PUCHAR) &Value  , sizeof(TIME));
 	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), VALUE );
 }
@@ -2984,11 +2971,12 @@ PNOXNODE  nox_SetTimeByNameVC (PNOXNODE pNode, PLVARCHAR  Name, TIME Value , LGL
 PNOXNODE  nox_SetTimeStampByNameVC (PNOXNODE pNode, PLVARCHAR  Name, TIMESTAMP Value , LGL nullIf)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
-      return jx_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
+	UCHAR  s [32];
+
+	if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
+      return nox_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
 	}
 
-	UCHAR  s [32];
 	substr(s , (PUCHAR) &Value  , sizeof(TIMESTAMP));
 	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), VALUE );
 }
@@ -2999,16 +2987,20 @@ PNOXNODE  nox_SetDecByNameVC (PNOXNODE pNode, PLVARCHAR Name, FIXEDDEC Value , L
 {
 
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
-      return jx_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
-	}
-
 	UCHAR  s [32];
 	PUCHAR t;
-	int len = sprintf(s , "%D(30,15)" , Value);
-	PUCHAR p = s + len -1 ;
+	int len;
+	int cutlen;
+	PUCHAR p;
+
+	if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
+      return nox_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
+	}
+
+	len = sprintf(s , "%D(30,15)" , Value);
+	p = s + len -1 ;
 	// int cutlen = 16; // remove last trailing zeroes. if none after the decimal point the also the secimal point
-	int cutlen = 14; // remove last trailing zeroes. Keep the last zero so it is still a decimal point
+	cutlen = 14; // remove last trailing zeroes. Keep the last zero so it is still a decimal point
 
 	// %D is determined by locale so we can have either  , or .
 	// we always need .
@@ -3038,7 +3030,7 @@ PNOXNODE  nox_SetBoolByNameVC (PNOXNODE pNode, PLVARCHAR pName, LGL Value , LGL 
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
-      return jx_SetValueByName(pNode , plvc2str(pName) , NULL , LITERAL );
+      return nox_SetValueByName(pNode , plvc2str(pName) , NULL , LITERAL );
 	}
 	return nox_SetValueByName(pNode , plvc2str(pName) , Value == OFF ? FALSESTR:TRUESTR, LITERAL );
 }
@@ -3050,11 +3042,11 @@ PNOXNODE  nox_SetStrByName (PNOXNODE pNode, PUCHAR pName, PUCHAR pValue)
 {
 	return nox_SetValueByName(pNode , pName , pValue , VALUE );
 }
-PNOXNODE  nox_SetStrByNameVC (PNOXNODE pNode, PLVARCHAR pName, PLVARCHAR pValue LGL nullIf)
+PNOXNODE  nox_SetStrByNameVC (PNOXNODE pNode, PLVARCHAR pName, PLVARCHAR pValue, LGL nullIf)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
-      return jx_SetValueByName(pNode , plvc2str(pName) , NULL , LITERAL );
+      return nox_SetValueByName(pNode , plvc2str(pName) , NULL , LITERAL );
    } 
 	return nox_SetValueByName(pNode , plvc2str(pName) , plvc2str(pValue) ,VALUE);
 }

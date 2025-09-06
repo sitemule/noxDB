@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -15,14 +15,14 @@
 
         //------------------------------------------------------------- *
       
-        pArr = json_parseString('[a,b,c]');
-        pB   = json_lookupValue(pArr :  'B' : JSON_IGNORE_CASE);
-        pC   = json_lookupValue(pArr :  'c' : JSON_SAME_CASE);
-        pC   = json_lookupValue(pArr :  'c' ); // Same case is default
-        pD   = json_arrayPush(pArr : 'd');
-        len  = json_getLength(pArr);
+        pArr = nox_parseString('[a,b,c]');
+        pB   = nox_lookupValue(pArr :  'B' : NOX_IGNORE_CASE);
+        pC   = nox_lookupValue(pArr :  'c' : NOX_SAME_CASE);
+        pC   = nox_lookupValue(pArr :  'c' ); // Same case is default
+        pD   = nox_arrayPush(pArr : 'd');
+        len  = nox_getLength(pArr);
 
-        t =   json_asJsonText(pArr);
+        t =   nox_asJsonText(pArr);
 
-        json_close(pArr);
+        nox_close(pArr);
         *inlr = *on;

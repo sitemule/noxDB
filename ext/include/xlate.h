@@ -18,5 +18,7 @@ VARCHAR    XlateStr (PVARCHAR In ,  int FromCCSID, int ToCCSID);
 PUCHAR     Xlatestr (PUCHAR out, PUCHAR in , int FromCCSID, int ToCCSID);
 PUCHAR     XlateFromAnyAscii2ebcdic (PUCHAR outStr, PUCHAR inStr);
 iconv_t    XlateOpen (int FromCCSID, int ToCCSID);
+LONG       XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen ) ;
+
 
 #endif

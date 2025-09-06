@@ -16,6 +16,7 @@
 #include <decimal.h>
 #include <wchar.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include <sys/stat.h>
 #include "ostypes.h"
@@ -26,13 +27,14 @@
 #include "strUtil.h"
 #include "memUtil.h"
 #include "streamer.h"
-#include "noxdb2.h"
+#include "noxDbUtf8.h"
 #include "e2aa2e.h"
 
 
 
 static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT level);
 LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP);
+static PJWRITE newWriter (void);
 
 
 /* ---------------------------------------------------------------------------

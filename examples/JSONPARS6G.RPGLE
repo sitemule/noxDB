@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //This sample shows the use of the buildin JSON parser in IceBreak
 
@@ -25,25 +25,25 @@
 
         *inlr = *on;
 
-        p1  = Json_ParseString ('  -
+        p1  = Nox_ParseString ('  -
             {  a: 1,               -
                b: 2                -
             }                      -
         ');
-        p2  = Json_ParseString ('  -
+        p2  = Nox_ParseString ('  -
             {  c: 3,               -
                d: 4                -
             }                      -
         ');
 
-        Json_mergeObjects (p1 : p2) ;
-        Json_WriteStmf  (p1   : '/samples/json/json-merge1.json' : 1208 : *ON );
-        Json_Close(p1   );
-        Json_Close(p2   );
+        Nox_mergeObjects (p1 : p2) ;
+        Nox_WriteStmf  (p1   : '/samples/json/json-merge1.json' : 1208 : *ON );
+        Nox_Close(p1   );
+        Nox_Close(p2   );
 
 
         // Yet more advanced
-        pJson = Json_ParseString (
+        pJson = Nox_ParseString (
            '{  u:"This is a unicode \u00b5 string"  ,   '+
            '   "s":"abc"                            ,   '+
            '   a:[1,2,3],                   ' +
@@ -60,13 +60,13 @@
            '   }         '+
            '}'
              : '');
-        if Json_Error(pJson) ;
-           msg = Json_Message(pJson);
-           Json_dump(pJson);
-           Json_Close(pJson);
+        if Nox_Error(pJson) ;
+           msg = Nox_Message(pJson);
+           Nox_dump(pJson);
+           Nox_Close(pJson);
            return;
         endif;
-        pRcv  = Json_ParseString (
+        pRcv  = Nox_ParseString (
            '{  r: {                                     '+
            '     o: {                                     '+
            '       n:"Do not overwrite me"    ' +
@@ -74,17 +74,17 @@
            '   }' +
            '}'
              : '');
-        if Json_Error(pRcv ) ;
-           msg = Json_Message(pRcv );
-           Json_dump(pRcv );
-           Json_Close(pRcv );
+        if Nox_Error(pRcv ) ;
+           msg = Nox_Message(pRcv );
+           Nox_dump(pRcv );
+           Nox_Close(pRcv );
            return;
         endif;
 
-        pO    = Json_locate(pJson: '/o');
-        pR    = Json_locate(pRcv : '/r');
-        Json_merge (pR : pO : Json_DONTREPLACE);
-        Json_dump(pRcv );
-        Json_WriteStmf  (pR   : '/samples/json/jsonout.json' : 1208 : *OFF);
-        Json_Close(pJson);
-        Json_Close(pRcv );
+        pO    = Nox_locate(pJson: '/o');
+        pR    = Nox_locate(pRcv : '/r');
+        Nox_merge (pR : pO : Nox_DONTREPLACE);
+        Nox_dump(pRcv );
+        Nox_WriteStmf  (pR   : '/samples/json/jsonout.json' : 1208 : *OFF);
+        Nox_Close(pJson);
+        Nox_Close(pRcv );

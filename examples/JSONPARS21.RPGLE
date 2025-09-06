@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -19,29 +19,29 @@
         Dcl-S n            Packed(15:2);
 
         //------------------------------------------------------------- *
-        pJson = JSON_ParseString (
+        pJson = NOX_ParseString (
            '{                      '+
            '  a:123,               '+
            '  b:"text",            '+
            '  c:"More text"        '+
            '}'
              : '');
-        if JSON_Error(pJson) ;
-           msg = JSON_Message(pJson);
-           JSON_dump(pJson);
-           JSON_Close(pJson);
+        if NOX_Error(pJson) ;
+           msg = NOX_Message(pJson);
+           NOX_dump(pJson);
+           NOX_Close(pJson);
            return;
         endif;
-        pRcv  = JSON_ParseString ('{}');
+        pRcv  = NOX_ParseString ('{}');
 
-        pO = json_SetValue(pRcv : '/row' : pJson: JSON_OBJREPLACE);
+        pO = nox_SetValue(pRcv : '/row' : pJson: NOX_OBJREPLACE);
 
-        pKey  = JSON_ParseString ('{ key: "123" }');
-        pO = json_SetValue(pRcv : '/key' : pKey : JSON_OBJREPLACE);
+        pKey  = NOX_ParseString ('{ key: "123" }');
+        pO = nox_SetValue(pRcv : '/key' : pKey : NOX_OBJREPLACE);
 
-        JSON_dump(pRcv );
-        json_WriteStmf  (pRcv : '/www/systest/jsonout.json' : 1208 : *OFF);
-        JSON_Close(pJSON);
-        JSON_Close(pKey );
-        JSON_Close(pRcv );
+        NOX_dump(pRcv );
+        nox_WriteStmf  (pRcv : '/www/systest/jsonout.json' : 1208 : *OFF);
+        NOX_Close(pJSON);
+        NOX_Close(pKey );
+        NOX_Close(pRcv );
         *inlr = *on;

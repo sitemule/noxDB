@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -13,14 +13,14 @@
 
         //------------------------------------------------------------- *
 
-        pJson = json_ParseString ('[1,2,3]');
+        pJson = nox_ParseString ('[1,2,3]');
 
         // Get number of entries in arrays
-        i     = json_getNum       (pJson : '/[UBOUND]': -1 );
-        s     = json_getStr       (pJson : '/[0]'     : 'N/A' );
-        s     = json_getStr       (pJson : '[1]'      : 'N/A' );
+        i     = nox_getNum       (pJson : '/[UBOUND]': -1 );
+        s     = nox_getStr       (pJson : '/[0]'     : 'N/A' );
+        s     = nox_getStr       (pJson : '[1]'      : 'N/A' );
 
-        json_WriteStmf  (pJson   : '/www/systest/jsonout.json' : 1208 : *OFF);
-        json_dump(pJson);
-        json_Close(pJson);
+        nox_WriteStmf  (pJson   : '/www/systest/jsonout.json' : 1208 : *OFF);
+        nox_dump(pJson);
+        nox_Close(pJson);
         *inlr = *on;

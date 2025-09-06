@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE');
 
         //------------------------------------------------------------- *
 
@@ -13,21 +13,21 @@
 
         //------------------------------------------------------------- *
         
-        pJson = json_ParseString (
+        pJson = nox_ParseString (
            '{  +
                "a.b.c":"Text for a.b.c." +
             }'
          );
 
         // Not found - since the '.' is ne notation for "member of"
-        abc  = json_getStr(pJson: 'a.b.c');
+        abc  = nox_getStr(pJson: 'a.b.c');
 
         // Now replace the  '.' notation with a |
-        json_setDelimiters('/\@[] |');
+        nox_setDelimiters('/\@[] |');
 
         // Works  !!
-        abc  = json_getStr(pJson: 'a.b.c');
+        abc  = nox_getStr(pJson: 'a.b.c');
 
         // Done
-        json_Close(pJson);
+        nox_Close(pJson);
         *inlr = *on;

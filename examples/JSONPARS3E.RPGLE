@@ -2,7 +2,7 @@
         //------------------------------------------------------------- *
 
         //This sample shows array handling
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -23,36 +23,36 @@
 
         // Step 1:
         // Create two objects, and move the conent of b into the root
-        pObj = json_newObject();
-        json_setStr(pObj : 'a' : 'Value for a');
+        pObj = nox_newObject();
+        nox_setStr(pObj : 'a' : 'Value for a');
 
-        pB   = json_newObject();
-        json_setStr(pB : 'bValue' : 'Value for b');
+        pB   = nox_newObject();
+        nox_setStr(pB : 'bValue' : 'Value for b');
 
-        json_MoveObjectInto(pObj : 'bObject': pB);
+        nox_MoveObjectInto(pObj : 'bObject': pB);
 
-        t =   json_asJsonText(pObj);
+        t =   nox_asJsonText(pObj);
         // done
-        json_close(pObj);
+        nox_close(pObj);
 
         //------------------------------------------------------------- *
 
         // Step 2:
         // Do the same with lo-level functions
-        pObj = json_newObject();
-        pA   = json_locateOrCreate(pObj : 'aValue');
-        pA2  = json_setStr(pA : '' : 'Value for a');
+        pObj = nox_newObject();
+        pA   = nox_locateOrCreate(pObj : 'aValue');
+        pA2  = nox_setStr(pA : '' : 'Value for a');
 
-        pB   = json_newObject();
-        pB2  = json_locateOrCreate(pB   : 'bValue');
-        pB3  = json_setStr(pB2: '' : 'Value for b');
+        pB   = nox_newObject();
+        pB2  = nox_locateOrCreate(pB   : 'bValue');
+        pB3  = nox_setStr(pB2: '' : 'Value for b');
 
-        json_MoveObjectInto(pObj : 'bObject' : pB);
+        nox_MoveObjectInto(pObj : 'bObject' : pB);
 
-        t =   json_asJsonText(pObj);
+        t =   nox_asJsonText(pObj);
 
         // done
-        json_close(pObj);
+        nox_close(pObj);
 
         //------------------------------------------------------------- *
         // Step 3:
@@ -61,21 +61,21 @@
         // note: it works like renaming the value inserting
         // it into the destinaiton object
 
-        pObj = json_newObject();
-        json_setStr(pObj : 'a' : 'Value for a');
+        pObj = nox_newObject();
+        nox_setStr(pObj : 'a' : 'Value for a');
 
-        pB    = json_newObject();
-        pBval = json_setStr(pB : 'bValue' : 'Value for b');
+        pB    = nox_newObject();
+        pBval = nox_setStr(pB : 'bValue' : 'Value for b');
 
-        json_MoveObjectInto(pObj : 'newBvalue' : pBval);
+        nox_MoveObjectInto(pObj : 'newBvalue' : pBval);
 
         // Note : pB is now dangerling since it is a empty object
         // atfer the move it is allone in the world,
         // So we need to delete it by hand
-        json_close(pB);
+        nox_close(pB);
 
-        t =   json_asJsonText(pObj);
-        json_close(pObj);
+        t =   nox_asJsonText(pObj);
+        nox_close(pObj);
 
         //------------------------------------------------------------- *
         // Step 4:
@@ -83,20 +83,20 @@
         // always replace the desitnation node is it exists
         // it will not try to merge the nodes ( rather look at the "merge" feature)
         // Note the memory location for the values ramain the same after the "move"
-        pObj = json_newObject();
-        json_setStr(pObj : 'a' : 'Value for a');
+        pObj = nox_newObject();
+        nox_setStr(pObj : 'a' : 'Value for a');
 
-        pA    = json_newObject();
-        pAval = json_setStr(pA : 'MyInitialName' : 'New value for a');
+        pA    = nox_newObject();
+        pAval = nox_setStr(pA : 'MyInitialName' : 'New value for a');
 
         // replae the "a" node
-        json_MoveObjectInto(pObj : 'a'  : pAval);
+        nox_MoveObjectInto(pObj : 'a'  : pAval);
 
         // Note : pA is now dangerling since it is a empty object
         // atfer the move it is allone in the world,
         // We need to delete it by hand
-        json_close(pA);
+        nox_close(pA);
 
-        t =   json_asJsonText(pObj);
-        json_close(pObj);
+        t =   nox_asJsonText(pObj);
+        nox_close(pObj);
         *inlr = *on;

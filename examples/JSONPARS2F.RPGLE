@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -12,27 +12,27 @@
 
         //------------------------------------------------------------- *
 
-        pData = json_ParseString (
+        pData = nox_ParseString (
            '{                      '+
            '  a:123,               '+
            '  b:"text",            '+
            '  c:"More text"        '+
            '}'
         );
-        pProp = json_ParseString (
+        pProp = nox_ParseString (
            '{                      '+
            '  name:"Company",      '+
            '  addr:"Smart city"    '+
            '}'
         );
-        pTplData = json_NewObject();
-        json_setValue(pTplData :'this' : pData      : json_OBJCOPY);
-        json_setValue(pTplData :'site' : pProp      : json_OBJCOPY);
-        json_WritejsonStmf(pTplData : './props.json' : 1208 : *OFF);
+        pTplData = nox_NewObject();
+        nox_setValue(pTplData :'this' : pData      : nox_OBJCOPY);
+        nox_setValue(pTplData :'site' : pProp      : nox_OBJCOPY);
+        nox_WritejsonStmf(pTplData : './props.json' : 1208 : *OFF);
 
-        json_Close(pProp    );
-        json_Close(pData    );
-        json_Close(pTplData );
+        nox_Close(pProp    );
+        nox_Close(pData    );
+        nox_Close(pTplData );
         *inlr = *on;
         return;
 

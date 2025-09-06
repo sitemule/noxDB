@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
         
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -13,16 +13,16 @@
 
         // return an simple array with all rows
         sql   = 'Select * from product';
-        pRows = json_sqlResultSet(sql);
+        pRows = nox_sqlResultSet(sql);
 
         // Produce a JSON stream file in the root of the IFS
-        json_writeJsonStmf(pRows  :
+        nox_writeJsonStmf(pRows  :
            '/jsonxml/json/resultset-array.json' : 1208 : *ON
         );
 
         // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
-        json_close(pRows);
-        json_sqlDisconnect();
+        nox_close(pRows);
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

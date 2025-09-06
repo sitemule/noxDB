@@ -5,7 +5,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -23,59 +23,59 @@
 
         // The destination object for our SQL result row
         // and the array to contain the rows
-        resultArray  = json_newArray ();
+        resultArray  = nox_newArray ();
 
         // Open our SQL cursor. Use a simple select
         sql = 'Select * from manufact';
-        manuHnd  = json_sqlOpen(sql);
+        manuHnd  = nox_sqlOpen(sql);
 
         // Now iterate on each row in the resultset
-        manuRow = json_sqlFetchNext(manuHnd);
+        manuRow = nox_sqlFetchNext(manuHnd);
         dow (manuRow <> *NULL);
-           prodArray  = json_newArray ();
+           prodArray  = nox_newArray ();
 
            // Note: the SQL can be a template, we fill with values from a json row
            sql = 'Select * from product where manuid = $manuid' ;
-           prodHnd  = json_sqlOpen(sql : manuRow);
+           prodHnd  = nox_sqlOpen(sql : manuRow);
            
-           prodRow = json_sqlFetchNext(prodHnd);
+           prodRow = nox_sqlFetchNext(prodHnd);
            dow ( prodRow <>  *NULL);
-              Json_MemStat();
+              Nox_MemStat();
 
-              json_setValue(prodArray :'[]' : prodRow: JSON_OBJMOVE);
+              nox_setValue(prodArray :'[]' : prodRow: NOX_OBJMOVE);
 
-              Json_MemStat();
+              Nox_MemStat();
 
-              prodRow = json_sqlFetchNext(prodHnd);
+              prodRow = nox_sqlFetchNext(prodHnd);
            enddo;
 
-           json_sqlClose(prodHnd);
+           nox_sqlClose(prodHnd);
            // Append the row to the end of the result array. The [] means "new array element"
-           json_setValue(manuRow   : 'products' : prodArray : JSON_OBJMOVE);
+           nox_setValue(manuRow   : 'products' : prodArray : NOX_OBJMOVE);
 
            // Append the row to the end of the result array. The [] means "new array element"
-           json_setValue(resultArray : '[]' : manuRow : JSON_OBJMOVE);
-           manuRow = json_sqlFetchNext(manuHnd) ;
+           nox_setValue(resultArray : '[]' : manuRow : NOX_OBJMOVE);
+           manuRow = nox_sqlFetchNext(manuHnd) ;
         enddo;
 
         // Produce a JSON stream file in the root of the IFS
-        json_writeJsonStmf(resultArray  :
+        nox_writeJsonStmf(resultArray  :
            '/jsonxml/json/demo-nested.json' : 1208 : *ON
         );
-        json_NodeRename( resultArray : 'ROWS');
+        nox_NodeRename( resultArray : 'ROWS');
         // Give the root a name for XML
-        json_writeXmlStmf(resultArray  :
+        nox_writeXmlStmf(resultArray  :
            '/jsonxml/xml/demo-nested.xml' : 1208 : *ON
         );
 
         // Cleanup: Close the SQL cursor, dispose the row and the array
-        json_close(resultArray);
-        json_sqlClose(manuHnd);
-        json_sqlDisconnect();
+        nox_close(resultArray);
+        nox_sqlClose(manuHnd);
+        nox_sqlDisconnect();
 
         // If needed you can detect leaks here:
-        if Json_MemLeak();
-           Json_MemStat();
+        if Nox_MemLeak();
+           Nox_MemStat();
         endif;
 
         // That's it..

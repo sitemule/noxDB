@@ -8,11 +8,11 @@
 
         //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
       /include 'headers/JSONPARSER.rpgle'
 
-        json_sqlDisconnect();
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

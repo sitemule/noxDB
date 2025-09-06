@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -14,32 +14,32 @@
 
         //------------------------------------------------------------- *
         
-        pj1   = JSON_ParseString (' +
+        pj1   = NOX_ParseString (' +
             { items: [{name:"john", height:22}]} +
            ');
 
-        if JSON_Error(pj1  ) ;
-           msg = JSON_Message(pj1  );
-           JSON_dump(pj1  );
-           JSON_Close(pj1  );
+        if NOX_Error(pj1  ) ;
+           msg = NOX_Message(pj1  );
+           NOX_dump(pj1  );
+           NOX_Close(pj1  );
            return;
         endif;
 
-        pj2   = JSON_ParseFile (
+        pj2   = NOX_ParseFile (
              '/www/systest/simpleform.json'
              : '');
 
-        if JSON_Error(pj2  ) ;
-           msg = JSON_Message(pj2  );
-           JSON_dump(pj2  );
-           JSON_Close(pj1  );
-           JSON_Close(pj2  );
+        if NOX_Error(pj2  ) ;
+           msg = NOX_Message(pj2  );
+           NOX_dump(pj2  );
+           NOX_Close(pj1  );
+           NOX_Close(pj2  );
            return;
         endif;
 
-        // JSON_dump(pj2  );
-        JSON_CloneFormat(pj1: pj2 );
-        json_WriteStmf  (pj1: './jsonout.json' : 1208 : *OFF);
-        JSON_Close(pj1  );
-        JSON_Close(pj2  );
+        // NOX_dump(pj2  );
+        NOX_CloneFormat(pj1: pj2 );
+        nox_WriteStmf  (pj1: './jsonout.json' : 1208 : *OFF);
+        NOX_Close(pj1  );
+        NOX_Close(pj2  );
         *inlr = *on;

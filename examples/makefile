@@ -1,11 +1,11 @@
 ﻿.ONESHELL:
 
-BIN_LIB=NOXDB2
+BIN_LIB=NOXDBUTF8
 PRJ_ROOT=./examples
 # NOTE - UTF is not allowed for ILE source (yet) - so convert to WIN-1252
-RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb2') OPTION(*NOXREF *NOSHOWCPY *NODEBUGIO *NOUNREF *EVENTF *NOEXT *NOEXPDDS)
+RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/NOXDBUTF8') OPTION(*NOXREF *NOSHOWCPY *NODEBUGIO *NOUNREF *EVENTF *NOEXT *NOEXPDDS)
 FILTER2=| grep '*RNF' | grep -v '*RNF7031' | grep -v '*RNF5409' | sed  "s!*!$(SRC): &!"
-FILTER1=> /prj/noxdb2/examples/error.txt  
+FILTER1=> /prj/NOXDBUTF8/examples/error.txt  
 
 SYSCMD=execlist cmd(\
 	'chgjob ccsid(500)' \
@@ -23,7 +23,7 @@ compile:
 	-system "crtsrcpf $(BIN_LIB)/qtmpsrc rcdlen(240) CCSID(500)"
 	system "CPYFRMSTMF FROMSTMF('$(SRC)') TOMBR('/QSYS.LIB/$(BIN_LIB).LIB/qtmpsrc.FILE/$(OBJ).mbr') MBROPT(*REPLACE)"
 	system "crtbndrpg  pgm($(BIN_LIB)/$(OBJ)) srcfile($(BIN_LIB)/qtmpsrc) $(RPG_OPT)"  $(FILTER1)
-	../tools/formaterr.sh /QSYS.LIB/noxdb2.LIB/EVFEVENT.FILE/$(OBJ).mbr $(PRJ_ROOT)/$(SRC)
+	../tools/formaterr.sh /QSYS.LIB/NOXDBUTF8.LIB/EVFEVENT.FILE/$(OBJ).mbr $(PRJ_ROOT)/$(SRC)
 	EOF
 ##system -i "$(SYSCMD)" $(FILTER1)
 

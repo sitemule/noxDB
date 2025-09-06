@@ -1,7 +1,7 @@
         
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //Look at the header source file "qAspHdr" in the IceBreak   library
         //for a complete description of the functionality
@@ -19,44 +19,44 @@
 
         //------------------------------------------------------------- *
 
-        pJson = json_NewObject();
-        json_SetValue ( pJson : 'items[]': '10'); // add to the tail of items
-        json_SetValue ( pJson : 'items[]': '20'); // add to the tail of items
-        json_SetValue ( pJson : 'items[]': '30'); // add to the tail of items
+        pJson = nox_NewObject();
+        nox_SetValue ( pJson : 'items[]': '10'); // add to the tail of items
+        nox_SetValue ( pJson : 'items[]': '20'); // add to the tail of items
+        nox_SetValue ( pJson : 'items[]': '30'); // add to the tail of items
 
         // Now add relative
-        pArr = json_locate(pJson : 'items');
-        json_SetValue ( pArr  : '[]': '40'); // add to the tail of items
-        json_SetValue ( pArr  : '[]': '50'); // add to the tail of items
+        pArr = nox_locate(pJson : 'items');
+        nox_SetValue ( pArr  : '[]': '40'); // add to the tail of items
+        nox_SetValue ( pArr  : '[]': '50'); // add to the tail of items
 
         // Evaluate a json string into a new array element:
-        json_SetValue ( pArr  : '[]' :  // Empty array causes a new element to be added in the end
+        nox_SetValue ( pArr  : '[]' :  // Empty array causes a new element to be added in the end
            '{a:123,b:"Some text"}' :    // A JSON object string
-           JSON_EVAL                    // add to the tail of items
+           NOX_EVAL                    // add to the tail of items
         );
 
         // Add an object into the to a new array element:
-        pNewObj = json_ParseString('{x:456,y:"More text"}');
-        json_SetValue ( pArr  : '[]' : pNewObj);
+        pNewObj = nox_ParseString('{x:456,y:"More text"}');
+        nox_SetValue ( pArr  : '[]' : pNewObj);
 
         // Now: Build a new object and copy it into the temp array
         // After pNewObj still have all elements
-        pTemp = json_NewObject();
-        json_SetValue ( pTemp : 'a' : 'A value ');
-        json_SetValue ( pTemp : 'b' : 'B value ');
-        json_SetValue ( pTemp : 'c' : 'C value ');
-        json_SetValue ( pArr  : '[]' : pTemp  );
+        pTemp = nox_NewObject();
+        nox_SetValue ( pTemp : 'a' : 'A value ');
+        nox_SetValue ( pTemp : 'b' : 'B value ');
+        nox_SetValue ( pTemp : 'c' : 'C value ');
+        nox_SetValue ( pArr  : '[]' : pTemp  );
 
         // If we need to move the elemets ( which is much faster)
         // After pTemp   will be empty but still an object though
-        json_SetValue ( pJson : 'anObject': pTemp : JSON_OBJMOVE);
+        nox_SetValue ( pJson : 'anObject': pTemp : NOX_OBJMOVE);
 
         // Is is empty ?
-        json_SetValue ( pJson : 'emptyObject': pTemp);
+        nox_SetValue ( pJson : 'emptyObject': pTemp);
 
-        json_WriteStmf  (pJson   : '/www/systest/jsonout.json' : 1208 : *OFF);
-        json_dump(pJson);
-        json_Close(pJson);    // All objects created must be closed
-        json_Close(pNewObj);  // All objects created must be closed
-        json_Close(pTemp  );  // All objects created must be closed
+        nox_WriteStmf  (pJson   : '/www/systest/jsonout.json' : 1208 : *OFF);
+        nox_dump(pJson);
+        nox_Close(pJson);    // All objects created must be closed
+        nox_Close(pNewObj);  // All objects created must be closed
+        nox_Close(pTemp  );  // All objects created must be closed
         *inlr = *on;

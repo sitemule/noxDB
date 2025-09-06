@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE');
 
         //------------------------------------------------------------- *
         
@@ -13,32 +13,32 @@
         *inlr = *on;
 
         // My root json
-        pJson  = json_ParseString ( '{ a:99, b:77 }');
+        pJson  = nox_ParseString ( '{ a:99, b:77 }');
 
         // Set by location name (paramter 2) .. set c to 3
-        json_SetInt    (pJson : 'c'  : 3 );
+        nox_SetInt    (pJson : 'c'  : 3 );
 
         // Merge object into  the root ( note the location is blank )
         // Note: value from a is replaced and d is added since modifier is "MO_MERGE_REPLACE"
-        json_SetValue  (pJson : '' : '{a:1,d:4}' :JSON_EVAL+MO_MERGE_REPLACE);
+        nox_SetValue  (pJson : '' : '{a:1,d:4}' :NOX_EVAL+MO_MERGE_REPLACE);
 
         // Merge object into  the root ( note the location is blank )
         // Note: value from b is unchaned but e is set with "MO_MERGE_NEW" , since b exists and e dont
-        json_SetValue  (pJson : '' : '{b:88,e:5}' :JSON_EVAL+MO_MERGE_NEW    );
+        nox_SetValue  (pJson : '' : '{b:88,e:5}' :NOX_EVAL+MO_MERGE_NEW    );
 
         // Merge object into  the root ( note the location is blank )
         // Note: value from b is changed  but f is not merged since it does not exists
-        json_SetValue  (pJson : '' : '{b:2,f:66}' :JSON_EVAL+MO_MERGE_MATCH  );
+        nox_SetValue  (pJson : '' : '{b:2,f:66}' :NOX_EVAL+MO_MERGE_MATCH  );
 
         // Finally - add an new array to the root with two object
-        json_SetValue  (pJson : 'arr1:[]' : '{x:1,y:2}' : JSON_EVAL);
-        json_SetValue  (pJson : 'arr1:[]' : '{x:3,y:4}' : JSON_EVAL);
+        nox_SetValue  (pJson : 'arr1:[]' : '{x:1,y:2}' : NOX_EVAL);
+        nox_SetValue  (pJson : 'arr1:[]' : '{x:3,y:4}' : NOX_EVAL);
 
         // Write it out:
-        Json_WriteStmf (pJson  :
+        Nox_WriteStmf (pJson  :
            '/samples/json/jsonout-set-By-Parse.json':1208:*OFF
         );
 
         // Always close
-        json_Close(pJson);
+        nox_Close(pJson);
 

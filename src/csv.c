@@ -30,7 +30,7 @@
 #include "strUtil.h"
 #include "memUtil.h"
 #include "streamer.h"
-#include "noxdb2.h"
+#include "noxDbUtf8.h"
 
 
 // --------------------------------------------------------------------------- 

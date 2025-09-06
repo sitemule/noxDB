@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE');
 
         //------------------------------------------------------------- *
 
@@ -16,7 +16,7 @@
         // u00b5 is "Micro sign" and exists in ebcdic
         // u2318 is "sight of interest" icon and have no equvalent in ebedic so
         // \u2318 will be un touched in the input string
-        pJson = json_ParseString (
+        pJson = nox_ParseString (
            '{  +
                a:"A valid unicode \u00b5 string",    +
                b:"An invalid unicode \u2318 string",  +
@@ -24,10 +24,10 @@
             }'
          );
 
-        a  = json_getStr(pJson: 'a');
-        b  = json_getStr(pJson: 'b');
-        c  = json_getStr(pJson: 'c');
-        json_WriteJsonStmf( pJson:
+        a  = nox_getStr(pJson: 'a');
+        b  = nox_getStr(pJson: 'b');
+        c  = nox_getStr(pJson: 'c');
+        nox_WriteJsonStmf( pJson:
             './unicode-strings.json': 1208 : *OFF);
-        json_Close(pJson);
+        nox_Close(pJson);
         *inlr = *on;

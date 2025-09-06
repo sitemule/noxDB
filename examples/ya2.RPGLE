@@ -17,7 +17,7 @@
 
         //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         Dcl-S err          Ind;
         Dcl-S row          Varchar(32766);
@@ -33,16 +33,16 @@
            text1: {da:"Dansk Tekst" , en:"English"}     -
         }');
 
-        err = json_sqlInsert  (
+        err = nox_sqlInsert  (
            'qgpl/note2'
            :row
         );
 
         // get ret unique ID generated
-        id = json_sqlGetInsertId();
+        id = nox_sqlGetInsertId();
 
         // now get that row: here we use the a stringed object to build the where statement via the template
-        pRow = json_sqlResultRow (('  -
+        pRow = nox_sqlResultRow (('  -
               select * from qgpl/note2  -
               where id = $id           -
            ')
@@ -50,9 +50,9 @@
         );
 
         // manipulate data:
-        json_setStr(pRow : 'text1.fr' : 'aussi en français');
-        json_setInt(pRow : 'number'   : 123.56 );
-        err = json_sqlUpdate(
+        nox_setStr(pRow : 'text1.fr' : 'aussi en français');
+        nox_setInt(pRow : 'number'   : 123.56 );
+        err = nox_sqlUpdate(
            'qgpl/note2'
            :pRow                // the text object is updated with a extra tag
            :'where  id = $id'   // the where uses atemplate to the id, and the ide is retrived from the row itself
@@ -60,8 +60,8 @@
         );
 
         // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
-        json_close(pRow);
-        json_sqlDisconnect();
+        nox_close(pRow);
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

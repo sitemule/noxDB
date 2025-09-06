@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -14,7 +14,7 @@
 
         *inlr = *on;
 
-        pJson1 = Json_ParseString ('                            -
+        pJson1 = Nox_ParseString ('                            -
            {                                                    -
               x : {                                             -
                 a : 1                                           -
@@ -22,7 +22,7 @@
            }                                                    -
         ');
 
-        pJson2 = Json_ParseString ('                            -
+        pJson2 = Nox_ParseString ('                            -
            {                                                    -
               x : {                                             -
                 b : 2                                           -
@@ -30,8 +30,8 @@
            }                                                    -
         ');
 
-        Json_merge (pJson1 : pJson2  : Json_DONTREPLACE);
+        Nox_merge (pJson1 : pJson2  : Nox_DONTREPLACE);
 
-        Json_WriteStmf (pJson1:'./jsonout-merge-6i.json':1208:*OFF);
-        Json_Close(pJson1);
-        Json_Close(pJson2);
+        Nox_WriteStmf (pJson1:'./jsonout-merge-6i.json':1208:*OFF);
+        Nox_Close(pJson1);
+        Nox_Close(pJson2);

@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE');
 
         //------------------------------------------------------------- *
 
@@ -18,21 +18,21 @@
         *inlr = *on;
 
         // Load an other json into a new memory segment
-        pSegment1 = json_SegmentSelectNo(1);
-        pJson1 = Json_ParseFile ('/samples/json/demo.json');
-        pNode = json_Locate(pJson1 : '/'); // Delete root ... empty all
-        json_NodeDelete(pNode);        // Delete john
+        pSegment1 = nox_SegmentSelectNo(1);
+        pJson1 = Nox_ParseFile ('/samples/json/demo.json');
+        pNode = nox_Locate(pJson1 : '/'); // Delete root ... empty all
+        nox_NodeDelete(pNode);        // Delete john
 
 
         // Load an other json into a new memory segment
-        pSegment2= json_SegmentSelectNo(2);
-        pJson2 = Json_ParseFile ('/samples/json/demo.json');
-        pNode = json_Locate(pJson2 : '/o/f');
-        name =  json_GetStr(pNode);   // Show john
+        pSegment2= nox_SegmentSelectNo(2);
+        pJson2 = Nox_ParseFile ('/samples/json/demo.json');
+        pNode = nox_Locate(pJson2 : '/o/f');
+        name =  nox_GetStr(pNode);   // Show john
 
         // Always dispose the complete Segment
-        json_SegmentDispose(pSegment1);
-        json_SegmentDispose(pSegment2);
+        nox_SegmentDispose(pSegment1);
+        nox_SegmentDispose(pSegment2);
 
-        json_memstat();
+        nox_memstat();
 

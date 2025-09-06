@@ -29,8 +29,9 @@
 // #include "rtvsysval.h"
 #include "memUtil.h"
 #include "strUtil.h"
+#include "e2aa2e.h"
 
-#include "noxdb2.h"
+#include "noxDbUtf8.h"
 
 
 
@@ -327,8 +328,9 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 					return FALSE;
 				}
 				if (key.token != COMMA)  {
+					UCHAR w [256];
 					nox_SetMessage( "Invalid token at (%d:%d) token number: %d. Was expecting an ',' but got a %s near %s"
-												, pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo, c2s(key.token), stra2e(key.data) );
+												, pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo, c2s(key.token), stra2e(w,key.data) );
 					pJxCom->State = XML_EXIT_ERROR;
 					memFree (&key.data);
 					return TRUE;

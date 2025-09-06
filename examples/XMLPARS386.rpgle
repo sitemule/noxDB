@@ -1,7 +1,7 @@
 **free
 // ------------------------------------------------------------------------------------
-Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' ) main(main);
-/include 'headers/noxDb2.rpgle'
+Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' ) main(main);
+/include 'headers/NOXDBUTF8.rpgle'
 
 dcl-proc main;
 
@@ -66,7 +66,7 @@ dcl-proc test1;
    showme = nox_AsXmlText(pXmlEnvelope); 
 
    // now even add an extra delivery node from a file 
-   pXmlPayloadFromFile = nox_ParseFile ('/prj/noxdb2/testdata/Deliverynote.xml');  
+   pXmlPayloadFromFile = nox_ParseFile ('/prj/NOXDBUTF8/testdata/Deliverynote.xml');  
    showme = nox_AsXmlText(pXmlPayloadFromFile); 
 
    nox_documentInsert   (pEnvelopeElement : pXmlPayloadFromFile : nox_LAST_CHILD);
@@ -75,7 +75,7 @@ dcl-proc test1;
    showme = nox_AsXmlText(pXmlEnvelope); 
 
    // The complete output:
-   nox_WriteXmlStmf (pXmlEnvelope: '/prj/noxdb2/test/out/cdata1.xml' : 1208: *OFF);
+   nox_WriteXmlStmf (pXmlEnvelope: '/prj/NOXDBUTF8/test/out/cdata1.xml' : 1208: *OFF);
    
    // Note we do not need to delete pXmlPayload's explicitly - they are children of the envelope
    // nox_delete(pXmlPayloadFromString) or nox_delete(pXmlPayloadFromFile);
@@ -139,7 +139,7 @@ dcl-proc test2;
    showme = nox_AsXmlText(pXmlEnvelope); 
 
    // The complete output:
-   nox_WriteXmlStmf (pXmlEnvelope: '/prj/noxdb2/test/out/cdata2.xml' : 1208: *OFF);
+   nox_WriteXmlStmf (pXmlEnvelope: '/prj/NOXDBUTF8/test/out/cdata2.xml' : 1208: *OFF);
    
    // Note we do not need to delete pXmlPayload's explicitly - they are children of the envelope
    // nox_delete(pXmlPayloadFromString) or nox_delete(pXmlPayloadFromFile);

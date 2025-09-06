@@ -7,7 +7,7 @@
         // Produce a CSV files directly from a SQL select
         //
         // ------------------------------------------------------------- *
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE');
 
         /include 'headers/JSONPARSER.rpgle'
 
@@ -20,15 +20,15 @@
         ');
 
         // Load all rows
-        rows = json_sqlResultSet(sql)    ;
+        rows = nox_sqlResultSet(sql)    ;
 
         // Save it as CSV files
-        json_WriteCsvStmf (rows : '/tmp/sample.csv' : 1208: *OFF :
+        nox_WriteCsvStmf (rows : '/tmp/sample.csv' : 1208: *OFF :
         '{ decPoint:",",  delimiter:";", headers:true}'
         );
 
         // Cleanup: Dispose the row array
-        json_delete(rows);
+        nox_delete(rows);
 
         // That's it..
         *inlr = *on;

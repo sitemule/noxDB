@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -19,18 +19,18 @@
 
         //------------------------------------------------------------- *
 
-        pJson = json_ParseString ('{}');
-        json_SetValue ( pJson : '/o/a[0]':
-          '{x:123,y:456}': JSON_EVAL );
-        json_SetValue ( pJson : '/o/a[1]':
-          '{x:444,y:555}': JSON_EVAL );
-        json_SetValue ( pJson : '/o/e':
-          '{s:"a",t:"b"}': JSON_EVAL );
+        pJson = nox_ParseString ('{}');
+        nox_SetValue ( pJson : '/o/a[0]':
+          '{x:123,y:456}': NOX_EVAL );
+        nox_SetValue ( pJson : '/o/a[1]':
+          '{x:444,y:555}': NOX_EVAL );
+        nox_SetValue ( pJson : '/o/e':
+          '{s:"a",t:"b"}': NOX_EVAL );
 
-             json_SetValue ( pJson : '/o/arr':
-               '[1,2,3,4,5,6]': JSON_EVAL );
+             nox_SetValue ( pJson : '/o/arr':
+               '[1,2,3,4,5,6]': NOX_EVAL );
 
-        json_WriteStmf  (pJson   : './jsonout.json' : 1208 : *OFF);
+        nox_WriteStmf  (pJson   : './jsonout.json' : 1208 : *OFF);
 
-        json_Close(pJSON);
+        nox_Close(pJSON);
         *inlr = *on;

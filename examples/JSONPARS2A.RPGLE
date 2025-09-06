@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -17,7 +17,7 @@
 
         //------------------------------------------------------------- *
         
-        pJson = JSON_ParseString (
+        pJson = NOX_ParseString (
            '{                                             '+
            '   "e"  :"Quote\"line1\nline2\rtab\ttabed",   '+
            '   "123":"Key can be numeric"             ,   '+
@@ -25,22 +25,22 @@
            '}'
         );
 
-        if JSON_Error(pJson) ;
-           msg = JSON_Message(pJson);
-           JSON_dump(pJson);
-           JSON_Close(pJson);
+        if NOX_Error(pJson) ;
+           msg = NOX_Message(pJson);
+           NOX_dump(pJson);
+           NOX_Close(pJson);
            return;
         endif;
 
-        json_WriteStmf( pJson: './dump-payload.json': 1208 : *OFF);
-        pNode = JSON_locate(pJson: '/e');
-        value = json_getStr  (pNode);
+        nox_WriteStmf( pJson: './dump-payload.json': 1208 : *OFF);
+        pNode = NOX_locate(pJson: '/e');
+        value = nox_getStr  (pNode);
 
         // Get value for at numeric key
-        value = json_getStr  (pJson: %char(123));
+        value = nox_getStr  (pJson: %char(123));
 
         // Get value for at national chars
-        value = json_getStr  (pJson: 'ÆØÅ');
+        value = nox_getStr  (pJson: 'ÆØÅ');
 
-        JSON_Close(pJSON);
+        NOX_Close(pJSON);
         *inlr = *on;

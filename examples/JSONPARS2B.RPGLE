@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -16,7 +16,7 @@
 
         //------------------------------------------------------------- *
 
-        pJson = JSON_ParseString (
+        pJson = NOX_ParseString (
            '{"/rrn/product/icebreak":1,' +
            '"PRODID":"\u00b5 DIGITAL 600 ax",' +
            '"MANUID":"CASIO",' +
@@ -25,26 +25,26 @@
            '"janej":"0"}'
              : '');
 
-        if JSON_Error(pJson) ;
-           msg = JSON_Message(pJson);
-           JSON_dump(pJson);
-           JSON_Close(pJson);
+        if NOX_Error(pJson) ;
+           msg = NOX_Message(pJson);
+           NOX_dump(pJson);
+           NOX_Close(pJson);
            return;
         endif;
         
-        pNode = JSON_locate(pJson: '/PRICE');
-        price = JSON_getNum(pNode);
+        pNode = NOX_locate(pJson: '/PRICE');
+        price = NOX_getNum(pNode);
 
         // Or in one line
-        price = json_getNum(pJson: '/price' : 0);
+        price = nox_getNum(pJson: '/price' : 0);
 
         // Online showin with / without  default will return 0 or blank
-        price = json_getNum       (pJson: '/priceJohn': -1);
-        value = json_getStr       (pJson: '/priceJohn': 'N/A');
-        price = json_getNum       (pJson: '/priceJohn');
-        value = json_getStr       (pJson: '/priceJohn');
+        price = nox_getNum       (pJson: '/priceJohn': -1);
+        value = nox_getStr       (pJson: '/priceJohn': 'N/A');
+        price = nox_getNum       (pJson: '/priceJohn');
+        value = nox_getStr       (pJson: '/priceJohn');
 
 
-        JSON_dump(pJson);
-        JSON_Close(pJSON);
+        NOX_dump(pJson);
+        NOX_Close(pJSON);
         *inlr = *on;

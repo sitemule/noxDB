@@ -27,12 +27,24 @@
 #include "xlate.h"
 #include "parms.h"
 #include "memUtil.h"
-#include "noxdb2.h"
+#include "noxDbUtf8.h"
 
 
-
-/* ---------------------------------------------------------------------------
-	--------------------------------------------------------------------------- */
+// --------------------------------------------------------------------------- 
+void  nox_LoadRecursiveList (PNOXNODE pNode, PNOXITERATOR pIter, BOOL first)
+{
+	while (pNode) {
+		if (pIter->length >= pIter->size) {
+			pIter->size += 256;
+			pIter->list = realloc (pIter->list , sizeof(PNOXNODE) * pIter->size);
+		}
+		pIter->list [pIter->length] = pNode;
+		pIter->length++;
+		nox_LoadRecursiveList (pNode->pNodeChildHead , pIter, FALSE);
+		pNode = first ? NULL : pNode->pNodeSibling;
+	}
+}
+// --------------------------------------------------------------------------- 
 NOXITERATOR nox_SetRecursiveIterator (PNOXNODE pNode , PUCHAR path)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();

@@ -17,7 +17,7 @@
 
         //http://www-03.ibm.com/systems/power/software/i/db2/support/tips/clifaq.
         //------------------------------------------------------------- *
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         Dcl-S err          Ind;
         Dcl-S pNote1       Pointer;
@@ -30,19 +30,19 @@
         // Advanced: - update using json object as a row
         // This also works for BLOBS and CLOB columns
 
-        pRow  = json_newObject();
-        json_setStr(pRow:  'title'    : 'My first note');
-        json_setStr(pRow:  'text1'    : '{a:123}');
+        pRow  = nox_newObject();
+        nox_setStr(pRow:  'title'    : 'My first note');
+        nox_setStr(pRow:  'text1'    : '{a:123}');
 
-        err = json_sqlInsert  (
+        err = nox_sqlInsert  (
            'qgpl/notes'
            :pRow
         );
-        id = json_sqlGetInsertId();
+        id = nox_sqlGetInsertId();
 
         // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
-        json_close(pRow);
-        json_sqlDisconnect();
+        nox_close(pRow);
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

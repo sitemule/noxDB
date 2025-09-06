@@ -10,7 +10,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -27,16 +27,16 @@
             text1: {da:"Dansk Tekst" , en:"English"}     -
          }');
 
-         err = json_sqlInsert  (
+         err = nox_sqlInsert  (
             'qgpl/note2'
             :row
          );
 
          // get ret unique ID generated
-         id = json_sqlGetInsertId();
+         id = nox_sqlGetInsertId();
 
          // now get that row: here we use the a stringed obje
-         pRow = json_sqlResultRow (('  -
+         pRow = nox_sqlResultRow (('  -
                select * from qgpl/note2  -
                where id = $id           -
             ')
@@ -44,8 +44,8 @@
         );
 
         // manipulate data:
-        json_setStr(pRow : 'text1.fr' : 'aussi en français');
-        err = json_sqlUpdate(
+        nox_setStr(pRow : 'text1.fr' : 'aussi en français');
+        err = nox_sqlUpdate(
            'qgpl/note2'
            :pRow                // the text object is updated with a extra tag
            :'where  id = $id'   // the where uses atemplate to the id, and the i
@@ -53,8 +53,8 @@
         );
 
         // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnec
-        json_close(pRow);
-        json_sqlDisconnect();
+        nox_close(pRow);
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

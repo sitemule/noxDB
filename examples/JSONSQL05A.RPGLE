@@ -5,7 +5,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -23,16 +23,16 @@
            fetch first 1 row only    -
         ');
 
-        pRow  = json_sqlResultRow(sql);
+        pRow  = nox_sqlResultRow(sql);
 
         // Produce a JSON stream file in the root of the IFS
-        json_writeJsonStmf(pRow   :
+        nox_writeJsonStmf(pRow   :
            '/jsonxml/json/one-object.json' : 1208 : *ON
         );
 
         // Cleanup: delete the object and disconnect
-        json_delete (pRow);
-        json_sqlDisconnect();
+        nox_delete (pRow);
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

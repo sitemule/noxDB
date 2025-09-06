@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -14,19 +14,19 @@
 
         //------------------------------------------------------------- *
 
-        pJson = json_ParseString ('{ e: "" , n: null }');
+        pJson = nox_ParseString ('{ e: "" , n: null }');
 
-        if json_Error(pJson) ;
-           msg = json_Message(pJson);
-           json_dump(pJson);
-           json_Close(pJson);
+        if nox_Error(pJson) ;
+           msg = nox_Message(pJson);
+           nox_dump(pJson);
+           nox_Close(pJson);
            return;
         endif;
 
-        e = json_getValue(pJson : 'e');
-        n = json_getValue(pJson : 'n' );
+        e = nox_getValue(pJson : 'e');
+        n = nox_getValue(pJson : 'n' );
 
-        outstr = json_asJsonText(pJson);
+        outstr = nox_asJsonText(pJson);
         
-        json_Close(pJSON);
+        nox_Close(pJSON);
         *inlr = *on;

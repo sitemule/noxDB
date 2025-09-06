@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -18,29 +18,29 @@
         //------------------------------------------------------------- *
 
         // Open our SQL cursor. Use a simple select
-        sqlhnd  = json_sqlOpen(
+        sqlhnd  = nox_sqlOpen(
            'Select x from blob'
         );
 
         // Was there a problem ?
-        if json_Error(sqlhnd);
-           msg = json_Message(sqlhnd);
-           json_sqlDisconnect();
+        if nox_Error(sqlhnd);
+           msg = nox_Message(sqlhnd);
+           nox_sqlDisconnect();
            return;  // You can return, however the rest of the routines a roubust enough to just continue
         endif;
 
         // Now iterate on each row in the resultset
-        pRow = json_sqlFetchNext(sqlhnd);
+        pRow = nox_sqlFetchNext(sqlhnd);
         dow (pRow <> *NULL );
-           text    = json_getStr (pRow : 'x' );
-           json_NodeDelete(pRow); // Always dispose it before get the next
-           pRow = json_sqlFetchNext(sqlhnd);
+           text    = nox_getStr (pRow : 'x' );
+           nox_NodeDelete(pRow); // Always dispose it before get the next
+           pRow = nox_sqlFetchNext(sqlhnd);
         enddo;
 
 
         // Finaly and always !! close the SQL cursor and dispose the json row object
-        json_sqlClose(sqlhnd);
-        json_sqlDisconnect();
+        nox_sqlClose(sqlhnd);
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

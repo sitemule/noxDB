@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE');
 
         //------------------------------------------------------------- *
         
@@ -14,17 +14,17 @@
         //------------------------------------------------------------- *
 
         *inlr = *on;
-        pJson = Json_ParseFile ('./test/documents/sample01.json');
+        pJson = Nox_ParseFile ('./test/documents/sample01.json');
 
-        if Json_Error(pJson) ;
-           msg = Json_Message(pJson);
-           Json_dump(pJson);
-           Json_Close(pJson);
+        if Nox_Error(pJson) ;
+           msg = Nox_Message(pJson);
+           Nox_dump(pJson);
+           Nox_Close(pJson);
            return;
         endif;
 
         // save as new file
-        json_WriteJsonStmf(pJson : './sample01out.json' : 1208 : *ON );
+        nox_WriteJsonStmf(pJson : './sample01out.json' : 1208 : *ON );
 
-        Json_Close(pJson);
+        Nox_Close(pJson);
 

@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -13,27 +13,27 @@
         Dcl-S maxid        Int(10);
         Dcl-S id           Int(10);
         Dcl-S index        Pointer    dim(100);
-        Dcl-DS list  likeds(json_iterator);
+        Dcl-DS list  likeds(nox_iterator);
         End-DS;
 
         //------------------------------------------------------------- *
         
-        pJson = JSON_ParseFile (
+        pJson = NOX_ParseFile (
             '/www/portfolio/Public/TwiSite/xpd/folder.xpd'
         );
 
-        if JSON_Error(pJson) ;
-           msg = JSON_Message(pJson);
-           JSON_dump(pJson);
-           JSON_Close(pJson);
+        if NOX_Error(pJson) ;
+           msg = NOX_Message(pJson);
+           NOX_dump(pJson);
+           NOX_Close(pJson);
            return;
         endif;
 
-        list = json_setRecursiveIterator(pJson);
-        dow json_ForEach(list);
-           if ('id' = json_getName (list.this));
-              id = json_getNum     (list.this);
-              index(id) = json_getParent(list.this);
+        list = nox_setRecursiveIterator(pJson);
+        dow nox_ForEach(list);
+           if ('id' = nox_getName (list.this));
+              id = nox_getNum     (list.this);
+              index(id) = nox_getParent(list.this);
               if maxid < id;
                  maxid = id;
               endif;
@@ -42,9 +42,9 @@
 
         // Lets play with it:
         for i = 1 to maxid;
-          v = json_getStr    (index(i):'title');
+          v = nox_getStr    (index(i):'title');
           dsply v;
         endfor;
 
-        JSON_Close(pJSON);
+        NOX_Close(pJSON);
         *inlr = *on;

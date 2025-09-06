@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -15,32 +15,32 @@
 
 
         // upsert is a combination of "update" and if not found then "insert"
-        row = json_newObject();
-        json_setInt(row : 'prodkey' : 12345);
-        json_setStr(row : 'desc'    : 'Demo');
+        row = nox_newObject();
+        nox_setInt(row : 'prodkey' : 12345);
+        nox_setStr(row : 'desc'    : 'Demo');
 
         // update or insert using object as the row
-        err = json_sqlUpsert (
+        err = nox_sqlUpsert (
            'product'                // table name
            :row                     // row in object form {a:1,b:2} etc..
            :'prodkey = 12345    '   // need always a key, which can be different from the row
         );
 
-        json_setInt(row : 'prodkey' : 23456);
-        json_setStr(row : 'desc'    : 'Next Demo');
+        nox_setInt(row : 'prodkey' : 23456);
+        nox_setStr(row : 'desc'    : 'Next Demo');
 
         // update or insert using object as the row
-        err = json_sqlUpsert (
+        err = nox_sqlUpsert (
            'product'                // table name
            :row                     // row in object form {a:1,b:2} etc..
            :'prodkey = $prodkey'   // can also use data from the row for the where statment
            :row                    // values for the key template
         );
 
-        json_delete(row);
+        nox_delete(row);
 
         // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
-        json_sqlDisconnect();
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

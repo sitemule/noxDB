@@ -5,7 +5,7 @@
     "tasks": [
         {
             "label": "Compile current file",
-            "command": "ssh -t my_ibm_i  'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake ${relativeFile} --always-make '",
+            "command": "ssh -t my_ibm_i  'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/;gmake ${relativeFile} --always-make '",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -37,9 +37,7 @@
         },
         {
             "label": "Compile Service program",
-            "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake all'",
-<<<<<<< HEAD
-=======
+            "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/;gmake all'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -51,8 +49,7 @@
         },
         {
             "label": "Build release",
-            "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/;gmake release'",
->>>>>>> ab0f46cc8de7978cebb70145d65b2f9c449c1c28
+            "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/;gmake release'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -64,7 +61,7 @@
         },
         {
             "label": "Compile Test modules for noxDB",
-            "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/test/;gmake'",
+            "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/test/;gmake'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -76,9 +73,7 @@
         },
         {
             "label": "Compile current example file",
-            "command": "ssh -t my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
-<<<<<<< HEAD
-=======
+            "command": "ssh -t my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/examples/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -106,8 +101,7 @@
         },
         {
             "label": "Compile current test file",
-            "command": "ssh -t my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdb2/test/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
->>>>>>> ab0f46cc8de7978cebb70145d65b2f9c449c1c28
+            "command": "ssh -t my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/test/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
             "type": "shell",
             "group": {
                 "kind": "build",

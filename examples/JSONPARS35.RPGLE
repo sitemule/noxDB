@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -16,29 +16,29 @@
         //------------------------------------------------------------- *
 
         *inlr = *on;
-        pJson = json_ParseFile ('/udv/ccsid/win-1252.json');
-        if json_Error(pJson) ;
-           msg = json_Message(pJson);
+        pJson = nox_ParseFile ('/udv/ccsid/win-1252.json');
+        if nox_Error(pJson) ;
+           msg = nox_Message(pJson);
         endif;
-        json_Dump(pJson);
-        json_Close(pJson);
+        nox_Dump(pJson);
+        nox_Close(pJson);
 
-        pJson = json_ParseFile ('/udv/ccsid/doesnotexists.json');
-        if json_Error(pJson) ;
-           msg = json_Message(pJson);
+        pJson = nox_ParseFile ('/udv/ccsid/doesnotexists.json');
+        if nox_Error(pJson) ;
+           msg = nox_Message(pJson);
         endif;
-        json_Close(pJson);
+        nox_Close(pJson);
 
 
-        pJson = json_ParseFile ('/udv/ccsid/partsplexer.lib');
-        if json_Error(pJson) ;
-           msg = json_Message(pJson);
+        pJson = nox_ParseFile ('/udv/ccsid/partsplexer.lib');
+        if nox_Error(pJson) ;
+           msg = nox_Message(pJson);
         endif;
-        json_Close(pJson);
+        nox_Close(pJson);
 
-        pJson = json_ParseFile ('/udv/ccsid/webshop.lib');
-        if json_Error(pJson) ;
-           msg = json_Message(pJson);
+        pJson = nox_ParseFile ('/udv/ccsid/webshop.lib');
+        if nox_Error(pJson) ;
+           msg = nox_Message(pJson);
         endif;
-        json_Close(pJson);
+        nox_Close(pJson);
 

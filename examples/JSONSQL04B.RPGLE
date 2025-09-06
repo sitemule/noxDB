@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -17,21 +17,21 @@
 
         //------------------------------------------------------------- *
 
-        Json_MemStat();
+        Nox_MemStat();
 
         // The destination object for our SQL result row
         // and the array to contain the rows
-        resultArray  = json_newArray ();
+        resultArray  = nox_newArray ();
 
-        prodRow    = json_newObject ();
-        json_setValue(prodRow :'n' : 'abc'  );
+        prodRow    = nox_newObject ();
+        nox_setValue(prodRow :'n' : 'abc'  );
 
-        Json_MemStat();
-        json_setValue(resultArray: '[]' : prodRow: JSON_OBJMOVE);
-        Json_MemStat();
-        json_close(resultArray);
+        Nox_MemStat();
+        nox_setValue(resultArray: '[]' : prodRow: NOX_OBJMOVE);
+        Nox_MemStat();
+        nox_close(resultArray);
 
-        Json_MemStat();
+        Nox_MemStat();
 
         // That's it..
         *inlr = *on;

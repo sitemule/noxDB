@@ -5,13 +5,14 @@ UCHAR  toLower(UCHAR c);
 UCHAR  toUpper(UCHAR c);
 UCHAR  atoUpper(UCHAR c);
 UCHAR  atoLower(UCHAR c);
+PUCHAR aCamelCase (PUCHAR out , PUCHAR in);
 LONG   strTrimLen(PUCHAR str);
 LONG   astrTrimLen(PUCHAR str);
 LONG   strtrim(PUCHAR str);
 LONG   astrtrim(PUCHAR str);
 LONG   asprintf (PUCHAR res, PUCHAR ctrlstr , ... );
 LONG   a2i (PUCHAR str);
-
+LGL isOn (int boolExpr);
 PUCHAR strchrreplace(PUCHAR out , PUCHAR in , PUCHAR from , PUCHAR to );
 LONG   memstrreplace(PUCHAR buf , LONG len , PUCHAR from , PUCHAR to );
 PUCHAR fmtPacked(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint);
@@ -55,6 +56,8 @@ UCHAR hexchar2int (UCHAR c);
 PUCHAR binMem2Hex (PUCHAR out , PUCHAR in , LONG len);
 PUCHAR hex2BinMem (PUCHAR out , PUCHAR in , LONG len);
 FIXEDDEC str2dec(PUCHAR str, UCHAR decPoint);
+FIXEDDEC astr2dec(PUCHAR str , UCHAR decPoint);
+
 LONG packedMem2Int(PUCHAR buf, SHORT bytes);
 PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen, 
                 PUCHAR needle , ULONG needleLen);

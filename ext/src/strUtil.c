@@ -1,6 +1,6 @@
 // CMD:CRTCMOD 
 /* ------------------------------------------------------------- */
-/* Date  . . . . : 14.12.3005                                    */
+/* Date  . . . . : 14.12.2005                                    */
 /* Design  . . . : Niels Liisberg                                */
 /* Function  . . : Base utilies                                  */
 /*                                                               */
@@ -20,6 +20,7 @@
 #include <mih/setsppfp.h>
 
 #include "ostypes.h"
+#include "varchar.h"
 #include "strUtil.h"
 #include "e2aa2e.h"
 
@@ -57,6 +58,27 @@ int astrIcmp (PUCHAR s1, PUCHAR s2)
 
     return c;
 }
+PUCHAR aCamelCase (PUCHAR out , PUCHAR in)
+{
+   PUCHAR ret = out;
+   BOOL upperNext = false;
+
+   for (;*in;in++) {
+      if (*in == '_') {
+         upperNext = true;
+      } else {
+         if (upperNext) {
+            *(out++) = atoUpper(*in);
+            upperNext = false;
+         } else {
+            *(out++) = atoLower (*in);
+         }
+      }
+   }
+   *(out) = '\0';
+   return ret;
+}
+
 /* ------------------------------------------------------------- *\
    memIcmp  is memIcmp in ccsid 277
 \* ------------------------------------------------------------- */
@@ -716,6 +738,50 @@ FIXEDDEC str2dec(PUCHAR str , UCHAR decPoint)
    }
    return (Res );
 }
+/* ------------------------------------------------------------- */
+#pragma convert(1252)
+FIXEDDEC astr2dec(PUCHAR str , UCHAR decPoint)
+{
+   PUCHAR p;
+   FIXEDDEC        Res   = 0D;
+   decimal(17,16)  Temp  = 0D;
+   decimal(17)     Decs  = 1D;
+   BOOL  DecFound = FALSE;
+   UCHAR c = '0';
+   PUCHAR firstDigit = NULL;
+   PUCHAR lastDigit  = NULL;
+   int   Dec=0;
+   int   Prec=0;
+
+   for (p=str; (c = *p) > '\0' ; p ++) {
+      if (c >= '0' && c <= '9' ) {
+         if (!firstDigit) firstDigit = p;
+         lastDigit = p;
+         if (DecFound) {
+           if (++Prec <= 15) {
+              Decs  *= 10D;
+              Temp = (c - '0');
+              Temp /= Decs;
+              Res += Temp;
+           }
+         } else {
+           if (Dec < 15) {
+             Res = Res * 10D + (c - '0');
+             if (Res > 0D) Dec++;
+           }
+         }
+      } else if (c == decPoint) {
+         DecFound = TRUE;
+      }
+   }
+   if ((firstDigit > str && *(firstDigit-1) == '-')
+   ||  (lastDigit        && *(lastDigit+1)  == '-')) {
+      Res = - Res;
+   }
+   return (Res );
+}
+#pragma convert(0)
+
 /* ------------------------------------------------------------- */
 LONG packedMem2Int(PUCHAR buf, SHORT bytes)
 {

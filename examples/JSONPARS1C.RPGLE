@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -18,54 +18,54 @@
         //------------------------------------------------------------- *
 
         *inlr = *on;
-        pJson = Json_ParseFile ('./test/documents/demo.json');
+        pJson = Nox_ParseFile ('./test/documents/demo.json');
 
-        if Json_Error(pJson) ;
-           msg = Json_Message(pJson);
+        if Nox_Error(pJson) ;
+           msg = Nox_Message(pJson);
            dsply msg;
-           Json_dump(pJson);
-           Json_Close(pJson);
+           Nox_dump(pJson);
+           Nox_Close(pJson);
            return;
         endif;
 
-        pNode = Json_locate(pJson: '/o/n');
-        n     = Json_getNum(pNode);
+        pNode = Nox_locate(pJson: '/o/n');
+        n     = Nox_getNum(pNode);
 
-        pNode = Json_locate(pJson: '/a[1]');
-        n     = Json_GetNum (pNode);
+        pNode = Nox_locate(pJson: '/a[1]');
+        n     = Nox_GetNum (pNode);
 
-        pNode = Json_locate(pJson: '/s');
-        value = Json_getStr(pNode);
+        pNode = Nox_locate(pJson: '/s');
+        value = Nox_getStr(pNode);
 
-        pNode = Json_locate(pJson: '/u');
-        value = Json_getStr(pNode);
+        pNode = Nox_locate(pJson: '/u');
+        value = Nox_getStr(pNode);
 
-        pNode = Json_locate(pJson: '/o/a[2]');
-        n     = Json_GetNum(pNode);
+        pNode = Nox_locate(pJson: '/o/a[2]');
+        n     = Nox_GetNum(pNode);
 
         // Loop on the array
-        pArr  = Json_locate(pJson: '/o/a[0]'); // First array element
+        pArr  = Nox_locate(pJson: '/o/a[0]'); // First array element
         dow (pArr <> *NULL) ;
-          n     = Json_GetNum (pArr);
-          pArr  = Json_GetNext(pArr);
+          n     = Nox_GetNum (pArr);
+          pArr  = Nox_GetNext(pArr);
         endDo;
 
         // Loop the root: Note the  "/" will position to the first chile of the root
-        pNode  = Json_locate(pJson: '/'); // First array element
+        pNode  = Nox_locate(pJson: '/'); // First array element
         dow (pNode <> *NULL) ;
-          value  = Json_GetStr (pNode);
-          pNode  = Json_GetNext(pNode);
+          value  = Nox_GetStr (pNode);
+          pNode  = Nox_GetNext(pNode);
         endDo;
 
         // Get Value directly
-        value = Json_GetStr    (pJson : '/u');
+        value = Nox_GetStr    (pJson : '/u');
 
         // Get Value directly relative
-        pNode = Json_locate(pJson: '/o');
-        value = Json_GetStr (pNode : 'n');   // This is "n" in "o"
+        pNode = Nox_locate(pJson: '/o');
+        value = Nox_GetStr (pNode : 'n');   // This is "n" in "o"
 
         // Get number of entries in arrays
-        n  = Json_GetNum(pJson : '/o/a[UBOUND]': -1 );
+        n  = Nox_GetNum(pJson : '/o/a[UBOUND]': -1 );
 
-        Json_dump(pJson);
-        Json_Close(pJson);
+        Nox_dump(pJson);
+        Nox_Close(pJson);

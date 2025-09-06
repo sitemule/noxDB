@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -19,25 +19,25 @@
         start = 1;
         limit = 10; // Give me the 10 first rows
 
-        // The JSON_META constructs a resultset object with a "row" array
+        // The NOX_META constructs a resultset object with a "row" array
         // Total rows convert ( if possible ) the select to an select count(*) first
-        pResult = json_sqlResultSet(sql:start:limit:
-           JSON_META + JSON_TOTALROWS
+        pResult = nox_sqlResultSet(sql:start:limit:
+           NOX_META + NOX_TOTALROWS
         );
 
         // Produce an other result set - like a selected dropdownbox
         sql   = 'Select * from product where prodkey  = 160';
-        pSelected = json_sqlResultRow(sql);
-        json_MoveObjectInto (pResult : 'selected' : pSelected);
+        pSelected = nox_sqlResultRow(sql);
+        nox_MoveObjectInto (pResult : 'selected' : pSelected);
 
         // Produce a JSON stream file in the root of the IFS
-        json_writeJsonStmf(pResult:
+        nox_writeJsonStmf(pResult:
            '/jsonxml/json/resultset-total-rows-one-selected.json' : 1208 : *ON
         );
 
         // Cleanup: Close the SQL cursor, dispose the rows, arrays and disconnect
-        json_close(pResult);
-        json_sqlDisconnect();
+        nox_close(pResult);
+        nox_sqlDisconnect();
 
         // That's it..
         *inlr = *on;

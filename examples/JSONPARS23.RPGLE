@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
         
         //------------------------------------------------------------- *
         
@@ -10,16 +10,16 @@
         
         //------------------------------------------------------------- *
 
-        pJson = JSON_ParseString('[           -
+        pJson = NOX_ParseString('[           -
           {a:"Hello",b:1,c:22.7},             -
           {a:"Yes\" you can",b:2,c:3.14}      -
         ]');
 
-        json_WriteJsonStmf(pJson: '/jsonxml/out1.json': 1208: *OFF);
-        json_WriteXmlStmf (pJson: '/jsonxml/out1.xml' : 1208: *OFF);
-        json_WriteCsvStmf (pJson: '/jsonxml/out1.csv' : 1208: *OFF :
+        nox_WriteJsonStmf(pJson: '/jsonxml/out1.json': 1208: *OFF);
+        nox_WriteXmlStmf (pJson: '/jsonxml/out1.xml' : 1208: *OFF);
+        nox_WriteCsvStmf (pJson: '/jsonxml/out1.csv' : 1208: *OFF :
           '{ decPoint:",",  delimiter:";",  headers:true}'
         );
 
-        json_Close(pJson);
+        nox_Close(pJson);
         *inlr = *on;

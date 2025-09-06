@@ -1,7 +1,7 @@
         // ------------------------------------------------------------------------- 
         // noxDB samples - Handeling of Dangling  pointers to Dangling  objects
         // ------------------------------------------------------------------------- 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         /include 'headers/JSONPARSER.rpgle'
 
@@ -12,19 +12,19 @@
         
 
         // Build an object
-        pObj  = json_newObject();
-        pString = json_setStr(pObj:  'title'    : 'Just some text');
+        pObj  = nox_newObject();
+        pString = nox_setStr(pObj:  'title'    : 'Just some text');
 
         // Let a pointer - point to an object we wil delete
         pDangling   = pString;
-        json_delete (pString);
+        nox_delete (pString);
 
         // Now: Dangling will return a blank - and not the original object since it is deleted" 
-        s  = json_getStr(pDangling);
+        s  = nox_getStr(pDangling);
 
         if s <> '';
                 dsply 'Dangling does not work as supposed';
         endif;
 
-        json_delete (pObj);
+        nox_delete (pObj);
         *inlr = *on;

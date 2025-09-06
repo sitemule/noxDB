@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
         
@@ -13,7 +13,7 @@
 
         *inlr = *on;
 
-        pJson = json_ParseString ('                                -
+        pJson = nox_ParseString ('                                -
           {                                                        -
              arr1: [                                               -
                 "The ",                                            -
@@ -24,7 +24,7 @@
         ');
 
         // Glue all array elements together as one string
-        msg = json_getStrJoin(pJson : 'arr1' );
+        msg = nox_getStrJoin(pJson : 'arr1' );
         dsply msg;
 
-        json_close(pJson);
+        nox_close(pJson);

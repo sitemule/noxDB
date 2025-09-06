@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -13,18 +13,18 @@
         //------------------------------------------------------------- *
 
         *inlr = *on;
-        pJson  = json_NewObject();
+        pJson  = nox_NewObject();
 
-        pJsonTemp = Json_ParseString (
+        pJsonTemp = Nox_ParseString (
           '{"__cid__":1,"backgroundcolor":"#4400FF","design":"rl"}');
-        Json_merge (pJson  : pJsonTemp : Json_DONTREPLACE);
-        Json_Close(pJsonTemp);
+        Nox_merge (pJson  : pJsonTemp : Nox_DONTREPLACE);
+        Nox_Close(pJsonTemp);
 
-        pJsonTemp = Json_ParseString (
+        pJsonTemp = Nox_ParseString (
           '{"__cid__":13,"name":"Den første stakside"}');
-        Json_merge (pJson  : pJsonTemp : Json_DONTREPLACE);
-        Json_Close(pJsonTemp);
+        Nox_merge (pJson  : pJsonTemp : Nox_DONTREPLACE);
+        Nox_Close(pJsonTemp);
 
 
-        Json_WriteStmf (pJson:'./jsonout-merge2.json':1208:*OFF);
-        Json_Close(pJson);
+        Nox_WriteStmf (pJson:'./jsonout-merge2.json':1208:*OFF);
+        Nox_Close(pJson);

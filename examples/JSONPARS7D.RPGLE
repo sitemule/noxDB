@@ -2,7 +2,7 @@
         //------------------------------------------------------------- *
 
         //Join an array and return is as string
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
         
@@ -14,7 +14,7 @@
         *inlr = *on;
 
         // Simple - on column
-        pJson = json_ParseString ('                          -
+        pJson = nox_ParseString ('                          -
              [                                               -
                 { key: "d" , value : 4 },                    -
                 { key: "c" , value : 3 },                    -
@@ -24,15 +24,15 @@
         ');
 
         // Sort the array after the key field
-        json_arraySort(pJson : 'key' );
+        nox_arraySort(pJson : 'key' );
 
         // save as new file
-        json_WriteJsonStmf(pJson : '/jsonxml/sample7D.json' : 1208 : *OFF);
+        nox_WriteJsonStmf(pJson : '/jsonxml/sample7D.json' : 1208 : *OFF);
 
-        json_close(pJson);
+        nox_close(pJson);
 
         // Multiple keys
-        pJson = json_ParseString ('                          -
+        pJson = nox_ParseString ('                          -
              [                                               -
                 { keya: "b" , keyb: "2" , value : 4 },        -
                 { keya: "b" , keyb: "1" , value : 3 },        -
@@ -42,9 +42,9 @@
         ');
 
         // Sort the array after the key field
-        json_arraySort(pJson : 'keya,keyb' );
+        nox_arraySort(pJson : 'keya,keyb' );
 
         // save as new file
-        json_WriteJsonStmf(pJson : '/jsonxml/sample7D1.json' : 1208 : *OFF);
+        nox_WriteJsonStmf(pJson : '/jsonxml/sample7D1.json' : 1208 : *OFF);
 
-        json_close(pJson);
+        nox_close(pJson);

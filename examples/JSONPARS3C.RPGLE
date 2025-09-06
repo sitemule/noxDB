@@ -1,7 +1,7 @@
 
         //------------------------------------------------------------- *
 
-        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE' );
 
         //------------------------------------------------------------- *
 
@@ -14,7 +14,7 @@
 
         //------------------------------------------------------------- *
         
-        pJson = json_parseString('                 -
+        pJson = nox_parseString('                 -
             {                                      -
                a :{                                -
                   x:1,                             -
@@ -26,22 +26,22 @@
         ');
 
         // Direct with "getLength"
-        pA = json_locate(pJson : 'a');
-        aCount = json_getLength(pA);
+        pA = nox_locate(pJson : 'a');
+        aCount = nox_getLength(pA);
 
         // Direct with expression
-        aCount = json_getNum(pJson : 'a[UBOUND]');
+        aCount = nox_getNum(pJson : 'a[UBOUND]');
 
         // Relative
-        pA = json_locate(pJson : 'a');
-        aCount = json_getNum(pA : '[UBOUND]');
+        pA = nox_locate(pJson : 'a');
+        aCount = nox_getNum(pA : '[UBOUND]');
 
         // Direct
-        bCount = json_getNum(pJson : 'b[UBOUND]');
+        bCount = nox_getNum(pJson : 'b[UBOUND]');
 
         // Relative
-        pB = json_locate(pJson : 'b');
-        bCount = json_getNum(pB : '[UBOUND]');
+        pB = nox_locate(pJson : 'b');
+        bCount = nox_getNum(pB : '[UBOUND]');
 
-        json_Close(pJson);
+        nox_Close(pJson);
         *inlr = *on;
