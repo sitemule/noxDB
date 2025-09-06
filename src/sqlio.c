@@ -871,7 +871,7 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
          *pCol->text = '\0';
       }
 
-      // If all uppsercase ( not given name by .. AS "newName") then lowercase
+      // If all uppercase ( not given name by .. AS "newName") then lowercase
       if (format & (JX_SYSTEM_NAMES)) {
          if (!(format & (JX_UPPERCASE))) {
             str2lower  (pCol->colname , pCol->sysname);

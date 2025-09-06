@@ -170,6 +170,7 @@ void  freeNodeValue(PJXNODE pNode)
       memFree(&pNode->Value );
    }
 }
+// ---------------------------------------------------------------------------
 void jx_SetTraceProc (JX_TRACE  proc) {
    jx_trace = proc;
 }

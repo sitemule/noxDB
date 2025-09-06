@@ -196,7 +196,7 @@ STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('JSONXML01')
   EXPORT SYMBOL("jx_GetNodeAttrValuePVC")
   EXPORT SYMBOL("jx_SetNodeAttrValueInt")
   EXPORT SYMBOL("jx_GetNodeAttrValueInt")
-  EXPORT SYMBOL("jx_Bool2Lgl");
-  EXPORT SYMBOL("jx_Lgl2Bool");
+  EXPORT SYMBOL("jx_Bool2Lgl")
+  EXPORT SYMBOL("jx_Lgl2Bool")
 
 ENDPGMEXP

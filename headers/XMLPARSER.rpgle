@@ -553,6 +553,13 @@ Dcl-PR xml_setInt pointer extproc(*CWIDEN : 'jx_SetIntByName2');
   nullIf ind value options(*nopass);
 End-PR;
 
+///
+// Create an atomic integer node
+//
+// @param (input) New value
+// @return pointer to the new node
+///
+
 Dcl-PR xml_Int pointer extproc(*CWIDEN : 'jx_Int');
   value int(20) value;
 End-PR;
@@ -712,7 +719,7 @@ End-PR;
 // and maps it to a noxDB object tree. The noxDB object tree will be created by
 // this function an does not need to exist.
 //
-// @param (input) noxDB object tree (output parameter)
+// @param (output) noxDB object tree (output parameter) Note: This is passed by reference pointer to noxDB tree
 // @param (input) options, check IBM documentation for data-gen for possible options
 // @return Procedure pointer of the data-gen generator function
 //
@@ -1335,8 +1342,8 @@ End-PR;
 ///
 // Slice array
 //
-// Removes nodes from an array. The node specified on the "to" parameter is
-// included (also removed).
+// returns a sub-array from an array. The node specified on the "to" parameter is
+// included .
 //
 // @param (input) Array or JSON array string
 // @param (input) From index (1-based)
@@ -1542,7 +1549,7 @@ End-PR;
 // Writes the object tree as a JSON string to a stream file in the IFS.
 //
 // @param (input) Node
-// @param (input) File name (either a literal or null-terminated in a variable)
+// @param (input) IFS File name
 // @param (input) CCSID of the output file
 // @param (input) <code>*off</code> = output will be pretty printed else
 //        <code>*on</code> (default)
@@ -1631,7 +1638,7 @@ End-PR;
 // start of the XML file.
 //
 // @param (input) Node
-// @param (input) File name (either a literal or null-terminated in a variable)
+// @param (input) IFS File name
 // @param (input) CCSID of the output file
 // @param (input) <code>*off</code> = output will be pretty printed else
 //        <code>*on</code> (default)
@@ -1755,7 +1762,9 @@ End-DS;
 //   <li>comma : Will be ',' as long there are more elements in the list </li>
 //   <li>count : current element index (starting at 1)</li>
 //   <li>length : number of elements</li>
-//   <li>break : set this to *ON to terminate the loop</li>
+//   <li>size  : Size of the iterator object ( internal use only)</li>
+//   <li>listArr :Pointer to temp array of elms for recursive lists ( internal use only)</li>
+//   <li>break : set this to *ON to terminate the loop, and free up memory</li>
 // </ul>
 ///
 Dcl-DS xml_iterator based(prototype_only) qualified;
@@ -1954,14 +1963,14 @@ Dcl-PR xml_clear extproc(*CWIDEN : 'jx_Clear');
 End-PR;
 
 ///
-// Close object tree
+// Close object graph
 //
-// Frees all resources allocated by this object tree.
+// Frees all resources allocated by this object graph.
 //
 // @param (input) Node
 //
 // @info The passed node does not necessarily has to be the root node of the
-//       tree. Any node of the tree will suffice.
+//       graph. Any node of the graph will suffice.
 ///
 Dcl-PR xml_close extproc(*CWIDEN : 'jx_Close');
   node pointer;
