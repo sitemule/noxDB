@@ -1,6 +1,5 @@
 *.DS_Store
-headers/noxDB2.rpgle
-headers/noxDB2JSON.rpgle
-headers/noxDB2XML.rpgle
 postlist.txt
 test/out/*
+testout/*
+include/qoar

@@ -1,15 +1,15 @@
-  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO2      DKSRV206   06-09-25 23:07:24        Page      1
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO       DKSRV206   08-09-25 01:16:15        Page      1
    Command  . . . . . . . . . . . . :   CRTBNDRPG
      Issued by  . . . . . . . . . . :     NLI
-   Program  . . . . . . . . . . . . :   EX01DEMO2
+   Program  . . . . . . . . . . . . :   EX01DEMO
      Library  . . . . . . . . . . . :     NOXDBUTF8
    Text 'description' . . . . . . . :   *SRCMBRTXT
-   Source Member  . . . . . . . . . :   EX01DEMO2
+   Source Member  . . . . . . . . . :   EX01DEMO
    Source File  . . . . . . . . . . :   QTMPSRC
      Library  . . . . . . . . . . . :     NOXDBUTF8
      CCSID  . . . . . . . . . . . . :     500
    Text 'description' . . . . . . . :
-   Last Change  . . . . . . . . . . :   06-09-25  23:07:24
+   Last Change  . . . . . . . . . . :   08-09-25  01:16:15
    Generation severity level  . . . :   10
    Default activation group . . . . :   *YES
    Compiler options . . . . . . . . :   *NOXREF    *GEN       *NOSECLVL  *NOSHOWCPY
@@ -38,7 +38,7 @@
    Include directory  . . . . . . . :   ./..
                                     :   /prj/NOXDBUTF8
    Preprocessor options . . . . . . :   *NONE
-  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO2      DKSRV206   06-09-25 23:07:24        Page      2
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO       DKSRV206   08-09-25 01:16:15        Page      2
  Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
  Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
                            S o u r c e   L i s t i n g
@@ -62,7 +62,7 @@
      18     Ctl-Opt CCSID(*CHAR:*UTF8) ; //  CCSID(*EXACT) ; // CCSID(*CHAR:*JOBRUN) ; // CCSID(*CHAR:*UTF8)      000000     001800
   ...   ;
      19                                                                                                           000000     001900
-     20     /include QRPGLEREF,noxDbUtf8                                                                          000000     002000
+     20     /include qrpgleref,noxDbUtf8                                                                          000000     002000
  Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
  Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
  Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
@@ -78,7 +78,7 @@
          *                                       *NOSECLVL  *NOSHOWCPY        *
          *                                       *NOEXPDDS  *NOEXT            *
          *                                       *NOSHOWSKP *NOSRCSTMT        *
-  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO2      DKSRV206   06-09-25 23:07:24        Page      3
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO       DKSRV206   08-09-25 01:16:15        Page      3
  Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
  Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
          *                                       *NODEBUGIO *NOUNREF          *
@@ -103,71 +103,295 @@
          *  Generate program interface . . . :   *NO                          *
          *  REQUIRE PROTOTYPE FOR EXPORT . . :                                *
          *--------------------------------------------------------------------*
- *RNF0516 30    729 071000+ Name is not allowed since it has already been defined;        NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-                            specification is ignored.
- *RNF0516 30    733 071400+ Name is not allowed since it has already been defined;        NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-                            specification is ignored.
- *RNF0516 30    745 072600+ Name is not allowed since it has already been defined;        NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-                            specification is ignored.
- *RNF0516 30   1000 098100+ Name is not allowed since it has already been defined;        NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-                            specification is ignored.
- *RNF0516 30   1004 098500+ Name is not allowed since it has already been defined;        NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-                            specification is ignored.
- *RNF0516 30   1008 098900+ Name is not allowed since it has already been defined;        NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-                            specification is ignored.
- *RNF0516 30   1012 099300+ Name is not allowed since it has already been defined;        NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-                            specification is ignored.
- *RNF3308 20   2659 264000+ Keyword name is not valid; the keyword is ignored.            NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
- *RNF0299 20   2659 264000+ Two keywords have been specified that are not allowed with    NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-                            each other.
- *RNF3749 20   2659 264000+ Keyword is not allowed for a prototype definition; keyword    NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-                            is ignored.
- *RNF3308 20   2671 265200+ Keyword name is not valid; the keyword is ignored.            NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO2      DKSRV206   06-09-25 23:07:24        Page      4
+             LINES EXCLUDED: 0
+   2806                                                                                                           000000     002100
+   2807     dcl-s id           int(10);                                                                           000000     002200
+   2808     dcl-s name         varchar(256);                                                                      000000     002300
+   2809     dcl-s street       varchar(256);                                                                      000000     002400
+   2810     dcl-s city         varchar(256);                                                                      000000     002500
+   2811     dcl-s creditLimit  packed(15:2);                                                                      000000     002600
+   2812     dcl-s createdDate  date;                                                                              000000     002700
+   2813     dcl-s createdTime  time;                                                                              000000     002800
+   2814     dcl-s dateTime     timeStamp;                                                                         000000     002900
+   2815     dcl-s isNice       ind;                                                                               000000     003000
+   2816                                                                                                           000000     003100
+   2817     dcl-s debug        varchar(32766:4);                                                                  000000     003200
+   2818     dcl-s msg          varchar(256);                                                                      000000     003300
+   2819     dcl-s len          int(10);                                                                           000000     003400
+   2820     dcl-s checksum     int(10);                                                                           000000     003500
+   2821     dcl-s memuse       int(10);                                                                           000000     003600
+   2822     dcl-s pCustObject  pointer;                                                                           000000     003700
+   2823     dcl-s pCon         pointer;                                                                           000000     003800
+   2824     dcl-s pCustomer    pointer;                                                                           000000     003900
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO       DKSRV206   08-09-25 01:16:15        Page      4
  Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
  Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
- *RNF0299 20   2671 265200+ Two keywords have been specified that are not allowed with    NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-                            each other.
- *RNF3749 20   2671 265200+ Keyword is not allowed for a prototype definition; keyword    NOXDBUTF8/QRPGLEREF(NOXDBUTF8)
-                            is ignored.
-             LINES EXCLUDED: 0
-   2684     *INLR = *ON;                                                                                          000000     002100
+   2825     dcl-s pCustomer2   pointer;                                                                           000000     004000
+   2826     dcl-s pCustList    pointer;                                                                           000000     004100
+   2827     dcl-s pMoreCust    pointer;                                                                           000000     004200
+   2828     dcl-s pTopFive     pointer;                                                                           000000     004300
+   2829     dcl-s pRes         pointer;                                                                           000000     004400
+   2830     dcl-s key          varchar(256) CCSID(*UTF8) inz('topFive#id=12345¤');                                000000     004500
+   2831                                                                                                           000000     004600
+   2832     dcl-ds itList      likeds(nox_iterator);                                                              000000     004700
+   2833                                                                                                           000000     004800
+   2834     //------------------------------------------------------------- *                                     000000     004900
+   2835                                                                                                           000000     005000
+   2836     *inlr = *on;                                                                                          000000     005100
+   2837     memuse = nox_memUse();                                                                                000000     005200
+   2838                                                                                                           000000     005300
+   2839     // Step 1: Lets build a JSON object from scratch                                                      000000     005400
+   2840     // and let set some attirbutes on the object.                                                         000000     005500
+   2841     // we use integers, string , fixed float numbers and date                                             000000     005600
+   2842     pCustomer = nox_newObject();                                                                          000000     005700
+   2843     nox_setInt (pCustomer:'id'         : 12345);                                                          000000     005800
+   2844     nox_setStr (pCustomer:'name'       : 'System & Metod A/S');                                           000000     005900
+   2845     nox_setStr (pCustomer:'street'     : 'H}ndv{rkersvinget 8');                                          000000     006000
+   2846     nox_setStr (pCustomer:'city'       : 'H¦rsholm');                                                     000000     006100
+   2847     nox_setStr (pCustomer:'greeting'   : u'4f605978'); // "Ni hau" in unicode                             000000     006200
+   2848     nox_setDec (pCustomer:'creditLimit': 76543.21);                                                       000000     006300
+   2849     nox_setDate(pCustomer:'createdDate': %date());                                                        000000     006400
+   2850     nox_setTime(pCustomer:'createdTime': %time());                                                        000000     006500
+   2851     nox_setTS  (pCustomer:'dateTime'   : %timestamp());                                                   000000     006600
+   2852     nox_setBool(pCustomer:'isNice'     : (10 > 1)); // Logical expression                                 000000     006700
+   2853                                                                                                           000000     006800
+   2854     // Just to see the progress:                                                                          000000     006900
+   2855     nox_WriteJsonStmf(pCustomer : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer.json' : 1208 : *OFF)      000000     007000
+  ...   ;
+   2856     debug = nox_asJsonText(pCustomer);                                                                    000000     007100
+   2857                                                                                                           000000     007200
+   2858     // Step 1.a: alternativ - you can also make it with the object builder:                               000000     007300
+   2859     // Here you make atomic value nodes in the graph, and create a new object on the fly                  000000     007400
+   2860     pCustomer2 = nox_Object(                                                                              000000     007500
+   2861         'id'         : nox_Int  (12345):                                                                  000000     007600
+   2862         'name'       : nox_Str  ('System & Metod A/S'):                                                   000000     007700
+   2863         'street'     : nox_Str  ('H}ndv{rkersvinget 8'):                                                  000000     007800
+   2864         'city'       : nox_Str  ('H¦rsholm'):                                                             000000     007900
+   2865         'greeting'   : nox_Str  (u'4f605978'): // "Ni hau" in unicode                                     000000     008000
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO       DKSRV206   08-09-25 01:16:15        Page      5
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+   2866         'creditLimit': nox_Dec  (76543.21):                                                               000000     008100
+   2867         'createdDate': nox_Date (%date()):                                                                000000     008200
+   2868         'createdTime': nox_Time (%time()):                                                                000000     008300
+   2869         'dateTime'   : nox_TS   (%timestamp()):                                                           000000     008400
+   2870         'isNice'     : nox_Bool (10 > 1)                                                                  000000     008500
+   2871     );                                                                                                    000000     008600
+   2872                                                                                                           000000     008700
+   2873     // Just to see the progress:                                                                          000000     008800
+   2874     nox_WriteJsonStmf(pCustomer2 : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer2.json' : 1208 : *OF      000000     008900
+  ...   F);
+   2875     debug = nox_asJsonText(pCustomer);                                                                    000000     009000
+   2876                                                                                                           000000     009100
+   2877     // Step 2: Build an array with customers                                                              000000     009200
+   2878     // note the arrayPush can push it to either head or tail                                              000000     009300
+   2879     pCustList = nox_newArray();                                                                           000000     009400
+   2880     nox_arrayPush ( pCustList : pCustomer);                                                               000000     009500
+   2881                                                                                                           000000     009600
+   2882     // Just to see the progress:                                                                          000000     009700
+   2883     debug = nox_asJsonText(pCustList);                                                                    000000     009800
+   2884                                                                                                           000000     009900
+   2885     // step3: now we get the rest of customers from the database;                                         000000     010000
+   2886     pCon = nox_sqlConnect();                                                                              000000     010100
+   2887     pMoreCust = nox_sqlResultSet(pCon:                                                                    000000     010200
+   2888         'select                       -                                                                   000000     010300
+   2889             cusnum  as "id",          -                                                                   000000     010400
+   2890             lstnam  as "name",        -                                                                   000000     010500
+   2891             street  as "street",      -                                                                   000000     010600
+   2892             cdtlmt  as "creditLimit"  -                                                                   000000     010700
+   2893         from qiws.QCUSTCDT            -                                                                   000000     010800
+   2894     ');                                                                                                   000000     010900
+   2895     nox_sqlDisconnect(pCon);                                                                              000000     011000
+   2896                                                                                                           000000     011100
+   2897     // Just to see the progress:                                                                          000000     011200
+   2898     debug = nox_asJsonText(pMoreCust);                                                                    000000     011300
+   2899                                                                                                           000000     011400
+   2900     // now we have the list                                                                               000000     011500
+   2901     // Note: the MOVE_UNLINK can be used if the array was already                                         000000     011600
+   2902     // a sub-node in an other object/array. here it just an example and have no effect                    000000     011700
+   2903     // Also you can omit the result - but returns the receiving array so you can "chain" this functi      000000     011800
+  ...   on
+   2904     // ie "moveObjectInto"                                                                                000000     011900
+   2905     pRes  = nox_arrayAppend(pCustList : pMoreCust: NOX_MOVE_UNLINK);                                      000000     012000
+   2906                                                                                                           000000     012100
+   2907     // How many are there in the array?                                                                   000000     012200
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO       DKSRV206   08-09-25 01:16:15        Page      6
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+   2908     len  = nox_getLength(pCustList);                                                                      000000     012300
+   2909                                                                                                           000000     012400
+   2910     // Just to see the progress:                                                                          000000     012500
+   2911     debug = nox_asJsonText(pCustList);                                                                    000000     012600
+   2912                                                                                                           000000     012700
+   2913     // Lets sort the array on highest "creditLimit" and then "name"                                       000000     012800
+   2914     nox_arraySort(pCustList : 'creditLimit:DESC,name:ASC' );                                              000000     012900
+   2915                                                                                                           000000     013000
+   2916     // Just to see the progress:                                                                          000000     013100
+   2917     debug = nox_asJsonText(pCustList);                                                                    000000     013200
+   2918                                                                                                           000000     013300
+   2919                                                                                                           000000     013400
+   2920     // I only want the first 5                                                                            000000     013500
+   2921     // Note the first element is = 0                                                                      000000     013600
+   2922     // You can also use NOX_MOVE_UNLINK, to carve the result out of the source                            000000     013700
+   2923     // however, here we copy the elements to a new array                                                  000000     013800
+   2924     pTopFive = nox_arraySlice(pCustList : 0: 5 : NOX_COPY_CLONE);                                         000000     013900
+   2925                                                                                                           000000     014000
+   2926     // Just to see the progress:                                                                          000000     014100
+   2927     debug = nox_asJsonText(pTopFive);                                                                     000000     014200
+   2928                                                                                                           000000     014300
+   2929     // we can caluculate the checksum, to see later if anyone have touched the object graph               000000     014400
+   2930     checksum = nox_NodeCheckSum(pTopFive);                                                                000000     014500
+   2931                                                                                                           000000     014600
+   2932     // and save it to disk:                                                                               000000     014700
+   2933     // You can use UTF8_BOM if you need the BOM-siganture                                                 000000     014800
+   2934     nox_WriteJsonStmf(pTopFive : '/prj/noxDbUtf8/testout/ex01Tutorial.json' : 1208 : *OFF);               000000     014900
+   2935                                                                                                           000000     015000
+   2936     // Now what do we need to clean up:                                                                   000000     015100
+   2937     // pCustList? yes                                                                                     000000     015200
+   2938     // pCustomer? no - it is already removed when deleting the pCustList                                  000000     015300
+   2939     // pTopFive? Yes - it is a clone                                                                      000000     015400
+   2940     nox_delete(pCustList);                                                                                000000     015500
+   2941     nox_delete(pTopFive);                                                                                 000000     015600
+   2942                                                                                                           000000     015700
+   2943     // We could stop the program here - But let's have som more fun:                                      000000     015800
+   2944     // Load the top five array                                                                            000000     015900
+   2945     pTopFive = nox_ParseFile ('/prj/noxDbUtf8/testout/ex01Tutorial.json');                                000000     016000
+   2946                                                                                                           000000     016100
+   2947     // Just to see the progress:                                                                          000000     016200
+   2948     debug = nox_asJsonText(pTopFive);                                                                     000000     016300
+   2949                                                                                                           000000     016400
+   2950     // Was there som issues?                                                                              000000     016500
+   2951     if Nox_Error(pTopFive) ;                                                                         B01  000000     016600
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO       DKSRV206   08-09-25 01:16:15        Page      7
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+   2952         msg = Nox_Message(pTopFive);                                                                  01  000000     016700
+   2953         Nox_dump(pTopFive);                                                                           01  000000     016800
+   2954         Nox_delete(pTopFive);                                                                         01  000000     016900
+   2955         return;                                                                                       01  000000     017000
+   2956     endif;                                                                                           E01  000000     017100
+   2957                                                                                                           000000     017200
+   2958     // Is the checksum the same?                                                                          000000     017300
+   2959     if checksum <> nox_NodeCheckSum(pTopFive);                                                       B01  000000     017400
+   2960         dsply 'Invlaid checksum';                                                                     01  000000     017500
+   2961     endif;                                                                                           E01  000000     017600
+   2962                                                                                                           000000     017700
+   2963     // now create a object with that array and call it "topFive":                                         000000     017800
+   2964     pCustObject = nox_newObject();                                                                        000000     017900
+   2965     nox_moveObjectInto (pCustObject: 'topFive': pTopFive );                                               000000     018000
+   2966                                                                                                           000000     018100
+   2967     // Just to see the progress:                                                                          000000     018200
+   2968     debug = nox_asJsonText(pCustObject);                                                                  000000     018300
+   2969                                                                                                           000000     018400
+   2970     // let's loop through all items and get them back to RPG variables:                                   000000     018500
+   2971     // note: we could have used pTopFive - but for fun we locate from the top                             000000     018600
+   2972     itList = nox_setIterator(pCustObject : 'topFive');                                                    000000     018700
+   2973     dow nox_ForEach(itList);                                                                         B01  000000     018800
+   2974         id          = nox_getInt ( itList.this : 'id');                                               01  000000     018900
+   2975         name        = nox_getStr ( itList.this : 'name');                                             01  000000     019000
+   2976         street      = nox_getStr ( itList.this : 'street');                                           01  000000     019100
+   2977         city        = nox_getStr ( itList.this : 'city');                                             01  000000     019200
+   2978         creditLimit = nox_getDec ( itList.this : 'creditLimit');                                      01  000000     019300
+   2979         createdDate = nox_getDate( itList.this : 'createdDate');                                      01  000000     019400
+   2980         createdTime = nox_getTime( itList.this : 'createdTime');                                      01  000000     019500
+   2981         dateTime    = nox_getTS  ( itList.this : 'dateTime');                                         01  000000     019600
+   2982         isNice      = nox_getBool( itList.this : 'isNice');                                           01  000000     019700
+   2983     enddo;                                                                                           E01  000000     019800
+   2984                                                                                                           000000     019900
+   2985                                                                                                           000000     020000
+   2986     // Locate the first node with id = 593029.                                                            000000     020100
+   2987     // the indexfor the array can be the indexnumber OR a simple element test (=,>,<,<=,>= are suppo      000000     020200
+  ...   rted)
+   2988     pCustomer   = nox_Locate(pCustObject: 'topFive#id=12345¤');                                           000000     020300
+   2989                                                                                                           000000     020400
+   2990                                                                                                           000000     020500
+   2991     // Note: You have to be carefull with the source is in the right CCSID for RPG to convert the         000000     020600
+   2992     // strings ( if they contains national charaters and/or brackets likeæå#¤ )                           000000     020700
+   2993     // if you run into issues, you can define them as const as in the                                     000000     020800
+   2994     // example below: it is suppose to do the same as abowe                                               000000     020900
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO       DKSRV206   08-09-25 01:16:15        Page      8
+ Line   <---------------------- Source Specifications ----------------------------------------------------->  Do  Change Src Seq
+ Number ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10  Num Date   Id  Number
+   2995     pCustomer   = nox_Locate(pCustObject: key);                                                           000000     021000
+   2996                                                                                                           000000     021100
+   2997     id          = nox_getInt ( pCustomer : 'id');                                                         000000     021200
+   2998     name        = nox_getStr ( pCustomer : 'name');                                                       000000     021300
+   2999     street      = nox_getStr ( pCustomer : 'street');                                                     000000     021400
+   3000     city        = nox_getStr ( pCustomer : 'city');                                                       000000     021500
+   3001     creditLimit = nox_getDec ( pCustomer : 'creditLimit');                                                000000     021600
+   3002     createdDate = nox_getDate( pCustomer : 'createdDate');                                                000000     021700
+   3003     createdTime = nox_getTime( pCustomer : 'createdTime');                                                000000     021800
+   3004     dateTime    = nox_getTS  ( pCustomer : 'dateTime');                                                   000000     021900
+   3005     isNice      = nox_getBool( pCustomer : 'isNice');                                                     000000     022000
+   3006                                                                                                           000000     022100
+   3007     // Just to see the progress:                                                                          000000     022200
+   3008     debug = nox_asJsonText(pCustomer);                                                                    000000     022300
+   3009                                                                                                           000000     022400
+   3010     // That's it - time to cleanup:                                                                       000000     022500
+   3011     nox_delete(pCustomer);                                                                                000000     022600
+   3012                                                                                                           000000     022700
+   3013     if memuse <> nox_memuse();                                                                       B01  000000     022800
+   3014         dsply 'Ups - forgot to clean something up';                                                   01  000000     022900
+   3015     endif;                                                                                           E01  000000     023000
+   3016                                                                                                           000000     023100
+   3017     Return;                                                                                               000000     023200
         * * * * *   E N D   O F   S O U R C E   * * * * *
-  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO2      DKSRV206   06-09-25 23:07:24        Page      5
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO       DKSRV206   08-09-25 01:16:15        Page      9
            A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s
   Msg id  Sv Number Seq     Message text
+ *RNF5409 00   2843 005800  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2844 005900  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2845 006000  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2846 006100  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2847 006200  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2848 006300  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2849 006400  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2850 006500  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2851 006600  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2852 006700  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2880 009500  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2914 012900  The prototyped call returns a value which is lost when
+                            CALLP is used.
+ *RNF5409 00   2965 018000  The prototyped call returns a value which is lost when
+                            CALLP is used.
   * * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C   M E S S A G E S   * * * * *
                              / C o p y   M e m b e r s
  Line   Src  RPG name   <-------- External name -------> CCSID  <- Last change ->
  Number Id              Library    File       Member            Date     Time
-     20    1 NOXDBUTF8  NOXDBUTF8  QRPGLEREF  NOXDBUTF8    277  06-09-25 22:43:14
+     20    1 NOXDBUTF8  NOXDBUTF8  QRPGLEREF  NOXDBUTF8    277  08-09-25 01:16:06
           * * * * *   E N D   O F   / C O P Y   M E M B E R S   * * * * *
-  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO2      DKSRV206   06-09-25 23:07:24        Page      6
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO       DKSRV206   08-09-25 01:16:15        Page     10
                            M e s s a g e   S u m m a r y
   Msg id  Sv Number Message text
- *RNF7031 00    197 The name or indicator is not referenced.
- *RNF0299 20      2 Two keywords have been specified that are not allowed with
-                    each other.
- *RNF3308 20      2 Keyword name is not valid; the keyword is ignored.
- *RNF3749 20      2 Keyword is not allowed for a prototype definition; keyword is
-                    ignored.
- *RNF0516 30      7 Name is not allowed since it has already been defined;
-                    specification is ignored.
+ *RNF5409 00     13 The prototyped call returns a value which is lost when CALLP
+                    is used.
+ *RNF7031 00    169 The name or indicator is not referenced.
         * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
-  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO2      DKSRV206   06-09-25 23:07:24        Page      7
+  5770WDS V7R3M0  160422 RN        IBM ILE RPG             NOXDBUTF8/EX01DEMO       DKSRV206   08-09-25 01:16:15        Page     11
                              F i n a l   S u m m a r y
    Message Totals:
-     Information  (00) . . . . . . . :      197
+     Information  (00) . . . . . . . :      182
      Warning      (10) . . . . . . . :        0
-     Error        (20) . . . . . . . :        6
-     Severe Error (30+)  . . . . . . :        7
+     Error        (20) . . . . . . . :        0
+     Severe Error (30+)  . . . . . . :        0
      ---------------------------------  -------
-     Total . . . . . . . . . . . . . :      210
+     Total . . . . . . . . . . . . . :      182
    Source Totals:
-     Records . . . . . . . . . . . . :       21
-     Specifications  . . . . . . . . :        3
+     Records . . . . . . . . . . . . :      232
+     Specifications  . . . . . . . . :      123
      Data records  . . . . . . . . . :        0
-     Comments  . . . . . . . . . . . :       16
+     Comments  . . . . . . . . . . . :      107
           * * * * *   E N D   O F   F I N A L   S U M M A R Y   * * * * *
- Compilation stopped. Severity 30 errors found in program.
+ Program EX01DEMO placed in library NOXDBUTF8. 00 highest severity. Created on 08-09-25 at 01:16:15.
            * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *

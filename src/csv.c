@@ -87,7 +87,7 @@ void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
 	}
 
 	pjWrite->buf    = wTemp;
-	pjWrite->iconv  = XlateOpen(1208 , Ccsid );
+	pjWrite->iconv  = XlateOpen(1208 , Ccsid, false );
 
 	switch(Ccsid) {
 		case 1208 :

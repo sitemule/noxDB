@@ -55,6 +55,8 @@ ULONG hexstr2int (PUCHAR s);
 UCHAR hexchar2int (UCHAR c);
 PUCHAR binMem2Hex (PUCHAR out , PUCHAR in , LONG len);
 PUCHAR hex2BinMem (PUCHAR out , PUCHAR in , LONG len);
+
+PUCHAR   dec2str (PUCHAR str , FIXEDDEC Value);
 FIXEDDEC str2dec(PUCHAR str, UCHAR decPoint);
 FIXEDDEC astr2dec(PUCHAR str , UCHAR decPoint);
 

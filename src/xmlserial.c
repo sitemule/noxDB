@@ -283,7 +283,7 @@ void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
 	pStream->handle = pjWrite;
 
 	pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
-	pjWrite->iconv  = XlateOpen(1208 , Ccsid );
+	pjWrite->iconv  = XlateOpen(1208 , Ccsid , false );
 
    #pragma convert(1252)
    switch(Ccsid) {

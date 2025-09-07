@@ -203,13 +203,13 @@ int nox_sqlExecDirectTrace(PNOXSQLCONNECT pCon, PNOXSQL pSQL , int hstmt, PUCHAR
 	return rc; // we have an error
 }
 /* ------------------------------------------------------------- */
+// TODO !! Note the public - changed behaviour : marker are now: ${ value }
 PUCHAR strFormat (PUCHAR out, PUCHAR in , PNOXNODE parms)
 {
 	PUCHAR p, pMarker, res = out;
 	PNOXNODE pParms = parms;
 	int markerLen ;
 	UCHAR marker [64];
-	UCHAR dollar = 0x67;
 
 
 	if (parms == NULL) {
@@ -222,9 +222,10 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PNOXNODE parms)
 	}
 
 	while (*in) {
-		if (*in == dollar) {
-			pMarker = ++in;
-			for (;isalnum(*in) || *in=='.' || *in=='/' || *in=='_' ; in++);
+		if (in[0] == '$' && in[1] == '{' ) {
+			in += 2; // Skip ${
+			pMarker = in;
+			for (;*in && *in != '}' ; in++);
 			markerLen = in - pMarker ;
 			if (markerLen > 0) {
 				substr(marker , pMarker , markerLen );
@@ -237,7 +238,7 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PNOXNODE parms)
 	*(out++) =  '\0';
 
 	if (OFF == nox_isNode (parms)) {
-		nox_Close (&pParms);
+		nox_NodeDelete (pParms);
 	}
 
 	return res;
@@ -511,11 +512,11 @@ PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, L
          int rc;
          UCHAR buf [256];
          ULONG options =  REG_NOSUB + REG_EXTENDED + REG_ICASE;
-         #pragma convert(1252)
+         # pragma convert(1252)
          rc = regcomp(&hasLimitReg , XlateStringQ (buf , "limit[ ]*[0-9]" , 1252, 0)  , options );
          rc = regcomp(&hasOffsetReg, XlateStringQ (buf , "offset[ ]*[0-9]", 1252, 0)   , options );
          rc = regcomp(&hasFetchReg , XlateStringQ (buf , "fetch[ ]*first" , 1252, 0)     , options );
-      	#pragma convert(0)
+      	# pragma convert(0)
          compilereg = false;
       }
 
@@ -1622,7 +1623,7 @@ void nox_traceOpen (PNOXSQLCONNECT pCon)
 	// rc = SQLBindParameter(pTrc->handle,7,SQL_PARAM_INPUT,SQL_C_CHAR,SQL_VARCHAR ,8192,0,pTrc->sqlstmt,0,NULL);
 }
 /* ------------------------------------------------------------- */
-void nox_traceSetId (PNOXSQLCONNECT pCon, INT64 trid)
+void nox_TraceSetId (PNOXSQLCONNECT pCon, INT64 trid)
 {
 	PNOXTRACE pTrc = &pCon->sqlTrace;
 	pTrc->trid = trid;

@@ -219,7 +219,7 @@ UCHAR unicode2ebcdic (USHORT c)
 
 	 // if  (ic.cd  == NULL) ic = OpenXlate (13488, 0);
 	 if (doOpen) {
-		 ic = XlateOpen(1200  , 0 );
+		 ic = XlateOpen(1200  , 0 , false);
 		 doOpen = FALSE;
 	 }
 	 outbytesleft = 1  ;
@@ -240,7 +240,7 @@ int unicode2utf8 (PUCHAR out, USHORT c)
 
 	// if  (ic.cd  == NULL) ic = OpenXlate (13488, 0);
 	if (doOpen) {
-		ic = XlateOpen (1200  , 1208);
+		ic = XlateOpen (1200  , 1208, false);
 		doOpen = FALSE;
 	}
 	outbytesleft = 2  ;

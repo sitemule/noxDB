@@ -23,7 +23,7 @@
 
 
 /* ------------------------------------------------------------- */
-iconv_t XlateOpen (int FromCCSID, int ToCCSID)
+iconv_t XlateOpen (int FromCCSID, int ToCCSID , int reportError)
 {
    QtqCode_T To;
    QtqCode_T From;
@@ -42,7 +42,7 @@ iconv_t XlateOpen (int FromCCSID, int ToCCSID)
    To.subs_alternative = 0;
    To.shift_alternative = 0;
    To.length_option = 0;
-   To.mx_error_option = 0;
+   To.mx_error_option = reportError;
 
    // Get descriptor
    return QtqIconvOpen( &To, &From);
@@ -56,7 +56,7 @@ PXLATEDESC XlateXdOpen (int FromCCSID, int ToCCSID)
    pXd->ToCCSID   = ToCCSID;
 
    // Get descriptor
-   pXd->Iconv = XlateOpen (FromCCSID, ToCCSID);
+   pXd->Iconv = XlateOpen (FromCCSID, ToCCSID, false);
    pXd->Open = (pXd->Iconv.return_value != -1);
    if (! pXd->Open) {
       free (pXd);

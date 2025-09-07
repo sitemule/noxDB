@@ -26,15 +26,13 @@
 #include "noxDbUtf8.h"
 #include "xlate.h"
 
-#ifdef QOAR_INCLUDE_IFS
-#include  <qoar/h/qrntypes>
-#include  <qoar/h/qrndtagen>
-#else
-#include  "/QSYS.LIB/QOAR.LIB/H.FILE/QRNTYPES.MBR"
-#include  "/QSYS.LIB/QOAR.LIB/H.FILE/QRNDTAGEN.MBR"
-#endif
+#include  "qoar/h/qrntypes"
+#include  "qoar/h/qrndtagen"
 
-// TODO !!! ensure UTF-8 - Check reintrant 
+// NOTE ALL constants is UTF-8
+#pragma convert(1252) 
+
+// TODO !!! - Check reintrant 
 
 static PNOXNODE * ppRoot;
 static iconv_t iconvCd;
@@ -54,7 +52,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
 
     if (buildIconv) {
         buildIconv  = false;
-        iconvCd = XlateOpen (13488, 0 , false);
+        iconvCd = XlateOpen (13488, 1208 , false);
     }
 
     switch ( pParms->event) {
@@ -182,7 +180,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
 // ---------------------------------------------------------------------------
 // The main entry point for the data generation
 // ---------------------------------------------------------------------------
-NOX_DATAGEN  nox_dataGen (PNOXNODE * ppNode, PUCHAR optionsP)
+NOX_DATAGEN  nox_DataGen (PNOXNODE * ppNode, PUCHAR optionsP)
 {
     PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
     ppRoot = ppNode; // not reentrant

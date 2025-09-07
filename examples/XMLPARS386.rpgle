@@ -61,7 +61,7 @@ dcl-proc test1;
 
    // Note: The documents contents is "move into" the destination, so the 
    // pXmlPayloadFromString will after be a NULL 
-   nox_documentInsert  (pEnvelopeElement : pXmlPayloadFromString: nox_LAST_CHILD);
+   nox_DocumentInsert  (pEnvelopeElement : pXmlPayloadFromString: nox_LAST_CHILD);
 
    showme = nox_AsXmlText(pXmlEnvelope); 
 
@@ -69,7 +69,7 @@ dcl-proc test1;
    pXmlPayloadFromFile = nox_ParseFile ('/prj/NOXDBUTF8/testdata/Deliverynote.xml');  
    showme = nox_AsXmlText(pXmlPayloadFromFile); 
 
-   nox_documentInsert   (pEnvelopeElement : pXmlPayloadFromFile : nox_LAST_CHILD);
+   nox_DocumentInsert   (pEnvelopeElement : pXmlPayloadFromFile : nox_LAST_CHILD);
 
    // Note the two nodes are now just after each other - with their own CDATA, that is allowed
    showme = nox_AsXmlText(pXmlEnvelope); 
@@ -134,7 +134,7 @@ dcl-proc test2;
 
    // Note: The documents contents is "moved into" the destination, so the 
    // pXmlPayloadFromString will after be a NULL 
-   nox_documentInsert  (pEnvelopeElement : pXmlPayloadFromString: nox_LAST_CHILD);
+   nox_DocumentInsert  (pEnvelopeElement : pXmlPayloadFromString: nox_LAST_CHILD);
 
    showme = nox_AsXmlText(pXmlEnvelope); 
 

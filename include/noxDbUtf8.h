@@ -413,11 +413,11 @@ PUCHAR   nox_GetNodeValuePtr (PNOXNODE pNode, PUCHAR DefaultValue);
 #pragma descriptor ( void nox_GetNodeValuePtr                                      (void))
 
 
-void    nox_GetNodeValueVC  (PLVARCHAR pRes, PNOXNODE pNode , PLVARCHAR DefaultValue);
-#pragma descriptor ( void nox_GetNodeValueVC                                       (void))
+void    nox_GetNodeValueStrVC  (PLVARCHAR pRes, PNOXNODE pNode , PLVARCHAR DefaultValue);
+#pragma descriptor ( void nox_GetNodeValueStrVC                                       (void))
 
-FIXEDDEC nox_GetNodeValueNum (PNOXNODE pNode , FIXEDDEC DefaultValue);
-#pragma descriptor ( void nox_GetNodeValueNum                                      (void))
+FIXEDDEC nox_GetNodeValueDec (PNOXNODE pNode , FIXEDDEC DefaultValue);
+#pragma descriptor ( void nox_GetNodeValueDec                                      (void))
 
 PUCHAR   nox_GetNodeNamePtr  (PNOXNODE pNode);
 void    nox_GetNodeNameVC   (PLVARCHAR name, PNOXNODE pNode);
@@ -441,8 +441,8 @@ PUCHAR   nox_GetAttrValuePtr  (PNOXATTR pAttr);
 void     nox_GetAttrValueVC (PLVARCHAR pRes, PNOXATTR pAttr, PLVARCHAR pDefaultValue);
 #pragma descriptor ( void nox_GetAttrValueVC                                       (void))
 
-FIXEDDEC nox_GetAttrValueNum  (PNOXATTR pAttr, FIXEDDEC dftParm);
-#pragma descriptor ( void nox_GetAttrValueNum                                      (void))
+FIXEDDEC nox_GetAttrValueDec  (PNOXATTR pAttr, FIXEDDEC dftParm);
+#pragma descriptor ( void nox_GetAttrValueDec                                      (void))
 
 // Get Node Attribute value variants:
 PUCHAR   nox_GetNodeAttrValuePtr  (PNOXNODE pNode, PUCHAR AttrName, PUCHAR DefaultValue);
@@ -451,8 +451,8 @@ PUCHAR   nox_GetNodeAttrValuePtr  (PNOXNODE pNode, PUCHAR AttrName, PUCHAR Defau
 void     nox_GetNodeAttrValueVC (PLVARCHAR pRes, PNOXNODE pNode ,PLVARCHAR pAttrName, PLVARCHAR  pDefaultValue);
 #pragma descriptor ( void nox_GetNodeAttrValueVC                                   (void))
 
-FIXEDDEC nox_GetNodeAttrValueNum  (PNOXNODE pNode , PUCHAR AttrName, FIXEDDEC DefaultValue);
-#pragma descriptor ( void nox_GetNodeAttrValueNum                                  (void))
+FIXEDDEC nox_GetNodeAttrValueDec  (PNOXNODE pNode , PUCHAR AttrName, FIXEDDEC DefaultValue);
+#pragma descriptor ( void nox_GetNodeAttrValueDec                                  (void))
 
 VOID     nox_SetNodeAttrValue     (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Value);
 
@@ -460,8 +460,8 @@ VOID     nox_SetNodeAttrValue     (PNOXNODE pNode , PUCHAR AttrName, PUCHAR Valu
 PUCHAR  nox_GetValuePtr (PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Default) ;
 #pragma descriptor ( void nox_GetValuePtr    (void))
 
-void nox_GetValueVC(PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR NameP, PLVARCHAR DefaultP);
-#pragma descriptor ( void nox_GetValueVC     (void))
+void nox_GetValueStrVC(PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR NameP, PLVARCHAR DefaultP);
+#pragma descriptor ( void nox_GetValueStrVC     (void))
 
 FIXEDDEC nox_GetValueNum (PNOXNODE pNode , PUCHAR Name  , FIXEDDEC dftParm);
 #pragma descriptor ( void nox_GetValueNum    (void))

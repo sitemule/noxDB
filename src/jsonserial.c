@@ -279,7 +279,7 @@ void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut,
 	if (pjWrite->outFile == NULL) return;
 
 	pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
-	pjWrite->iconv  = XlateOpen(1208, Ccsid);
+	pjWrite->iconv  = XlateOpen(1208, Ccsid, false);
 
 	if (makeBomCode) {
 		switch(Ccsid) {

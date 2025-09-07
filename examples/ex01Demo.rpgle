@@ -17,14 +17,17 @@
     Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE'); 
     Ctl-Opt CCSID(*CHAR:*UTF8) ; //  CCSID(*EXACT) ; // CCSID(*CHAR:*JOBRUN) ; // CCSID(*CHAR:*UTF8);
 
-    /include QRPGLEREF,noxDbUtf8
+    /include qrpgleref,noxDbUtf8
 
     dcl-s id           int(10);
     dcl-s name         varchar(256);
     dcl-s street       varchar(256);
     dcl-s city         varchar(256);
     dcl-s creditLimit  packed(15:2);
-    dcl-s created      date;
+    dcl-s createdDate  date;
+    dcl-s createdTime  time;
+    dcl-s dateTime     timeStamp;
+    dcl-s isNice       ind; 
 
     dcl-s debug        varchar(32766:4);
     dcl-s msg          varchar(256);
@@ -34,6 +37,7 @@
     dcl-s pCustObject  pointer;
     dcl-s pCon         pointer;
     dcl-s pCustomer    pointer;
+    dcl-s pCustomer2   pointer;
     dcl-s pCustList    pointer;
     dcl-s pMoreCust    pointer;
     dcl-s pTopFive     pointer;
@@ -56,15 +60,34 @@
     nox_setStr (pCustomer:'street'     : 'Håndværkersvinget 8');
     nox_setStr (pCustomer:'city'       : 'Hørsholm');
     nox_setStr (pCustomer:'greeting'   : u'4f605978'); // "Ni hau" in unicode
-    nox_setNum (pCustomer:'creditLimit': 76543.21);
+    nox_setDec (pCustomer:'creditLimit': 76543.21);
     nox_setDate(pCustomer:'createdDate': %date());
     nox_setTime(pCustomer:'createdTime': %time());
-    nox_setTimeStamp(pCustomer:'timeStamp': %timestamp());
-
+    nox_setTS  (pCustomer:'dateTime'   : %timestamp());
+    nox_setBool(pCustomer:'isNice'     : (10 > 1)); // Logical expression
+ 
     // Just to see the progress:
-    nox_WriteJsonStmf(pCustomer : './test/documents/ex01Tutorial-Customer.json' : 1208 : *OFF);    
+    nox_WriteJsonStmf(pCustomer : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer.json' : 1208 : *OFF);    
     debug = nox_asJsonText(pCustomer);
 
+    // Step 1.a: alternativ - you can also make it with the object builder:
+    // Here you make atomic value nodes in the graph, and create a new object on the fly
+    pCustomer2 = nox_Object(
+        'id'         : nox_Int  (12345):
+        'name'       : nox_Str  ('System & Metod A/S'):
+        'street'     : nox_Str  ('Håndværkersvinget 8'):
+        'city'       : nox_Str  ('Hørsholm'):
+        'greeting'   : nox_Str  (u'4f605978'): // "Ni hau" in unicode
+        'creditLimit': nox_Dec  (76543.21):
+        'createdDate': nox_Date (%date()):
+        'createdTime': nox_Time (%time()):
+        'dateTime'   : nox_TS   (%timestamp()):
+        'isNice'     : nox_Bool (10 > 1)
+    ); 
+
+    // Just to see the progress:
+    nox_WriteJsonStmf(pCustomer2 : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer2.json' : 1208 : *OFF);    
+    debug = nox_asJsonText(pCustomer);
 
     // Step 2: Build an array with customers
     // note the arrayPush can push it to either head or tail
@@ -123,7 +146,7 @@
 
     // and save it to disk:
     // You can use UTF8_BOM if you need the BOM-siganture
-    nox_WriteJsonStmf(pTopFive : './test/documents/ex01Tutorial.json' : 1208 : *OFF);    
+    nox_WriteJsonStmf(pTopFive : '/prj/noxDbUtf8/testout/ex01Tutorial.json' : 1208 : *OFF);    
 
     // Now what do we need to clean up:
     // pCustList? yes 
@@ -134,7 +157,7 @@
 
     // We could stop the program here - But let's have som more fun:
     // Load the top five array 
-    pTopFive = nox_ParseFile ('./test/documents/ex01Tutorial.json');
+    pTopFive = nox_ParseFile ('/prj/noxDbUtf8/testout/ex01Tutorial.json');
 
     // Just to see the progress:
     debug = nox_asJsonText(pTopFive);
@@ -167,39 +190,41 @@
         name        = nox_getStr ( itList.this : 'name');
         street      = nox_getStr ( itList.this : 'street');
         city        = nox_getStr ( itList.this : 'city');
-        creditLimit = nox_getNum ( itList.this : 'creditLimit');
+        creditLimit = nox_getDec ( itList.this : 'creditLimit');
         createdDate = nox_getDate( itList.this : 'createdDate');
         createdTime = nox_getTime( itList.this : 'createdTime');
-        dateTime    = nox_getTimeStamp( itList.this : 'timeStamp');
+        dateTime    = nox_getTS  ( itList.this : 'dateTime');
+        isNice      = nox_getBool( itList.this : 'isNice'); 
     enddo;    
 
 
-    // Locate the first node with id = 593029. 
-    // the indexfor the array can be the indexnumber OR a simple element test (=,>,<,<=,>= are supported)
-    pCustomer   = Nox_Locate(pCustObject: 'topFive[id=12345]');
+    // Locate the first node with id = 12345. 
+    // the index for the array can be the indexnumber OR a simple element test (=,>,<,<=,>= are supported)
+    pCustomer   = nox_Locate(pCustObject: 'topFive[id=12345]');
 
 
-    // Note: You have to be carefull with the source is in the right CCSID for ROG to convert the
-    // strings ( if they contains national charater s and/or brackets like{}[] )
+    // Note: You have to be carefull with the source is in the right CCSID for RPG to convert the
+    // strings ( if they contains national charaters and/or brackets like{}[] )
     // if you run into issues, you can define them as const as in the 
     // example below: it is suppose to do the same as abowe
-    pCustomer   = Nox_Locate(pCustObject: key);
+    pCustomer   = nox_Locate(pCustObject: key);
 
     id          = nox_getInt ( pCustomer : 'id');
     name        = nox_getStr ( pCustomer : 'name');
     street      = nox_getStr ( pCustomer : 'street');
     city        = nox_getStr ( pCustomer : 'city');
-    creditLimit = nox_getNum ( pCustomer : 'creditLimit');
-    created     = nox_getDate( pCustomer : 'created');
+    creditLimit = nox_getDec ( pCustomer : 'creditLimit');
     createdDate = nox_getDate( pCustomer : 'createdDate');
     createdTime = nox_getTime( pCustomer : 'createdTime');
-    dateTime    = nox_getTimeStamp( pCustomer : 'timeStamp');
+    dateTime    = nox_getTS  ( pCustomer : 'dateTime');
+    isNice      = nox_getBool( pCustomer : 'isNice');   
 
     // Just to see the progress:
     debug = nox_asJsonText(pCustomer);
 
     // That's it - time to cleanup:
     nox_delete(pCustomer);
+    nox_delete(pCustomer2);
 
     if memuse <> nox_memuse();
         dsply 'Ups - forgot to clean something up';

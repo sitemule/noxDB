@@ -16,9 +16,9 @@
         //------------------------------------------------------------- *
       
         pArr = nox_parseString('[a,b,c]');
-        pB   = nox_lookupValue(pArr :  'B' : NOX_IGNORE_CASE);
-        pC   = nox_lookupValue(pArr :  'c' : NOX_SAME_CASE);
-        pC   = nox_lookupValue(pArr :  'c' ); // Same case is default
+        pB   = nox_LookupValue(pArr :  'B' : NOX_IGNORE_CASE);
+        pC   = nox_LookupValue(pArr :  'c' : NOX_SAME_CASE);
+        pC   = nox_LookupValue(pArr :  'c' ); // Same case is default
         pD   = nox_arrayPush(pArr : 'd');
         len  = nox_getLength(pArr);
 

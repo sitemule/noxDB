@@ -20,6 +20,7 @@ Dcl-S UTF8_MAX varchar(16773100:4) CCSID(*UTF8) Template;
 Dcl-S UTF8_1M  varchar(1048572:4)  CCSID(*UTF8) Template;
 Dcl-S UTF8_1K  varchar(1024:4)     CCSID(*UTF8) Template;
 Dcl-C UTF8_BOM const(-1208);
+Dcl-S FIXEDDEC Packed(30:15) Template;  
 
 
 ///
@@ -404,6 +405,16 @@ Dcl-PR nox_SetStr Pointer extproc(*CWIDEN: 'nox_SetStrByNameVC');
   nullIf         ind value options(*nopass); 
 End-PR;
 
+/// TODO - not migrated !!
+// create an atomic string node
+//
+// @param (input) New string value
+// @return new node
+///
+Dcl-PR nox_Str Pointer extproc(*CWIDEN: 'nox_StrVC');
+  Value          Like(UTF8) const options(*varsize);
+End-PR;
+
 ///
 // Set integer value
 //
@@ -425,7 +436,7 @@ End-PR;
 /// TODO - not migrated !!
 // Create an atomic integer node  
 //
-// @param (input) New value
+// @param (input) value
 // @return pointer to the new node
 ///
 Dcl-PR nox_Int Pointer extproc(*CWIDEN: 'nox_Int');
@@ -444,11 +455,23 @@ End-PR;
 // @param (input) If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
-Dcl-PR nox_SetNum Pointer extproc(*CWIDEN: 'nox_SetDecByNameVC');
-  pNode          Pointer    value;
-  Expresion      Like(UTF8_1K) const options(*varsize);
-  Value          Packed(30:15) value;
-  nullIf         ind value options(*nopass); 
+Dcl-PR nox_SetDec Pointer extproc(*CWIDEN: 'nox_SetDecByNameVC');
+  pNode           Pointer    value;
+  Expresion       Like(UTF8_1K) const options(*varsize);
+  Value           like(FIXEDDEC) value;
+  nullIf          ind value options(*nopass); 
+End-PR;
+
+/// TODO - not migrated !!
+// create an atomic deciaml number node 
+//
+//
+// @param (input) New value
+// @param (input) If this is *ON the value will be set to null regardless of the values
+// @return Changed node
+///
+Dcl-PR nox_Dec   Pointer extproc(*CWIDEN: 'nox_Dec');
+  Value          like(FIXEDDEC) value;
 End-PR;
 
 ///
@@ -469,6 +492,18 @@ Dcl-PR nox_SetBool Pointer extproc(*CWIDEN: 'nox_SetBoolByNameVC');
   nullIf         ind value options(*nopass); 
 End-PR;
 
+/// TODO - not migrated !!
+// create an atomic boolean value
+//
+// Sets the passed value to the node pointed to by the passed path expression.
+//
+// @param (input) Value
+// @return new node
+///
+Dcl-PR nox_Bool Pointer extproc(*CWIDEN: 'nox_Bool');
+  Value          Ind        value;
+End-PR;
+
 ///
 // Set date value
 //
@@ -483,8 +518,19 @@ End-PR;
 Dcl-PR nox_SetDate Pointer extproc(*CWIDEN: 'nox_SetDateByNameVC');
   pNode          Pointer    value;
   Expresion      Like(UTF8_1K) const options(*varsize);
-  Value          date    value;
+  Value          date(*ISO)    value  ;
   nullIf         ind value options(*nopass); 
+End-PR;
+
+/// TODO - not migrated !!
+// create an atomic  date value
+//
+//
+// @param (input) Value
+// @return new  node
+///
+Dcl-PR nox_Date Pointer extproc(*CWIDEN: 'nox_Date');
+  Value          date(*ISO)    value;
 End-PR;
 
 ///
@@ -501,12 +547,22 @@ End-PR;
 Dcl-PR nox_SetTime pointer extproc(*CWIDEN : 'nox_SetTimeByNameVC');
   pNode          pointer value;
   Expresion      Like(UTF8_1K) const options(*varsize);
-  Value          time(*ISO) const;
+  Value          time(*ISO) value;
   nullIf         ind value options(*nopass); 
 End-PR;
 
+/// TODO - not migrated !!
+// create an atomic time value
+//
+// @param (input) Value
+// @return new  node
 ///
-// Set timestamp value 
+Dcl-PR nox_Time pointer extproc(*CWIDEN : 'nox_Time');
+  Value          time(*ISO) value;
+End-PR;
+
+///
+// Set timestamp value  
 //
 // Set the passed value to the node pointed to by the passed path expression.
 //
@@ -516,11 +572,21 @@ End-PR;
 // @param (input) If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
-Dcl-PR nox_SetTimeStamp pointer extproc(*CWIDEN : 'nox_SetTimeStampByNameVC');
+Dcl-PR nox_SetTS  pointer extproc(*CWIDEN : 'nox_SetTimeStampByNameVC');
   pNode          pointer value;
   Expresion      Like(UTF8_1K) const options(*varsize);
-  Value          timestamp  const;
+  Value          timestamp  value;
   nullIf         ind value options(*nopass);
+End-PR;
+
+/// TODO - not migrated !!
+// create an atomic timestamp value
+//
+// @param (input) Value
+// @return New  node
+///
+Dcl-PR nox_TS  pointer extproc(*CWIDEN : 'nox_TimeStamp');
+  Value          timestamp  value;
 End-PR;
 
 ///
@@ -577,7 +643,7 @@ End-PR;
 // @param (input) Node to be mapped to a data structure
 // @return Procedure pointer of the data-into parser
 ///
-Dcl-PR nox_DataInto pointer(*proc) extproc(*CWIDEN : 'nox_dataInto');
+Dcl-PR nox_DataInto pointer(*proc) extproc(*CWIDEN : 'nox_DataInto');
   pNode pointer value;
 End-PR;
 
@@ -596,7 +662,7 @@ End-PR;
 //       parameter needs to be freed by calling <em>nox_delete(node)</em> by the
 //       user of this function.
 ///
-Dcl-PR nox_DataGen pointer(*proc) extproc(*CWIDEN : 'nox_dataGen');
+Dcl-PR nox_DataGen pointer(*proc) extproc(*CWIDEN : 'nox_DataGen');
   pNode    pointer; 
   Options  pointer value options(*string : *nopass);
 End-PR;
@@ -613,7 +679,7 @@ End-PR;
 // @return String value or the default value (or an empty string) if the node
 //         does not exist
 ///
-Dcl-PR nox_GetValueStr Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_GetNodeValueVC');
+Dcl-PR nox_GetValueStr Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_GetNodeValueStrVC');
   pNode          Pointer    value;
   Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
 End-PR;
@@ -627,9 +693,9 @@ End-PR;
 // @param (input) Default value
 // @return Decimal value or the default value (or 0) if the node does not exist
 ///
-Dcl-PR nox_GetValueNum Packed(30:15) extproc(*CWIDEN : 'nox_GetNodeValueNum');
+Dcl-PR nox_GetValueNum like(FIXEDDEC) extproc(*CWIDEN : 'nox_GetNodeValueDec');
   pNode          Pointer    value;
-  Defaultvalue   Packed(30:15) value options(*NOPASS);
+  Defaultvalue   like(FIXEDDEC) value options(*NOPASS);
 End-PR;
 
 ///
@@ -731,7 +797,7 @@ End-PR;
 // @param (input) Default value
 // @return String value or the default value if the node does not exist
 ///
-Dcl-PR nox_GetStr Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_GetValueVC');
+Dcl-PR nox_GetStr Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_GetValueStrVC');
   pNode          Pointer    value;
   Expression     Like(UTF8_1K) const options(*nopass:*varsize);
   Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
@@ -771,10 +837,10 @@ End-PR;
 // @param (input) Default value
 // @return Decimal value or the default value if the node does not exist
 ///
-Dcl-PR nox_GetNum Packed(30:15) extproc(*CWIDEN : 'nox_GetValueNumVC');
+Dcl-PR nox_GetDec like(FIXEDDEC) extproc(*CWIDEN : 'nox_GetValueDecVC');
   pNode          Pointer    value;
   Expression     Like(UTF8_1K) const  options(*nopass:*varsize);
-  Defaultvalue   Packed(30:15) value options(*nopass);
+  Defaultvalue   like(FIXEDDEC) value options(*nopass);
 End-PR;
 
 ///
@@ -860,6 +926,22 @@ End-PR;
 // @return TimeStamp value or the default value if the node does not exist
 ///
 Dcl-PR nox_GetTimeStamp TimeStamp  extproc(*CWIDEN : 'nox_GetValueTimeStampVC');
+  pNode          Pointer    value;
+  Expression     Like(UTF8_1K) const options(*nopass:*varsize);
+  Defaultvalue   TimeStamp   value options(*nopass);
+End-PR;
+
+/// TODO - migrated !!  
+// Get TimeStamp value by expression - alias for nox_GetTimeStamp
+//
+// Returns the TimeStamp value of the node pointed to by the passed expression.
+//
+// @param (input) Node
+// @param (input) Node path expression
+// @param (input) Default value
+// @return TimeStamp value or the default value if the node does not exist
+///
+Dcl-PR nox_GetTS  TimeStamp  extproc(*CWIDEN : 'nox_GetValueTimeStampVC');
   pNode          Pointer    value;
   Expression     Like(UTF8_1K) const options(*nopass:*varsize);
   Defaultvalue   TimeStamp   value options(*nopass);
@@ -1066,35 +1148,6 @@ End-PR;
 Dcl-PR nox_NewObject Pointer extproc(*CWIDEN : 'nox_NewObject');
 End-PR;
 
-///
-// Create object node 
-//
-// Create object node - graph builder with name / value pairs 
-//
-// @info The caller of this procedure needs to take care of freeing the resources
-//       of the returned noxDB object graph by calling <em>nox_delete(node)</em>.
-///
-Dcl-PR nox_Object pointer extproc(*CWIDEN : 'nox_Object');
-  name00 Like(UTF8_1K) const options(*nopass:*varsize);
-  valu00 pointer value options(*nopass:*string);
-  name01 Like(UTF8_1K) const options(*nopass:*varsize);
-  valu02 pointer value options(*nopass:*string);
-  name03 Like(UTF8_1K) const options(*nopass:*varsize);
-  valu03 pointer value options(*nopass:*string);
-  name04 Like(UTF8_1K) const options(*nopass:*varsize);
-  valu04 pointer value options(*nopass:*string);
-  name05 Like(UTF8_1K) const options(*nopass:*varsize);
-  valu05 pointer value options(*nopass:*string);
-  name06 Like(UTF8_1K) const options(*nopass:*varsize);
-  valu06 pointer value options(*nopass:*string);
-  name07 Like(UTF8_1K) const options(*nopass:*varsize);
-  valu07 pointer value options(*nopass:*string);
-  name08 Like(UTF8_1K) const options(*nopass:*varsize);
-  valu08 pointer value options(*nopass:*string);
-  name09 Like(UTF8_1K) const options(*nopass:*varsize);
-  valu09 pointer value options(*nopass:*string);
-End-PR;
-
 
 ///
 // Create array
@@ -1110,28 +1163,6 @@ Dcl-PR nox_NewArray Pointer extproc(*CWIDEN : 'nox_NewArray');
 End-PR;
 
 
-///
-// Create array
-//
-// Creates a new atomic noxDB array node. and fills it with the passed  values  
-//
-// @return New array 
-//
-// @info The caller of this procedure needs to take care of freeing the resources
-//       of the returned noxDB object tree by calling <em>nox_delete(node)</em>.
-///
-Dcl-PR nox_Array pointer extproc(*CWIDEN : 'nox_Array');
-  value00 pointer value options(*nopass:*string);
-  value01 pointer value options(*nopass:*string);
-  value02 pointer value options(*nopass:*string);
-  value03 pointer value options(*nopass:*string);
-  value04 pointer value options(*nopass:*string);
-  value05 pointer value options(*nopass:*string);
-  value06 pointer value options(*nopass:*string);
-  value07 pointer value options(*nopass:*string);
-  value08 pointer value options(*nopass:*string);
-  value09 pointer value options(*nopass:*string);
-End-PR;
 
 ///
 // Push node into array
@@ -1241,7 +1272,7 @@ End-PR;
 // @info The search will not be done recursivly. Only the first level (depth)
 //       of the node's content will be evaluated.
 ///
-Dcl-PR nox_LookupValue Pointer extproc(*CWIDEN : 'nox_lookupValueVC');
+Dcl-PR nox_LookupValue Pointer extproc(*CWIDEN : 'nox_LookupValueVC');
   pArray         Pointer    value;
   expr           Like(UTF8) const options(*varsize);
   ignoreCase     Uns(5)     value options(*nopass);
@@ -1333,7 +1364,7 @@ End-PR;
 // @info The source node pointer will be <code>*null</code> after this function
 //       call.
 ///
-Dcl-PR nox_documentInsert pointer extproc(*CWIDEN : 'nox_documentInsert');
+Dcl-PR nox_DocumentInsert pointer extproc(*CWIDEN : 'nox_DocumentInsert');
   destination pointer value;
   source pointer;
   location int(10) value;
@@ -2580,7 +2611,7 @@ End-PR;
 //
 // @param (input) Trace id
 ///
-Dcl-PR nox_traceSetId  extproc(*CWIDEN : 'nox_traceSetId');
+Dcl-PR nox_TraceSetId  extproc(*CWIDEN : 'nox_TraceSetId');
   traceId        Int(20)    value; // Ccsid of inpur file
 End-PR;
 
@@ -2625,6 +2656,124 @@ Dcl-PR nox_sqlRollback ind extproc(*CWIDEN : 'nox_sqlRollback');
     pConnection   pointer value;
 End-PR;
 
+/// -- Document builder section begin --  
+
+///
+// Create object node 
+//
+// Create object node - graph builder with name / value pairs 
+//
+// @info The caller of this procedure needs to take care of freeing the resources
+//       of the returned noxDB object graph by calling <em>nox_delete(node)</em>.
+///
+Dcl-PR nox_Object pointer extproc(*CWIDEN : 'nox_Object');
+  name00 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu00 pointer value options(*nopass:*string);
+  name01 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu01 pointer value options(*nopass:*string);
+  name02 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu02 pointer value options(*nopass:*string);
+  name03 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu03 pointer value options(*nopass:*string);
+  name04 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu04 pointer value options(*nopass:*string);
+  name05 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu05 pointer value options(*nopass:*string);
+  name06 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu06 pointer value options(*nopass:*string);
+  name07 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu07 pointer value options(*nopass:*string);
+  name08 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu08 pointer value options(*nopass:*string);
+  name09 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu09 pointer value options(*nopass:*string);
+  name10 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu10 pointer value options(*nopass:*string);
+  name11 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu11 pointer value options(*nopass:*string);
+  name12 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu12 pointer value options(*nopass:*string);
+  name13 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu13 pointer value options(*nopass:*string);
+  name14 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu14 pointer value options(*nopass:*string);
+  name15 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu15 pointer value options(*nopass:*string);
+  name16 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu16 pointer value options(*nopass:*string);
+  name17 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu17 pointer value options(*nopass:*string);
+  name18 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu18 pointer value options(*nopass:*string);
+  name19 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu19 pointer value options(*nopass:*string);
+  name20 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu20 pointer value options(*nopass:*string);
+  name21 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu21 pointer value options(*nopass:*string);
+  name22 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu22 pointer value options(*nopass:*string);
+  name23 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu23 pointer value options(*nopass:*string);
+  name24 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu24 pointer value options(*nopass:*string);
+  name25 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu25 pointer value options(*nopass:*string);
+  name26 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu26 pointer value options(*nopass:*string);
+  name27 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu27 pointer value options(*nopass:*string);
+  name28 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu28 pointer value options(*nopass:*string);
+  name29 Like(UTF8_1K) const options(*nopass:*varsize);
+  valu29 pointer value options(*nopass:*string);
+
+End-PR;
+
+///
+// Create array
+//
+// Creates a new atomic noxDB array node. and fills it with the passed  values  
+//
+// @return New array 
+//
+// @info The caller of this procedure needs to take care of freeing the resources
+//       of the returned noxDB object tree by calling <em>nox_delete(node)</em>.
+///
+Dcl-PR nox_Array pointer extproc(*CWIDEN : 'nox_Array');
+  value00 pointer value options(*nopass:*string);
+  value01 pointer value options(*nopass:*string);
+  value02 pointer value options(*nopass:*string);
+  value03 pointer value options(*nopass:*string);
+  value04 pointer value options(*nopass:*string);
+  value05 pointer value options(*nopass:*string);
+  value06 pointer value options(*nopass:*string);
+  value07 pointer value options(*nopass:*string);
+  value08 pointer value options(*nopass:*string);
+  value09 pointer value options(*nopass:*string);
+  value10 pointer value options(*nopass:*string);
+  value11 pointer value options(*nopass:*string);
+  value12 pointer value options(*nopass:*string);
+  value13 pointer value options(*nopass:*string);
+  value14 pointer value options(*nopass:*string);
+  value15 pointer value options(*nopass:*string);
+  value16 pointer value options(*nopass:*string);
+  value17 pointer value options(*nopass:*string);
+  value18 pointer value options(*nopass:*string);
+  value19 pointer value options(*nopass:*string);
+  value20 pointer value options(*nopass:*string);
+  value21 pointer value options(*nopass:*string);
+  value22 pointer value options(*nopass:*string);
+  value23 pointer value options(*nopass:*string);
+  value24 pointer value options(*nopass:*string);
+  value25 pointer value options(*nopass:*string);
+  value26 pointer value options(*nopass:*string);
+  value27 pointer value options(*nopass:*string);
+  value28 pointer value options(*nopass:*string);
+  value29 pointer value options(*nopass:*string);
+End-PR;
+
+/// -- Document builder section begin --  
 
 // Need Space arround the nox_OVERLOAD , else the prototype generator will not work
 /if defined( nox_OVERLOAD )

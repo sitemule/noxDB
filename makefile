@@ -79,17 +79,23 @@ all:  $(BIN_LIB).lib link hdr $(EXTERNALS) $(SOURCE) noxDbUtf8.srvpgm noxDbUtf8.
 	-system -q "CRTLIB $* TYPE(*TEST)"
 
 # QOAR are for unknow reasons not in /QIBM/include
+# We make link to them for copyright reasons - no copy
 link:
-	-mkdir -p ./headers/qoar/h
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./headers/qoar/h/qrntypes
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./headers/qoar/h/qrndtagen
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./headers/qoar/h/qrndtainto
+	-mkdir -p ./ext/include/qoar/h
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./ext/include/qoar/h/qrntypes
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./ext/include/qoar/h/qrndtagen
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./ext/include/qoar/h/qrndtainto
 
 
 $(EXTERNALS) $(SOURCE): FORCE
 	$(CC)
 
-noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/csv.c src/xmlparser.c src/jsonparser.c src/jsonserial.c src/xmlserial.c src/tostream.c src/reader.c src/iterator.c src/http.c src/generic.c src/trace.clle ext/src/memUtil.c ext/src/parms.c ext/src/sndpgmmsg.c ext/src/stream.c ext/src/timestamp.c ext/src/trycatch.c ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c 
+noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/csv.c src/xmlparser.c \
+						src/jsonparser.c src/jsonserial.c src/xmlserial.c src/tostream.c src/reader.c \
+						src/iterator.c src/http.c src/generic.c src/trace.clle src/datagen.c\
+						ext/src/memUtil.c ext/src/parms.c ext/src/sndpgmmsg.c ext/src/stream.c ext/src/timestamp.c \
+						ext/src/trycatch.c \
+						ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c 
 	@# You may be wondering what this ugly string is. It's a list of objects created from the dep list that end with .c or .clle.
 	$(eval MODULES = $(notdir $(basename $(filter %.c %.clle %.cpp, $^))))
 	compile.py --stmf="src/$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" \
@@ -114,7 +120,11 @@ hdr:
 	system "CPYFRMSTMF FROMSTMF('include/noxDbUtf8.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/noxDbUtf8.mbr') MBROPT(*REPLACE)"
 
 all:
-	@echo Build success!
+	@echo Done - Check list above for errors!
+
+.PHONY: update
+update: 
+	-system -q "UPDSRVPGM ($(BIN_LIB)/NOXDBUTF8) MODULE(*ALL)"
 
 cleanup:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL)     OBJTYPE(*MODULE)"

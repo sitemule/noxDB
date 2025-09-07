@@ -1419,7 +1419,7 @@ void AddNode(PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc)
 // XML documents has a anonymus root node. Each child from the 
 // root is added  
 // ---------------------------------------------------------------------------
-PNOXNODE nox_documentInsert(PNOXNODE pDest, PNOXNODE * ppSource, REFLOC refloc)
+PNOXNODE nox_DocumentInsert(PNOXNODE pDest, PNOXNODE * ppSource, REFLOC refloc)
 {
    PNOXNODE pTemp;
    PNOXNODE * pNodes;
@@ -2692,7 +2692,7 @@ PNOXNODE  nox_ArrayConvertList (PNOXNODE pList , BOOL16 copyP)
 /* ---------------------------------------------------------------------------
 	 Find node by name, by parsing a name string and traverse the array list
 	 --------------------------------------------------------------------------- */
-PNOXNODE  nox_lookupValue (PNOXNODE pNode, PUCHAR expr, BOOL16 ignorecaseP)
+PNOXNODE  nox_LookupValue (PNOXNODE pNode, PUCHAR expr, BOOL16 ignorecaseP)
 {
 	PNOXNODE  pTemp;
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -2716,11 +2716,11 @@ PNOXNODE  nox_lookupValue (PNOXNODE pNode, PUCHAR expr, BOOL16 ignorecaseP)
 	return NULL;
 
 }
-PNOXNODE  nox_lookupValueVC (PNOXNODE pNode, PLVARCHAR expr, BOOL16 ignorecaseP)
+PNOXNODE  nox_LookupValueVC (PNOXNODE pNode, PLVARCHAR expr, BOOL16 ignorecaseP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	BOOL16  ignorecase = (pParms->OpDescList->NbrOfParms >= 3) ? ignorecaseP : false;
-	return nox_lookupValue (pNode, plvc2str(expr), ignorecaseP);
+	return nox_LookupValue (pNode, plvc2str(expr), ignorecaseP);
 }
 /* ---------------------------------------------------------------------------
 	 Find node by name, by parsing a name string and traverse the array list
@@ -2944,6 +2944,15 @@ PNOXNODE  nox_SetIntByNameVC (PNOXNODE pNode, PLVARCHAR  Name, INT64 Value , LGL
 	sprintf(s , "%lld" , Value);
 	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), LITERAL );
 }
+PNOXNODE nox_Int  (INT64 value)
+{
+   UCHAR temp [256];
+   sprintf (temp ,"%lld", value);
+   return NewNode  (NULL, stre2a (temp , temp) , LITERAL);
+}
+/* -------------------------------------------------------------
+	 Set date by name
+	 ------------------------------------------------------------- */
 PNOXNODE  nox_SetDateByNameVC (PNOXNODE pNode, PLVARCHAR  Name, DATE Value , LGL nullIf)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -2955,7 +2964,15 @@ PNOXNODE  nox_SetDateByNameVC (PNOXNODE pNode, PLVARCHAR  Name, DATE Value , LGL
 	substr(s , (PUCHAR) &Value  , sizeof(DATE));
 	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), VALUE );
 }
-// Time --------------
+PNOXNODE  nox_Date (DATE Value )
+{
+	UCHAR  s [32];
+	substr(s , (PUCHAR) &Value  , sizeof(DATE));
+	return NewNode (NULL, stre2a(s,s), VALUE );
+}
+/* -------------------------------------------------------------
+	 Set time by name
+	 ------------------------------------------------------------- */
 PNOXNODE  nox_SetTimeByNameVC (PNOXNODE pNode, PLVARCHAR  Name, TIME Value , LGL nullIf)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -2967,7 +2984,15 @@ PNOXNODE  nox_SetTimeByNameVC (PNOXNODE pNode, PLVARCHAR  Name, TIME Value , LGL
 	substr(s , (PUCHAR) &Value  , sizeof(TIME));
 	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), VALUE );
 }
-// TimeStemp --------------
+PNOXNODE  nox_Time (TIME Value )
+{
+	UCHAR  s [32];
+	substr(s , (PUCHAR) &Value  , sizeof(TIME));
+	return NewNode (NULL, stre2a(s,s), VALUE );
+}
+/* -------------------------------------------------------------
+	 Set timestamp by name
+	 ------------------------------------------------------------- */
 PNOXNODE  nox_SetTimeStampByNameVC (PNOXNODE pNode, PLVARCHAR  Name, TIMESTAMP Value , LGL nullIf)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -2980,43 +3005,32 @@ PNOXNODE  nox_SetTimeStampByNameVC (PNOXNODE pNode, PLVARCHAR  Name, TIMESTAMP V
 	substr(s , (PUCHAR) &Value  , sizeof(TIMESTAMP));
 	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), VALUE );
 }
+PNOXNODE  nox_TimeStamp (TIMESTAMP Value )
+{
+	UCHAR  s [32];
+	substr(s , (PUCHAR) &Value  , sizeof(TIMESTAMP));
+	return NewNode (NULL, stre2a(s,s), VALUE );
+}
 /* -------------------------------------------------------------
 	 Set decimal  by name
 	 ------------------------------------------------------------- */
 PNOXNODE  nox_SetDecByNameVC (PNOXNODE pNode, PLVARCHAR Name, FIXEDDEC Value , LGL nullIf)
 {
-
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	UCHAR  s [32];
-	PUCHAR t;
-	int len;
-	int cutlen;
-	PUCHAR p;
 
 	if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
       return nox_SetValueByName(pNode , plvc2str(Name) , NULL , LITERAL );
 	}
 
-	len = sprintf(s , "%D(30,15)" , Value);
-	p = s + len -1 ;
-	// int cutlen = 16; // remove last trailing zeroes. if none after the decimal point the also the secimal point
-	cutlen = 14; // remove last trailing zeroes. Keep the last zero so it is still a decimal point
-
-	// %D is determined by locale so we can have either  , or .
-	// we always need .
-	for(t=s; *t ; t++) {
-		if (*t == ',') {
-			*t = '.';
-			break;
-		}
-	}
-
-	while ((*p == '0' || *p == '.') && cutlen --) {
-		*p = '\0';
-		p--;
-	}
-
+	dec2str(s, Value);
 	return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), LITERAL );
+}
+PNOXNODE  nox_Dec (FIXEDDEC Value )
+{
+	UCHAR  s [32];
+	dec2str(s, Value);
+	return NewNode (NULL, stre2a(s,s), VALUE );
 }
 /* -------------------------------------------------------------
 	 Set BOOL by name
@@ -3034,6 +3048,10 @@ PNOXNODE  nox_SetBoolByNameVC (PNOXNODE pNode, PLVARCHAR pName, LGL Value , LGL 
 	}
 	return nox_SetValueByName(pNode , plvc2str(pName) , Value == OFF ? FALSESTR:TRUESTR, LITERAL );
 }
+PNOXNODE  nox_Bool (BOOL  Value )
+{
+	return NewNode (NULL, Value == OFF ? FALSESTR:TRUESTR, LITERAL );
+}
 #pragma convert(0)
 /* -------------------------------------------------------------
 	 Set string value by name
@@ -3049,6 +3067,10 @@ PNOXNODE  nox_SetStrByNameVC (PNOXNODE pNode, PLVARCHAR pName, PLVARCHAR pValue,
       return nox_SetValueByName(pNode , plvc2str(pName) , NULL , LITERAL );
    } 
 	return nox_SetValueByName(pNode , plvc2str(pName) , plvc2str(pValue) ,VALUE);
+}
+PNOXNODE  nox_StrVC (PLVARCHAR pValue )
+{
+	return NewNode (NULL,plvc2str(pValue) ,VALUE );
 }
 /* -------------------------------------------------------------
 	 Set evaluate by parser - set by name
@@ -3081,7 +3103,7 @@ PNOXNODE  nox_SetPtrByNameVC (PNOXNODE pNode, PLVARCHAR pName, PUCHAR Value, LGL
 	return pRes;
 }
 // -------------------------------------------------------------
-void nox_GetValueVC(PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR NameP, PLVARCHAR DefaultP)
+void nox_GetValueStrVC(PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR NameP, PLVARCHAR DefaultP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PLVARCHAR  Name    = (pParms->OpDescList->NbrOfParms >= 3) ? NameP    : PLVARCHARNULL;
@@ -3097,7 +3119,7 @@ void nox_GetStrJoinVC(PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR NameP, PLVAR
 	nox_CopyValueByNameVC ( pRes , pNodeRoot, Name , Default , true ) ;
 }
 // -------------------------------------------------------------
-FIXEDDEC nox_GetValueNumVC (PNOXNODE pNode , PLVARCHAR NameP  , FIXEDDEC dftParm)
+FIXEDDEC nox_GetValueDecVC (PNOXNODE pNode , PLVARCHAR NameP  , FIXEDDEC dftParm)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PLVARCHAR  path  =  (pParms->OpDescList->NbrOfParms >= 2) ? NameP  : PLVARCHARNULL;
@@ -3183,7 +3205,7 @@ TIMESTAMP nox_GetValueTimeStampVC (PNOXNODE pNode , PLVARCHAR NameP  , TIMESTAMP
 	return ret;
 }
 // -------------------------------------------------------------
-void nox_GetNodeValueVC (PLVARCHAR pRes, PNOXNODE pNode , PLVARCHAR pDefaultValue)
+void nox_GetNodeValueStrVC (PLVARCHAR pRes, PNOXNODE pNode , PLVARCHAR pDefaultValue)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PLVARCHAR dft = (pParms->OpDescList->NbrOfParms >= 3) ? pDefaultValue : PLVARCHARNULL;
@@ -3194,7 +3216,7 @@ void nox_GetNodeValueVC (PLVARCHAR pRes, PNOXNODE pNode , PLVARCHAR pDefaultValu
 	memcpy(pRes->String , value , pRes->Length);
 }
 // -------------------------------------------------------------
-FIXEDDEC nox_GetNodeValueNum (PNOXNODE pNode , FIXEDDEC DefaultValue)
+FIXEDDEC nox_GetNodeValueDec (PNOXNODE pNode , FIXEDDEC DefaultValue)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	FIXEDDEC dft = (pParms->OpDescList->NbrOfParms >= 2) ? DefaultValue : 0;
@@ -3229,7 +3251,7 @@ void nox_GetNodeAttrValueVC (PLVARCHAR pRes, PNOXNODE pNode ,PLVARCHAR pAttrName
 	memcpy(pRes->String , value , pRes->Length);
 }
 // -------------------------------------------------------------
-FIXEDDEC nox_GetNodeAttrValueNumVC (PNOXNODE pNode , PLVARCHAR pAttrName, FIXEDDEC DefaultValue)
+FIXEDDEC nox_GetNodeAttrValueDecVC (PNOXNODE pNode , PLVARCHAR pAttrName, FIXEDDEC DefaultValue)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	FIXEDDEC dft = (pParms->OpDescList->NbrOfParms >= 3) ? DefaultValue : 0;
@@ -3309,7 +3331,7 @@ PUCHAR  nox_GetAttrValuePtr (PNOXATTR pAttr)
 	return (pAttr && pAttr->Value) ? pAttr->Value : null;
 }
 // -------------------------------------------------------------
-FIXEDDEC nox_GetAttrValueNum  (PNOXATTR pAttr, FIXEDDEC dftParm)
+FIXEDDEC nox_GetAttrValueDec  (PNOXATTR pAttr, FIXEDDEC dftParm)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	FIXEDDEC dft = (pParms->OpDescList->NbrOfParms >= 2) ? dftParm  : 0;
@@ -3332,6 +3354,75 @@ void nox_GetAttrValueVC (PLVARCHAR pRes, PNOXATTR pAttr, PLVARCHAR pDefaultValue
 		plvccopy (pRes , dft);
 	}
 }
+// -------------------------------------------------------------
+PNOXNODE nox_Object (PVOID pFirst, ...)
+{
+   va_list arg_list;
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	int parms = pParms->OpDescList->NbrOfParms;
+	int i;
+	PNOXNODE pObject = nox_NewObject();
+	PVOID  pNext;
+	PLVARCHAR pName;
+	PNOXNODE  pNode;
+
+	if (parms > 0) {
+
+		va_start(arg_list, pFirst);
+
+		for(i = 0; i< parms / 2;i++){
+			if (i==0) {
+				pName = pFirst;
+			} else {
+				pName = va_arg(arg_list, PVOID);
+			}
+			pNode = va_arg(arg_list, PVOID);
+			nox_NodeRename(pNode, plvc2str(pName));
+			nox_NodeInsertChildTail (pObject, pNode );
+		}
+		va_end(arg_list);
+	}
+
+	return pObject;
+}
+// -------------------------------------------------------------
+PNOXNODE ensureNode (PNOXNODE pNode)
+{
+   if (pNode->signature == NODESIG) {
+      return pNode;
+   } else {
+      return  NewNode  (NULL  , (PUCHAR) pNode, VALUE);
+   }
+}
+
+// -------------------------------------------------------------
+PNOXNODE nox_Array  (PNOXNODE pFirst, ...)
+{
+   va_list arg_list;
+
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   int parms = pParms->OpDescList->NbrOfParms;
+   int i;
+   PNOXNODE pNode;
+   PNOXNODE pArray = nox_NewArray();
+
+   if (parms > 0) {
+      va_start(arg_list, pFirst);
+
+      for(i = 0; i < parms; i++){
+         if (i==0) {
+            pNode = pFirst;
+         } else {
+            pNode = va_arg(arg_list, PNOXNODE);
+         }
+         nox_NodeInsertChildTail (pArray, ensureNode(pNode));
+      }
+      va_end(arg_list);
+   }
+
+   return pArray;
+}
+
 // -------------------------------------------------------------
 LGL  nox_Error (PNOXNODE  pNode)
 {

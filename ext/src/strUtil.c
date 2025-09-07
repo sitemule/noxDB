@@ -698,6 +698,30 @@ ULONG hexstr2int (PUCHAR s)
    return res;
 }
 /* ------------------------------------------------------------- */
+PUCHAR dec2str (PUCHAR str , FIXEDDEC Value)
+{
+	int len = sprintf(str , "%D(30,15)" , Value);
+	PUCHAR p = str + len -1 ;
+   PUCHAR t;
+	// int cutlen = 16; // remove last trailing zeroes. if none after the decimal point the also the secimal point
+	int cutlen = 14; // remove last trailing zeroes. Keep the last zero so it is still a decimal point
+
+	// %D is determined by locale so we can have either  , or .
+	// we always need .
+	for(t=str; *t ; t++) {
+		if (*t == ',') {
+			*t = '.';
+			break;
+		}
+	}
+
+	while ((*p == '0' || *p == '.') && cutlen --) {
+		*p = '\0';
+		p--;
+	}
+   return str; 
+}
+/* ------------------------------------------------------------- */
 FIXEDDEC str2dec(PUCHAR str , UCHAR decPoint)
 {
    PUCHAR p;
