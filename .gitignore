@@ -2,4 +2,4 @@
 postlist.txt
 test/out/*
 testout/*
-include/qoar
+ext/include/qoar
