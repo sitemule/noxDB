@@ -97,7 +97,6 @@ void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
 			fputs (sigUtf16 , pjWrite->outFile);
 			break;
 	}
-
 	if ( pNode == NULL || pNode->pNodeChildHead  == NULL) return;
 
 	// Arrays - need first child;

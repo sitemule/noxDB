@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- */
 /* SYSIFCOPT(*IFSIO) OPTION(*EXPMAC *SHOWINC) */
 #include <stdio.h>
@@ -24,7 +24,7 @@ void sndpgmmsg(PUCHAR Msgid,PUCHAR Msgf, PUCHAR Type ,PUCHAR Msgdta, ... )
       printf ("Api error: %7s - %s" ,apierr.msgid, apierr.msgdta);
    }
 }
-void nox_joblog(PUCHAR text , ... )
+void nox_Joblog(PUCHAR text , ... )
 {
    APIERR apierr = { sizeof(APIERR), 0 ,  "" , ' ', ""};
    va_list arg_ptr;

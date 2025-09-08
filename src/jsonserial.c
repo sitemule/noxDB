@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- *
  * Company . . . : System & Method A/S                           *
  * Design  . . . : Niels Liisberg                                *
@@ -103,7 +103,7 @@ void checkParentRelation(PNOXNODE pNode , PNOXNODE pParent)
 {
 	 if (pNode->pNodeParent != pParent) {
 		try {
-			nox_joblog("Invalid parent relation %s , %s for %s",
+			nox_Joblog("Invalid parent relation %s , %s for %s",
 				pNode->pNodeParent->Name,
 				pParent->Name,
 				pNode->Name

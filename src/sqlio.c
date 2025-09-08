@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- */
 /* Program . . . : sqlio                                         */
 /* Design  . . . : Niels Liisberg                                */
@@ -45,7 +45,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 // Globals: TODO !!! remove to make code reintrant
 __thread extern UCHAR jxMessage[512];
 __thread extern BOOL  jxError;
-PNOXSQLCONNECT pLastConnnection = NULL; 
+PNOXSQLCONNECT pLastConnnection = NULL;
 
 // !!!!! NOTE every constant in this module is in ASCII
 #pragma convert(1252)
@@ -76,7 +76,7 @@ static SQLINTEGER getSqlCode(SQLHSTMT hStmt)
 // Additional data descibing the error can optionally
 // be set and found in the envvar MESSAGES_LIST
 /* ------------------------------------------------------------- */
-static void messageList (PNOXNODE pError) 
+static void messageList (PNOXNODE pError)
 {
 
 	PUCHAR message;
@@ -229,8 +229,10 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PNOXNODE parms)
 			markerLen = in - pMarker ;
 			if (markerLen > 0) {
 				substr(marker , pMarker , markerLen );
+				atrim(marker);
 				out += insertMarkerValue (out , marker, pParms );
 			}
+			if (*in == '}') in++; // skip the termination
 		} else {
 			*(out++) = *(in++);
 		}
@@ -251,7 +253,7 @@ static PNOXSQL nox_sqlNewStatement(PNOXSQLCONNECT pCon, PNOXNODE pSqlParms, BOOL
 	SHORT i;
 	int rc;
 	LONG   attrParm;
-	
+
 	if (pCon == NULL) return NULL;
 	pCon->sqlCode = 0;
 
@@ -325,7 +327,7 @@ static PUCHAR getSystemColumnName ( PUCHAR sysColumnName, PUCHAR columnText, PUC
 
 	static _RFILE * fSysCol = null;
 	if ((fSysCol = _Ropen ("QSYS/QADBILFI" , "rr,nullcap=Y")) == NULL) {
-		nox_joblog ( "Not able to open QADBILFI: %s",  strerror(errno)) ;
+		nox_Joblog ( "Not able to open QADBILFI: %s",  strerror(errno)) ;
 		return sysColumnName;
 	}
 
@@ -471,7 +473,7 @@ PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, L
 	int rc;
 
 	jxError = false; // Assume OK
-	
+
 	// quick trim - advance the pointer until data:
    for  (;*sqlstmt > '\0' && *sqlstmt <= ' '; sqlstmt++);
 
@@ -574,14 +576,14 @@ PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, L
 		PNOXCOL pCol = &pSQL->cols[i];
 
 		rc = SQLDescribeCol (
-			pSQL->pstmt->hstmt, 
-			i+1, 
-			pCol->colname, 
+			pSQL->pstmt->hstmt,
+			i+1,
+			pCol->colname,
 			sizeof (pCol->colname),
-			&pCol->colnamelen, 
-			&pCol->coltype, 
-			&pCol->collen, 
-			&pCol->scale, 
+			&pCol->colnamelen,
+			&pCol->coltype,
+			&pCol->collen,
+			&pCol->scale,
 			&pCol->nullable
 		);
 
@@ -615,7 +617,7 @@ PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, L
 			} else if (format & (NOX_UPPERCASE)) {
 			// It is upper NOW
 			// nox_sqlUpperCaseNames(pSQL);
-		
+
 		} else if (OFF == nox_IsTrue (pCon->pOptions ,"uppercasecolname")) {
 			UCHAR temp [256];
 			astr2upper  (temp , pCol->colname);
@@ -737,7 +739,7 @@ PNOXSQL nox_sqlOpenVC(PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt , PNOXNODE pSqlParm
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PNOXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 3 ) ? pSqlParmsP : NULL;
-	LONG format =  (pParms->OpDescList->NbrOfParms >= 4 ) ? formatP : 0; 
+	LONG format =  (pParms->OpDescList->NbrOfParms >= 4 ) ? formatP : 0;
 	LONG start  =  (pParms->OpDescList->NbrOfParms >= 5 ) ? startP : 1;
 	LONG limit  =  (pParms->OpDescList->NbrOfParms >= 5 ) ? limitP : -1;
 
@@ -782,7 +784,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 				// Note: SQLCLI only supports LONG_MAX size of data to be transfered
 				// SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , memSize(buf), &buflen);
 				SQLGetCol (pSQL->pstmt->hstmt, i+1, pCol->coltype, buf , LONG_MAX, &buflen);
-				
+
 				// Note: collen will contain xFFFFFFFF for  type 14 = CLOB
             memset ( buf + buflen, 0 , 2); // Zero term - also UNICODE
 				break;
@@ -803,11 +805,11 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 				switch( pCol->coltype) {
 					case SQL_BOOLEAN    :
                   nox_NodeInsert (
-							pRow , 
-							RL_LAST_CHILD, 
-							pCol->colname , 
-							(*buf == '1' || *buf == 't') ? "true":"false",  
-							pCol->nodeType 
+							pRow ,
+							RL_LAST_CHILD,
+							pCol->colname ,
+							(*buf == '1' || *buf == 't') ? "true":"false",
+							pCol->nodeType
 						);
                   break;
 
@@ -858,7 +860,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 							memmove (p+1 , p, len+1);
 							*(p+1) = '0';
 
-						} 
+						}
 
 						nox_NodeInsert (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
 						break ;
@@ -985,7 +987,7 @@ void nox_sqlDisconnect (PNOXSQLCONNECT * ppCon)
 	int rc;
 
 	if (ppCon == NULL) {
-		pCon = pLastConnnection; 
+		pCon = pLastConnnection;
 	} else {
 		pCon = *ppCon;
 	}
@@ -1354,7 +1356,7 @@ PNOXNODE nox_sqlValues ( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlPa
 	PNOXNODE pChild ;
 	UCHAR   stmtBuf [32760];
 
-	strcpy (stmtBuf , "values ("); 
+	strcpy (stmtBuf , "values (");
 	strcat (stmtBuf , plvc2str(sqlstmt));
 	strcat (stmtBuf , ")");
 
@@ -1388,7 +1390,7 @@ PNOXNODE nox_sqlGetMeta (PNOXSQLCONNECT pCon, PUCHAR sqlstmt)
 	nox_sqlClose (&pSQL);
 	return pMeta;
 }
-PNOXNODE nox_sqlGetMetaVC (PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt) 
+PNOXNODE nox_sqlGetMetaVC (PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt)
 {
 	return nox_sqlGetMeta (pCon, plvc2str(sqlstmt));
 }
@@ -1956,7 +1958,7 @@ LGL nox_sqlUpsertVC (PNOXSQLCONNECT pCon, PLVARCHAR table  , PNOXNODE pRow , PLV
 	PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 3) ? plvc2str(whereP) : "";
 	PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
 	return nox_sqlUpsert (pCon, plvc2str(table)  , pRow , where, pSqlParms);
-	
+
 }
 /* -------------------------------------------------------------------
  * Provide options to a pSQL environment - If NULL then use the default
@@ -2048,7 +2050,7 @@ PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PNOXNODE  pOptions = pParms->OpDescList->NbrOfParms >= 1 ? pOptionsP : NULL;
-	PNOXSQLCONNECT pCon;  
+	PNOXSQLCONNECT pCon;
 	LONG          attrParm;
 	PUCHAR        server = "*LOCAL";
 	int rc;

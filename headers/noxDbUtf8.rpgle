@@ -20,11 +20,11 @@ Dcl-S UTF8_MAX varchar(16773100:4) CCSID(*UTF8) Template;
 Dcl-S UTF8_1M  varchar(1048572:4)  CCSID(*UTF8) Template;
 Dcl-S UTF8_1K  varchar(1024:4)     CCSID(*UTF8) Template;
 Dcl-C UTF8_BOM const(-1208);
-Dcl-S FIXEDDEC Packed(30:15) Template;  
+Dcl-S FIXEDDEC Packed(30:15) Template;
 
 
 ///
-// Type of a node: 
+// Type of a node:
 ///
 Dcl-C NOX_TYPE_UNKNOWN const(0);
 Dcl-C NOX_TYPE_OBJECT  const(1);
@@ -402,7 +402,7 @@ Dcl-PR nox_SetStr Pointer extproc(*CWIDEN: 'nox_SetStrByNameVC');
   pNode          Pointer    value;
   Expresion      Like(UTF8_1K) const options(*varsize);
   Value          Like(UTF8) const options(*varsize);
-  nullIf         ind value options(*nopass); 
+  nullIf         ind value options(*nopass);
 End-PR;
 
 /// TODO - not migrated !!
@@ -429,18 +429,18 @@ End-PR;
 Dcl-PR nox_SetInt Pointer extproc(*CWIDEN: 'nox_SetIntByNameVC');
   pNode          Pointer    value;
   Expresion      Like(UTF8_1K) const options(*varsize);
-  Value          Int(20)    value;           
-  nullIf         ind value options(*nopass); 
+  Value          Int(20)    value;
+  nullIf         ind value options(*nopass);
 End-PR;
 
 /// TODO - not migrated !!
-// Create an atomic integer node  
+// Create an atomic integer node
 //
 // @param (input) value
 // @return pointer to the new node
 ///
 Dcl-PR nox_Int Pointer extproc(*CWIDEN: 'nox_Int');
-  Value          Int(20)    value;            
+  Value          Int(20)    value;
 End-PR;
 
 
@@ -459,11 +459,11 @@ Dcl-PR nox_SetDec Pointer extproc(*CWIDEN: 'nox_SetDecByNameVC');
   pNode           Pointer    value;
   Expresion       Like(UTF8_1K) const options(*varsize);
   Value           like(FIXEDDEC) value;
-  nullIf          ind value options(*nopass); 
+  nullIf          ind value options(*nopass);
 End-PR;
 
 /// TODO - not migrated !!
-// create an atomic deciaml number node 
+// create an atomic deciaml number node
 //
 //
 // @param (input) New value
@@ -489,7 +489,7 @@ Dcl-PR nox_SetBool Pointer extproc(*CWIDEN: 'nox_SetBoolByNameVC');
   pNode          Pointer    value;
   Expresion      Like(UTF8_1K) const options(*varsize);
   Value          Ind        value;
-  nullIf         ind value options(*nopass); 
+  nullIf         ind value options(*nopass);
 End-PR;
 
 /// TODO - not migrated !!
@@ -519,7 +519,7 @@ Dcl-PR nox_SetDate Pointer extproc(*CWIDEN: 'nox_SetDateByNameVC');
   pNode          Pointer    value;
   Expresion      Like(UTF8_1K) const options(*varsize);
   Value          date(*ISO)    value  ;
-  nullIf         ind value options(*nopass); 
+  nullIf         ind value options(*nopass);
 End-PR;
 
 /// TODO - not migrated !!
@@ -534,7 +534,7 @@ Dcl-PR nox_Date Pointer extproc(*CWIDEN: 'nox_Date');
 End-PR;
 
 ///
-// Set time value 
+// Set time value
 //
 // Set the passed value to the node pointed to by the passed path expression.
 //
@@ -548,7 +548,7 @@ Dcl-PR nox_SetTime pointer extproc(*CWIDEN : 'nox_SetTimeByNameVC');
   pNode          pointer value;
   Expresion      Like(UTF8_1K) const options(*varsize);
   Value          time(*ISO) value;
-  nullIf         ind value options(*nopass); 
+  nullIf         ind value options(*nopass);
 End-PR;
 
 /// TODO - not migrated !!
@@ -562,7 +562,7 @@ Dcl-PR nox_Time pointer extproc(*CWIDEN : 'nox_Time');
 End-PR;
 
 ///
-// Set timestamp value  
+// Set timestamp value
 //
 // Set the passed value to the node pointed to by the passed path expression.
 //
@@ -628,9 +628,9 @@ End-PR;
 // @info Procedure pointers are not intended to be serialized.
 ///
 Dcl-PR nox_SetProcPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByNameVC');
-  pNode          Pointer    value; 
+  pNode          Pointer    value;
   Expresion      Like(UTF8_1K) const options(*varsize);
-  Proc           Pointer(*Proc); 
+  Proc           Pointer(*Proc);
 End-PR;
 
 
@@ -663,7 +663,7 @@ End-PR;
 //       user of this function.
 ///
 Dcl-PR nox_DataGen pointer(*proc) extproc(*CWIDEN : 'nox_DataGen');
-  pNode    pointer; 
+  pNode    pointer;
   Options  pointer value options(*string : *nopass);
 End-PR;
 
@@ -788,7 +788,7 @@ End-PR;
 //
 // Returns the string value of the node pointed to by the passed expression.
 //
-// expresion examples:  
+// expresion examples:
 //  /object/array[123]/name
 //  .object.array[123].name
 //
@@ -899,7 +899,7 @@ Dcl-PR nox_GetDate date  extproc(*CWIDEN : 'nox_GetValueDateVC');
   Defaultvalue   date   value options(*nopass);
 End-PR;
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Get time value by expression
 //
 // Returns the time value of the node pointed to by the passed expression.
@@ -915,7 +915,7 @@ Dcl-PR nox_GetTime time(*ISO)  extproc(*CWIDEN : 'nox_GetValueTimeVC');
   Defaultvalue   time(*ISO) value options(*nopass);
 End-PR;
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Get TimeStamp value by expression
 //
 // Returns the TimeStamp value of the node pointed to by the passed expression.
@@ -931,7 +931,7 @@ Dcl-PR nox_GetTimeStamp TimeStamp  extproc(*CWIDEN : 'nox_GetValueTimeStampVC');
   Defaultvalue   TimeStamp   value options(*nopass);
 End-PR;
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Get TimeStamp value by expression - alias for nox_GetTimeStamp
 //
 // Returns the TimeStamp value of the node pointed to by the passed expression.
@@ -947,7 +947,7 @@ Dcl-PR nox_GetTS  TimeStamp  extproc(*CWIDEN : 'nox_GetValueTimeStampVC');
   Defaultvalue   TimeStamp   value options(*nopass);
 End-PR;
 
-/// 
+///
 // Copy node value
 //
 // Copies the value of a node to an new or existing node.
@@ -974,7 +974,7 @@ Dcl-PR nox_CopyValue Pointer extproc(*CWIDEN : 'nox_CopyValueVC');
   sourceName     Like(UTF8) const options(*varsize:*nopass);
 End-PR;
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Move node value
 //
 // Moves the value of a node to an new or existing node.
@@ -1016,7 +1016,7 @@ Dcl-PR nox_NodeClone Pointer extproc(*CWIDEN : 'nox_NodeClone');
   pSource        Pointer    value;
 End-PR;
 
-/// TODO - migrated !! - check return pointer !!   
+/// TODO - migrated !! - check return pointer !!
 // Copy node - Clone a node and insert
 //
 // Adds a copy of an existing node to the noxDB object graph.
@@ -1049,7 +1049,7 @@ End-PR;
 
 ///
 // Node Insert
-// 
+//
 // Creates a new node and insert that into eexisting root node
 //
 // <br><br>
@@ -1065,10 +1065,10 @@ End-PR;
 //
 // @param (output) Node
 // @param (input) Reference location
-// @param (input) Name of node 
-// @param (input) Node value  
-// @param (input) Node type: Refere to above "node type"    
-// @return the new created node 
+// @param (input) Name of node
+// @param (input) Node value
+// @param (input) Node type: Refere to above "node type"
+// @return the new created node
 ///
 Dcl-PR nox_NodeInsert Pointer extproc(*CWIDEN : 'nox_NodeInsertVC');
   // node. Retrive from Locate()
@@ -1099,7 +1099,7 @@ End-PR;
 // Unlink node from graph
 //
 // Unlinks the passed node from the graph. The unlinked node will be promoted as
-// a new root node and functions as a root in a separate graph 
+// a new root node and functions as a root in a separate graph
 //
 // @param (input) Node (<code>*null</code> will be ignored)
 // @return Unlinked node
@@ -1138,7 +1138,7 @@ Dcl-PR nox_NodeCheckSum Uns(10) extproc(*CWIDEN : 'nox_NodeCheckSum');
 End-PR;
 
 ///
-// Create object node 
+// Create object node
 //
 // Creates a new atomic noxDB object node.
 //
@@ -1154,7 +1154,7 @@ End-PR;
 //
 // Creates a new atomic noxDB array node.
 //
-// @return New array 
+// @return New array
 //
 // @info The caller of this procedure needs to take care of freeing the resources
 //       of the returned noxDB object tree by calling <em>nox_delete(node)</em>.
@@ -1200,7 +1200,7 @@ Dcl-C NOX_COPY_CLONE  const(1);
 Dcl-PR nox_ArrayAppend Pointer extproc(*CWIDEN :'nox_ArrayAppend');
   pDestArray     Pointer    value;
   pSourceNode    Pointer    value;
-  copy           Uns(5)     value options(*nopass); 
+  copy           Uns(5)     value options(*nopass);
 End-PR;
 
 
@@ -1224,7 +1224,7 @@ Dcl-PR nox_ArraySlice Pointer extproc(*CWIDEN : 'nox_ArraySlice' );
   to             Int(10)    value;
   copy           Uns(5)     value options(*nopass);
 End-PR;
-     
+
 
 ///
 // Sort array
@@ -1245,12 +1245,12 @@ End-PR;
 Dcl-C NOX_USE_LOCALE const(1);
 
 
-/// TODO - nmigrated !!  
+/// TODO - nmigrated !!
 // Convert an array of objects OR an object into a simple array
 //
 // @param (input/output) Array of objects or an object
-// @param (input) Copy operation mode: 
-//    NOX_MOVE_UNLINK (default) removes the "input array of object" node. 
+// @param (input) Copy operation mode:
+//    NOX_MOVE_UNLINK (default) removes the "input array of object" node.
 //    NOX_COPY_CLONE leaves the node
 // @return New array with the "converted" nodes
 ///
@@ -1354,7 +1354,7 @@ End-PR;
 ///
 // Move node into object graph
 //
-// Moves a node into an existing object graph. 
+// Moves a node into an existing object graph.
 //
 // @param Destination node
 // @param Source node
@@ -1388,7 +1388,7 @@ End-PR;
 // Writes the object tree as a JSON string to a stream file in the IFS.
 //
 // @param (input) Node
-// @param (input) IFS File name 
+// @param (input) IFS File name
 // @param (input) CCSID of the output file
 // @param (input) <code>*off</code> = output will be pretty printed else
 //        <code>*on</code> (default)
@@ -1472,7 +1472,7 @@ Dcl-PR nox_WriteXmlStmf  extproc(*CWIDEN : 'nox_WriteXmlStmf');
   Options        Pointer    value  options(*nopass:*string);
 End-PR;
 
-      
+
 ///
 // To XML string
 //
@@ -1506,7 +1506,7 @@ End-PR;
 
 
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // String quote - escapes quotes into double quotes and add leading and trailing
 // Courtesy function to avoid SQL injection attacks
 //
@@ -1520,7 +1520,7 @@ Dcl-PR nox_strQuote  Like(UTF8) rtnparm  extproc(*CWIDEN : 'nox_strQuote');
 End-PR;
 
 ///
-// Stream format options 
+// Stream format options
 ///
 Dcl-C NOX_STREAM_JSON const(0);
 Dcl-C NOX_STREAM_XML  const(1);
@@ -1531,7 +1531,7 @@ Dcl-C NOX_STREAM_CSV  const(2);
 ///
 // Create stream
 //
-// Return a streamer object to be used in own serialisers 
+// Return a streamer object to be used in own serialisers
 // Creates a stream object to be used by the noxDB serializers.
 //
 // @param (input) Node
@@ -1539,7 +1539,7 @@ Dcl-C NOX_STREAM_CSV  const(2);
 ///
 Dcl-PR nox_Stream pointer extproc(*CWIDEN : 'nox_Stream');
   pNode          Pointer    value;
-  format         int(10)    value; 
+  format         int(10)    value;
 End-PR;
 
 ///
@@ -1587,12 +1587,12 @@ End-PR;
 //   <li>comma : Will be ',' as long there are more elements in the list </li>
 //   <li>count : current element index (starting at 1)</li>
 //   <li>length : number of elements</li>
-//   <li>size  : Size of the iterator object ( internal use only)</li> 
+//   <li>size  : Size of the iterator object ( internal use only)</li>
 //   <li>listArr :Pointer to temp array of elms for recursive lists ( internal use only)</li>
 //   <li>break : set this to *ON to terminate the loop, and free up memory</li>
 // </ul>
 ///
-Dcl-DS nox_Iterator qualified Template; 
+Dcl-DS nox_Iterator qualified Template;
   root           Pointer;
   this           Pointer;
   isList         Ind;
@@ -1635,7 +1635,7 @@ End-PR;
 // @param (input) Node path expression to the node which child elements will be iterated
 // @return Iterator instance
 ///
-Dcl-PR nox_setRecursiveIterator  likeds( nox_Iterator) 
+Dcl-PR nox_setRecursiveIterator  likeds( nox_Iterator)
         extproc(*CWIDEN : 'nox_SetRecursiveIteratorVC');
   pNode          Pointer    value;
   path           Like(UTF8_1K) const options(*nopass:*varsize);
@@ -1653,8 +1653,8 @@ End-PR;
 // <br><br>
 // The iteration can be interrupted either by leaving the loop or by setting
 // iterator.break to *on.
-// Note: Always use the "break" property of the iterator to terminate the   
-// iteration and free up memory.  
+// Note: Always use the "break" property of the iterator to terminate the
+// iteration and free up memory.
 //
 // @param (input) Iterator
 // @return *on if there is another entry , *off if the iteration ended
@@ -1679,7 +1679,7 @@ End-PR;
 // @param (input) Default value
 // @return Attribute value or default value if no attriute exists
 ///
-Dcl-PR nox_GetNodeAttrValue Like(UTF8) 
+Dcl-PR nox_GetNodeAttrValue Like(UTF8)
           rtnparm extproc(*CWIDEN : 'nox_GetNodeAttrValueVC');
   pNode          Pointer    value;
   AttrName       Like(UTF8_1K) const options(*varsize);
@@ -1698,7 +1698,7 @@ End-PR;
 //
 // @info Attributes will be omitted in JSON output.
 ///
-Dcl-PR nox_SetNodeAttrValue 
+Dcl-PR nox_SetNodeAttrValue
           extproc(*CWIDEN : 'nox_SetNodeAttrValueVC');
   pNode          Pointer    value;
   AttrName       Like(UTF8_1K) const options(*varsize);
@@ -1714,7 +1714,7 @@ End-PR;
 // @param (input) Default value
 // @return Attribute value or default value if the attribute has no value
 ///
-Dcl-PR nox_GetAttrValue 
+Dcl-PR nox_GetAttrValue
                  Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_GetAttrValueVC');
   pAttr          Pointer    value;
   Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
@@ -1773,7 +1773,7 @@ End-PR;
 // @param (input) Attribute
 // @return Attribute name
 ///
-Dcl-PR nox_GetAttrName 
+Dcl-PR nox_GetAttrName
                Like(UTF8_1K) rtnparm extproc(*CWIDEN : 'nox_GetAttrNameVC');
   pAttribute   Pointer    value;
 End-PR;
@@ -1808,11 +1808,11 @@ Dcl-PR nox_Close  extproc(*CWIDEN : 'nox_Close');
   pNode          Pointer  ;
 End-PR;
 
-/// 
-// Pprograms and procedures section begin 
+///
+// Pprograms and procedures section begin
 ///
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Programs and procedures : Call program
 //
 // Call ILE program compiled with ctl-opt pgminfo(*PCML:*MODULE)
@@ -1835,7 +1835,7 @@ Dcl-PR nox_CallProgram pointer extproc(*CWIDEN : 'nox_CallProgram');
 End-PR;
 
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Programs and procedures : Load program as procedure pointer
 //
 //
@@ -1849,7 +1849,7 @@ Dcl-PR nox_LoadProgram pointer(*proc) extproc(*CWIDEN : 'nox_loadProgram');
   program        char(10) const;
 End-PR;
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Programs and procedures : Call program  - lo level
 // @param (input) procedure pointer to the program  to call
 // @param (input) parms pointer to array of addresse to parameters to pass to the procedure
@@ -1862,7 +1862,7 @@ Dcl-PR nox_CallPgm extproc(*CWIDEN : 'nox_callPgm');
 End-PR;
 
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Programs and procedures : Program meta
 //
 // Returns the parameter meta information as a noxDb object graph accordin to the PCML format
@@ -1883,7 +1883,7 @@ Dcl-PR nox_ProgramMeta pointer extproc(*CWIDEN : 'nox_ProgramMeta');
 End-PR;
 
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Programs and procedures : Call procedure
 //
 // Call ILE service program procedure compiled with ctl-opt pgminfo(*PCML:*MODULE)
@@ -1908,7 +1908,7 @@ Dcl-PR nox_CallProcedure pointer extproc(*CWIDEN : 'nox_CallProcedure');
 End-PR;
 
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Programs and procedures : Load service program procedure as procedure pointer
 //
 //
@@ -1924,7 +1924,7 @@ Dcl-PR nox_LoadServiceProgramProc pointer(*proc) extproc(*CWIDEN : 'nox_loadServ
 
 End-PR;
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Programs and procedures : Call procedure - lo level
 // @param (input) procedure pointer to the procedure to call
 // @param (input) parms pointer to array of addresse to parameters to pass to the procedure
@@ -1936,7 +1936,7 @@ Dcl-PR nox_CallProc extproc(*CWIDEN : 'nox_callProc');
   numberOfParms  int(10) value  ;
 End-PR;
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Programs and procedures : Program meta
 //
 // Returns the parameter meta information as a noxDb object graph according to the PCML format
@@ -1958,7 +1958,7 @@ Dcl-PR nox_ProcedureMeta pointer extproc(*CWIDEN : 'nox_ProcedureMeta');
   formatOptions  int(10)   value options(*nopass) ;
 End-PR;
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Programs and procedures : Program and service program meta
 //
 // Returns the parameter meta information as a noxDb object graph according to the PCML format
@@ -1979,8 +1979,8 @@ Dcl-PR nox_ApplicationMeta pointer extproc(*CWIDEN : 'nox_ApplicationMeta');
   procedure      pointer   value options(*string);
 End-PR;
 
-/// 
-// Pprograms and procedures section end 
+///
+// Pprograms and procedures section end
 ///
 
 
@@ -2019,7 +2019,7 @@ Dcl-PR nox_MemUse Uns(20) extproc(*CWIDEN : 'nox_MemUse');
 End-PR;
 
 
-/// TODO - not migrated !!  
+/// TODO - not migrated !!
 // Log message
 //
 // Sends an info message to the job log. The passed message can either be text
@@ -2028,19 +2028,19 @@ End-PR;
 //
 // @param (input) Message text or node
 ///
-Dcl-PR nox_joblog extproc(*CWIDEN : 'nox_joblog');
+Dcl-PR nox_joblog extproc(*CWIDEN : 'nox_Joblog');
   textOrNode pointer value options(*string);
 End-PR;
 
 ///
-// mapix - map index to pointer 
-//  
-// Maintain at list of index numbers to database CLOB/BLOB 
+// mapix - map index to pointer
+//
+// Maintain at list of index numbers to database CLOB/BLOB
 // fields since pointers can not be shared in SQL
-// @param (input) pointer to pointer to node 
-// @param (input) index  number ( 1= first ) 
-// 
-// @return *ON if found 
+// @param (input) pointer to pointer to node
+// @param (input) index  number ( 1= first )
+//
+// @return *ON if found
 ///
 Dcl-PR nox_mapIx Ind extproc(*CWIDEN:'nox_MapIx' );
   ppNode         Pointer;
@@ -2071,12 +2071,12 @@ End-PR;
 Dcl-PR nox_httpRequest Pointer extproc(*CWIDEN:'nox_httpRequest');
   url            Like(UTF8) const options(*varsize);
   pReqNode       pointer value;
-  options        Like(UTF8) const options(*nopass:*varsize); 
+  options        Like(UTF8) const options(*nopass:*varsize);
   format         pointer value options(*string : *nopass);
 End-PR;
 
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // Set trace procedure
 //
 // Sets the trace procedure which gets called on any interaction with an
@@ -2129,7 +2129,7 @@ End-PR;
 // is used and the tables are searched in the library list.
 //
 // NOTE: If a pConnection pointer is provided, it will be updated with the connection
-// @param (input) Pointer to connection ( from nox_sqlConnect() ) or *null 
+// @param (input) Pointer to connection ( from nox_sqlConnect() ) or *null
 // @param (input) Object tree or JSON string containing SQL options or
 //        <code>*null</code> to use the default options
 ///
@@ -2138,14 +2138,14 @@ Dcl-PR nox_sqlSetOptions  extproc(*CWIDEN: 'nox_sqlSetOptions');
   parms          Like(UTF8) const options(*nopass:*varsize);
 End-PR;
 
-/// TODO - not migrated !!  
-// retrive currens SQL setting 
+/// TODO - not migrated !!
+// retrive currens SQL setting
 Dcl-PR nox_sqlGetOptions Like(UTF8) extproc(*CWIDEN : 'nox_sqlGetOptions');
   pConnection    pointer value;
 End-PR;
 
 
-/// TODO - migrated !!  
+/// TODO - migrated !!
 // SQL : Execute SQL statement "Values"
 //
 // Returns an value or an array of values like the  "values into" - being array, object or value
@@ -2164,7 +2164,7 @@ Dcl-PR nox_sqlValues pointer extproc(*CWIDEN: 'nox_sqlValuesVC');
 End-PR;
 
 
-/// TODO - check templateValues and format   
+/// TODO - check templateValues and format
 // SQL : Execute SQL statement (single row)
 //
 // Returns an object node with one (first) resulting row for the SQL statment.
@@ -2186,13 +2186,13 @@ Dcl-PR nox_sqlResultRow Pointer extproc(*CWIDEN: 'nox_sqlResultRowVC');
 End-PR;
 
 
-/// TODO - check templateValues and format   
+/// TODO - check templateValues and format
 // SQL : Execute SQL statement (multiple rows)
 //
 // Executes the statement and returns the result set. The result set
 // structure depends on the passed options.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL statement
 // @param (input) Template values (context)
 // @param (input) Start ( 1 = first (default) )
@@ -2245,19 +2245,19 @@ Dcl-C NOX_UPPERCASE const(8);
 // faster than nox_TOTALROWS but is not as precise.
 ///
 Dcl-C NOX_APPROXIMATE_TOTALROWS const(16);
-/// TODO - not migrated !! 
+/// TODO - not migrated !!
 // Result set format option to return system column names instead of sql
 // column names.
 ///
 Dcl-C NOX_SYSTEM_NAMES  const(32);
-/// TODO - not migrated !! 
+/// TODO - not migrated !!
 // Result set format option to return the column names in camel case.
 // "THE_COLUMN_NAME" will be returned as "theColumnName".
 
-/// TODO - not migrated !! 
+/// TODO - not migrated !!
 Dcl-C NOX_CAMEL_CASE   const(64);
 
-/// TODO - not migrated !! 
+/// TODO - not migrated !!
 // For SQL resultset
 // If set: resultSets will return a success:false
 // and set the message to the apropiate SQL error text
@@ -2266,7 +2266,7 @@ Dcl-C NOX_CAMEL_CASE   const(64);
 ///
 Dcl-C NOX_GRACEFUL_ERROR   const(128);
 
-/// TODO - not migrated !! 
+/// TODO - not migrated !!
 // Result set format option to return extra column text label
 ///
 Dcl-C NOX_COLUMN_TEXT   const(256);
@@ -2278,7 +2278,7 @@ Dcl-C NOX_COLUMN_TEXT   const(256);
 //
 // Opens a cursor for processing the SQL data row by row.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL statement
 // @param (input) Template values (context) - string or noxDb graph
 // @param (input) Result set format options
@@ -2290,9 +2290,9 @@ Dcl-PR nox_sqlOpen Pointer extproc(*CWIDEN:'nox_sqlOpenVC'  );
   pConnection    pointer value;
   sqlStmt        Like(UTF8) const options(*varsize);
   templateValues pointer value options(*string : *nopass);
-  format         int(10) value options(*nopass); // TODO - not migrated !!  
-  startRow       int(10) value options(*nopass); // TODO - not migrated !!  
-  limitRows      int(10) value options(*nopass); // TODO - not migrated !!  
+  format         int(10) value options(*nopass); // TODO - not migrated !!
+  startRow       int(10) value options(*nopass); // TODO - not migrated !!
+  limitRows      int(10) value options(*nopass); // TODO - not migrated !!
 End-PR;
 
 
@@ -2302,10 +2302,10 @@ End-PR;
 // Returns the next row from the SQL data relative to the current cursor position.
 //
 // @param (input) SQL handle
-// @param (input) Additional offset (relative to the current cursor) (1=next, -1=previous)  
+// @param (input) Additional offset (relative to the current cursor) (1=next, -1=previous)
 // @return Row object or <code>*null</code> if there are no more rows to fetch
 ///
-Dcl-PR nox_sqlFetchRelative Pointer 
+Dcl-PR nox_sqlFetchRelative Pointer
                             extproc(*CWIDEN: 'nox_sqlFetchRelative');
   pSqlHndl       Pointer    value;
   fromRow        Int(10)    value;
@@ -2369,7 +2369,7 @@ End-PR;
 //
 // Executes any SQL statement not involving a cursor.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL statement
 // @param (input) Template values (context)
 // @return <code>*on</code> if an error occured else <code>*off</code>
@@ -2377,16 +2377,16 @@ End-PR;
 Dcl-PR nox_sqlExec Ind extproc(*CWIDEN:'nox_sqlExecVC'  );
   pConnection    pointer value;
   sqlStmt        Like(UTF8) const options(*varsize);
-  templateValues pointer value options(*string : *nopass); // TODO - not migrated !! 
+  templateValues pointer value options(*string : *nopass); // TODO - not migrated !!
 End-PR;
 
 
-/// TODO - not migrated !!  
+/// TODO - not migrated !!
 // SQL : Call stored procedure
 //
 // Calls a SQL stored procedure with the passed parameters.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) Qualified SQL procedure name
 // @param (input) noxDB object tree with input parameters
 // @return noxDB object tree with output parameters
@@ -2400,12 +2400,12 @@ Dcl-PR nox_sqlCall pointer extproc(*CWIDEN : 'nox_sqlCall');
   inputParms pointer value;
 End-PR;
 
-/// TODO - not migrated !!  
+/// TODO - not migrated !!
 // SQL : Call stored procedure, select from UDTF table functions, return values from scalar function
 //
 // Calls a SQL stored procedure / Table Function / value with the passed parameters.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) Qualified SQL procedure / UDTF / value  name
 // @param (input) noxDB object tree with input ( INOUT) parameters
 // @param (input) Result set format options
@@ -2423,7 +2423,7 @@ Dcl-PR nox_sqlExecuteRoutine pointer extproc(*CWIDEN : 'nox_sqlExecuteRoutine');
 End-PR;
 
 
-/// TODO - not migrated !!  
+/// TODO - not migrated !!
 // SQL : Call stored procedure (noxDB nodes)
 //
 // Calls a SQL stored procedure with the passed parameters. The passed
@@ -2432,7 +2432,7 @@ End-PR;
 // directly in the stored procedure. A passed string will be parsed into
 // a new noxDB object tree.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) Qualified SQL procedure name
 // @param (input) JSON or XML strings or noxDB object tree
 // @param (input) JSON or XML strings or noxDB object tree
@@ -2469,7 +2469,7 @@ End-PR;
 //
 // Executes an UPDATE TABLE where the row is defined as an object tree.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL table name
 // @param (input) Row data as either object tree or JSON or XML string
 // @param (input) SQL WHERE clause (may include template variables like WHERE id = $id)
@@ -2490,7 +2490,7 @@ End-PR;
 //
 // Executes an INSERT where the row is defined as an object tree.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL table name
 // @param (input) Row data as either object tree or JSON or XML string
 // @return <code>*on</code> if an error occured else <code>*off</code>
@@ -2510,7 +2510,7 @@ End-PR;
 // does not contain any matching row the passed row will be INSERTed into
 // the table.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL table name
 // @param (input) Row data as either object tree or JSON or XML string
 // @param (input) Input parameter (don't have to pass anything as it is not needed on INSERT)
@@ -2532,7 +2532,7 @@ End-PR;
 //
 // Returns the last generated id (f. e. id of identity columns).
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @return Last generated id or 0 if there was no INSERT statement previously
 //         executed
 ///
@@ -2555,7 +2555,7 @@ End-PR;
 //  <li>text   : column text label. If'text' is set in format option </li>
 // </ul>
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL SELECT statement with the columns to be queried
 // @return Object tree (array) with column meta data
 //
@@ -2583,7 +2583,7 @@ End-PR;
 ///
 // SQL : Disconnect
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 //
 // Disconnects the current database connection.
 ///
@@ -2596,7 +2596,7 @@ End-PR;
 //
 // Returns the SQL code for the previous executed statement.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @return SQL Code or 0 if no SQL statement was previously executed
 ///
 Dcl-PR nox_sqlCode Int(10) extproc(*CWIDEN: 'nox_sqlCode');
@@ -2616,14 +2616,14 @@ Dcl-PR nox_TraceSetId  extproc(*CWIDEN : 'nox_TraceSetId');
 End-PR;
 
 
-/// TODO - not migrated !!  
+/// TODO - not migrated !!
 // SQL : Start transaction
 //
 // Starts a new transaction. If commitment control has not been started yet
 // it will be started now. The transaction will end on either commit or
 // rollback.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @return <code>*on</code> if an error occured else <code>*off</code>
 //
 // @info Transaction Isolation Level (Scope) will be REPEATABLE READ.
@@ -2632,36 +2632,36 @@ Dcl-PR nox_sqlStartTransaction ind extproc(*CWIDEN : 'nox_sqlStartTransaction');
     pConnection   pointer value;
 End-PR;
 
-/// TODO - not migrated !!  
+/// TODO - not migrated !!
 // SQL : Commit
 //
 // Commits the current transaction.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @return <code>*on</code> if an error occured else <code>*off</code>
 ///
 Dcl-PR nox_sqlCommit ind extproc(*CWIDEN : 'nox_sqlCommit') ;
     pConnection   pointer value;
 End-PR;
 
-/// TODO - not migrated !!  
+/// TODO - not migrated !!
 // SQL : Rollback
 //
 // Rollbacks the current transaction.
 //
-// @param (input) Pointer to database connection provided by nox_sqlConnect() 
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @return <code>*on</code> if an error occured else <code>*off</code>
 ///
-Dcl-PR nox_sqlRollback ind extproc(*CWIDEN : 'nox_sqlRollback'); 
+Dcl-PR nox_sqlRollback ind extproc(*CWIDEN : 'nox_sqlRollback');
     pConnection   pointer value;
 End-PR;
 
-/// -- Document builder section begin --  
+/// -- Document builder section begin --
 
 ///
-// Create object node 
+// Create object node
 //
-// Create object node - graph builder with name / value pairs 
+// Create object node - graph builder with name / value pairs
 //
 // @info The caller of this procedure needs to take care of freeing the resources
 //       of the returned noxDB object graph by calling <em>nox_delete(node)</em>.
@@ -2733,9 +2733,9 @@ End-PR;
 ///
 // Create array
 //
-// Creates a new atomic noxDB array node. and fills it with the passed  values  
+// Creates a new atomic noxDB array node. and fills it with the passed  values
 //
-// @return New array 
+// @return New array
 //
 // @info The caller of this procedure needs to take care of freeing the resources
 //       of the returned noxDB object tree by calling <em>nox_delete(node)</em>.
@@ -2773,7 +2773,7 @@ Dcl-PR nox_Array pointer extproc(*CWIDEN : 'nox_Array');
   value29 pointer value options(*nopass:*string);
 End-PR;
 
-/// -- Document builder section begin --  
+/// -- Document builder section begin --
 
 // Need Space arround the nox_OVERLOAD , else the prototype generator will not work
 /if defined( nox_OVERLOAD )
@@ -2812,8 +2812,7 @@ Dcl-PR nox_set pointer overload (
 );
 /endif
 
-  
 
 
-     
-   
+
+

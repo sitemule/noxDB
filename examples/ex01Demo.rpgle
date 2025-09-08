@@ -1,21 +1,48 @@
-**FREE
-    // ------------------------------------------------------------- 
-    // noxDB - Not Only Xml - Its JSON, XML, SQL and more
-    //
-    // This tutorial will show all the features, from a JSON 
-    // and SQL perspective
-    //
-    // Design:  Niels Liisberg  
-    // Project: Sitemule.com
-    //
-    // try/build:
-    // cd '/prj/NOXDBUTF8' 
-    // addlible NOXDBUTF8 
-    // call 
-    // ------------------------------------------------------------- 
-    Ctl-Opt BndDir('NOXDBUTF8') CCSID(*CHAR:*UTF8); 
-    Ctl-Opt dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt:*nounref) ALWNULL(*USRCTL); 
-    /include qrpgleref,noxDbUtf8
+**free
+// ------------------------------------------------------------------------------------
+// noxDB - Not Only Xml - Its JSON, XML, SQL and more
+//
+// This tutorial will show all the features, from a JSON
+// and SQL perspective
+//
+// Design:  Niels Liisberg
+// Project: Sitemule.com
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//
+// Look at the header source file "QRPGLEREF" member "NOXDBUTF8"
+// for a complete description of the functionality
+//
+// When using noxDbUtf8 you need two things:
+//  A: Bind you program with "NOXDBUTF8" Bind directory
+//  B: Include the noxDbUtf8 prototypes from QRPGLEREF member NOXDBUTF8
+//
+// Important: You need to set the CCSID of the source to the CCSID of the
+//            traget ccsid of the running job.
+//            otherwise special chars will be strange for constants.
+//            This project is by default set to CCSID 500
+//            do a CHGJOBCCSID(500) before running these examples.
+//            This only applies to program constants !!
+//
+// Note:      This program is build with UTF-8, so all CHAR/VARCHAR are in UTF-8
+//            This is not an requirement - you can use any CCSID you like
+//
+//
+// try/build:
+// cd '/prj/NOXDBUTF8'
+// addlible NOXDBUTF8
+// chgjobccsid(500)
+// call
+// ------------------------------------------------------------------------------------
+Ctl-Opt BndDir('NOXDBUTF8') CCSID(*CHAR:*UTF8);
+Ctl-Opt dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt:*nounref) ALWNULL(*USRCTL);
+Ctl-Opt main(main);
+/include qrpgleref,noxDbUtf8
+
+// ------------------------------------------------------------------------------------
+dcl-proc main;
 
     dcl-s id           int(10);
     dcl-s name         varchar(256);
@@ -25,13 +52,13 @@
     dcl-s createdDate  date;
     dcl-s createdTime  time;
     dcl-s dateTime     timeStamp;
-    dcl-s isNice       ind; 
+    dcl-s isNice       ind;
 
     dcl-s debug        varchar(32766:4);
     dcl-s msg          varchar(256);
     dcl-s len          int(10);
     dcl-s checksum     int(10);
-    dcl-s memuse       int(10);
+    dcl-s memuse       int(20);
     dcl-s pCustObject  pointer;
     dcl-s pCon         pointer;
     dcl-s pCustomer    pointer;
@@ -41,17 +68,16 @@
     dcl-s pTopFive     pointer;
     dcl-s pRes         pointer;
     dcl-s key          varchar(256) CCSID(*UTF8) inz('topFive[id=12345]');
-    
+
     dcl-ds itList      likeds(nox_iterator);
 
     //------------------------------------------------------------- *
 
-    *inlr = *on;
     memuse = nox_memUse();
 
     // Step 1: Lets build a JSON object from scratch
-    // and let set some attirbutes on the object. 
-    // we use integers, string , fixed float numbers and date 
+    // and let set some attirbutes on the object.
+    // we use integers, string , fixed float numbers and date
     pCustomer = nox_newObject();
     nox_setInt (pCustomer:'id'         : 12345);
     nox_setStr (pCustomer:'name'       : 'System & Metod A/S');
@@ -63,9 +89,9 @@
     nox_setTime(pCustomer:'createdTime': %time());
     nox_setTS  (pCustomer:'dateTime'   : %timestamp());
     nox_setBool(pCustomer:'isNice'     : (10 > 1)); // Logical expression
- 
+
     // Just to see the progress:
-    nox_WriteJsonStmf(pCustomer : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer.json' : UTF8_BOM : *OFF);    
+    nox_WriteJsonStmf(pCustomer : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer.json' : UTF8_BOM : *OFF);
     debug = nox_asJsonText(pCustomer);
 
     // Step 1.a: alternativ - you can also make it with the object builder:
@@ -81,10 +107,10 @@
         'createdTime': nox_Time (%time()):
         'dateTime'   : nox_TS   (%timestamp()):
         'isNice'     : nox_Bool (10 > 1)
-    ); 
+    );
 
     // Just to see the progress:
-    nox_WriteJsonStmf(pCustomer2 : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer2.json' : UTF8_BOM : *OFF);    
+    nox_WriteJsonStmf(pCustomer2 : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer2.json' : UTF8_BOM : *OFF);
     debug = nox_asJsonText(pCustomer);
 
     // Step 2: Build an array with customers
@@ -98,7 +124,7 @@
     // step3: now we get the rest of customers from the database;
     pCon = nox_sqlConnect();
     pMoreCust = nox_sqlResultSet(pCon:
-        'select                       - 
+        'select                       -
             cusnum  as "id",          -
             lstnam  as "name",        -
             street  as "street",      -
@@ -111,20 +137,20 @@
     debug = nox_asJsonText(pMoreCust);
 
     // now we have the list
-    // Note: the MOVE_UNLINK can be used if the array was already 
+    // Note: the MOVE_UNLINK can be used if the array was already
     // a sub-node in an other object/array. here it just an example and have no effect
     // Also you can omit the result - but returns the receiving array so you can "chain" this function
-    // ie "moveObjectInto" 
-    pRes  = nox_arrayAppend(pCustList : pMoreCust: NOX_MOVE_UNLINK);  
+    // ie "moveObjectInto"
+    pRes  = nox_arrayAppend(pCustList : pMoreCust: NOX_MOVE_UNLINK);
 
-    // How many are there in the array? 
-    len  = nox_getLength(pCustList); 
+    // How many are there in the array?
+    len  = nox_getLength(pCustList);
 
     // Just to see the progress:
     debug = nox_asJsonText(pCustList);
 
     // Lets sort the array on highest "creditLimit" and then "name"
-    nox_arraySort(pCustList : 'creditLimit:DESC,name:ASC' );   
+    nox_arraySort(pCustList : 'creditLimit:DESC,name:ASC' );
 
     // Just to see the progress:
     debug = nox_asJsonText(pCustList);
@@ -133,45 +159,44 @@
     // I only want the first 5
     // Note the first element is = 0
     // You can also use NOX_MOVE_UNLINK, to carve the result out of the source
-    // however, here we copy the elements to a new array  
-    pTopFive = nox_arraySlice(pCustList : 0: 5 : NOX_COPY_CLONE);         
+    // however, here we copy the elements to a new array
+    pTopFive = nox_arraySlice(pCustList : 0: 5 : NOX_COPY_CLONE);
 
     // Just to see the progress:
     debug = nox_asJsonText(pTopFive);
 
     // we can caluculate the checksum, to see later if anyone have touched the object graph
-    checksum = nox_NodeCheckSum(pTopFive);   
+    checksum = nox_NodeCheckSum(pTopFive);
 
     // and save it to disk:
     // You can use UTF8_BOM if you need the BOM-siganture
-    nox_WriteJsonStmf(pTopFive : '/prj/noxDbUtf8/testout/ex01Tutorial.json' : UTF8_BOM : *OFF);    
+    nox_WriteJsonStmf(pTopFive : '/prj/noxDbUtf8/testout/ex01Tutorial.json' : UTF8_BOM : *OFF);
 
     // Now what do we need to clean up:
-    // pCustList? yes 
+    // pCustList? yes
     // pCustomer? no - it is already removed when deleting the pCustList
     // pTopFive? Yes - it is a clone
-    nox_delete(pCustList); 
-    nox_delete(pTopFive); 
+    nox_delete(pCustList);
+    nox_delete(pTopFive);
 
     // We could stop the program here - But let's have som more fun:
-    // Load the top five array 
+    // Load the top five array
     pTopFive = nox_ParseFile ('/prj/noxDbUtf8/testout/ex01Tutorial.json');
 
     // Just to see the progress:
     debug = nox_asJsonText(pTopFive);
 
-    // Was there som issues?        
+    // Was there som issues?
     if Nox_Error(pTopFive) ;
         msg = Nox_Message(pTopFive);
         Nox_dump(pTopFive);
-        Nox_delete(pTopFive);
         return;
     endif;
 
-    // Is the checksum the same? 
+    // Is the checksum the same?
     if checksum <> nox_NodeCheckSum(pTopFive);
-        dsply 'Invlaid checksum';
-    endif;   
+        nox_joblog ('Invlaid checksum');
+    endif;
 
     // now create a object with that array and call it "topFive":
     pCustObject = nox_newObject();
@@ -182,8 +207,8 @@
 
     // let's loop through all items and get them back to RPG variables:
     // note: we could have used pTopFive - but for fun we locate from the top
-    itList = nox_setIterator(pCustObject : 'topFive');      
-    dow nox_ForEach(itList);        
+    itList = nox_setIterator(pCustObject : 'topFive');
+    dow nox_ForEach(itList);
         id          = nox_getInt ( itList.this : 'id');
         name        = nox_getStr ( itList.this : 'name');
         street      = nox_getStr ( itList.this : 'street');
@@ -192,18 +217,18 @@
         createdDate = nox_getDate( itList.this : 'createdDate');
         createdTime = nox_getTime( itList.this : 'createdTime');
         dateTime    = nox_getTS  ( itList.this : 'dateTime');
-        isNice      = nox_getBool( itList.this : 'isNice'); 
-    enddo;    
+        isNice      = nox_getBool( itList.this : 'isNice');
+    enddo;
 
 
-    // Locate the first node with id = 12345. 
+    // Locate the first node with id = 12345.
     // the index for the array can be the indexnumber OR a simple element test (=,>,<,<=,>= are supported)
     pCustomer   = nox_Locate(pCustObject: 'topFive[id=12345]');
 
 
     // Note: You have to be carefull with the source is in the right CCSID for RPG to convert the
     // strings ( if they contains national charaters and/or brackets like{}[] )
-    // if you run into issues, you can define them as const as in the 
+    // if you run into issues, you can define them as const as in the
     // example below: it is suppose to do the same as abowe
     pCustomer   = nox_Locate(pCustObject: key);
 
@@ -215,17 +240,20 @@
     createdDate = nox_getDate( pCustomer : 'createdDate');
     createdTime = nox_getTime( pCustomer : 'createdTime');
     dateTime    = nox_getTS  ( pCustomer : 'dateTime');
-    isNice      = nox_getBool( pCustomer : 'isNice');   
+    isNice      = nox_getBool( pCustomer : 'isNice');
 
     // Just to see the progress:
     debug = nox_asJsonText(pCustomer);
 
-    // That's it - time to cleanup:
+
+on-exit;
+    // That's it - time to cleanup: $
     nox_delete(pCustomer);
     nox_delete(pCustomer2);
+    nox_delete(pCustObject);
+    nox_delete(pTopFive);
 
     if memuse <> nox_memuse();
-        dsply 'Ups - forgot to clean something up';
-    endif;   
-
-    Return;
+        nox_joblog ('Ups - forgot to clean something up');
+    endif;
+end-proc;

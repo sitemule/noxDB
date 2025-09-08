@@ -106,7 +106,6 @@
                     "message": 4
                 }
             }
-
         },
         {
             "label": "Compile current test file",
@@ -117,7 +116,7 @@
                 "isDefault": true
             },
             "problemMatcher": []
-        },        
+        },
         {
             "label": "Build release",
             "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/;gmake release'",

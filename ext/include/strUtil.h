@@ -42,6 +42,7 @@ PUCHAR strrighttrimncpy(PUCHAR dst, PUCHAR src, LONG len);
 
 int cpy  (PUCHAR out , PUCHAR in);
 PUCHAR trim(PUCHAR in);
+PUCHAR atrim(PUCHAR in);
 PUCHAR firstnonblank(PUCHAR in);
 PUCHAR lastnonblank(PUCHAR in);
 PUCHAR righttrim(PUCHAR in);
@@ -61,7 +62,7 @@ FIXEDDEC str2dec(PUCHAR str, UCHAR decPoint);
 FIXEDDEC astr2dec(PUCHAR str , UCHAR decPoint);
 
 LONG packedMem2Int(PUCHAR buf, SHORT bytes);
-PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen, 
+PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen,
                 PUCHAR needle , ULONG needleLen);
 BOOL   memBeginsWith(PUCHAR heystack ,PUCHAR needle);
 BOOL   memiBeginsWith(PUCHAR heystack ,PUCHAR needle);

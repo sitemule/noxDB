@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- */
 /* Date  . . . . : 14.12.2005                                    */
 /* Design  . . . : Niels Liisberg                                */
@@ -91,9 +91,9 @@ int memIcmp (PUCHAR s1, PUCHAR s2 , int len)
     return c;
 }
 /* ------------------------------------------------------------- *\
-   memmem 
+   memmem
 \* ------------------------------------------------------------- */
-PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen, 
+PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen,
                        PUCHAR needle , ULONG needleLen)
 {
     PUCHAR p = heystack;
@@ -372,6 +372,29 @@ PUCHAR trim(PUCHAR in)
   *end = '\0';
   return ret;
 }
+/* ------------------------------------------------------------- *\
+   trim both
+\* ------------------------------------------------------------- */
+#pragma convert(1252)
+PUCHAR atrim(PUCHAR in)
+{
+  PUCHAR out, end, begin, ret;
+  BOOL   docopy = false;
+  ret = begin = end = out = in;
+  while (*in) {
+     if (*in > ' ') {
+        docopy = true;
+     }
+     if (docopy) {
+       *(out++) = *in;
+       if (*in > ' ') end = out;  // Store that address just after the nonblank char
+     }
+     in++;
+  }
+  *end = '\0';
+  return ret;
+}
+#pragma convert(0)
 /* ------------------------------------------------------------- *\
    righttrimlen - start from length
 \* ------------------------------------------------------------- */
@@ -719,7 +742,7 @@ PUCHAR dec2str (PUCHAR str , FIXEDDEC Value)
 		*p = '\0';
 		p--;
 	}
-   return str; 
+   return str;
 }
 /* ------------------------------------------------------------- */
 FIXEDDEC str2dec(PUCHAR str , UCHAR decPoint)
@@ -988,13 +1011,13 @@ PUCHAR astrTrim(PUCHAR s)
 {
    return _trim ( s , 0x20);
 }
-// --------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------
 LONG asprintf (PUCHAR res, PUCHAR ctrlstr , ... )
 {
 	UCHAR eCtrlstr [32766];
    LONG len;
    va_list arg_ptr;
-	
+
    stra2e (eCtrlstr , ctrlstr);
 	// Build a temp string with the formated data  */
 	va_start(arg_ptr, eCtrlstr);
@@ -1003,9 +1026,9 @@ LONG asprintf (PUCHAR res, PUCHAR ctrlstr , ... )
    stre2a (res  , res );
    return len;
 }
-// --------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------
 // real ascii version of atoi
-// --------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------
 LONG a2i (PUCHAR s)
 {
    LONG res = 0;
@@ -1014,6 +1037,6 @@ LONG a2i (PUCHAR s)
       if (*s == '-') sign = FALSE;
       if (*s >= '0' && *s <= '9') res = 10 * res + (*s - '0');;
    }
-   
-   return (sign? res : -res); 
+
+   return (sign? res : -res);
 }
