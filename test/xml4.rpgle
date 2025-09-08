@@ -22,7 +22,7 @@
 
         Result = '';
 
-        pXml = xml_parseString('                   -
+        pXml = nox_parseString('                   -
             <a>                                    -
                <l>1</l>                            -
                <l>2</l>                            -
@@ -32,26 +32,26 @@
         ');
 
         // Count number of l and k tags
-        lCount = xml_getNum(pXml : '/a/l' + OB + 'UBOUND' + CB);
-        kCount = xml_getNum(pXml : '/a/k' + OB + 'UBOUND' + CB);
+        lCount = nox_getNum(pXml : '/a/l' + OB + 'UBOUND' + CB);
+        kCount = nox_getNum(pXml : '/a/k' + OB + 'UBOUND' + CB);
 
         Result += %Char(lCount) + %Char(kCount);
 
         // relative Count number of l and k tags
-        pA = xml_locate(pXml : '/a');
-        lCount = xml_getNum(pA   : 'l' + OB + 'UBOUND' + CB);
-        kCount = xml_getNum(pA   : 'k' + OB + 'UBOUND' + CB);
+        pA = nox_locate(pXml : '/a');
+        lCount = nox_getNum(pA   : 'l' + OB + 'UBOUND' + CB);
+        kCount = nox_getNum(pA   : 'k' + OB + 'UBOUND' + CB);
 
         Result += %Char(lCount) + %Char(kCount);
 
         // relative Count number childrens of a
-        pA = xml_locate(pXml : '/a');
-        countChildren  =   xml_getNum(pA  : OB + 'UBOUND' + CB);
+        pA = nox_locate(pXml : '/a');
+        countChildren  =   nox_getNum(pA  : OB + 'UBOUND' + CB);
 
         Result += %Char(countChildren);
 
         pResult = Result;
 
-        xml_delete(pXml);
+        nox_delete(pXml);
         
         Return;

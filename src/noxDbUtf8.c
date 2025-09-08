@@ -1092,7 +1092,7 @@ PUCHAR detectEncoding(PNOXCOM pJxCom, PUCHAR pIn)
 		InputCcsid = 0; // Empty string; build from scratch XML
 	} else {
 		nox_SetMessage( "Unsupported /unknown charset or encoding for file %s ", pJxCom->FileName);
-		pJxCom->State = XML_EXIT_ERROR;
+		pJxCom->State = nox_EXIT_ERROR;
 		return outbuf;
 	}
 
@@ -1106,7 +1106,7 @@ static PNOXNODE  SelectParser (PNOXCOM pJxCom)
 	CheckBufSize(pJxCom);
 	pJxCom->pNodeRoot = pRoot = NewNode (NULL, NULL, OBJECT);
 	pJxCom->pFileBuf = NULL;
-	pJxCom->State = XML_FIND_START_TOKEN;
+	pJxCom->State = nox_FIND_START_TOKEN;
 	pJxCom->LineCount = 1;
 	pJxCom->pNodeWorkRoot = pJxCom->pNodeRoot;
 	pJxCom->Comment = memAlloc(COMMENT_SIZE);
@@ -3030,7 +3030,7 @@ PNOXNODE  nox_Dec (FIXEDDEC Value )
 {
 	UCHAR  s [32];
 	dec2str(s, Value);
-	return NewNode (NULL, stre2a(s,s), VALUE );
+	return NewNode (NULL, stre2a(s,s), LITERAL );
 }
 /* -------------------------------------------------------------
 	 Set BOOL by name

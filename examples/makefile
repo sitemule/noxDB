@@ -1,38 +1,22 @@
-﻿.ONESHELL:
-
+# NOTE - UTF-8 is not allowed for ILE source on 7.2 unsing stream files
+# This makefile is made for 7.2 since ccsid conversion from 1208 causes issues
+#
+# Note TGTCCSID is only supported from 7.4 > so the examples will run in ccsid 500
+# i.e. you have to do a
+#    CHGJOB CCSID(500)
+# Before your examples will run.
+# If you are on 7.4 change the compile option to local ccsid like:
+#
+#    RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb') PPGENOPT(*EXPINCLUDE) TGTCCSID(277)
+#
 BIN_LIB=NOXDBUTF8
-PRJ_ROOT=./examples
-# NOTE - UTF is not allowed for ILE source (yet) - so convert to WIN-1252
-RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/NOXDBUTF8') OPTION(*NOXREF *NOSHOWCPY *NODEBUGIO *NOUNREF *EVENTF *NOEXT *NOEXPDDS)
-FILTER2=| grep '*RNF' | grep -v '*RNF7031' | grep -v '*RNF5409' | sed  "s!*!$(SRC): &!"
-FILTER1=> /prj/NOXDBUTF8/examples/error.txt  
+RPG_OPT=OPTION(*EVENTF *NOXREF *NOUNREF) OUTPUT(*PRINT) DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdbutf8')
+CCSID=500
+SHELL=/QOpenSys/usr/bin/qsh
 
-##SYSCMD=execlist cmd(\
-##	'chgjob ccsid(500)' \
-##	'chgatr obj(''$(SRC)'') atr(*ccsid) value(1252)' \
-##	'crtbndrpg  pgm($(BIN_LIB)/$(SRC)) srcstmf(''$(SRC)'') $(RPG_OPT)' \
-##)
-OBJ = $(subst .,,$(SRC))
-
-    
 all: compile
-compile: 
-	qsh << EOF 
-	liblist -a $(BIN_LIB)
-	system "chgatr obj('$(SRC)') atr(*ccsid) value(1252)"
-	-system "crtsrcpf $(BIN_LIB)/qtmpsrc rcdlen(240) CCSID(500)"
-	system "CPYFRMSTMF FROMSTMF('$(SRC)') TOMBR('/QSYS.LIB/$(BIN_LIB).LIB/qtmpsrc.FILE/$(OBJ).mbr') MBROPT(*REPLACE)"
-	system "crtbndrpg  pgm($(BIN_LIB)/$(OBJ)) srcfile($(BIN_LIB)/qtmpsrc) $(RPG_OPT)"  $(FILTER1)
-	../tools/formaterr.sh /QSYS.LIB/NOXDBUTF8.LIB/EVFEVENT.FILE/$(OBJ).mbr $(PRJ_ROOT)/$(SRC)
-	EOF
-##system -i "$(SYSCMD)" $(FILTER1)
+.ONESHELL:
+compile:
+	./compile.sh -f "$(SRC)"  -l $(BIN_LIB) -c $(CCSID) -o "$(RPG_OPT)"
 
-#compile: 
-#	qsh << EOF 
-#	liblist -a $(BIN_LIB)
-#	system "chgatr obj('$(SRC)') atr(*ccsid) value(1252)"
-#	system "crtbndrpg  pgm($(BIN_LIB)/$(OBJ)) srcstmf('$(SRC)') $(RPG_OPT)"
-#	../tools/formaterr.sh /QSYS.LIB/NOXDBUTF8.LIB/EVFEVENT.FILE/$(OBJ).mbr $(PRJ_ROOT)/$(SRC)
-#	EOF
-##
 .PHONY: compile

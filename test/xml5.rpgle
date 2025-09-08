@@ -22,23 +22,23 @@
 
         Result = '';
 
-        pXml  = xml_ParseFile('./test/documents/XmlSample2.xml':'syntax=LOOSE');
-        if Xml_Error(pXml ) ;
-           pResult = xml_Message(pXml);
-           xml_delete(pXml );
+        pXml  = nox_ParseFile('./test/documents/XmlSample2.xml':'syntax=LOOSE');
+        if nox_Error(pXml ) ;
+           pResult = nox_Message(pXml);
+           nox_delete(pXml );
            return;
         endif;
 
         // Count elements
-        count= %int(xml_GetValue(pXml: '/myroot/myElement' +
+        count= %int(nox_GetValue(pXml: '/myroot/myElement' +
                                        OB + 'UBOUND' + CB:'0'));
 
         for i = 0 to count -1;
-          pOut = xml_Locate(pXml: '/myroot/myElement' + OB + %char(i) + CB);
-          Result += xml_GetValue(pOut : AT + 'Myattribute1' : 'x');
+          pOut = nox_Locate(pXml: '/myroot/myElement' + OB + %char(i) + CB);
+          Result += nox_GetValue(pOut : AT + 'Myattribute1' : 'x');
         endFor;
 
         pResult = Result;
 
-        xml_delete(pXml);
+        nox_delete(pXml);
         *inlr = *on;

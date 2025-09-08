@@ -101,7 +101,7 @@ void nox_AppendName (PNOXCOM pJxCom)
 
 	if (*pJxCom->pNameIx > sizeof(pJxCom->StartName)) {
 		nox_SetMessage( "Name to long at (%d:%d)", pJxCom->LineCount, pJxCom->ColCount);
-		pJxCom->State = XML_EXIT_ERROR;
+		pJxCom->State = nox_EXIT_ERROR;
 		return;
 	}
 	//Still a valid name 
@@ -147,19 +147,19 @@ void nox_AppendName (PNOXCOM pJxCom)
 		|| pJxCom->pNodeWorkRoot->Name == NULL) {
 			nox_SetMessage( "No end for start tag <%s> at (%d:%d)" ,
 				pJxCom->pName , pJxCom->LineCount, pJxCom->ColCount);
-			pJxCom->State = XML_EXIT_ERROR;
+			pJxCom->State = nox_EXIT_ERROR;
 			return;
 		} 
 		if (astrIcmp(pJxCom->pName , pJxCom->pNodeWorkRoot->Name) != 0) {
 			nox_SetMessage( "Invalid end tag </%s> for start tag <%s> at (%d:%d)" ,
 				pJxCom->pName , pJxCom->pNodeWorkRoot->Name, pJxCom->LineCount, pJxCom->ColCount);
-			pJxCom->State = XML_EXIT_ERROR;
+			pJxCom->State = nox_EXIT_ERROR;
 			return;
 		}
 		pJxCom->pNodeWorkRoot = pJxCom->pNodeWorkRoot->pNodeParent;
 		pJxCom->Level--;
 	}
-	pJxCom->State  = XML_ATTR_NAME;
+	pJxCom->State  = nox_ATTR_NAME;
 	pJxCom->DataIx = 0;
 	pJxCom->pAttr  = &pNode->pAttrList;
 	nox_CheckEnd(pJxCom);
@@ -206,7 +206,7 @@ static void nox_AttrAppendName  (PNOXCOM pJxCom)
 
 	pJxCom->DataIx=0;
 	pJxCom->Data[0]='\0';
-	pJxCom->State = XML_ATTR_VALUE;
+	pJxCom->State = nox_ATTR_VALUE;
 	nox_CheckEnd(pJxCom);
 }
 // ---------------------------------------------------------------------------
@@ -220,7 +220,7 @@ void nox_CopyCdata (PNOXCOM pJxCom)
 
 	nox_SkipChars(pJxCom , sizeof("<![CDATA[") -2) ; // omit the zero terminator
 	p = nox_GetChar(pJxCom);
-	while (! amemiBeginsWith(p , BRABRAGT  ) &&  pJxCom->State != XML_EXIT) {  // the "]]>"
+	while (! amemiBeginsWith(p , BRABRAGT  ) &&  pJxCom->State != nox_EXIT) {  // the "]]>"
 		CheckBufSize(pJxCom);
 		pJxCom->Data[pJxCom->DataIx++] = *p;
 		p = nox_GetChar(pJxCom);
@@ -257,7 +257,7 @@ void nox_AppendData (PNOXCOM pJxCom)
 		if (lookahead == SLASH
 		||  lookahead == EXCLMARK
 		||  lookahead > BLANK      ) {
-			pJxCom->State = XML_DETERMIN_TAG_TYPE;
+			pJxCom->State = nox_DETERMIN_TAG_TYPE;
 			if (pJxCom->pName == pJxCom->StartName) {
 				if (pJxCom->DataIx > 0) {
 					pJxCom->pNodeWorkRoot->Value = memAlloc (pJxCom->DataIx + 1) ;
@@ -297,14 +297,14 @@ static void nox_AttrAppendValue  (PNOXCOM pJxCom)
 			pAttr =  *pJxCom->pAttr;
 			if (pAttr==NULL) {
 				nox_SetMessage( "Invalid attribute termination at (%d:%d)", pJxCom->LineCount, pJxCom->ColCount);
-				pJxCom->State = XML_EXIT_ERROR;
+				pJxCom->State = nox_EXIT_ERROR;
 				return;
 			}
 			pAttr->Value = memAlloc (pJxCom->DataIx + 1) ;
 			nox_XmlDecode(pAttr->Value   , pJxCom->Data , pJxCom->DataIx + 1);
 		}
 		pJxCom->DataIx = 0;
-		pJxCom->State = XML_ATTR_NAME;
+		pJxCom->State = nox_ATTR_NAME;
 		pJxCom->pAttr = & ((*pJxCom->pAttr)->pAttrSibling);
 		if (pJxCom->StartLine != pJxCom->LineCount) {
 			pJxCom->pNodeWorkRoot->newlineInAttrList = TRUE;
@@ -329,13 +329,13 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 		p = nox_GetChar(pJxCom);
 		c = *p;
 		switch (pJxCom->State) {
-			case XML_FIND_START_TOKEN:
+			case nox_FIND_START_TOKEN:
 				if (c == LT ) {
-					pJxCom->State = XML_DETERMIN_TAG_TYPE;
+					pJxCom->State = nox_DETERMIN_TAG_TYPE;
 				}
 				break;
 
-			case XML_DETERMIN_TAG_TYPE:
+			case nox_DETERMIN_TAG_TYPE:
 
 	            #pragma convert(1252)
 				if (amemiBeginsWith(p , REMARK  )) {  // the "!--"
@@ -345,22 +345,22 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 						if (commentIx < COMMENT_SIZE -1) {
 							pJxCom->Comment[commentIx++] = *p;
 						}
-					} while (! amemiBeginsWith (p , ENDREMARK ) && pJxCom->State != XML_EXIT);  // EndRemark "-->"
+					} while (! amemiBeginsWith (p , ENDREMARK ) && pJxCom->State != nox_EXIT);  // EndRemark "-->"
 		            #pragma convert(0)
 					pJxCom->Comment[commentIx-1] = '\0';
-					pJxCom->State = XML_FIND_END_TOKEN;
+					pJxCom->State = nox_FIND_END_TOKEN;
 				} else if (amemiBeginsWith(p , DOCTYPE  )) {  // the "!DOCTYPE"
-					pJxCom->State = XML_FIND_END_TOKEN;
+					pJxCom->State = nox_FIND_END_TOKEN;
 				} else if (c == QUESTION) {  // the ?
-					pJxCom->State = XML_FIND_END_TOKEN;
+					pJxCom->State = nox_FIND_END_TOKEN;
 				} else if (c == SLASH) {   //  the /
-					pJxCom->State = XML_BUILD_NAME;
+					pJxCom->State = nox_BUILD_NAME;
 					pJxCom->pNameIx = &pJxCom->EndNameIx;
 					pJxCom->pName   = pJxCom->EndName;
 					*pJxCom->pNameIx = 0;
 
 				} else {
-					pJxCom->State = XML_BUILD_NAME;
+					pJxCom->State = nox_BUILD_NAME;
 					pJxCom->pNameIx = &pJxCom->StartNameIx;
 					pJxCom->pName   = pJxCom->StartName;
 					*pJxCom->pNameIx = 0;
@@ -368,29 +368,29 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 				}
 				break;
 
-			case XML_BUILD_NAME:
+			case nox_BUILD_NAME:
 				nox_AppendName (pJxCom);
 				break;
 
-			case XML_ATTR_NAME:
+			case nox_ATTR_NAME:
 				nox_AttrAppendName(pJxCom);
 				break;
 
-			case XML_ATTR_VALUE:
+			case nox_ATTR_VALUE:
 				nox_AttrAppendValue(pJxCom);
 				break;
 
-			case XML_COLLECT_DATA:
+			case nox_COLLECT_DATA:
 				nox_AppendData (pJxCom);
 				break;
 
-			case XML_FIND_END_TOKEN:
+			case nox_FIND_END_TOKEN:
 				if (c == GT ) {
-					pJxCom->State = XML_FIND_START_TOKEN;
+					pJxCom->State = nox_FIND_START_TOKEN;
 				}
 				break;
 
-			case XML_EXIT:
+			case nox_EXIT:
 				if (debug) {
 					nox_Dump(pJxCom->pNodeRoot);
 				}
@@ -401,12 +401,12 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
 				if (pJxCom->Level == 0) {
 					return false;
 				} else {
-					pJxCom->State = XML_EXIT_ERROR;
+					pJxCom->State = nox_EXIT_ERROR;
 					nox_SetMessage( "Unexpected end of inputstream");
 					return true;
 				}
 
-			case XML_EXIT_ERROR:
+			case nox_EXIT_ERROR:
 				memFree(&pJxCom->Data);
 				return true;
 		}

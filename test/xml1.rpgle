@@ -17,24 +17,24 @@
         End-Pi;
 
         Result = '';
-        pXml = xml_ParseFile('./test/documents/XmlSample1.xml');
+        pXml = nox_ParseFile('./test/documents/XmlSample1.xml');
 
-        if Xml_Error(pXml) ;
-           pResult = xml_Message(pXml);
+        if nox_Error(pXml) ;
+           pResult = nox_Message(pXml);
 
         else;
-           pElem = xml_locate(pXml:'/MyRoot/MyElement');
+           pElem = nox_locate(pXml:'/MyRoot/MyElement');
            dow (pElem <> *NULL);
-              MyElem   = xml_GetElemValue (pElem : 'N/A');
-              MyString = xml_GetAttr      (pElem : 'MyAttribute1' : 'N/A');
+              MyElem   = nox_GetElemValue (pElem : 'N/A');
+              MyString = nox_GetAttr      (pElem : 'MyAttribute1' : 'N/A');
 
               Result += MyElem + MyString;
 
-              pElem = xml_GetElemNext(pElem);
+              pElem = nox_GetElemNext(pElem);
            enddo;
         endif;
 
-        xml_delete(pXml);
+        nox_delete(pXml);
 
         pResult = Result;
 

@@ -114,7 +114,7 @@ PUCHAR nox_GetChar(PNOXCOM pJxCom)
 	}
 	*/
 
-	if (pJxCom->State == XML_EXIT_ERROR) {
+	if (pJxCom->State == nox_EXIT_ERROR) {
 		return (pJxCom->pFileBuf == NULL ? "" : pJxCom->pFileBuf );
 	}
 
@@ -125,7 +125,7 @@ PUCHAR nox_GetChar(PNOXCOM pJxCom)
 	}
 
 	if (*pJxCom->pFileBuf == '\0') {
-		pJxCom->State = XML_EXIT;
+		pJxCom->State = nox_EXIT;
 	}
 	if (*pJxCom->pFileBuf == CR) {
 		pJxCom->LineCount ++;
@@ -143,8 +143,8 @@ UCHAR SkipBlanks (PNOXCOM pJxCom)
 
 	for(;;) {
 		c  = *nox_GetChar(pJxCom);
-		if ( pJxCom->State == XML_EXIT
-		||   pJxCom->State == XML_EXIT_ERROR ) {
+		if ( pJxCom->State == nox_EXIT
+		||   pJxCom->State == nox_EXIT_ERROR ) {
 			return '\0';
 		}
 		if (c > BLANK) {
@@ -167,7 +167,7 @@ void CheckBufSize(PNOXCOM pJxCom)
 void nox_CheckEnd(PNOXCOM pJxCom)
 {
 	if (*pJxCom->pFileBuf == GT) {
-		pJxCom->State = XML_COLLECT_DATA;
+		pJxCom->State = nox_COLLECT_DATA;
 		if (skipBlanks) {
 			SkipBlanks(pJxCom);
 		}
@@ -178,7 +178,7 @@ void nox_CheckEnd(PNOXCOM pJxCom)
 	if (memBeginsWith (pJxCom->pFileBuf ,SLASHGT))  {  // Check for short form   />
 		pJxCom->pNodeWorkRoot = pJxCom->pNodeWorkRoot->pNodeParent;
 		pJxCom->Level --;
-		pJxCom->State = XML_FIND_START_TOKEN;
+		pJxCom->State = nox_FIND_START_TOKEN;
 	}
 }
 
@@ -208,7 +208,7 @@ int readBlock(PNOXCOM pJxCom , PUCHAR buf, int size)
 			pJxCom->Iconv = OpenXlate(InputCcsid  , OutputCcsid);
 			len = xlate(pJxCom, buf, temp , rlen);
 			if (len == -1) { // Still invalid char .. don't what to do !!!
-			  pJxCom->State == XML_EXIT_ERROR;
+			  pJxCom->State == nox_EXIT_ERROR;
 			  memFree (&temp);
 			  return 0;
 			}

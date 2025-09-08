@@ -13,10 +13,8 @@
     // addlible NOXDBUTF8 
     // call 
     // ------------------------------------------------------------- 
-
-    Ctl-Opt BndDir('NOXDBUTF8') dftactgrp(*NO) ACTGRP('QILE'); 
-    Ctl-Opt CCSID(*CHAR:*UTF8) ; //  CCSID(*EXACT) ; // CCSID(*CHAR:*JOBRUN) ; // CCSID(*CHAR:*UTF8);
-
+    Ctl-Opt BndDir('NOXDBUTF8') CCSID(*CHAR:*UTF8); 
+    Ctl-Opt dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt:*nounref) ALWNULL(*USRCTL); 
     /include qrpgleref,noxDbUtf8
 
     dcl-s id           int(10);
@@ -67,7 +65,7 @@
     nox_setBool(pCustomer:'isNice'     : (10 > 1)); // Logical expression
  
     // Just to see the progress:
-    nox_WriteJsonStmf(pCustomer : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer.json' : 1208 : *OFF);    
+    nox_WriteJsonStmf(pCustomer : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer.json' : UTF8_BOM : *OFF);    
     debug = nox_asJsonText(pCustomer);
 
     // Step 1.a: alternativ - you can also make it with the object builder:
@@ -86,7 +84,7 @@
     ); 
 
     // Just to see the progress:
-    nox_WriteJsonStmf(pCustomer2 : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer2.json' : 1208 : *OFF);    
+    nox_WriteJsonStmf(pCustomer2 : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer2.json' : UTF8_BOM : *OFF);    
     debug = nox_asJsonText(pCustomer);
 
     // Step 2: Build an array with customers
@@ -146,7 +144,7 @@
 
     // and save it to disk:
     // You can use UTF8_BOM if you need the BOM-siganture
-    nox_WriteJsonStmf(pTopFive : '/prj/noxDbUtf8/testout/ex01Tutorial.json' : 1208 : *OFF);    
+    nox_WriteJsonStmf(pTopFive : '/prj/noxDbUtf8/testout/ex01Tutorial.json' : UTF8_BOM : *OFF);    
 
     // Now what do we need to clean up:
     // pCustList? yes 

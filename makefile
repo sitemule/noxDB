@@ -64,6 +64,15 @@ CC = $(eval FILEEXT = $(call UC,$(subst .,,$(suffix $@)))) \
 	$(eval FLAGS   = $(FILEEXT)_FLAGS) \
 	$(eval INCLUDE = $(FILEEXT)_INCLUDE) \
 	@compile.py --stmf="$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" --flags="$($(FLAGS))" --include="$($(INCLUDE))"
+
+ifeq ($(GIT_SHORT),)
+GIT_SHORT := $(shell git rev-parse --short HEAD)
+endif
+
+ifeq ($(GIT_HASH),)
+GIT_HASH := $(shell git rev-parse --verify HEAD)
+endif
+
 #-----------------------------------------------------------
 
 # Dependency list ---  list all
@@ -72,7 +81,7 @@ SOURCE  := $(shell find src -name "*.cpp" -o -name "*.c" -o -name "*.clle" )
 
 
 
-all:  $(BIN_LIB).lib link hdr $(EXTERNALS) $(SOURCE) noxDbUtf8.srvpgm noxDbUtf8.bnddir
+all:  $(BIN_LIB).lib link githash hdr $(EXTERNALS) $(SOURCE) noxDbUtf8.bnddir noxDbUtf8.srvpgm 
 
 
 %.lib:
@@ -90,9 +99,14 @@ link:
 $(EXTERNALS) $(SOURCE): FORCE
 	$(CC)
 
+githash:
+	touch src/githash.c
+	-echo "// CMD:CRTCMOD" > src/githash.c
+	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(GIT_SHORT) (hash: $(GIT_HASH) ) build: $(TS)\")" >> src/githash.c
+
 noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/csv.c src/xmlparser.c \
 						src/jsonparser.c src/jsonserial.c src/xmlserial.c src/tostream.c src/reader.c \
-						src/iterator.c src/http.c src/generic.c src/trace.clle src/datagen.c\
+						src/iterator.c src/http.c src/generic.c src/trace.clle src/datagen.c src/githash.c \
 						ext/src/memUtil.c ext/src/parms.c ext/src/sndpgmmsg.c ext/src/stream.c ext/src/timestamp.c \
 						ext/src/trycatch.c \
 						ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c 
@@ -124,7 +138,7 @@ all:
 
 .PHONY: update
 update: 
-	-system -q "UPDSRVPGM ($(BIN_LIB)/NOXDBUTF8) MODULE(*ALL)"
+	-system -q "UPDSRVPGM ($(BIN_LIB)/NOXDBUTF8) MODULE($(BIN_LIB)/$(OBJ))"
 
 cleanup:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL)     OBJTYPE(*MODULE)"

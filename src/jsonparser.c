@@ -128,7 +128,7 @@ TOK getTok(PNOXCOM pJxCom)
 
 	for(;;) {
 		start = nox_GetChar(pJxCom);
-		if (pJxCom->State == XML_EXIT || pJxCom->State == XML_EXIT_ERROR) {
+		if (pJxCom->State == nox_EXIT || pJxCom->State == nox_EXIT_ERROR) {
 			tok.isEof = TRUE;
 			return tok;
 		}
@@ -214,7 +214,7 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 	TOK t;
 
 
-	if (pJxCom->State == XML_EXIT_ERROR) return TRUE;
+	if (pJxCom->State == nox_EXIT_ERROR) return TRUE;
 	if (pCurNode->lineNo == 0) pCurNode->lineNo = pJxCom->LineCount;
 
 	switch(state) {
@@ -233,7 +233,7 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 			} else if (t.data == NULL) {
 				nox_SetMessage( "Invalid token %s or no data when parsing an object at (%d:%d) token number: %d"
 											,c2s(t.token), pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo);
-				pJxCom->State = XML_EXIT_ERROR;
+				pJxCom->State = nox_EXIT_ERROR;
 				return TRUE;
 			} else if (state == ROOT) {
 				nox_setRootNode( pCurNode, t);
@@ -256,7 +256,7 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 				if (key.isEof) {
 					nox_SetMessage( "Invalid end of stream when parsing an object at (%d:%d) token number: %d"
 												, pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo);
-					pJxCom->State = XML_EXIT_ERROR;
+					pJxCom->State = nox_EXIT_ERROR;
 					return TRUE;
 				}
 
@@ -268,14 +268,14 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 				if (sep.isEof) {
 					nox_SetMessage( "Invalid end of stream at (%d:%d) token number: %d. Was expecting an :"
 												, pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo);
-					pJxCom->State = XML_EXIT_ERROR;
+					pJxCom->State = nox_EXIT_ERROR;
 					memFree (&key.data);
 					return TRUE;
 				}
 				if (sep.token != COLON)  {
 					nox_SetMessage( "Invalid token at (%d:%d) token number: %d. Was expecting an :' but got a %s near %s"
 												, pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo , c2s(sep.token), sep.data );
-					pJxCom->State = XML_EXIT_ERROR;
+					pJxCom->State = nox_EXIT_ERROR;
 					memFree (&key.data);
 					memFree (&sep.data);
 					return TRUE;
@@ -289,7 +289,7 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 				if (sep.isEof) {
 					nox_SetMessage( "Invalid end of stream at (%d:%d) token number: %d. Was expecting an sepeator or end of object"
 												, pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo);
-					pJxCom->State = XML_EXIT_ERROR;
+					pJxCom->State = nox_EXIT_ERROR;
 					return TRUE;
 				}
 				if (sep.token == CUREND) { // The }
@@ -299,7 +299,7 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 				if (sep.token != COMMA)  {
 					nox_SetMessage( "Invalid token at (%d:%d) token number: %d. Was expecting an ',' but got a %s near %s"
 												, pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo, c2s(sep.token), sep.data );
-					pJxCom->State = XML_EXIT_ERROR;
+					pJxCom->State = nox_EXIT_ERROR;
 					memFree (&sep.data);
 					return TRUE;
 				}
@@ -320,7 +320,7 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 				if (key.isEof) {
 					nox_SetMessage( "Invalid end of stream when parsing an array at (%d:%d) token number: %d "
 												, pJxCom->LineCount, pJxCom->ColCount,pJxCom->tokenNo);
-					pJxCom->State = XML_EXIT_ERROR;
+					pJxCom->State = nox_EXIT_ERROR;
 					return TRUE;
 				}
 				if (key.token == BRAEND) {
@@ -331,7 +331,7 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 					UCHAR w [256];
 					nox_SetMessage( "Invalid token at (%d:%d) token number: %d. Was expecting an ',' but got a %s near %s"
 												, pJxCom->LineCount, pJxCom->ColCount, pJxCom->tokenNo, c2s(key.token), stra2e(w,key.data) );
-					pJxCom->State = XML_EXIT_ERROR;
+					pJxCom->State = nox_EXIT_ERROR;
 					memFree (&key.data);
 					return TRUE;
 				}
@@ -344,14 +344,14 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 BOOL nox_ParseJson(PNOXCOM pJxCom)
 {
 	CheckBufSize(pJxCom);
-	pJxCom->State = XML_FIND_START_TOKEN;
+	pJxCom->State = nox_FIND_START_TOKEN;
 	nox_ParseJsonNode (pJxCom , ROOT, NULL , pJxCom->pNodeRoot );
 
 	if (pJxCom->UseIconv) iconv_close(pJxCom->Iconv );
 	memFree(&pJxCom->Data);
 	//fcloseAndSetNull(&pJxCom->File);
 
-	return (pJxCom->State == XML_EXIT_ERROR);
+	return (pJxCom->State == nox_EXIT_ERROR);
 
 }
 

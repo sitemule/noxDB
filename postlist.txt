@@ -1,19 +1,19 @@
-Command > CRTCPPMOD SRCSTMF('src/initialize.cpp') MODULE(NOXDBUTF8/initialize) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) DBGVIEW(*ALL) TGTRLS(V7R3M0) OPTION(*EVENTF) OUTPUT(*PRINT) INCDIR('/QIBM/include' 'include' 'ext/include') <
- 5770WDS V7R3M0  160422   IBM ILE C++ compiler    initialize.cpp                     DKSRV206    07-09-25 00:26:04 Page           1
+Command > CRTCMOD SRCSTMF('ext/src/strUtil.c') MODULE(NOXDBUTF8/strUtil) OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) DBGVIEW(*ALL) TGTRLS(V7R3M0) OPTION(*EVENTF) OUTPUT(*PRINT) INCDIR('/QIBM/include' 'include' 'ext/include') <
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page           1
                                                  * * * * *   P R O L O G   * * * * *
-  Module  . . . . . . . . . . . . :   INITIALIZE
+  Module  . . . . . . . . . . . . :   STRUTIL
     Library . . . . . . . . . . . :      NOXDBUTF8
-  Source stream file  . . . . . . :   src/initialize.cpp
+  Source stream file  . . . . . . :   ext/src/strUtil.c
   Text description  . . . . . . . :
   Output options:
     Output file . . . . . . . . . :   *PRINT
     Title . . . . . . . . . . . . :   *BLANK
     Subtitle  . . . . . . . . . . :   *BLANK
   Compiler options  . . . . . . . :   *NOFULL  *SHOWSRC  *NOSHOWSYS  *NOSHOWUSR  *NOSHOWINC  *NOEXPMAC
-                                      *LONGLONG  *NOBITSIGN  *NORTTI  *NOXREF  *NOXREFREF
-                                      *EVENTF  *LOGMSG  *NOSTDLOGMSG  *NOSYSINCPATH  *STDINC  *NOINCDIRFIRST  *GEN
+                                      *NOSECLVL  *SHOWSKP  *DIGRAPH  *NOAGR  *NOSTRUCREF  *NOXREF  *NOXREFREF
+                                      *EVENTF  *LOGMSG  *NOSTDLOGMSG  *NOSYSINCPATH  *STDINC  *NOINCDIRFIRST  *GEN  *NOPPONLY
   Checkout options  . . . . . . . :   *NOCOND  *NOEFFECT  *NOGENERAL  *NOPARM  *NOPORT  *NOREACH  *NOTRUNC  *NOUNUSED
-                                      *NOGOTO  *NOPPTRACE  *NOLANG  *NOCLASS  *NOTEMP
+                                      *NOGOTO  *NOINIT  *NOCONST  *NOENUM  *NOPPCHECK  *NOPPTRACE  *NOEXTERN
   Optimization  . . . . . . . . . :   10
   Inline options:
     Inliner . . . . . . . . . . . :   *OFF
@@ -27,7 +27,7 @@ Command > CRTCPPMOD SRCSTMF('src/initialize.cpp') MODULE(NOXDBUTF8/initialize) O
   Define names  . . . . . . . . . :   *NONE
   Language level  . . . . . . . . :   *EXTENDED
   Alias . . . . . . . . . . . . . :   *ANSI
-  System interface options  . . . :   *IFSIO
+  System interface options  . . . :   *IFSIO  *NOASYNCSIGNAL
   Locale object type  . . . . . . :   *LOCALE
   Message flagging level  . . . . :   0
   Compiler messages:
@@ -42,76 +42,1109 @@ Command > CRTCPPMOD SRCSTMF('src/initialize.cpp') MODULE(NOXDBUTF8/initialize) O
   Teraspace options . . . . . . . :   *YES  *NOTSIFC
   Storage model . . . . . . . . . :   *INHERIT
   Data model  . . . . . . . . . . :   *P128
-  Run time binding  . . . . . . . :   *DEFAULT
   Preprocessor generation options :   *NONE
   Include directory . . . . . . . :   /QIBM/include
                                       include
- 5770WDS V7R3M0  160422   IBM ILE C++ compiler    initialize.cpp                     DKSRV206    07-09-25 00:26:04 Page           2
                                       ext/include
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page           2
   Pack structure  . . . . . . . . :   *NATURAL
   Enum size . . . . . . . . . . . :   *INT
   Dependency information  . . . . :   *NONE
   Default char type . . . . . . . :   *UNSIGNED
-  Template options  . . . . . . . :
-    Temporary include directory . :   *NONE
-    Maximum generated headers . . :   1
-    Template validity checking  . :   *NO
-  Template Registry . . . . . . . :   *NONE
-  Weak Template Definitions . . . :   *YES
   Compiler services option  . . . :   *BLANK
   Licensed internal code options  :   *BLANK
   Target CCSID  . . . . . . . . . :   *SOURCE
   Decimal float round mode  . . . :   *HALFEVEN
-  Last change . . . . . . . . . . :   07-09-25 00:17:09
+  Last change . . . . . . . . . . :   08-09-25 01:21:45
   Source description  . . . . . . :
-  Compiler  . . . . . . . . . . . :   IBM ILE C++ compiler
+  Compiler  . . . . . . . . . . . :   IBM ILE C compiler
                                           * * * * *   E N D   O F   P R O L O G   * * * * *
- 5770WDS V7R3M0  160422   IBM ILE C++ compiler    initialize.cpp                     DKSRV206    07-09-25 00:26:04 Page           3
- ***** SOURCE SECTION *****
- FILENO   LINE   STMT
-      0      1        | // CMD:CRTCPPMOD
-      0      2        |
-      0      3        | #include <cstdlib>
-      0      4        | //extern "C" void nox_setDelimitersByCcsid (int);
-      0      5        | extern "C" void nox_sqlDisconnect (void *);
-      0      6        |
-      0      7        |
-      0      8        | class Entry_Exit
-      0      9        | {
-      0     10        |     public:
-      0     11        |     int m_nEntry;
-      0     12        |     int m_nExit;
-      0     13        |
-      0     14        |     // Construction
-      0     15        |     public:
-      0     16        |         Entry_Exit(void);   // standard constructor
-      0     17        |         ~Entry_Exit(void);
-      0     18        | };
-      0     19        |
-      0     20        |     Entry_Exit::Entry_Exit(void) {
-      0     21        |         //nox_setDelimitersByCcsid (0);
-      0     22      1 |         m_nEntry = 0;
-      0     23      2 |     }
-      0     24        |
-      0     25      3 |     Entry_Exit::~Entry_Exit() {
-      0     26      1 |         nox_sqlDisconnect(NULL);
-      0     27      2 |         m_nExit = 0;
-      0     28      4 |     }
-      0     29        |
-      0     30        |
-      0     31        | static  Entry_Exit  My_Entry_Exit;
- 5770WDS V7R3M0  160422   IBM ILE C++ compiler    initialize.cpp                     DKSRV206    07-09-25 00:26:04 Page           4
- ***** FILE TABLE SECTION *****
-     0  =  src/initialize.cpp
-     1  =  /QIBM/include/std/cstdlib
-     2  =  /QIBM/include/stdlib.h
-     3  =  /QIBM/include/mallocinfo.h
-     4  =  /QIBM/include/p_stdlib.h
-     5  =  /QIBM/include/yvals.h
- 5770WDS V7R3M0  160422   IBM ILE C++ compiler    initialize.cpp                     DKSRV206    07-09-25 00:26:04 Page           5
- ***** COMPILATION EPILOGUE SECTION *****
- TOTAL   INFORMATIONAL  WARNING       ERROR     SEVERE    UNRECOVERABLE
-                (00)      (10)        (20)       (30)         (40)
-     0           0         0           0          0            0
- Compilation succeeded for file src/initialize.cpp.
- Module INITIALIZE was created in library NOXDBUTF8 on 07-09-25 at 00:26:04.
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page           3
+                                                 * * * * *   S O U R C E   * * * * *
+  LINE  STMT                                                                                                       SEQNBR INCNO
+              *...+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9........
+     1       |// CMD:CRTCMOD                                                                                    |      1
+     2       |/* ------------------------------------------------------------- */                               |      2
+     3       |/* Date  . . . . : 14.12.2005                                    */                               |      3
+     4       |/* Design  . . . : Niels Liisberg                                */                               |      4
+     5       |/* Function  . . : Base utilies                                  */                               |      5
+     6       |/*                                                               */                               |      6
+     7       |/* By     Date       PTF     Description                         */                               |      7
+     8       |/* NL     09.03.2005         New program                         */                               |      8
+     9       |/* ------------------------------------------------------------- */                               |      9
+    10       |#include <stdio.h>                                                                                |     10
+    11       |#include <stdlib.h>                                                                               |     11
+    12       |#include <string.h>                                                                               |     12
+    13       |#include <stdarg.h>                                                                               |     13
+    14       |#include <ctype.h>                                                                                |     14
+    15       |#include <decimal.h>                                                                              |     15
+    16       |#include <mih/milckcom.h>     /* Lock types           */                                          |     16
+    17       |#include <mih/locksl.h>       /* LOCKSL instruction   */                                          |     17
+    18       |#include <mih/unlocksl.h>     /* UNLOCKSL instruction */                                          |     18
+    19       |#include <mih/setspfp.h>                                                                          |     19
+    20       |#include <mih/setsppfp.h>                                                                         |     20
+    21       |                                                                                                  |     21
+    22       |#include "ostypes.h"                                                                              |     22
+    23       |#include "varchar.h"                                                                              |     23
+    24       |#include "strUtil.h"                                                                              |     24
+    25       |#include "e2aa2e.h"                                                                               |     25
+    26       |                                                                                                  |     26
+    27       |                                                                                                  |     27
+    28       |/* ------------------------------------------------------------- *\                               |     28
+    29       |   copy a string and return number of bytes copied                                                |     29
+    30       |\* ------------------------------------------------------------- */                               |     30
+    31       |int cpy  (PUCHAR out , PUCHAR in)                                                                 |     31
+    32       |{                                                                                                 |     32
+    33     1 |   int l = strlen(in);                                                                            |     33
+    34     2 |   memcpy (out , in , l+1);                                                                       |     34
+    35     3 |   return (l);                                                                                    |     35
+    36       |}                                                                                                 |     36
+    37       |/* ------------------------------------------------------------- *\                               |     37
+    38       |   strIcmp  is stricmp in ccsid 277                                                               |     38
+    39       |\* ------------------------------------------------------------- */                               |     39
+    40       |int strIcmp (PUCHAR s1, PUCHAR s2)                                                                |     40
+    41       |{                                                                                                 |     41
+    42     1 |    int c =0;                                                                                     |     42
+    43     2 |    do {                                                                                          |     43
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page           4
+    44     3 |      c = toUpper(*(s1++)) - toUpper(*(s2++));                                                    |     44
+    45     4 |    } while (c == 0 && *s1 && *s2);                                                               |     45
+    46       |                                                                                                  |     46
+    47     5 |    return c;                                                                                     |     47
+    48       |}                                                                                                 |     48
+    49       |/* ------------------------------------------------------------- *\                               |     49
+    50       |   strIcmp  is stricmp in ascii                                                                   |     50
+    51       |\* ------------------------------------------------------------- */                               |     51
+    52       |int astrIcmp (PUCHAR s1, PUCHAR s2)                                                               |     52
+    53       |{                                                                                                 |     53
+    54     1 |    int c =0;                                                                                     |     54
+    55     2 |    do {                                                                                          |     55
+    56     3 |      c = atoUpper(*(s1++)) - atoUpper(*(s2++));                                                  |     56
+    57     4 |    } while (c == 0 && *s1 && *s2);                                                               |     57
+    58       |                                                                                                  |     58
+    59     5 |    return c;                                                                                     |     59
+    60       |}                                                                                                 |     60
+    61       |PUCHAR aCamelCase (PUCHAR out , PUCHAR in)                                                        |     61
+    62       |{                                                                                                 |     62
+    63     1 |   PUCHAR ret = out;                                                                              |     63
+    64     2 |   BOOL upperNext = false;                                                                        |     64
+    65       |                                                                                                  |     65
+    66     3 |   for (;*in;in++) {                                                                              |     66
+    67     4 |      if (*in == '_') {                                                                           |     67
+    68     5 |         upperNext = true;                                                                        |     68
+    69       |      } else {                                                                                    |     69
+    70     6 |         if (upperNext) {                                                                         |     70
+    71     7 |            *(out++) = atoUpper(*in);                                                             |     71
+    72     8 |            upperNext = false;                                                                    |     72
+    73       |         } else {                                                                                 |     73
+    74     9 |            *(out++) = atoLower (*in);                                                            |     74
+    75       |         }                                                                                        |     75
+    76       |      }                                                                                           |     76
+    77       |   }                                                                                              |     77
+    78    12 |   *(out) = '\0';                                                                                 |     78
+    79    13 |   return ret;                                                                                    |     79
+    80       |}                                                                                                 |     80
+    81       |                                                                                                  |     81
+    82       |/* ------------------------------------------------------------- *\                               |     82
+    83       |   memIcmp  is memIcmp in ccsid 277                                                               |     83
+    84       |\* ------------------------------------------------------------- */                               |     84
+    85       |int memIcmp (PUCHAR s1, PUCHAR s2 , int len)                                                      |     85
+    86       |{                                                                                                 |     86
+    87     1 |    int c =0;                                                                                     |     87
+    88     2 |    while (len-- > 0 && c==0) {                                                                   |     88
+    89     3 |      c = toUpper(*(s1++)) - toUpper(*(s2++));                                                    |     89
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page           5
+    90       |    }                                                                                             |     90
+    91     4 |    return c;                                                                                     |     91
+    92       |}                                                                                                 |     92
+    93       |/* ------------------------------------------------------------- *\                               |     93
+    94       |   memmem                                                                                         |     94
+    95       |\* ------------------------------------------------------------- */                               |     95
+    96       |PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen,                                              |     96
+    97       |                       PUCHAR needle , ULONG needleLen)                                           |     97
+    98       |{                                                                                                 |     98
+    99     1 |    PUCHAR p = heystack;                                                                          |     99
+   100     2 |    PUCHAR end = heystack + haystackLen;                                                          |    100
+   101     3 |    while (p < end) {                                                                             |    101
+   102       |        if (*p == *needle                                                                         |    102
+   103     4 |        &&   0 == memcmp ( p , needle , needleLen)) {                                             |    103
+   104     5 |            return p;                                                                             |    104
+   105       |        }                                                                                         |    105
+   106     6 |        p++;                                                                                      |    106
+   107       |    }                                                                                             |    107
+   108     7 |    return NULL;                                                                                  |    108
+   109       |}                                                                                                 |    109
+   110       |                                                                                                  |    110
+   111       |/* ------------------------------------------------------------- *\                               |    111
+   112       |   toUpper and toLower in ccsid 277                                                               |    112
+   113       |\* ------------------------------------------------------------- */                               |    113
+   114       |UCHAR toUpper(UCHAR c)                                                                            |    114
+   115       |{                                                                                                 |    115
+   116     1 |   switch(c) {                                                                                    |    116
+   117     2 |      case 'æ' : return 'Æ';                                                                      |    117
+   118     3 |      case 'ø' : return 'Ø';                                                                      |    118
+   119     4 |      case 'å' : return 'Å';                                                                      |    119
+   120     5 |      default  : return toupper(c);                                                               |    120
+   121       |   }                                                                                              |    121
+   122       |}                                                                                                 |    122
+   123       |UCHAR toLower(UCHAR c)                                                                            |    123
+   124       |{                                                                                                 |    124
+   125     1 |   switch(c) {                                                                                    |    125
+   126     2 |      case 'Æ' : return 'æ';                                                                      |    126
+   127     3 |      case 'Ø' : return 'ø';                                                                      |    127
+   128     4 |      case 'Å' : return 'å';                                                                      |    128
+   129     5 |      default  : return tolower(c);                                                               |    129
+   130       |   }                                                                                              |    130
+   131       |}                                                                                                 |    131
+   132       |/* ------------------------------------------------------------- */                               |    132
+   133       |UCHAR atoUpper (UCHAR c)                                                                          |    133
+   134       |{                                                                                                 |    134
+   135       |#pragma convert(1252)                                                                             |    135
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page           6
+   136     1 |   if (c >= 'a' && c <= 'z') return c - ( 'a' - 'A');                                             |    136
+   137     3 |   return c;                                                                                      |    137
+   138       |#pragma convert(0)                                                                                |    138
+   139       |}                                                                                                 |    139
+   140       |/* ------------------------------------------------------------- *\                               |    140
+   141       |\* ------------------------------------------------------------- */                               |    141
+   142       |UCHAR atoLower (UCHAR c)                                                                          |    142
+   143       |{                                                                                                 |    143
+   144       |#pragma convert(1252)                                                                             |    144
+   145     1 |   if (c >= 'A' && c <= 'Z') return c + ( 'a' - 'A');                                             |    145
+   146     3 |   return c;                                                                                      |    146
+   147       |#pragma convert(0)                                                                                |    147
+   148       |}                                                                                                 |    148
+   149       |/* ------------------------------------------------------------- *\                               |    149
+   150       |   strIstr is strstr that ignores the case                                                        |    150
+   151       |   is trturns the pointer to "key" with in base                                                   |    151
+   152       |\* ------------------------------------------------------------- */                               |    152
+   153       |PUCHAR strIstr(PUCHAR base, PUCHAR key )                                                          |    153
+   154       |{                                                                                                 |    154
+   155     1 |   UCHAR k = toUpper(key[0]) ;                                                                    |    155
+   156     2 |   SHORT keylen = strlen (key);                                                                   |    156
+   157       |                                                                                                  |    157
+   158     3 |   while (*base) {                                                                                |    158
+   159     4 |     if  (toUpper(*base) == k) {                                                                  |    159
+   160     5 |        if (memIcmp (base , key , keylen) == 0) {  /* Found !! */                                 |    160
+   161     6 |           return base;                                                                           |    161
+   162       |        }                                                                                         |    162
+   163       |     }                                                                                            |    163
+   164     7 |     base ++;                                                                                     |    164
+   165       |   }                                                                                              |    165
+   166     8 |   return NULL;                                                                                   |    166
+   167       |}                                                                                                 |    167
+   168       |/* ------------------------------------------------------------- *\                               |    168
+   169       |   astrIstr is strstr that ignores the case in ascii                                              |    169
+   170       |   is trturns the pointer to "key" with in base                                                   |    170
+   171       |\* ------------------------------------------------------------- */                               |    171
+   172       |PUCHAR astrIstr(PUCHAR base, PUCHAR key )                                                         |    172
+   173       |{                                                                                                 |    173
+   174     1 |   UCHAR k = atoUpper(key[0]) ;                                                                   |    174
+   175     2 |   SHORT keylen = strlen (key);                                                                   |    175
+   176       |                                                                                                  |    176
+   177     3 |   while (*base) {                                                                                |    177
+   178     4 |     if  (atoUpper(*base) == k) {                                                                 |    178
+   179     5 |        if (amemIcmp (base , key , keylen) == 0) {  /* Found !! */                                |    179
+   180     6 |           return base;                                                                           |    180
+   181       |        }                                                                                         |    181
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page           7
+   182       |     }                                                                                            |    182
+   183     7 |     base ++;                                                                                     |    183
+   184       |   }                                                                                              |    184
+   185     8 |   return NULL;                                                                                   |    185
+   186       |}                                                                                                 |    186
+   187       |                                                                                                  |    187
+   188       |/* ------------------------------------------------------------- *\                               |    188
+   189       |   strchrreplace returns a string, where chars are replaced one by one if byte match              |    189
+   190       |\* ------------------------------------------------------------- */                               |    190
+   191       |PUCHAR strchrreplace(PUCHAR out , PUCHAR in , PUCHAR from , PUCHAR to )                           |    191
+   192       |{                                                                                                 |    192
+   193     1 |   PUCHAR pf, pt, res = out;                                                                      |    193
+   194       |                                                                                                  |    194
+   195     2 |   for (;*in; in++, out++) {                                                                      |    195
+   196     3 |     *out = *in;                                                                                  |    196
+   197     4 |     for   (pf=from, pt=to ;*pf;pf++, pt++)  {                                                    |    197
+   198     5 |       if (*in == *pf) {                                                                          |    198
+   199     6 |         *out = *pt;                                                                              |    199
+   200     7 |         break;                                                                                   |    200
+   201       |       }                                                                                          |    201
+   202       |     }                                                                                            |    202
+   203       |   }                                                                                              |    203
+   204    12 |   *out = '\0';                                                                                   |    204
+   205    13 |   return res;                                                                                    |    205
+   206       |}                                                                                                 |    206
+   207       |/* ------------------------------------------------------------- *\                               |    207
+   208       |   memstrreplace returns new lengt of the buffer where replaced with a string                     |    208
+   209       |\* ------------------------------------------------------------- */                               |    209
+   210       |LONG  memstrreplace(PUCHAR buf , LONG len , PUCHAR from , PUCHAR to )                             |    210
+   211       |{                                                                                                 |    211
+   212     1 |   PUCHAR in , out = buf, inbuf, end;                                                             |    212
+   213     2 |   int lFrom = strlen(from), lTo = strlen(to);                                                    |    213
+   214       |                                                                                                  |    214
+   215     4 |   in = inbuf = malloc(len);                                                                      |    215
+   216     5 |   memcpy(in, buf, len);                                                                          |    216
+   217     6 |   end = in + len;                                                                                |    217
+   218       |                                                                                                  |    218
+   219     7 |   while (in<end) {                                                                               |    219
+   220       |     if (*in == *from                                                                             |    220
+   221     8 |     &&  memcmp (in , from  , lFrom) ==0) {                                                       |    221
+   222     9 |       memcpy(out , to , lTo);                                                                    |    222
+   223    10 |       out += lTo;                                                                                |    223
+   224    11 |       in += lFrom;                                                                               |    224
+   225       |     } else {                                                                                     |    225
+   226    12 |       *(out++) = *(in++);                                                                        |    226
+   227       |     }                                                                                            |    227
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page           8
+   228       |   }                                                                                              |    228
+   229    13 |   free(inbuf);                                                                                   |    229
+   230    14 |   return out - buf;                                                                              |    230
+   231       |}                                                                                                 |    231
+   232       |/* ------------------------------------------------------------- *\                               |    232
+   233       |   "memstr" returns a pointer to the first occurrence of a substring within another string.       |    233
+   234       |                                                                                                  |    234
+   235       |   base: points to the string to be scanned.                                                      |    235
+   236       |   key: points to the (sub)string to scan for. This string should end in the usual '\0'.          |    236
+   237       |   len:  is the length of "base".                                                                 |    237
+   238       |   returns:                                                                                       |    238
+   239       |   points to the first occurrence of the substring in the given string. If the substring is not f\|    239
+   239       |ound, this will be a nu                                                                           |    239
+   240       |   ll pointer.                                                                                    |    240
+   241       |\* ------------------------------------------------------------- */                               |    241
+   242       |PUCHAR memstr(PUCHAR base, PUCHAR key, LONG len )                                                 |    242
+   243       |{                                                                                                 |    243
+   244     1 |   UCHAR k = key[0] ;                                                                             |    244
+   245     2 |   SHORT keylen = strlen (key);                                                                   |    245
+   246       |                                                                                                  |    246
+   247     3 |   while (len>0) {                                                                                |    247
+   248     4 |     if  (*base == k) {                                                                           |    248
+   249     5 |        if (memcmp (base , key , keylen) == 0) {  /* Found !! */                                  |    249
+   250     6 |           return base;                                                                           |    250
+   251       |        }                                                                                         |    251
+   252       |     }                                                                                            |    252
+   253     7 |     base ++;                                                                                     |    253
+   254     8 |     len --;                                                                                      |    254
+   255       |   }                                                                                              |    255
+   256     9 |   return NULL;                                                                                   |    256
+   257       |}                                                                                                 |    257
+   258       |PUCHAR memIstr(PUCHAR base, PUCHAR key, LONG len )                                                |    258
+   259       |{                                                                                                 |    259
+   260     1 |   UCHAR k = toUpper(key[0]) ;                                                                    |    260
+   261     2 |   SHORT keylen = strlen (key);                                                                   |    261
+   262       |                                                                                                  |    262
+   263     3 |   while (len>0) {                                                                                |    263
+   264     4 |     if  (toUpper(*base) == k) {                                                                  |    264
+   265     5 |        if (memIcmp (base , key , keylen) == 0) {  /* Found !! */                                 |    265
+   266     6 |           return base;                                                                           |    266
+   267       |        }                                                                                         |    267
+   268       |     }                                                                                            |    268
+   269     7 |     base ++;                                                                                     |    269
+   270     8 |     len --;                                                                                      |    270
+   271       |   }                                                                                              |    271
+   272     9 |   return NULL;                                                                                   |    272
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page           9
+   273       |}                                                                                                 |    273
+   274       |SHORT amemIcmp (PUCHAR m1 , PUCHAR m2 , LONG len)                                                 |    274
+   275       |{                                                                                                 |    275
+   276     1 |   while (len) {                                                                                  |    276
+   277     2 |     UCHAR c1 = atoUpper(*m1);                                                                    |    277
+   278     3 |     UCHAR c2 = atoUpper(*m2);                                                                    |    278
+   279     4 |     if (c1 > c2) return 1;                                                                       |    279
+   280     6 |     if (c1 < c2) return -1;                                                                      |    280
+   281     8 |     len --;                                                                                      |    281
+   282     9 |     m1++;m2++;                                                                                   |    282
+   283       |   }                                                                                              |    283
+   284    11 |   return 0;                                                                                      |    284
+   285       |}                                                                                                 |    285
+   286       |PUCHAR amemIstr(PUCHAR base, PUCHAR key, LONG len )                                               |    286
+   287       |{                                                                                                 |    287
+   288     1 |   SHORT keylen = strlen (key);                                                                   |    288
+   289     2 |   UCHAR k = atoUpper(key[0]);                                                                    |    289
+   290       |                                                                                                  |    290
+   291     3 |   while (len>0) {                                                                                |    291
+   292     4 |     if  (atoUpper(*base) == k) {                                                                 |    292
+   293     5 |       if (amemIcmp (base , key , keylen) == 0) {  /* Found !! */                                 |    293
+   294     6 |          return base;                                                                            |    294
+   295       |       }                                                                                          |    295
+   296       |     }                                                                                            |    296
+   297     7 |     base ++;                                                                                     |    297
+   298     8 |     len --;                                                                                      |    298
+   299       |   }                                                                                              |    299
+   300     9 |   return NULL;                                                                                   |    300
+   301       |}                                                                                                 |    301
+   302       |BOOL   memBeginsWith(PUCHAR base  ,PUCHAR key)                                                    |    302
+   303       |{                                                                                                 |    303
+   304     1 |   int l = strlen ( key);                                                                         |    304
+   305     2 |   return memcmp (base , key , l) == 0;                                                           |    305
+   306       |}                                                                                                 |    306
+   307       |BOOL   memiBeginsWith(PUCHAR base  ,PUCHAR key)                                                   |    307
+   308       |{                                                                                                 |    308
+   309     1 |   int l = strlen ( key);                                                                         |    309
+   310     2 |   return memIcmp (base , key , l) == 0;                                                          |    310
+   311       |}                                                                                                 |    311
+   312       |BOOL   amemiBeginsWith(PUCHAR base  ,PUCHAR key)                                                  |    312
+   313       |{                                                                                                 |    313
+   314     1 |   int l = strlen ( key);                                                                         |    314
+   315     2 |   return amemIcmp (base , key , l) == 0;                                                         |    315
+   316       |}                                                                                                 |    316
+   317       |                                                                                                  |    317
+   318       |/* ------------------------------------------------------------- *\                               |    318
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          10
+   319       |   firstnonblank returns pointer to the string > ' '                                              |    319
+   320       |\* ------------------------------------------------------------- */                               |    320
+   321       |PUCHAR firstnonblank(PUCHAR in)                                                                   |    321
+   322       |{                                                                                                 |    322
+   323       |// Find first non blank                                                                           |    323
+   324     1 |   for (;;){                                                                                      |    324
+   325     2 |      if (*in == '\0') return (in);                                                               |    325
+   326     4 |      if (*in > ' ')   return (in);                                                               |    326
+   327     6 |      in ++;                                                                                      |    327
+   328       |   }                                                                                              |    328
+   329       |}                                                                                                 |    329
+   330       |/* ------------------------------------------------------------- *\                               |    330
+   331       |   lastnonblank returns pointer to the last char > ' '                                            |    331
+   332       |\* ------------------------------------------------------------- */                               |    332
+   333       |PUCHAR lastnonblank(PUCHAR in)                                                                    |    333
+   334       |{                                                                                                 |    334
+   335       |   LONG   len;                                                                                    |    335
+   336     1 |   PUCHAR end = in + strlen(in);                                                                  |    336
+   337       |                                                                                                  |    337
+   338       |// Find last  non blank                                                                           |    338
+   339     2 |   while (end > in) {                                                                             |    339
+   340     3 |      if (*end  > ' ') return (end);                                                              |    340
+   341     5 |      end--;                                                                                      |    341
+   342       |   }                                                                                              |    342
+   343     6 |   return in;                                                                                     |    343
+   344       |}                                                                                                 |    344
+   345       |/* ------------------------------------------------------------- *\                               |    345
+   346       |   righttrim - just set string termination after the last non blank                               |    346
+   347       |\* ------------------------------------------------------------- */                               |    347
+   348       |PUCHAR righttrim(PUCHAR in)                                                                       |    348
+   349       |{                                                                                                 |    349
+   350     1 |  PUCHAR p = lastnonblank(in);                                                                    |    350
+   351     2 |  * (p+1) = '\0';                                                                                 |    351
+   352     3 |  return in;                                                                                      |    352
+   353       |}                                                                                                 |    353
+   354       |/* ------------------------------------------------------------- *\                               |    354
+   355       |   trim both                                                                                      |    355
+   356       |\* ------------------------------------------------------------- */                               |    356
+   357       |PUCHAR trim(PUCHAR in)                                                                            |    357
+   358       |{                                                                                                 |    358
+   359       |  PUCHAR out, end, begin, ret;                                                                    |    359
+   360     1 |  BOOL   docopy = false;                                                                          |    360
+   361     2 |  ret = begin = end = out = in;                                                                   |    361
+   362     3 |  while (*in) {                                                                                   |    362
+   363     4 |     if (*in > ' ') {                                                                             |    363
+   364     5 |        docopy = true;                                                                            |    364
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          11
+   365       |     }                                                                                            |    365
+   366     6 |     if (docopy) {                                                                                |    366
+   367     7 |       *(out++) = *in;                                                                            |    367
+   368     8 |       if (*in > ' ') end = out;  // Store that address just after the nonblank char              |    368
+   369       |     }                                                                                            |    369
+   370    10 |     in++;                                                                                        |    370
+   371       |  }                                                                                               |    371
+   372    11 |  *end = '\0';                                                                                    |    372
+   373    12 |  return ret;                                                                                     |    373
+   374       |}                                                                                                 |    374
+   375       |/* ------------------------------------------------------------- *\                               |    375
+   376       |   righttrimlen - start from length                                                               |    376
+   377       |\* ------------------------------------------------------------- */                               |    377
+   378       |PUCHAR righttrimlen(PUCHAR in , LONG size)                                                        |    378
+   379       |{                                                                                                 |    379
+   380     1 |  PUCHAR p = in + size -1 ;                                                                       |    380
+   381     2 |  for   (;p >= in && * p <= ' ' ; p--);                                                           |    381
+   382     6 |  * (p+1) = '\0';                                                                                 |    382
+   383     7 |  return in;                                                                                      |    383
+   384       |}                                                                                                 |    384
+   385       |/* ------------------------------------------------------------- *\                               |    385
+   386       |   righttrimlen - start from length                                                               |    386
+   387       |\* ------------------------------------------------------------- */                               |    387
+   388       |LONG lenrighttrimlen(PUCHAR in , LONG size)                                                       |    388
+   389       |{                                                                                                 |    389
+   390     1 |  PUCHAR p = in + size -1 ;                                                                       |    390
+   391     2 |  if (size <= 0) return 0;                                                                        |    391
+   392     4 |  for   (;p >= in && * p <= ' ' ; p--, size --);                                                  |    392
+   393     8 |  return size;                                                                                    |    393
+   394       |}                                                                                                 |    394
+   395       |/* ------------------------------------------------------------- *\                               |    395
+   396       |   lastnonblank returns pointer to the last char > ' '                                            |    396
+   397       |\* ------------------------------------------------------------- */                               |    397
+   398       |PUCHAR lastnonblankfrom(PUCHAR in, LONG from)                                                     |    398
+   399       |{                                                                                                 |    399
+   400     1 |   PUCHAR end = in;                                                                               |    400
+   401     2 |   PUCHAR p = in;                                                                                 |    401
+   402     3 |   while  (from --) {                                                                             |    402
+   403     4 |      if (*p  > ' ') {                                                                            |    403
+   404     5 |        end = p;                                                                                  |    404
+   405     6 |      } else if (*p == '\0') {                                                                    |    405
+   406     7 |        break;                                                                                    |    406
+   407       |      }                                                                                           |    407
+   408     8 |      p++;                                                                                        |    408
+   409       |   }                                                                                              |    409
+   410     9 |   return end;                                                                                    |    410
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          12
+   411       |}                                                                                                 |    411
+   412       |/* ------------------------------------------------------------- *\                               |    412
+   413       |   strtrimcpy copys and remows blanks before and after                                            |    413
+   414       |\* ------------------------------------------------------------- */                               |    414
+   415       |PUCHAR strtrimncpy(PUCHAR out , PUCHAR in , LONG maxlen)                                          |    415
+   416       |{                                                                                                 |    416
+   417     1 |   PUCHAR end = out;                                                                              |    417
+   418     2 |   PUCHAR ret = out;                                                                              |    418
+   419     3 |   BOOL   findfirst = TRUE;                                                                       |    419
+   420       |                                                                                                  |    420
+   421     4 |   for  (; maxlen > 0 ; maxlen --) {                                                              |    421
+   422     5 |      if (findfirst ) {                                                                           |    422
+   423     6 |         if (*in > ' ') {                                                                         |    423
+   424     7 |            findfirst = FALSE;                                                                    |    424
+   425       |         }                                                                                        |    425
+   426       |      }                                                                                           |    426
+   427     8 |      if (! findfirst) {                                                                          |    427
+   428     9 |        *out = *in;                                                                               |    428
+   429    10 |        if (*out > ' ') {                                                                         |    429
+   430    11 |          end = out + 1; // Where the zero termination will be                                    |    430
+   431       |        }                                                                                         |    431
+   432    12 |        out++;                                                                                    |    432
+   433       |      }                                                                                           |    433
+   434    13 |      in++;                                                                                       |    434
+   435       |   }                                                                                              |    435
+   436    16 |   *(end) = '\0';                                                                                 |    436
+   437    17 |   return ret;                                                                                    |    437
+   438       |}                                                                                                 |    438
+   439       |/* ------------------------------------------------------------- *\                               |    439
+   440       |   strtrimcpy copys and remows blanks before and after                                            |    440
+   441       |\* ------------------------------------------------------------- */                               |    441
+   442       |PUCHAR strtrimcpy(PUCHAR out , PUCHAR in)                                                         |    442
+   443       |{                                                                                                 |    443
+   444     1 |   PUCHAR end = out;                                                                              |    444
+   445     2 |   PUCHAR ret = out;                                                                              |    445
+   446     3 |   BOOL   findfirst = TRUE;                                                                       |    446
+   447     4 |   int maxlen = strlen(in);                                                                       |    447
+   448       |                                                                                                  |    448
+   449     5 |   for  (; maxlen > 0 ; maxlen --) {                                                              |    449
+   450     6 |      if (findfirst ) {                                                                           |    450
+   451     7 |         if (*in > ' ') {                                                                         |    451
+   452     8 |            findfirst = FALSE;                                                                    |    452
+   453       |         }                                                                                        |    453
+   454       |      }                                                                                           |    454
+   455     9 |      if (! findfirst) {                                                                          |    455
+   456    10 |        *out = *in;                                                                               |    456
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          13
+   457    11 |        if (*out > ' ') {                                                                         |    457
+   458    12 |          end = out + 1; // Where the zero termination will be                                    |    458
+   459       |        }                                                                                         |    459
+   460    13 |        out++;                                                                                    |    460
+   461       |      }                                                                                           |    461
+   462    14 |      in++;                                                                                       |    462
+   463       |   }                                                                                              |    463
+   464    17 |   *(end) = '\0';                                                                                 |    464
+   465    18 |   return ret;                                                                                    |    465
+   466       |}                                                                                                 |    466
+   467       |/* ------------------------------------------------------------- *\                               |    467
+   468       |   substr  copys and from and up to len                                                           |    468
+   469       |\* ------------------------------------------------------------- */                               |    469
+   470       |PUCHAR substr(PUCHAR out , PUCHAR in , LONG len)                                                  |    470
+   471       |{                                                                                                 |    471
+   472     1 |   if (len < 0) len =0;                                                                           |    472
+   473       |                                                                                                  |    473
+   474     3 |   if (in == NULL) {                                                                              |    474
+   475     4 |      out[0] = '\0';                                                                              |    475
+   476     5 |      return (out);                                                                               |    476
+   477       |   }                                                                                              |    477
+   478       |                                                                                                  |    478
+   479     6 |   if (out == NULL) {                                                                             |    479
+   480     7 |     system("DSPJOB OUTPUT(*PRINT) OPTION(*PGMSTK)");                                             |    480
+   481       |   }                                                                                              |    481
+   482       |                                                                                                  |    482
+   483     8 |   memcpy(out, in , len);                                                                         |    483
+   484     9 |   out[len] = '\0';                                                                               |    484
+   485    10 |   return (out);                                                                                  |    485
+   486       |}                                                                                                 |    486
+   487       |/* ------------------------------------------------------------- *\                               |    487
+   488       |   copys a subword from at list seperated by the delimiter list                                   |    488
+   489       |   wordindex start at 0                                                                           |    489
+   490       |\* ------------------------------------------------------------- */                               |    490
+   491       |PUCHAR subword (PUCHAR out , PUCHAR in , LONG ix, PUCHAR delimiters)                              |    491
+   492       |{                                                                                                 |    492
+   493     1 |   PUCHAR res = out;                                                                              |    493
+   494     2 |   PUCHAR pi  = in;                                                                               |    494
+   495     3 |   LONG cx  =0;                                                                                   |    495
+   496       |   PUCHAR p;                                                                                      |    496
+   497       |   LONG i;                                                                                        |    497
+   498       |                                                                                                  |    498
+   499     4 |   *out = '\0';                                                                                   |    499
+   500     5 |   if (*in == '\0' ) return res; // Not found                                                     |    500
+   501       |                                                                                                  |    501
+   502       |   // Find the first occurens                                                                     |    502
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          14
+   503     7 |   for (; *in > '\0' && cx <ix; in++) {                                                           |    503
+   504     8 |      p = strchr(delimiters , *in);                                                               |    504
+   505     9 |      if (p) cx ++;                                                                               |    505
+   506       |   }                                                                                              |    506
+   507    13 |   if (cx != ix) return res; // Not found                                                         |    507
+   508       |                                                                                                  |    508
+   509       |   // Find the first occurens                                                                     |    509
+   510    15 |   while(*in > '\0') {                                                                            |    510
+   511    16 |      p = strchr(delimiters , *in);                                                               |    511
+   512    17 |      if (p) break;                                                                               |    512
+   513    19 |      *(out++) = *(in++);                                                                         |    513
+   514       |   }                                                                                              |    514
+   515    20 |   *(out) = '\0';                                                                                 |    515
+   516    21 |   return res;                                                                                    |    516
+   517       |}                                                                                                 |    517
+   518       |/* ------------------------------------------------------------- */                               |    518
+   519       |LONG subwords (PUCHAR in , PUCHAR  delimiters)                                                    |    519
+   520       |{                                                                                                 |    520
+   521     1 |   LONG res =1;                                                                                   |    521
+   522       |   PUCHAR p;                                                                                      |    522
+   523       |                                                                                                  |    523
+   524     2 |   if (!*in) return 0;                                                                            |    524
+   525       |                                                                                                  |    525
+   526     4 |   for (; *in ; in++) {                                                                           |    526
+   527     5 |      p = strchr(delimiters , *in);                                                               |    527
+   528     6 |      if (p) res++;                                                                               |    528
+   529       |   }                                                                                              |    529
+   530    10 |   return res;                                                                                    |    530
+   531       |}                                                                                                 |    531
+   532       |/* ------------------------------------------------------------- */                               |    532
+   533       |/* -----------------------------------------------------------------                              |    533
+   534       |   Copy a C-string to fixed char according to its length                                          |    534
+   535       |   padding it right with blanks                                                                   |    535
+   536       |   ----------------------------------------------------------------- */                           |    536
+   537       |PUCHAR padncpy(PUCHAR dst, PUCHAR src, SHORT dstlen)                                              |    537
+   538       |{                                                                                                 |    538
+   539     1 |   PUCHAR ret = dst;                                                                              |    539
+   540       |   SHORT i;                                                                                       |    540
+   541     2 |   for (i=0;i< dstlen ; i++) {                                                                    |    541
+   542     3 |      if (*src) {                                                                                 |    542
+   543     4 |         *dst = *src;                                                                             |    543
+   544     5 |         src++;                                                                                   |    544
+   545       |      } else {                                                                                    |    545
+   546     6 |         *dst = ' ';                                                                              |    546
+   547       |      }                                                                                           |    547
+   548     7 |      dst++;                                                                                      |    548
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          15
+   549       |   }                                                                                              |    549
+   550    10 |   return ret;                                                                                    |    550
+   551       |}                                                                                                 |    551
+   552       |/* -----------------------------------------------------------------                              |    552
+   553       |   ----------------------------------------------------------------- */                           |    553
+   554       |PUCHAR pad(PUCHAR s , LONG l)                                                                     |    554
+   555       |{                                                                                                 |    555
+   556     1 |  BOOL   dopad = FALSE;                                                                           |    556
+   557     2 |  PUCHAR r = s;                                                                                   |    557
+   558       |  LONG   i;                                                                                       |    558
+   559     3 |  for (i = 0; i< l; i++,s++) {                                                                    |    559
+   560     4 |    if (*s  < ' ') dopad = TRUE;                                                                  |    560
+   561     6 |    if (dopad) *s = ' ';                                                                          |    561
+   562       |                                                                                                  |    562
+   563       |  }                                                                                               |    563
+   564    10 |  return r;                                                                                       |    564
+   565       |}                                                                                                 |    565
+   566       |/* -----------------------------------------------------------------                              |    566
+   567       |   ----------------------------------------------------------------- */                           |    567
+   568       |PUCHAR strrighttrimcpy(PUCHAR dst, PUCHAR src)                                                    |    568
+   569       |{                                                                                                 |    569
+   570     1 |   PUCHAR end = dst;                                                                              |    570
+   571     2 |   PUCHAR ret = dst;                                                                              |    571
+   572       |   SHORT i;                                                                                       |    572
+   573     3 |   while (*src) {                                                                                 |    573
+   574     4 |      *dst = *src;                                                                                |    574
+   575     5 |      if (*dst > ' ') {                                                                           |    575
+   576     6 |        end = dst;                                                                                |    576
+   577       |      }                                                                                           |    577
+   578     7 |      dst ++;                                                                                     |    578
+   579     8 |      src ++;                                                                                     |    579
+   580       |   }                                                                                              |    580
+   581     9 |   *(end+1) = '\0';                                                                               |    581
+   582    10 |   return ret;                                                                                    |    582
+   583       |}                                                                                                 |    583
+   584       |/* -----------------------------------------------------------------                              |    584
+   585       |   ----------------------------------------------------------------- */                           |    585
+   586       |PUCHAR strrighttrimncpy(PUCHAR dst, PUCHAR src, LONG len)                                         |    586
+   587       |{                                                                                                 |    587
+   588     1 |   PUCHAR end = dst;                                                                              |    588
+   589     2 |   PUCHAR ret = dst;                                                                              |    589
+   590       |   SHORT i;                                                                                       |    590
+   591     3 |   while (*src && len-- > 0) {                                                                    |    591
+   592     4 |      *dst = *src;                                                                                |    592
+   593     5 |      if (*dst > ' ') {                                                                           |    593
+   594     6 |        end = dst;                                                                                |    594
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          16
+   595       |      }                                                                                           |    595
+   596     7 |      dst ++;                                                                                     |    596
+   597     8 |      src ++;                                                                                     |    597
+   598       |   }                                                                                              |    598
+   599     9 |   *(end+1) = '\0';                                                                               |    599
+   600    10 |   return ret;                                                                                    |    600
+   601       |}                                                                                                 |    601
+   602       |/* -----------------------------------------------------------------                              |    602
+   603       |   ----------------------------------------------------------------- */                           |    603
+   604       |PUCHAR str2upper (PUCHAR out, PUCHAR in )                                                         |    604
+   605       |{                                                                                                 |    605
+   606     1 |   PUCHAR r = out;                                                                                |    606
+   607     2 |   if (in) {                                                                                      |    607
+   608     3 |     while (*in ) {                                                                               |    608
+   609     4 |        *(r++)   = toUpper(*(in++));                                                              |    609
+   610       |     }                                                                                            |    610
+   611       |   }                                                                                              |    611
+   612     5 |   *r= '\0';                                                                                      |    612
+   613     6 |   return out;                                                                                    |    613
+   614       |}                                                                                                 |    614
+   615       |/* -----------------------------------------------------------------                              |    615
+   616       |   ----------------------------------------------------------------- */                           |    616
+   617       |PUCHAR astr2upper (PUCHAR out, PUCHAR in )                                                        |    617
+   618       |{                                                                                                 |    618
+   619     1 |   PUCHAR r = out;                                                                                |    619
+   620     2 |   if (in) {                                                                                      |    620
+   621     3 |     while (*in ) {                                                                               |    621
+   622     4 |        *(r++)   = atoUpper(*(in++));                                                             |    622
+   623       |     }                                                                                            |    623
+   624       |   }                                                                                              |    624
+   625     5 |   *r= '\0';                                                                                      |    625
+   626     6 |   return out;                                                                                    |    626
+   627       |}                                                                                                 |    627
+   628       |/* -----------------------------------------------------------------                              |    628
+   629       |   ----------------------------------------------------------------- */                           |    629
+   630       |PUCHAR str2lower (PUCHAR out, PUCHAR in )                                                         |    630
+   631       |{                                                                                                 |    631
+   632     1 |   PUCHAR r = out;                                                                                |    632
+   633     2 |   if (in) {                                                                                      |    633
+   634     3 |     while (*in ) {                                                                               |    634
+   635     4 |        *(r++)   = toLower(*(in++));                                                              |    635
+   636       |     }                                                                                            |    636
+   637       |   }                                                                                              |    637
+   638     5 |   *r= '\0';                                                                                      |    638
+   639     6 |   return out;                                                                                    |    639
+   640       |}                                                                                                 |    640
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          17
+   641       |/* -----------------------------------------------------------------                              |    641
+   642       |   ----------------------------------------------------------------- */                           |    642
+   643       |PUCHAR astr2lower (PUCHAR out, PUCHAR in )                                                        |    643
+   644       |{                                                                                                 |    644
+   645     1 |   PUCHAR r = out;                                                                                |    645
+   646     2 |   if (in) {                                                                                      |    646
+   647     3 |     while (*in ) {                                                                               |    647
+   648     4 |        *(r++)   = atoLower(*(in++));                                                             |    648
+   649       |     }                                                                                            |    649
+   650       |   }                                                                                              |    650
+   651     5 |   *r= '\0';                                                                                      |    651
+   652     6 |   return out;                                                                                    |    652
+   653       |}                                                                                                 |    653
+   654       |/* --------------------------------------------------------------------------- */                 |    654
+   655       |UCHAR hexchar2int (UCHAR c)                                                                       |    655
+   656       |{                                                                                                 |    656
+   657     1 |   if (c >= '0' && c <= '9') {                                                                    |    657
+   658     2 |     return (c - '0');                                                                            |    658
+   659       |   }                                                                                              |    659
+   660     3 |   if (c >= 'A' && c <= 'F') {                                                                    |    660
+   661     4 |     return (c - 'A' + 10);                                                                       |    661
+   662       |   }                                                                                              |    662
+   663     5 |   if (c >= 'a' && c <= 'f') {                                                                    |    663
+   664     6 |     return (c - 'a' + 10);                                                                       |    664
+   665       |   }                                                                                              |    665
+   666       |}                                                                                                 |    666
+   667       |PUCHAR binMem2Hex (PUCHAR out , PUCHAR in , LONG len)                                             |    667
+   668       |{                                                                                                 |    668
+   669     1 |   PUCHAR  res = out;                                                                             |    669
+   670     2 |   PUCHAR h = "0123456789ABCDEF";                                                                 |    670
+   671       |   UCHAR c;                                                                                       |    671
+   672       |   SHORT i;                                                                                       |    672
+   673       |                                                                                                  |    673
+   674     3 |   for (i=0; i < len  ; i++) {                                                                    |    674
+   675     4 |     c = in[i] ;                                                                                  |    675
+   676     5 |     *(res++) = h[c / 16];                                                                        |    676
+   677     6 |     *(res++) = h[c % 16];                                                                        |    677
+   678       |   }                                                                                              |    678
+   679     9 |    *(res++) = '\0';   // Can be a string                                                         |    679
+   680    10 |   return out;                                                                                    |    680
+   681       |}                                                                                                 |    681
+   682       |PUCHAR hex2BinMem (PUCHAR out , PUCHAR in , LONG len)                                             |    682
+   683       |{                                                                                                 |    683
+   684     1 |   PUCHAR  res = out;                                                                             |    684
+   685       |                                                                                                  |    685
+   686     2 |   while (len-- > 0) {                                                                            |    686
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          18
+   687     3 |     *(out++) = (16 * hexchar2int(*(in++)) + hexchar2int(*(in++)));                               |    687
+   688       |   }                                                                                              |    688
+   689     4 |   return res;                                                                                    |    689
+   690       |}                                                                                                 |    690
+   691       |/* --------------------------------------------------------------------------- */                 |    691
+   692       |ULONG hexstr2int (PUCHAR s)                                                                       |    692
+   693       |{                                                                                                 |    693
+   694     1 |   LONG res = 0;                                                                                  |    694
+   695     2 |   while (*s) {                                                                                   |    695
+   696     3 |      res = (res * 256) + (16 * hexchar2int(*(s++)) + hexchar2int(*(s++)));                       |    696
+   697       |   }                                                                                              |    697
+   698     4 |   return res;                                                                                    |    698
+   699       |}                                                                                                 |    699
+   700       |/* ------------------------------------------------------------- */                               |    700
+   701       |PUCHAR dec2str (PUCHAR str , FIXEDDEC Value)                                                      |    701
+   702       |{                                                                                                 |    702
+   703     1 | int len = sprintf(str , "%D(30,15)" , Value);                                                    |    703
+   704     2 | PUCHAR p = str + len -1 ;                                                                        |    704
+   705       |   PUCHAR t;                                                                                      |    705
+   706       | // int cutlen = 16; // remove last trailing zeroes. if none after the decimal point the also the\|    706
+   706       | secimal point                                                                                    |    706
+   707     3 | int cutlen = 14; // remove last trailing zeroes. Keep the last zero so it is still a decimal poi\|    707
+   707       |nt                                                                                                |    707
+   708       |                                                                                                  |    708
+   709       | // %D is determined by locale so we can have either  , or .                                      |    709
+   710       | // we always need .                                                                              |    710
+   711     4 | for(t=str; *t ; t++) {                                                                           |    711
+   712     5 |  if (*t == ',') {                                                                                |    712
+   713     6 |   *t = '.';                                                                                      |    713
+   714     7 |   break;                                                                                         |    714
+   715       |  }                                                                                               |    715
+   716       | }                                                                                                |    716
+   717       |                                                                                                  |    717
+   718    10 | while ((*p == '0' || *p == '.') && cutlen --) {                                                  |    718
+   719    11 |  *p = '\0';                                                                                      |    719
+   720    12 |  p--;                                                                                            |    720
+   721       | }                                                                                                |    721
+   722    13 |   return str;                                                                                    |    722
+   723       |}                                                                                                 |    723
+   724       |/* ------------------------------------------------------------- */                               |    724
+   725       |FIXEDDEC str2dec(PUCHAR str , UCHAR decPoint)                                                     |    725
+   726       |{                                                                                                 |    726
+   727       |   PUCHAR p;                                                                                      |    727
+   728     1 |   FIXEDDEC        Res   = 0D;                                                                    |    728
+   729     2 |   decimal(17,16)  Temp  = 0D;                                                                    |    729
+   730     3 |   decimal(17)     Decs  = 1D;                                                                    |    730
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          19
+   731     4 |   BOOL  DecFound = FALSE;                                                                        |    731
+   732     5 |   UCHAR c = '0';                                                                                 |    732
+   733     6 |   PUCHAR firstDigit = NULL;                                                                      |    733
+   734     7 |   PUCHAR lastDigit  = NULL;                                                                      |    734
+   735     8 |   int   Dec=0;                                                                                   |    735
+   736     9 |   int   Prec=0;                                                                                  |    736
+   737       |                                                                                                  |    737
+   738    10 |   for (p=str; (c = *p) > '\0' ; p ++) {                                                          |    738
+   739    11 |      if (c >= '0' && c <= '9' ) {                                                                |    739
+   740    12 |         if (!firstDigit) firstDigit = p;                                                         |    740
+   741    14 |         lastDigit = p;                                                                           |    741
+   742    15 |         if (DecFound) {                                                                          |    742
+   743    16 |           if (++Prec <= 15) {                                                                    |    743
+   744    17 |              Decs  *= 10D;                                                                       |    744
+   745    18 |              Temp = (c - '0');                                                                   |    745
+   746    19 |              Temp /= Decs;                                                                       |    746
+   747    20 |              Res += Temp;                                                                        |    747
+   748       |           }                                                                                      |    748
+   749       |         } else {                                                                                 |    749
+   750    21 |           if (Dec < 15) {                                                                        |    750
+   751    22 |             Res = Res * 10D + (c - '0');                                                         |    751
+   752    23 |             if (Res > 0D) Dec++;                                                                 |    752
+   753       |           }                                                                                      |    753
+   754       |         }                                                                                        |    754
+   755    25 |      } else if (c == decPoint) {                                                                 |    755
+   756    26 |         DecFound = TRUE;                                                                         |    756
+   757       |      }                                                                                           |    757
+   758       |   }                                                                                              |    758
+   759       |   if ((firstDigit > str && *(firstDigit-1) == '-')                                               |    759
+   760    29 |   ||  (lastDigit        && *(lastDigit+1)  == '-')) {                                            |    760
+   761    30 |      Res = - Res;                                                                                |    761
+   762       |   }                                                                                              |    762
+   763    31 |   return (Res );                                                                                 |    763
+   764       |}                                                                                                 |    764
+   765       |/* ------------------------------------------------------------- */                               |    765
+   766       |#pragma convert(1252)                                                                             |    766
+   767       |FIXEDDEC astr2dec(PUCHAR str , UCHAR decPoint)                                                    |    767
+   768       |{                                                                                                 |    768
+   769       |   PUCHAR p;                                                                                      |    769
+   770     1 |   FIXEDDEC        Res   = 0D;                                                                    |    770
+   771     2 |   decimal(17,16)  Temp  = 0D;                                                                    |    771
+   772     3 |   decimal(17)     Decs  = 1D;                                                                    |    772
+   773     4 |   BOOL  DecFound = FALSE;                                                                        |    773
+   774     5 |   UCHAR c = '0';                                                                                 |    774
+   775     6 |   PUCHAR firstDigit = NULL;                                                                      |    775
+   776     7 |   PUCHAR lastDigit  = NULL;                                                                      |    776
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          20
+   777     8 |   int   Dec=0;                                                                                   |    777
+   778     9 |   int   Prec=0;                                                                                  |    778
+   779       |                                                                                                  |    779
+   780    10 |   for (p=str; (c = *p) > '\0' ; p ++) {                                                          |    780
+   781    11 |      if (c >= '0' && c <= '9' ) {                                                                |    781
+   782    12 |         if (!firstDigit) firstDigit = p;                                                         |    782
+   783    14 |         lastDigit = p;                                                                           |    783
+   784    15 |         if (DecFound) {                                                                          |    784
+   785    16 |           if (++Prec <= 15) {                                                                    |    785
+   786    17 |              Decs  *= 10D;                                                                       |    786
+   787    18 |              Temp = (c - '0');                                                                   |    787
+   788    19 |              Temp /= Decs;                                                                       |    788
+   789    20 |              Res += Temp;                                                                        |    789
+   790       |           }                                                                                      |    790
+   791       |         } else {                                                                                 |    791
+   792    21 |           if (Dec < 15) {                                                                        |    792
+   793    22 |             Res = Res * 10D + (c - '0');                                                         |    793
+   794    23 |             if (Res > 0D) Dec++;                                                                 |    794
+   795       |           }                                                                                      |    795
+   796       |         }                                                                                        |    796
+   797    25 |      } else if (c == decPoint) {                                                                 |    797
+   798    26 |         DecFound = TRUE;                                                                         |    798
+   799       |      }                                                                                           |    799
+   800       |   }                                                                                              |    800
+   801       |   if ((firstDigit > str && *(firstDigit-1) == '-')                                               |    801
+   802    29 |   ||  (lastDigit        && *(lastDigit+1)  == '-')) {                                            |    802
+   803    30 |      Res = - Res;                                                                                |    803
+   804       |   }                                                                                              |    804
+   805    31 |   return (Res );                                                                                 |    805
+   806       |}                                                                                                 |    806
+   807       |#pragma convert(0)                                                                                |    807
+   808       |                                                                                                  |    808
+   809       |/* ------------------------------------------------------------- */                               |    809
+   810       |LONG packedMem2Int(PUCHAR buf, SHORT bytes)                                                       |    810
+   811       |{                                                                                                 |    811
+   812       |    SHORT i;                                                                                      |    812
+   813     1 |    LONG  res  = 0;                                                                               |    813
+   814     2 |    for(i=0;i<bytes-1; i++,buf++) {                                                               |    814
+   815     3 |       res = 10 * res + (*buf >> 4);                                                              |    815
+   816     4 |       res = 10 * res + (*buf & 0x0f);                                                            |    816
+   817       |    }                                                                                             |    817
+   818     7 |    res = 10 * res + (*buf >> 4);                                                                 |    818
+   819     8 |    if ((*buf & 0x0F) != 0x0F) {                                                                  |    819
+   820     9 |      res = - res;                                                                                |    820
+   821       |    }                                                                                             |    821
+   822    10 |    return res;                                                                                   |    822
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          21
+   823       |}                                                                                                 |    823
+   824       |/* ------------------------------------------------------------- */                               |    824
+   825       |#pragma convert(1252)                                                                             |    825
+   826       |void nox_strQuote (PLVARCHAR out, PLVARCHAR in)                                                   |    826
+   827       |{                                                                                                 |    827
+   828     1 |   PUCHAR os = out->String;                                                                       |    828
+   829     2 |   PUCHAR is = in->String;                                                                        |    829
+   830       |   int i;                                                                                         |    830
+   831       |                                                                                                  |    831
+   832     3 |   *os++ = '\'';                                                                                  |    832
+   833     4 |   for (i=0;i<in->Length;i++) {                                                                   |    833
+   834     5 |      if (*is == '\'') *os++ = '\'';                                                              |    834
+   835     7 |      *os++ = *is++;                                                                              |    835
+   836       |                                                                                                  |    836
+   837       |   }                                                                                              |    837
+   838    10 |   *os++ = '\'';                                                                                  |    838
+   839    11 |   *os++ = '\0';                                                                                  |    839
+   840    12 |   out->Length = os - out->String -1;                                                             |    840
+   841       |}                                                                                                 |    841
+   842       |#pragma convert(0)                                                                                |    842
+   843       |                                                                                                  |    843
+   844       |/* ------------------------------------------------------------- */                               |    844
+   845       |PUCHAR stripLeadingZeros(PUCHAR out, PUCHAR s)                                                    |    845
+   846       |{                                                                                                 |    846
+   847     1 |   PUCHAR p = s;                                                                                  |    847
+   848     2 |   BOOL   Neg = FALSE;                                                                            |    848
+   849       |                                                                                                  |    849
+   850     3 |   if (*p == '-') {                                                                               |    850
+   851     4 |     p++;                                                                                         |    851
+   852     5 |     Neg = TRUE;                                                                                  |    852
+   853       |   }                                                                                              |    853
+   854       |                                                                                                  |    854
+   855       |   // NULL returns 0. Also it could be a single '-' from the abowe                                |    855
+   856     6 |   if (*p == '\0') {                                                                              |    856
+   857     7 |      strcpy(out , "0");                                                                          |    857
+   858     8 |      return out;                                                                                 |    858
+   859       |   }                                                                                              |    859
+   860       |                                                                                                  |    860
+   861     9 |   while (*p == '0') {                                                                            |    861
+   862    10 |     p ++;                                                                                        |    862
+   863       |   }                                                                                              |    863
+   864    11 |   if (p > s && ! isdigit(*p)) p --;                                                              |    864
+   865       |                                                                                                  |    865
+   866    13 |   if (Neg) {                                                                                     |    866
+   867    14 |     p--;                                                                                         |    867
+   868    15 |     *p = '-';                                                                                    |    868
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          22
+   869       |   }                                                                                              |    869
+   870    16 |   strcpy(out , p);                                                                               |    870
+   871    17 |   return (out);                                                                                  |    871
+   872       |}                                                                                                 |    872
+   873       |/* ------------------------------------------------------------- */                               |    873
+   874       |PUCHAR fmtPacked(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint)                 |    874
+   875       |{                                                                                                 |    875
+   876       |   UCHAR  temp [64];                                                                              |    876
+   877     1 |   PUCHAR pOut = temp;                                                                            |    877
+   878     2 |   SHORT  ByteLen = len / 2 + 1;  /* Bytes required */                                            |    878
+   879     3 |   SHORT  HighNibbel = len % 2;                                                                   |    879
+   880       |   SHORT  j;                                                                                      |    880
+   881       |                                                                                                  |    881
+   882       |   // Negative when not xF in last lo nibble */                                                   |    882
+   883     4 |   if ((in[ByteLen-1] & 0x0F)  != 0x0F) {                                                         |    883
+   884     5 |      *pOut++ = '-';                                                                              |    884
+   885       |   }                                                                                              |    885
+   886     6 |   for (j=0;j<len;j++) {                                                                          |    886
+   887     7 |      if (j == (len - prec)) {                                                                    |    887
+   888     8 |         *pOut++ = decPoint;                                                                      |    888
+   889       |      }                                                                                           |    889
+   890     9 |      if (HighNibbel) {                                                                           |    890
+   891    10 |          *pOut++ = '0' + (*in >> 4);                                                             |    891
+   892    11 |          HighNibbel = FALSE;                                                                     |    892
+   893       |      } else {                                                                                    |    893
+   894    12 |          *pOut++ = '0' + (*in++ & 0x0f);                                                         |    894
+   895    13 |          HighNibbel = TRUE;                                                                      |    895
+   896       |      }                                                                                           |    896
+   897       |   }                                                                                              |    897
+   898    16 |   *pOut = '\0';                                                                                  |    898
+   899    17 |   return(stripLeadingZeros(out, temp));                                                          |    899
+   900       |}                                                                                                 |    900
+   901       |PUCHAR fmtZoned(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint)                  |    901
+   902       |{                                                                                                 |    902
+   903       |   UCHAR  temp [64];                                                                              |    903
+   904     1 |   PUCHAR pOut = temp;                                                                            |    904
+   905     2 |   SHORT  ByteLen = len ;  // Bytes required                                                      |    905
+   906       |   SHORT  j;                                                                                      |    906
+   907       |                                                                                                  |    907
+   908       |   // Negative when not xF in last lo nibble                                                      |    908
+   909     3 |   if ((in[ByteLen-1] & 0xF0)  != 0xF0) {                                                         |    909
+   910     4 |      *pOut++ = '-';                                                                              |    910
+   911       |   }                                                                                              |    911
+   912     5 |   for (j=0;j<len;j++) {                                                                          |    912
+   913     6 |      if (j == (len - prec)) {                                                                    |    913
+   914     7 |         *pOut++ = decPoint;                                                                      |    914
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          23
+   915       |      }                                                                                           |    915
+   916     8 |      *pOut++ = '0' + (*in++ & 0x0f);                                                             |    916
+   917       |   }                                                                                              |    917
+   918    11 |   *pOut = '\0';                                                                                  |    918
+   919    12 |   return(stripLeadingZeros(out , temp));                                                         |    919
+   920       |}                                                                                                 |    920
+   921       |// -------------------------------------------------------------                                  |    921
+   922       |/*                                                                                                |    922
+   923       |PUCHAR strDup(PUCHAR s)                                                                           |    923
+   924       |{                                                                                                 |    924
+   925       |    PUCHAR p;                                                                                     |    925
+   926       |    LONG len = strlen(s);                                                                         |    926
+   927       |    p = memAlloc (len);                                                                           |    927
+   928       |    return p;                                                                                     |    928
+   929       |}                                                                                                 |    929
+   930       |*/                                                                                                |    930
+   931       |/* ------------------------------------------------------------- */                               |    931
+   932       |LGL isOn (int boolExpr)                                                                           |    932
+   933       |{                                                                                                 |    933
+   934     1 |    return ( boolExpr ? ON : OFF);                                                                |    934
+   935       |}                                                                                                 |    935
+   936       |/* ------------------------------------------------------------- */                               |    936
+   937       |PUCHAR strlastchr(PUCHAR str , UCHAR c)                                                           |    937
+   938       |{                                                                                                 |    938
+   939     1 |     PUCHAR p, found = NULL;                                                                      |    939
+   940     2 |     while ( p = strchr(str , c )) {                                                              |    940
+   941     3 |        found = p;                                                                                |    941
+   942     4 |        str = p +1;                                                                               |    942
+   943       |     }                                                                                            |    943
+   944     5 |     return found;                                                                                |    944
+   945       |}                                                                                                 |    945
+   946       |PUCHAR blob2str  (PBLOB pb)                                                                       |    946
+   947       |{                                                                                                 |    947
+   948     1 |    pb->String[pb->Length] = '\0';                                                                |    948
+   949     2 |    return  pb->String;                                                                           |    949
+   950       |}                                                                                                 |    950
+   951       |/* ---------------------------------------------------------------------------------------- */    |    951
+   952       |static LONG _trimlen(PUCHAR str, UCHAR c)                                                         |    952
+   953       |{                                                                                                 |    953
+   954     1 |    PUCHAR end = str;                                                                             |    954
+   955     2 |    LONG l=0,len=0;                                                                               |    955
+   956     4 |    while (*end) {                                                                                |    956
+   957     5 |       l++;                                                                                       |    957
+   958     6 |       if (*end > c) {                                                                            |    958
+   959     7 |         len = l ;                                                                                |    959
+   960       |       }                                                                                          |    960
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          24
+   961     8 |       end++;                                                                                     |    961
+   962       |    }                                                                                             |    962
+   963     9 |    return len;                                                                                   |    963
+   964       |}                                                                                                 |    964
+   965       |LONG strTrimLen(PUCHAR str)                                                                       |    965
+   966       |{                                                                                                 |    966
+   967     1 |   return _trimlen(str, 0x40);                                                                    |    967
+   968       |}                                                                                                 |    968
+   969       |LONG astrTrimLen(PUCHAR str)                                                                      |    969
+   970       |{                                                                                                 |    970
+   971     1 |   return _trimlen( str, 0x20);                                                                   |    971
+   972       |}                                                                                                 |    972
+   973       |/* ------------------------------------------------------------- */                               |    973
+   974       |static PUCHAR _trim(PUCHAR s, UCHAR c)                                                            |    974
+   975       |{                                                                                                 |    975
+   976       | PUCHAR e;                                                                                        |    976
+   977     1 | for(e = s + strlen(s); e > s && *e <= c; e--);                                                   |    977
+   978     5 | *(e+1) = '\0';                                                                                   |    978
+   979     6 | return (s);                                                                                      |    979
+   980       |}                                                                                                 |    980
+   981       |/* ------------------------------------------------------------- */                               |    981
+   982       |PUCHAR strTrim(PUCHAR s)                                                                          |    982
+   983       |{                                                                                                 |    983
+   984     1 |   return _trim ( s , 0x40);                                                                      |    984
+   985       |}                                                                                                 |    985
+   986       |/* ------------------------------------------------------------- */                               |    986
+   987       |PUCHAR astrTrim(PUCHAR s)                                                                         |    987
+   988       |{                                                                                                 |    988
+   989     1 |   return _trim ( s , 0x20);                                                                      |    989
+   990       |}                                                                                                 |    990
+   991       |// ---------------------------------------------------------------------------                    |    991
+   992       |LONG asprintf (PUCHAR res, PUCHAR ctrlstr , ... )                                                 |    992
+   993       |{                                                                                                 |    993
+   994       | UCHAR eCtrlstr [32766];                                                                          |    994
+   995       |   LONG len;                                                                                      |    995
+   996       |   va_list arg_ptr;                                                                               |    996
+   997       |                                                                                                  |    997
+   998     1 |   stra2e (eCtrlstr , ctrlstr);                                                                   |    998
+   999       | // Build a temp string with the formated data  */                                                |    999
+  1000     2 | va_start(arg_ptr, eCtrlstr);                                                                     |   1000
+  1001     3 | len = vsprintf(res, eCtrlstr, arg_ptr);                                                          |   1001
+  1002     4 | va_end(arg_ptr);                                                                                 |   1002
+  1003     5 |   stre2a (res  , res );                                                                          |   1003
+  1004     6 |   return len;                                                                                    |   1004
+  1005       |}                                                                                                 |   1005
+  1006       |// ---------------------------------------------------------------------------                    |   1006
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          25
+  1007       |// real ascii version of atoi                                                                     |   1007
+  1008       |// ---------------------------------------------------------------------------                    |   1008
+  1009       |LONG a2i (PUCHAR s)                                                                               |   1009
+  1010       |{                                                                                                 |   1010
+  1011     1 |   LONG res = 0;                                                                                  |   1011
+  1012     2 |   BOOL sign = TRUE;                                                                              |   1012
+  1013     3 |   for (;*s;s++) {                                                                                |   1013
+  1014     4 |      if (*s == '-') sign = FALSE;                                                                |   1014
+  1015     6 |      if (*s >= '0' && *s <= '9') res = 10 * res + (*s - '0');;                                   |   1015
+  1016       |   }                                                                                              |   1016
+  1017       |                                                                                                  |   1017
+  1018    11 |   return (sign? res : -res);                                                                     |   1018
+  1019       |}                                                                                                 |   1019
+                                          * * * * *   E N D   O F   S O U R C E   * * * * *
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          26
+                                               * * * * *   I N C L U D E S   * * * * *
+ INCNBR  Include Name                     Last change        Actual Include Name
+     1   stdio.h                          04-10-15 09:42:48  /QIBM/include/stdio.h
+     2   ifs.h                            04-10-15 09:42:13  /QIBM/include/ifs.h
+     3   wctype.h                         04-10-15 09:41:55  /QIBM/include/wctype.h
+     4   qp0lstdi.h                       04-10-15 09:52:19  /QIBM/include/qp0lstdi.h
+     5   sys/types.h                      04-10-15 10:01:46  /QIBM/include/sys/types.h
+     6   string.h                         04-10-15 09:42:06  /QIBM/include/string.h
+     7   qlg.h                            04-10-15 09:51:29  /QIBM/include/qlg.h
+     8   qp0lscan.h                       04-10-15 10:00:32  /QIBM/include/qp0lscan.h
+     9   stdlib.h                         04-10-15 09:42:27  /QIBM/include/stdlib.h
+    10   mallocinfo.h                     04-10-15 09:42:01  /QIBM/include/mallocinfo.h
+    11   p_stdlib.h                       04-10-15 09:41:58  /QIBM/include/p_stdlib.h
+    12   stdarg.h                         04-10-15 09:42:28  /QIBM/include/stdarg.h
+    13   ctype.h                          04-10-15 09:42:06  /QIBM/include/ctype.h
+    14   p_ctype.h                        04-10-15 09:42:00  /QIBM/include/p_ctype.h
+    15   decimal.h                        04-10-15 09:42:11  /QIBM/include/decimal.h
+    16   mih/milckcom.h                   04-10-15 10:01:29  /QIBM/include/mih/milckcom.h
+    17   mih/micommon.h                   04-10-15 10:00:42  /QIBM/include/mih/micommon.h
+    18   pointer.h                        04-10-15 09:42:02  /QIBM/include/pointer.h
+    19   mih/miobjtyp.h                   04-10-15 10:02:16  /QIBM/include/mih/miobjtyp.h
+    20   mih/locksl.h                     04-10-15 10:00:50  /QIBM/include/mih/locksl.h
+    21   mih/unlocksl.h                   04-10-15 10:02:37  /QIBM/include/mih/unlocksl.h
+    22   mih/setspfp.h                    04-10-15 10:02:47  /QIBM/include/mih/setspfp.h
+    23   mih/micommon.h                   04-10-15 10:00:42  /QIBM/include/mih/micommon.h
+    24   mih/setsppfp.h                   04-10-15 10:02:17  /QIBM/include/mih/setsppfp.h
+    25   mih/micommon.h                   04-10-15 10:00:42  /QIBM/include/mih/micommon.h
+    26   ostypes.h                        06-12-18 23:20:34  /prj/noxDbUTF8/ext/include/ostypes.h
+    27   varchar.h                        21-11-18 23:22:55  /prj/noxDbUTF8/ext/include/varchar.h
+    28   strUtil.h                        07-09-25 19:28:11  /prj/noxDbUTF8/ext/include/strUtil.h
+    29   e2aa2e.h                         21-11-18 19:08:01  /prj/noxDbUTF8/ext/include/e2aa2e.h
+                                       * * * * *   E N D   O F   I N C L U D E S   * * * * *
+ 5770WDS V7R3M0  160422   IBM ILE C compiler      strUtil.c                          DKSRV206    08-09-25 15:03:54 Page          27
+                                        * * * * *   M E S S A G E   S U M M A R Y   * * * * *
+       Total      Informational(00)      Warning(10)      Error(20)      Severe Error(30)      Unrecoverable Error(40)
+         0              0                    0               0                  0                        0
+                                * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
+ Module STRUTIL was created in library NOXDBUTF8 on 08-09-25 at 15:03:54.
+                                    * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *
