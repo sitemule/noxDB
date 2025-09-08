@@ -11,7 +11,7 @@
 #define XMLPARSE_H
 
 #ifndef OCCURENS_TYPE
-#define OCCURENS_TYPE  
+#define OCCURENS_TYPE
 typedef enum {
 	OC_NONE = 0,
 	OC_NEXT_FOLLOWS = 1,
@@ -23,8 +23,8 @@ typedef decimal(30,15) FIXEDDEC, * PFIXEDDEC;
 
 /*
 #define UTF8CONST(a) (\
-#pragma convert(1252) \ 
-a \ 
+#pragma convert(1252) \
+a \
 #pragma convert(0)\
 )
 */
@@ -44,25 +44,25 @@ a \
 
 #define  APOS         0x27
 #define  QUOT         0x22
-#define  QUESTION     0x3f 
-#define  EQ           0x3d 
-#define  GT           0x3e 
+#define  QUESTION     0x3f
+#define  EQ           0x3d
+#define  GT           0x3e
 #define  LT           0x3c
-#define  UNDERSCORE   0x5f 
-#define  COLON        0x3a 
-#define  DOT          0x2e 
-#define  SLASH        0x2f 
-#define  EXCLMARK     0x21 
+#define  UNDERSCORE   0x5f
+#define  COLON        0x3a
+#define  DOT          0x2e
+#define  SLASH        0x2f
+#define  EXCLMARK     0x21
 #define  BACKSLASH    0x5c
-#define  MASTERSPACE  0x40 
-#define  BRABEG       0x5b 
-#define  BRAEND       0x5d 
-#define  CURBEG       0x7b 
-#define  CUREND       0x7d 
-#define  MINUS        0x2d 
-#define  BLANK        0x20 
-#define  AMP          0x26 
-#define  HASH         0x23 
+#define  MASTERSPACE  0x40
+#define  BRABEG       0x5b
+#define  BRAEND       0x5d
+#define  CURBEG       0x7b
+#define  CUREND       0x7d
+#define  MINUS        0x2d
+#define  BLANK        0x20
+#define  AMP          0x26
+#define  HASH         0x23
 #define  CR           0x0d
 #define  COMMA        0x2c
 #define  DELIMITERS   "/\\@[] .{}'\""
@@ -105,6 +105,8 @@ typedef enum {
 	CLONE_OLD           = 17,  // Was OBJLNK - Obsolete yes but maps to CLONE in appplication
 	CLONE               = 18,  // Obsolete ... NO
 	EVALUATE            = 19,  // Obsolete ??
+	NOX_POINTER 	     = 20,  // Internal objects
+	NOX_SUBGRAPH        = 21,  // Sub-graph, will be serialized but maintained elsewhere
 	OBJMOVE             = 2048,
 	// Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
 	// Note: "Merge options" are fit in here... from belowe
@@ -510,8 +512,8 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, BOOL useLocale);
 #define NOXSQLSTMT_MAX  32
 #endif
 
-#define NOXDB_FIRST_ROW 1 
-#define NOXDB_ALL_ROWS -1 
+#define NOXDB_FIRST_ROW 1
+#define NOXDB_ALL_ROWS -1
 
 typedef _Packed struct  {
 	 SQLHSTMT      hstmt;
@@ -573,7 +575,7 @@ typedef _Packed struct  {
 	 PNOXNODE      pOptions;
 	 BOOL          pOptionsCleanup;
 	 SQLOPTIONS    options;
-	 PXLATEDESC    pCd;
+	 iconv_t       iconv;
 	 UCHAR         sqlState[5];
 	 LONG          sqlCode;
 	 UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
@@ -598,7 +600,7 @@ typedef _Packed struct  {
 // BOOL          deleteOptions;
 	 PNOXCOL        cols;
 	 PNOXSQLCONNECT pCon;
-	 LONG           maxColSize;  
+	 LONG           maxColSize;
 
 } NOXSQL, * PNOXSQL;
 

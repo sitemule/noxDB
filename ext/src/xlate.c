@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- */
 /* Program . . . : XLATE                                         */
 /* Date  . . . . : 24.04.2008                                    */
@@ -48,10 +48,11 @@ iconv_t XlateOpen (int FromCCSID, int ToCCSID , int reportError)
    return QtqIconvOpen( &To, &From);
 }
 /* ------------------------------------------------------------- */
+/* *
 PXLATEDESC XlateXdOpen (int FromCCSID, int ToCCSID)
 {
    PXLATEDESC pXd = malloc(sizeof(XLATEDESC));
-  
+
    pXd->FromCCSID = FromCCSID ;
    pXd->ToCCSID   = ToCCSID;
 
@@ -64,27 +65,31 @@ PXLATEDESC XlateXdOpen (int FromCCSID, int ToCCSID)
    }
    return (pXd);  // Number of bytes converted
 }
+   */
 /* ------------------------------------------------------------- */
-LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen ) 
+LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen )
 {
    size_t inbytesleft = inLen;
    size_t outbytesleft =  LONG_MAX;
    PUCHAR pIn = in;
    PUCHAR pOut = out;
    size_t rc = iconv (cd, &pIn, &inbytesleft, &pOut, &outbytesleft);
-   
+
    return (rc < 0) ? -1: LONG_MAX - outbytesleft;
- 
-} 
+
+}
 
 /* ------------------------------------------------------------- */
+/*
 void XlateXdClose  (PXLATEDESC pXd)
 {
    if ( pXd == NULL) return;
    iconv_close (pXd->Iconv);
    free (pXd);
 }
+*/
 /* ------------------------------------------------------------- */
+/*
 ULONG XlateXdBuf(PXLATEDESC pXd, PUCHAR OutBuf, PUCHAR InBuf , ULONG Len)
 {
    PUCHAR pOutBuf;
@@ -114,17 +119,20 @@ ULONG XlateXdBuf(PXLATEDESC pXd, PUCHAR OutBuf, PUCHAR InBuf , ULONG Len)
    OutLen  = before - outbytesleft;
    return (OutLen);  // Number of bytes converted
 }
+   */
 /* ------------------------------------------------------------- */
+/*
 VARCHAR XlateXdStr (PXLATEDESC pXd, PVARCHAR In )
 {
    VARCHAR Result;
    Result.Length = XlateXdBuf(pXd ,Result.String , In->String , In->Length );
    return (Result);
 }
+*/
 /* ------------------------------------------------------------- */
 ULONG XlateBuf(PUCHAR OutBuf, PUCHAR InBuf , ULONG Len, int FromCCSID, int ToCCSID)
 {
-   PXLATEDESC pXd;
+   iconv_t iconv;
    ULONG OutLen;
 
    if (Len ==0 ) return 0;
@@ -134,11 +142,11 @@ ULONG XlateBuf(PUCHAR OutBuf, PUCHAR InBuf , ULONG Len, int FromCCSID, int ToCCS
       return Len;
    }
 
-   pXd = XlateXdOpen (FromCCSID, ToCCSID);
-   if  (!pXd) return -1;
+   iconv = XlateOpen (FromCCSID, ToCCSID, false);
+   if (iconv.return_value == -1) return -1;
 
-   OutLen = XlateXdBuf(pXd, OutBuf, InBuf , Len);
-   XlateXdClose  (pXd);
+   OutLen = XlateBuffer(iconv, OutBuf, InBuf , Len);
+   iconv_close (iconv);
 
    return (OutLen);  // Number of bytes converted
 }
@@ -158,6 +166,7 @@ PUCHAR Xlatestr (PUCHAR out, PUCHAR in, int FromCCSID, int ToCCSID)
    return out;
 }
 /* ------------------------------------------------------------- */
+/*
 PUCHAR XlateFromAnyAscii2ebcdic (PUCHAR outStr, PUCHAR inStr)
 {
   PXLATEDESC pXd;
@@ -181,7 +190,9 @@ PUCHAR XlateFromAnyAscii2ebcdic (PUCHAR outStr, PUCHAR inStr)
   outStr[xLen] = '\0';
   return outStr;
 }
+*/
 /* ------------------------------------------------------------- */
+/*
 LONG  XlateXdSprintf (PXLATEDESC pxd, PUCHAR out, PUCHAR Ctlstr,...)
 {
    va_list arg_ptr;
@@ -197,3 +208,4 @@ LONG  XlateXdSprintf (PXLATEDESC pxd, PUCHAR out, PUCHAR Ctlstr,...)
    len2 = XlateXdBuf(pxd , out , temp1  , len1);
    return len2;
 }
+   */

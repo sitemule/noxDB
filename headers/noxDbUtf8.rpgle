@@ -2032,6 +2032,11 @@ Dcl-PR nox_joblog extproc(*CWIDEN : 'nox_Joblog');
   textOrNode pointer value options(*string);
 End-PR;
 
+Dcl-PR nox_joblogUtf8 extproc(*CWIDEN : 'nox_JoblogVC');
+  textOrNode Like(UTF8_1K) const options(*varsize);
+End-PR;
+
+
 ///
 // mapix - map index to pointer
 //

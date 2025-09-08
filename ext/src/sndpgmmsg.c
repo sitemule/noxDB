@@ -5,8 +5,12 @@
 #include <stdarg.h>
 #include <string.h>
 #include "ostypes.h"
+#include "varchar.h"
 #include "sndpgmmsg.h"
 #include "apierr.h"
+#include "e2aa2e.h"
+#include "Xlate.h"
+
 void sndpgmmsg(PUCHAR Msgid,PUCHAR Msgf, PUCHAR Type ,PUCHAR Msgdta, ... )
 {
    APIERR apierr = { sizeof(APIERR), 0 ,  "" , ' ', ""};
@@ -35,9 +39,19 @@ void nox_Joblog(PUCHAR text , ... )
    va_start(arg_ptr,  text);
    len = vsprintf(temp, text, arg_ptr);
    va_end(arg_ptr);
-   QMHSNDPM ("CPF9898", QCPFMSG ,  temp , len , INFO , "joblog              " ,
+   QMHSNDPM ("CPF9898", QCPFMSG ,  temp , len , INFO , "nox_Joblog              " ,
              stackcount, msgkey , &apierr);
    if (apierr.avail) {
       printf ("Api error: %7s - %s" ,apierr.msgid, apierr.msgdta);
    }
 }
+// To avoid conversion error, we temporary use static ascii to 277, then to job
+void nox_JoblogVC(PLVARCHAR text)
+{
+   UCHAR temp [1024];
+   stra2e (temp  , plvc2str(text));
+   Xlatestr (temp, temp, 277, 0);
+	nox_Joblog  ( "%s" , temp);
+}
+
+

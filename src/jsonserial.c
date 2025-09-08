@@ -113,6 +113,7 @@ void checkParentRelation(PNOXNODE pNode , PNOXNODE pParent)
 	 }
 }
 /* --------------------------------------------------------------------------- */
+#pragma convert(1252)
 static void  jsonStreamPrintObject  (PNOXNODE pParent, PSTREAM pStream, SHORT level)
 {
 	PNOXNODE pNode;
@@ -133,7 +134,9 @@ static void  jsonStreamPrintObject  (PNOXNODE pParent, PSTREAM pStream, SHORT le
 	indent (pStream , level);
 	stream_putc (pStream, CUREND);
 }
+#pragma convert(0)
 /* --------------------------------------------------------------------------- */
+#pragma convert(1252)
 static void  jsonStreamPrintArray (PNOXNODE pParent, PSTREAM pStream, SHORT level)
 {
 	 PNOXNODE pNode;
@@ -151,6 +154,7 @@ static void  jsonStreamPrintArray (PNOXNODE pParent, PSTREAM pStream, SHORT leve
 	 indent (pStream , level);
 	 stream_putc (pStream, BRAEND);
 }
+#pragma convert(0)
 /* --------------------------------------------------------------------------- */
 #pragma convert(1252)
 static void jsonStreamPrintValue   (PNOXNODE pNode, PSTREAM pStream)
@@ -175,6 +179,18 @@ static void jsonStreamPrintValue   (PNOXNODE pNode, PSTREAM pStream)
 	}
 }
 #pragma convert(0)
+/* -- Experimental for issue90 ----------------------------------------------- */
+/* Transcode - analyse what node type it might be                              */
+/* XML Elements - if no children then a value else an object object            */
+/* --------------------------------------------------------------------------- */
+static void jsonStreamPrintTranscode (PNOXNODE pNode, PSTREAM pStream, SHORT level)
+{
+	if (pNode->pNodeChildHead) {
+		jsonStreamPrintObject  (pNode, pStream, level);
+	} else {
+		jsonStreamPrintValue   (pNode, pStream);
+	}
+}
 /* --------------------------------------------------------------------------- */
 /* Invalid node types a just jeft out                                          */
 /* --------------------------------------------------------------------------- */
@@ -193,6 +209,11 @@ static void  jsonStreamPrintNode (PNOXNODE pNode, PSTREAM pStream, SHORT level)
 		case POINTER_VALUE:
 			jsonStreamPrintValue   (pNode, pStream);
 			break;
+		case NOX_SUBGRAPH:
+			jsonStreamPrintNode   ((PNOXNODE) pNode->Value, pStream, level);
+			break;
+		default:
+			jsonStreamPrintTranscode (pNode, pStream, level);
 	 }
 }
 /* --------------------------------------------------------------------------- */
@@ -261,7 +282,7 @@ void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut,
 	UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
 	UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
 
-	// Negative values trigger bom codes
+	// Negative values trigger BOM codes
 	BOOL   makeBomCode  = Ccsid < 0;
 	Ccsid = Ccsid < 0  ? - Ccsid : Ccsid;
 

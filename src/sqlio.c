@@ -24,7 +24,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #include <recio.h>
 #include <errno.h>
 #include <limits.h>
-
+#include <QTQICONV.h>
 
 #include "ostypes.h"
 #include "varchar.h"
@@ -830,7 +830,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 								if ( * (PSHORT) (pInBuf + inbytesleft - 2) > 0x0020) break;
 							}
 						}
-						OutLen = XlateXdBuf  (pSQL->pCon->pCd, temp , pInBuf, inbytesleft);
+						OutLen = XlateBuffer  (pSQL->pCon->iconv, temp , pInBuf, inbytesleft);
 						temp[OutLen] = '\0';
 
 						nox_NodeInsert (pRow , RL_LAST_CHILD, pCol->colname , temp,  pCol->nodeType );
@@ -994,7 +994,7 @@ void nox_sqlDisconnect (PNOXSQLCONNECT * ppCon)
 
 	if (pCon == NULL) return;
 
-	XlateXdClose(pCon->pCd) ;
+	iconv_close (pCon->iconv);
 
 	if (pCon->sqlTrace.handle != -1) {
 		rc = SQLFreeHandle (SQL_HANDLE_STMT, pCon->sqlTrace.handle);
@@ -2058,7 +2058,7 @@ PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 
 	pCon = memAllocClear(sizeof(NOXSQLCONNECT));
 	pCon->sqlTrace.handle = -1;
-	pCon->pCd = XlateXdOpen (13488, 0);
+	pCon->iconv = XlateOpen (13488, 0, false);
 	po = &pCon->options;
 	po->upperCaseColName = OFF;
 	po->autoParseContent = ON;

@@ -439,7 +439,7 @@ dcl-proc example7;
 
     data-gen response
         %data(handle:'countprefix=num_')
-        %gen (nox_DataGen(pOutputRows):'case=camel');
+        %gen (nox_DataGen(pOutputRows):'case=default');
 
     // Let's see what we got
     nox_WriteJsonStmf(pOutputRows:'/prj/noxDbUtf8/testout/datagen7.json':1208:*OFF);
