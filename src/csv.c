@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- *
  * Company . . . : System & Method A/S                           *
  * Design  . . . : Niels Liisberg                                *
@@ -33,9 +33,9 @@
 #include "noxDbUtf8.h"
 
 
-// --------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------
 // CSV Helpers
-// --------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------
 void csvReplaceDecpoint ( PUCHAR out , PUCHAR in , UCHAR decpoint)
 {
 	for(;*in; in++) {
@@ -43,7 +43,7 @@ void csvReplaceDecpoint ( PUCHAR out , PUCHAR in , UCHAR decpoint)
 	}
 	*out = '\0';
 }
-// --------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------
 void csvStringEscape (PUCHAR out, PUCHAR in)
 {
 
@@ -55,12 +55,12 @@ void csvStringEscape (PUCHAR out, PUCHAR in)
 	*out++ = '"';
 	*out = '\0';
 }
-// --------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------
 void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	JWRITE jWrite;
-	PJWRITE pjWrite = &jWrite;
+	NOXWRITER noxWriter;
+	PNOXWRITER pNoxWriter = &noxWriter;
 	UCHAR  mode[32];
 	UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
 	UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
@@ -72,11 +72,11 @@ void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
 	BOOL   headers  = false;
 
 	if (pNode == NULL) return;
-	memset(pjWrite , 0 , sizeof(jWrite));
+	memset(pNoxWriter , 0 , sizeof(noxWriter));
 
 	sprintf(mode , "wb,codepage=%d", Ccsid);
-	pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
-	if (pjWrite->outFile == NULL) return;
+	pNoxWriter->outFile  = fopen ( strTrim(FileName) , mode );
+	if (pNoxWriter->outFile == NULL) return;
 
 	if (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 5) {
 		PNOXNODE  pOptions  = nox_ParseString((PUCHAR) options ); // When already a object: simply returns that
@@ -86,15 +86,15 @@ void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
 		if (pOptions != options) nox_Close(&pOptions); // It was already a josn object , then don't close
 	}
 
-	pjWrite->buf    = wTemp;
-	pjWrite->iconv  = XlateOpen(1208 , Ccsid, false );
+	pNoxWriter->buf    = wTemp;
+	pNoxWriter->iconv  = XlateOpen(1208 , Ccsid, false );
 
 	switch(Ccsid) {
 		case 1208 :
-			fputs (sigUtf8 , pjWrite->outFile);
+			fputs (sigUtf8 , pNoxWriter->outFile);
 			break;
 		case 1200 :
-			fputs (sigUtf16 , pjWrite->outFile);
+			fputs (sigUtf16 , pNoxWriter->outFile);
 			break;
 	}
 	if ( pNode == NULL || pNode->pNodeChildHead  == NULL) return;
@@ -107,12 +107,12 @@ void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
 		PNOXNODE pHead  = pNode->pNodeChildHead;
 		while (pHead) {
 			csvStringEscape (temp , pHead->Name);
-			iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);
+			iconvWrite(pNoxWriter->outFile ,&pNoxWriter->iconv, temp, FALSE);
 			pHead  = pHead->pNodeSibling;
-			if (pHead) iconvPutc(pjWrite->outFile , &pjWrite->iconv, comma);
+			if (pHead) iconvPutc(pNoxWriter->outFile , &pNoxWriter->iconv, comma);
 		}
 		// newline
-		fwrite (CrLf , 1 , 2 , pjWrite->outFile);
+		fwrite (CrLf , 1 , 2 , pNoxWriter->outFile);
 	}
 
 	while (pNode) {
@@ -125,27 +125,27 @@ void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
 
 				if (pCol->isLiteral) {
 					if (decpoint == '.') {
-						iconvWrite(pjWrite->outFile ,&pjWrite->iconv, pCol->Value, FALSE);
+						iconvWrite(pNoxWriter->outFile ,&pNoxWriter->iconv, pCol->Value, FALSE);
 					} else {
 						csvReplaceDecpoint (temp , pCol->Value , decpoint);
-						iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);
+						iconvWrite(pNoxWriter->outFile ,&pNoxWriter->iconv, temp, FALSE);
 					}
 				} else {
 					csvStringEscape (temp , pCol->Value);
-					iconvWrite(pjWrite->outFile ,&pjWrite->iconv, temp, FALSE);
+					iconvWrite(pNoxWriter->outFile ,&pNoxWriter->iconv, temp, FALSE);
 				}
 			}
 			pCol  = pCol->pNodeSibling;
-			if ( pCol) iconvPutc(pjWrite->outFile , &pjWrite->iconv, comma);
+			if ( pCol) iconvPutc(pNoxWriter->outFile , &pNoxWriter->iconv, comma);
 		}
 		// newline
-		fwrite (CrLf , 1 , 2 , pjWrite->outFile);
+		fwrite (CrLf , 1 , 2 , pNoxWriter->outFile);
 		pNode = pNode->pNodeSibling;
 
 	}
 
-	fclose(pjWrite->outFile);
-	iconv_close(pjWrite->iconv);
+	fclose(pNoxWriter->outFile);
+	iconv_close(pNoxWriter->iconv);
 }
 
 void  csvStreamRunner   (PSTREAM pStream)

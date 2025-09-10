@@ -175,7 +175,13 @@ static int insertMarkerValue (PUCHAR buf , PUCHAR marker, PNOXNODE parms)
 		} else {
 			len = sqlEscape (buf , value);
 		}
+	} else {
+		// TODO !! Experimental  - not found gives an empty string
+		// Then statemnet will not fail
+		strcpy(buf, "''");
+		len = 2;
 	}
+
 	return len;
 }
 /* ------------------------------------------------------------- */
@@ -1014,7 +1020,7 @@ void nox_sqlDisconnect (PNOXSQLCONNECT * ppCon)
 		pCon->henv = -1;
 	}
 
-	nox_Close(&pCon->pOptions);
+	nox_NodeDelete(pCon->pOptions);
 	memFree (ppCon);
 
 }
@@ -1991,7 +1997,7 @@ void nox_sqlSetOptions (PNOXSQLCONNECT pCon, PNOXNODE pOptionsP)
 
 	// Delete previous settings, if we did that parsing
 	if (pCon->pOptionsCleanup) {
-		nox_Close(&pCon->pOptions);
+		nox_NodeDelete (pCon->pOptions);
 	}
 
 	// .. and set the new setting
@@ -2046,6 +2052,7 @@ void nox_sqlSetOptions (PNOXSQLCONNECT pCon, PNOXNODE pOptionsP)
 	}
 }
 /* ------------------------------------------------------------- */
+/* original
 PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -2078,7 +2085,16 @@ PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 		return NULL; // we have an error
 	}
 
-	// Note - this is invers: Default to IBMi naming
+	// always use UTF-8 in noxDbUtf8
+	attrParm = SQL_TRUE;
+	rc = SQLSetEnvAttr  (pCon->henv, SQL_ATTR_UTF8 , &attrParm  , 0);
+	if (rc != SQL_SUCCESS ) {
+		check_error (pCon, NULL);
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
+	// Note - this is invers: Default to IBM i naming
 	attrParm = pCon->options.sqlNaming == ON ? SQL_FALSE : SQL_TRUE;
 	rc = SQLSetEnvAttr  (pCon->henv, SQL_ATTR_SYS_NAMING, &attrParm  , 0);
 	/* Dont test since the activations groupe might be reclaimed, and a new "session" is on..
@@ -2087,16 +2103,7 @@ PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 		nox_sqlDisconnect ();
 		return NULL; // we have an error
 	}
-	... */
-
-	/* TODO !!! always use UTF-8 */
-	attrParm = SQL_TRUE;
-	rc = SQLSetEnvAttr  (pCon->henv, SQL_ATTR_UTF8 , &attrParm  , 0);
-	if (rc != SQL_SUCCESS ) {
-		nox_sqlDisconnect (&pCon);
-		return NULL; // we have an error
-	}
-
+	... * /
 
 	attrParm = SQL_TRUE;
 	rc = SQLSetEnvAttr  (pCon->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
@@ -2127,6 +2134,103 @@ PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 		nox_sqlDisconnect (&pCon);
 		return NULL; // we have an error
 	}
+
+	// If required, open the trace table
+	nox_traceOpen (pCon);
+
+	pLastConnnection = pCon;
+	return pCon; // we are ok
+}*/
+
+
+
+PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
+{
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	PNOXNODE  pOptions = pParms->OpDescList->NbrOfParms >= 1 ? pOptionsP : NULL;
+	PNOXSQLCONNECT pCon;
+	LONG          attrParm;
+	PUCHAR        server = "*LOCAL";
+	int rc;
+	PSQLOPTIONS po;
+
+	pCon = memAllocClear(sizeof(NOXSQLCONNECT));
+	pCon->sqlTrace.handle = -1;
+	pCon->iconv = XlateOpen (13488, 0, false);
+	po = &pCon->options;
+	po->upperCaseColName = OFF;
+	po->autoParseContent = ON;
+	po->DecimalPoint     = '.';
+	po->hexSort          = OFF;
+	po->sqlNaming        = OFF;
+	po->DateSep          = '-';
+	po->DateFmt          = 'y';
+	po->TimeSep          = ':';
+	po->TimeFmt          = 'H';
+
+	// allocate an environment handle
+	rc = SQLAllocEnv (&pCon->henv);
+	if (rc != SQL_SUCCESS ) {
+		check_error (pCon, NULL);
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
+	// This is OK for now - it will inhirit it from the initial connection
+	// and work from out side as well
+	// so just dont, test if the call went ok
+	attrParm = SQL_TRUE;
+	rc = SQLSetEnvAttr  (pCon->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
+	// if (rc != SQL_SUCCESS ) {
+	// 	nox_sqlDisconnect (&pCon);
+	// 	return NULL; // we have an error
+	// }
+
+
+	// connection!!
+	rc = SQLAllocConnect (pCon->henv, &pCon->hdbc);  // allocate a connection handle
+	if (rc != SQL_SUCCESS ) {
+		check_error (pCon, NULL);
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
+	// always use UTF-8 in noxDbUtf8
+	attrParm = SQL_TRUE;
+	rc = SQLSetConnectAttr  (pCon->hdbc, SQL_ATTR_UTF8 , &attrParm  , 0);
+	if (rc != SQL_SUCCESS ) {
+		check_error (pCon, NULL);
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
+	// Note - this is invers: Default to IBM i naming
+	attrParm = pCon->options.sqlNaming == ON ? SQL_FALSE : SQL_TRUE;
+	rc = SQLSetConnectAttr  (pCon->hdbc, SQL_ATTR_SYS_NAMING, &attrParm  , 0);
+	// /* Dont test since the activations groupe might be reclaimed, and a new "session" is on..
+	// if (rc != SQL_SUCCESS ) {
+	// 	check_error (NULL);
+	// 	nox_sqlDisconnect ();
+	// 	return NULL; // we have an error
+	// }
+
+
+	attrParm = SQL_TXN_NO_COMMIT; // does not work with BLOBS
+	// attrParm = SQL_TXN_READ_UNCOMMITTED; // does not work for updates !!! can not bes pr- statement
+	rc = SQLSetConnectAttr (pCon->hdbc, SQL_ATTR_COMMIT , &attrParm  , 0);
+	if (rc != SQL_SUCCESS ) {
+		check_error (pCon, NULL);
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
+	rc = SQLConnect (pCon->hdbc, server , SQL_NTS, NULL, SQL_NTS, NULL, SQL_NTS);
+	if (rc != SQL_SUCCESS ) {
+		check_error (pCon, NULL);
+		nox_sqlDisconnect (&pCon);
+		return NULL; // we have an error
+	}
+
 
 	// If required, open the trace table
 	nox_traceOpen (pCon);

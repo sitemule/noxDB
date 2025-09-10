@@ -1,6 +1,6 @@
 STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('NOXDB02')
  EXPORT SYMBOL("nox_aNum")
- EXPORT SYMBOL("nox_ArrayAppend")
+ EXPORT SYMBOL("nox_Append")
  EXPORT SYMBOL("nox_ArrayPush")
  EXPORT SYMBOL("nox_ArraySlice")
  EXPORT SYMBOL("nox_ArraySort")

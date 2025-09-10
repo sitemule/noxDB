@@ -85,11 +85,11 @@ static PUCHAR nox_EncodeJson (PUCHAR out , PUCHAR in)
 static void indent (PSTREAM pStream , int indent)
 {
 	int i;
-	PJWRITE pjWrite = pStream->handle;
-	if (pjWrite->doTrim) return;
+	PNOXWRITER pNoxWriter = pStream->handle;
+	if (pNoxWriter->doTrim) return;
 
-	//if(!pjWrite->wasHere) {
-	//   pjWrite->wasHere = true;
+	//if(!pNoxWriter->wasHere) {
+	//   pNoxWriter->wasHere = true;
 	//} else {
 		stream_putc(pStream, '\n');
 	//}
@@ -234,9 +234,9 @@ LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PSTREAM  pStream;
 	LONG     len;
-	JWRITE   jWrite;
-	PJWRITE  pjWrite = &jWrite;
-	memset(pjWrite , 0 , sizeof(jWrite));
+	NOXWRITER   noxWriter;
+	PNOXWRITER  pNoxWriter = &noxWriter;
+	memset(pNoxWriter , 0 , sizeof(noxWriter));
 
 	if (pNode == NULL) return 0;
 	if (pNode->signature != NODESIG) {
@@ -246,10 +246,10 @@ LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
 
 	pStream = stream_new (4096);
 	pStream->writer  = nox_memWriter;
-	pStream->handle = pjWrite;
-	pjWrite->buf = buf;
-	pjWrite->doTrim = true;
-	pjWrite->maxSize =   pParms->OpDescList == NULL
+	pStream->handle = pNoxWriter;
+	pNoxWriter->buf = buf;
+	pNoxWriter->doTrim = true;
+	pNoxWriter->maxSize =   pParms->OpDescList == NULL
 		|| (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3) ? maxLenP : MEMMAX;
 
 	jsonStream (pNode , pStream);
@@ -276,8 +276,8 @@ void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut,
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PSTREAM pStream;
-	JWRITE  jWrite;
-	PJWRITE pjWrite= &jWrite;
+	NOXWRITER  noxWriter;
+	PNOXWRITER pNoxWriter= &noxWriter;
 	UCHAR   mode[32];
 	UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
 	UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
@@ -286,29 +286,29 @@ void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut,
 	BOOL   makeBomCode  = Ccsid < 0;
 	Ccsid = Ccsid < 0  ? - Ccsid : Ccsid;
 
-	memset(pjWrite , 0 , sizeof(jWrite));
+	memset(pNoxWriter , 0 , sizeof(noxWriter));
 
 	if (pNode == NULL) return;
 
 	pStream = stream_new (4096);
-	pStream->handle = pjWrite;
+	pStream->handle = pNoxWriter;
 	pStream->writer = nox_fileWriter;
 
 	sprintf(mode , "wb,o_ccsid=%d", Ccsid);
 	unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
-	pjWrite->outFile  = fopen ( strTrim(FileName) , mode );
-	if (pjWrite->outFile == NULL) return;
+	pNoxWriter->outFile  = fopen ( strTrim(FileName) , mode );
+	if (pNoxWriter->outFile == NULL) return;
 
-	pjWrite->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
-	pjWrite->iconv  = XlateOpen(1208, Ccsid, false);
+	pNoxWriter->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
+	pNoxWriter->iconv  = XlateOpen(1208, Ccsid, false);
 
 	if (makeBomCode) {
 		switch(Ccsid) {
 			case 1208 :
-				fputs (sigUtf8, pjWrite->outFile );
+				fputs (sigUtf8, pNoxWriter->outFile );
 				break;
 			case 1200 :
-				fputs (sigUtf16, pjWrite->outFile );
+				fputs (sigUtf16, pNoxWriter->outFile );
 				break;
 		}
 	}
@@ -316,6 +316,6 @@ void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut,
 	jsonStream (pNode , pStream);
 
 	stream_delete (pStream);
-	fclose(pjWrite->outFile);
-	iconv_close(pjWrite->iconv);
+	fclose(pNoxWriter->outFile);
+	iconv_close(pNoxWriter->iconv);
 }

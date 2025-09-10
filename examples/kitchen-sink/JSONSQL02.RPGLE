@@ -47,7 +47,7 @@
 
            // When done with the row then always dispose it. Otherwise you will have a memory leak
            // Remember that "Fetch" will produce a new row object
-           nox_NodeDelete(pRow);
+           nox_Delete(pRow);
 
            // .. Now we are ready for that nex row
            pRow  = nox_sqlFetchNext(sqlhnd);

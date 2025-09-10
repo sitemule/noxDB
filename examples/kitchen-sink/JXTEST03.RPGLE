@@ -37,7 +37,7 @@
            numbers = nox_getNum (pRow : 'PRICE');
            ints    = nox_getNum (pRow : 'STOCKCNT');
            dates   = %date(nox_getStr (pRow : 'STOCKDATE'));
-           nox_NodeDelete(pRow); // Always dispose it before get the next
+           nox_Delete(pRow); // Always dispose it before get the next
            pRow = nox_sqlFetchNext(sqlhnd);
         enddo;
 

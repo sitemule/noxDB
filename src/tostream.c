@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- *
  * Company . . . : System & Method A/S                           *
  * Design  . . . : Niels Liisberg                                *
@@ -33,17 +33,17 @@ PSTREAM nox_Stream  (PNOXNODE pNode , ULONG format)
 {
 	PSTREAM  pStream;
 	LONG     len;
-	JWRITE   jWrite;
-	PJWRITE  pjWrite = &jWrite;
-	memset(pjWrite , 0 , sizeof(jWrite));
+	NOXWRITER   noxWriter;
+	PNOXWRITER  pNoxWriter = &noxWriter;
+	memset(pNoxWriter , 0 , sizeof(noxWriter));
 
 	pStream = stream_new (4096);
-	pStream->handle  = pjWrite;
-	pjWrite->doTrim  = true;
-	pjWrite->maxSize = MEMMAX;
+	pStream->handle  = pNoxWriter;
+	pNoxWriter->doTrim  = true;
+	pNoxWriter->maxSize = MEMMAX;
 
     switch  (format) {
-        case NOX_STREAM_JSON : 
+        case NOX_STREAM_JSON :
             pStream->runner  = jsonStreamRunner;
             break;
         case NOX_STREAM_XML  :
@@ -54,7 +54,7 @@ PSTREAM nox_Stream  (PNOXNODE pNode , ULONG format)
             break;
     }
 
-	
+
 	pStream->context = pNode;
 	return  pStream;
 }
@@ -62,23 +62,23 @@ PSTREAM nox_Stream  (PNOXNODE pNode , ULONG format)
 // ----------------------------------------------------------------------------
 LONG nox_memWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 {
-	PJWRITE pjWrite = p->handle;
-	ULONG newLen =  pjWrite->bufLen + len;
-	if ( newLen  > pjWrite->maxSize) {
-		ULONG restlen = pjWrite->maxSize - pjWrite->bufLen;
-		memcpy ( pjWrite->buf +  pjWrite->bufLen , buf , restlen  );
-		pjWrite->bufLen = pjWrite->maxSize;
-		return pjWrite->bufLen;
+	PNOXWRITER pNoxWriter = p->handle;
+	ULONG newLen =  pNoxWriter->bufLen + len;
+	if ( newLen  > pNoxWriter->maxSize) {
+		ULONG restlen = pNoxWriter->maxSize - pNoxWriter->bufLen;
+		memcpy ( pNoxWriter->buf +  pNoxWriter->bufLen , buf , restlen  );
+		pNoxWriter->bufLen = pNoxWriter->maxSize;
+		return pNoxWriter->bufLen;
 	}
-	memcpy ( pjWrite->buf +  pjWrite->bufLen , buf , len);
-	pjWrite->bufLen += len;
-	return pjWrite->bufLen;
+	memcpy ( pNoxWriter->buf +  pNoxWriter->bufLen , buf , len);
+	pNoxWriter->bufLen += len;
+	return pNoxWriter->bufLen;
 }
 // ----------------------------------------------------------------------------
 LONG nox_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 {
-	PJWRITE pjWrite = p->handle;
-	LONG rc = fwrite (buf, 1, len , pjWrite->outFile);
+	PNOXWRITER pNoxWriter = p->handle;
+	LONG rc = fwrite (buf, 1, len , pNoxWriter->outFile);
 	return rc;
 }
 

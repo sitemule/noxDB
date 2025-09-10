@@ -81,9 +81,9 @@ typedef enum {
 } STREAM_OPTION , *PSTREAM_OPTION;
 
 
-#define ATTRSIG 0x03
+#define ATTRSIG 0x05
 typedef struct _NOXATTR {
-	UCHAR  signature; // always hex 03
+	UCHAR  signature; // always hex 05
 	LONG   Handle;
 	PUCHAR Name;
 	PUCHAR Value;
@@ -123,9 +123,9 @@ typedef enum {
 	MO_MERGE_REPLACE  =  1024   // Merge all: replace if it exists and append new nodes if not exists
 } MERGEOPTION , *PMERGEOPTION;
 
-#define NODESIG  0x02
+#define NODESIG  0x04
 typedef struct _NOXNODE {
-	UCHAR  signature; // always hex 02
+	UCHAR  signature; // always hex 05
 	LONG   Handle;
 	PUCHAR Name;
 	SHORT  Seq;
@@ -219,7 +219,7 @@ typedef struct _TOK{
 	LONG    count;
 } TOK, *PTOK;
 
-typedef _Packed struct  _JWRITE      {
+typedef _Packed struct  _NOXWRITER      {
 	FILE *  outFile;
 	iconv_t iconv;
 	PUCHAR  buf;
@@ -233,7 +233,7 @@ typedef _Packed struct  _JWRITE      {
 	ULONG   maxSize;
 	BOOL    wasHere;
 	PVOID   scratchPad; // Pointer to any user data
-} JWRITE, * PJWRITE;
+} NOXWRITER, * PNOXWRITER;
 
 typedef _Packed struct  _NOXITERATOR {
 	PNOXNODE   root;
@@ -259,7 +259,7 @@ typedef _Packed struct  _NOXITERATOR {
 LONG xlateMem  (iconv_t xid , PUCHAR out , PUCHAR in, LONG len);
 void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options);
 void nox_AsJsonText (PLVARCHAR retVal, PNOXNODE pNode);
-void nox_AsJsonTextList (PNOXNODE pNode, PJWRITE pJwrite);
+void nox_AsJsonTextList (PNOXNODE pNode, PNOXWRITER pNOXWRITER);
 void nox_AsJsonStream (PNOXNODE pNode, PSTREAM pStream);
 LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP);
 #pragma descriptor ( void nox_AsJsonTextMem                     (void))

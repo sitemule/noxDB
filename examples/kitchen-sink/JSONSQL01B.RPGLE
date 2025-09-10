@@ -33,7 +33,7 @@
         pRow = nox_sqlFetchNext(sqlhnd);
         dow (pRow <> *NULL );
            text    = nox_getStr (pRow : 'x' );
-           nox_NodeDelete(pRow); // Always dispose it before get the next
+           nox_Delete(pRow); // Always dispose it before get the next
            pRow = nox_sqlFetchNext(sqlhnd);
         enddo;
 

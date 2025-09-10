@@ -470,7 +470,7 @@ End-PR;
 // @param (input) If this is *ON the value will be set to null regardless of the values
 // @return Changed node
 ///
-Dcl-PR nox_Dec   Pointer extproc(*CWIDEN: 'nox_Dec');
+Dcl-PR nox_Dec   Pointer OPDESC extproc(*CWIDEN: 'nox_Dec');
   Value          like(FIXEDDEC) value;
 End-PR;
 
@@ -1167,12 +1167,12 @@ End-PR;
 ///
 // Push node into array
 //
-// Appends the passed node/value to the array. The node can either be an noxDB
+// Appends the passed node/value to the array ( or object ). The node can either be an noxDB
 // object tree or a string. If a string is passed and it is a JSON expression
 // (starting with { or [) it will be parsed else the string will be appended to
 // the array as it.
 //
-// @param (output) Array
+// @param (output) Array ( or object)
 // @param (input) Node to be appended to the end of the array
 // @param (input) Push operation mode (NOX_MOVE_UNLINK (default) or NOX_COPY_CLONE)
 // @return New node added to the end of the array
@@ -1188,16 +1188,16 @@ Dcl-C NOX_MOVE_UNLINK const(0);
 Dcl-C NOX_COPY_CLONE  const(1);
 
 ///
-// Push array nodes into array
+// Push array or object nodes into array or object
 //
-// Appends all nodes from one array to another array.
+// Appends all nodes from one array or object to another array or object.
 //
-// @param (output) Destination array (to)
-// @param (input) Source array (from)
+// @param (output) Destination array or object (to)
+// @param (input) Source array or object (from)
 // @param (input) Push operation mode (nox_MOVE_UNLINK (default) or nox_COPY_CLONE)
-// @return Destination array
+// @return Destination array or object
 ///
-Dcl-PR nox_ArrayAppend Pointer extproc(*CWIDEN :'nox_ArrayAppend');
+Dcl-PR nox_Append Pointer extproc(*CWIDEN :'nox_Append');
   pDestArray     Pointer    value;
   pSourceNode    Pointer    value;
   copy           Uns(5)     value options(*nopass);
@@ -1352,6 +1352,19 @@ Dcl-PR nox_MoveObjectInto Pointer extproc(*CWIDEN : 'nox_NodeMoveIntoVC');
 End-PR;
 
 ///
+// Appped to and object or array
+//
+//
+// @param (input/output) Destination object
+// @param (input) Sibling to append
+// @return Destination object
+//
+///
+Dcl-PR nox_AppendObject Pointer extproc(*CWIDEN : 'nox_NodeAppend');
+  pDestObj       Pointer    value;
+  pSiblin        Pointer    value;
+End-PR;
+///
 // Move node into object graph
 //
 // Moves a node into an existing object graph.
@@ -1418,7 +1431,7 @@ End-PR;
 // @param (input) Node
 // @return Object tree representation as a JSON string
 ///
-Dcl-PR nox_AsJsonText Like(UTF8_MAX) rtnparm extproc(*CWIDEN : 'nox_AsJsonText');
+Dcl-PR nox_AsJsonText Like(UTF8_MAX) rtnparm OPDESC extproc(*CWIDEN : 'nox_AsJsonText');
   pNode          Pointer    value;
 End-PR;
 
@@ -1481,7 +1494,7 @@ End-PR;
 // @param (input) Node
 // @return Object tree representation as a XML string
 ///
-Dcl-PR nox_AsXmlText Like(UTF8_MAX) rtnparm extproc(*CWIDEN : 'nox_AsXmlText');
+Dcl-PR nox_AsXmlText Like(UTF8_MAX) rtnparm OPDESC extproc(*CWIDEN : 'nox_AsXmlText');
   pNode          Pointer    value;
 End-PR;
 

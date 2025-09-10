@@ -1,23 +1,23 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* -------------------------------------------------------------
- * Company . . . : System & Method A/S                          
- * Design  . . . : Niels Liisberg                               
- * Function  . . : NOX - main service program API exports       
- *                                                              
- * By     Date     Task    Description                          
+ * Company . . . : System & Method A/S
+ * Design  . . . : Niels Liisberg
+ * Function  . . : NOX - main service program API exports
+ *
+ * By     Date     Task    Description
  * ------ -------- ------- -------------------------------------
- * NL     02.06.03 0000000 New program                          
- * NL     27.02.08 0000510 Allow also no namespace for *:tag    
- * NL     27.02.08 0000510 nox_NodeCopy                         
- * NL     13.05.08 0000577 nox_NodeInsert / WriteNote              
- * NL     13.05.08 0000577 Support for refference location      
+ * NL     02.06.03 0000000 New program
+ * NL     27.02.08 0000510 Allow also no namespace for *:tag
+ * NL     27.02.08 0000510 nox_NodeCopy
+ * NL     13.05.08 0000577 nox_NodeInsert / WriteNote
+ * NL     13.05.08 0000577 Support for refference location
  * NL     01.06.18 0001000 noxdb2 version 2 implementation
- * 
- * 
+ *
+ *
  * Note differences from noxDB version 1
  * 1: The obect graph is all UTF-8
  * 2: Output is by default witout BOM codes
- * 3: Input and output values are default 1M in size 
+ * 3: Input and output values are default 1M in size
  * ------------------------------------------------------------- */
 #include <stdio.h>
 #include <string.h>
@@ -63,7 +63,7 @@ static const PUCHAR delimiters = DELIMITERS;
 static NOX_TRACE_PROC nox_trace = null;
 
 
-// --------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------
 void nox_SetMessage (PUCHAR Ctlstr , ... )
 {
 	va_list arg_ptr;
@@ -370,7 +370,7 @@ LGL nox_IsLiteral (PNOXNODE node)
 // ---------------------------------------------------------------------------
 // use simple bouble-sort to sort an array by keyvalues
 // ---------------------------------------------------------------------------
-#pragma convert(1252) 
+#pragma convert(1252)
 PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
 {
 	PNOXNODE pNodeNext, pNode1, pNode2, pCompNode1, pCompNode2 ;
@@ -447,7 +447,7 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
 
 	return pNode;
 }
-#pragma convert(0) 
+#pragma convert(0)
 
 PNOXNODE nox_ArraySortVC(PNOXNODE pNode, PLVARCHAR fieldsP, USHORT optionsP)
 {
@@ -501,7 +501,7 @@ void nox_DumpNodeList (PNOXNODE pNodeTemp)
 		printf("\n   Value: %s" , pNodeTemp->Value == NULL ? "(null)" : pNodeTemp->Value);
 
 		for (pAttrTemp = pNodeTemp->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
-			printf("\n   Attribute: %s = %s" , 
+			printf("\n   Attribute: %s = %s" ,
 				pAttrTemp->Name == NULL ? "" : pAttrTemp->Name,
 				pAttrTemp->Value== NULL ? "" : pAttrTemp->Value);
 		}
@@ -692,7 +692,7 @@ LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf)
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // Traverse up the tree and build the name  like: "root/tree/node"
-// --------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------
 VOID nox_GetNodeNameAsPath (PLVARCHAR res ,PNOXNODE pNode, UCHAR Delimiter)
 {
 	PNOXNODE  p;
@@ -743,9 +743,9 @@ void nox_NodeCloneAndReplace (PNOXNODE pDest , PNOXNODE pSource)
 }
 // ---------------------------------------------------------------------------
 //	 This works great, have to go back and update the "cloneFormat" logic to do similar
-// --------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------
 #pragma convert(1252)
-void  nox_MergeList (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, PUCHAR name, PNOXNODE pParent, MERGEOPTION merge)
+void  nox_MergeList (PNOXNODE pDest, PNOXNODE pSource, PNOXWRITER pNoxWriter, PUCHAR name, PNOXNODE pParent, MERGEOPTION merge)
 {
 	PNOXNODE  p;
 	UCHAR tempname[256];
@@ -764,7 +764,7 @@ void  nox_MergeList (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, PUCHAR n
 
 		if (pSource->type == VALUE) {
 			PUCHAR relName = tempname+1; // Remove first slash absolut and make it relative
-			// printf("\n%s - %s : %d val:%s\n" , tempname , pSource->Name, pjWrite->level,pSource->Value);
+			// printf("\n%s - %s : %d val:%s\n" , tempname , pSource->Name, pNoxWriter->level,pSource->Value);
 
 			pDestNode = nox_GetNode  (pDest, relName);
 			if (pDestNode != NULL) {
@@ -780,12 +780,12 @@ void  nox_MergeList (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, PUCHAR n
 		}
 
 		if (pSource->pNodeChildHead) {
-			pjWrite->level ++;
-			nox_MergeList (pDest , pSource->pNodeChildHead,pjWrite, tempname , pSource, merge  );
-			pjWrite->level --;
+			pNoxWriter->level ++;
+			nox_MergeList (pDest , pSource->pNodeChildHead,pNoxWriter, tempname , pSource, merge  );
+			pNoxWriter->level --;
 		}
 		// Merging only take the first occurent where the object object names has a match
-		// pSource = (pjWrite->level == 0) ? NULL: pSource->pNodeSibling;
+		// pSource = (pNoxWriter->level == 0) ? NULL: pSource->pNodeSibling;
 		pSource = pSource->pNodeSibling;
 	}
 }
@@ -859,7 +859,7 @@ PNOXNODE  nox_MoveValueVC (PNOXNODE pDest , PLVARCHAR destName , PNOXNODE pSourc
 	return nox_MoveValue (pDest , plvc2str(destName) , pSource , plvc2str(sourceName));
 }
 /* --------------------------------------------------------------------------- */
-static void  nox_MergeObj  (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, MERGEOPTION merge)
+static void  nox_MergeObj  (PNOXNODE pDest, PNOXNODE pSource, PNOXWRITER pNoxWriter, MERGEOPTION merge)
 {
 	PNOXNODE  p;
 	UCHAR tempname[256];
@@ -876,7 +876,7 @@ static void  nox_MergeObj  (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, M
 					nox_InsertByName (pDest , pSource->Name , pSource );
 				} else {
 					if (pSource->pNodeChildHead && pSource->type == OBJECT) {
-						nox_MergeObj  (pDestNode ,  pSource->pNodeChildHead , pjWrite, merge);
+						nox_MergeObj  (pDestNode ,  pSource->pNodeChildHead , pNoxWriter, merge);
 					}
 				}
 			} else {
@@ -886,7 +886,7 @@ static void  nox_MergeObj  (PNOXNODE pDest, PNOXNODE pSource, PJWRITE pjWrite, M
 			if (pSource->pNodeChildHead ) {
 				// PNOXNODE pNewDest = pDest->pNodeChildHead ?  pDest->pNodeChildHead : pDest; // Handle roots !! TODO !!
 				PNOXNODE pNewDest = pDest;
-				nox_MergeObj  (pNewDest,  pSource->pNodeChildHead , pjWrite, merge);
+				nox_MergeObj  (pNewDest,  pSource->pNodeChildHead , pNoxWriter, merge);
 			}
 		}
 		pSource = pSource->pNodeSibling;
@@ -924,7 +924,7 @@ void  nox_MergeObjects (PNOXNODE pDest, PNOXNODE pSource , MERGEOPTION merge)
 }
 // ---------------------------------------------------------------------------
 // Delete nodes which are NULL
-// --------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------
 void  nox_NodeSanitize(PNOXNODE pNode)
 {
 	while (pNode) {
@@ -957,15 +957,15 @@ void  detectEncoding(PNOXCOM pJxCom)
 	PUCHAR p = pJxCom->StreamBuf;
 
 	// Skip bom ?
-	if (p [0] == 0xef && p[1] == 0xbb && p[2] == 0xbf) { // utf8 -BOM code 
+	if (p [0] == 0xef && p[1] == 0xbb && p[2] == 0xbf) { // utf8 -BOM code
 		p += 3; // Skip bom code;
 	}
 
-	// skip blanks 
+	// skip blanks
 	for (; *p <= BLANK && *p != '\0'; p++);
 
 	pJxCom->isJson = (*p != LT);
-	pJxCom->StreamBuf = p;	
+	pJxCom->StreamBuf = p;
 }
 // ---------------------------------------------------------------------------
 /* Old implementation
@@ -1416,8 +1416,8 @@ void AddNode(PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc)
 	}
 }
 // ---------------------------------------------------------------------------
-// XML documents has a anonymus root node. Each child from the 
-// root is added  
+// XML documents has a anonymus root node. Each child from the
+// root is added
 // ---------------------------------------------------------------------------
 PNOXNODE nox_DocumentInsert(PNOXNODE pDest, PNOXNODE * ppSource, REFLOC refloc)
 {
@@ -1429,7 +1429,7 @@ PNOXNODE nox_DocumentInsert(PNOXNODE pDest, PNOXNODE * ppSource, REFLOC refloc)
 
    // find length of source nodes:
    for (len =0, pTemp = pSource->pNodeChildHead ; pTemp != NULL; len++, pTemp = pTemp->pNodeSibling);
-   
+
    if (len == 0) return pDest;
 
    // Store the list of nodes and make each of them them roots;
@@ -1539,7 +1539,7 @@ PNOXNODE nox_NewObject ()
 	pNode->signature  = NODESIG;
 	pNode->type       = OBJECT;
 	return pNode;
-} 
+}
 // ---------------------------------------------------------------------------
 PNOXNODE nox_NewArray ()
 {
@@ -1613,12 +1613,12 @@ void nox_SetDelimiters(PNOXDELIM pDelim)
 	BRABEG      = delim [3];
 	BRAEND      = delim [4];
 }
-*/ 
+*/
 // ---------------------------------------------------------------------------
 // New wrapper  - Missing in old "SetDelimiters" - now the string is NULL
 // terminated to we can just build more on as we go
 // ---------------------------------------------------------------------------
-/* 
+/*
 void nox_SetDelimiters2(PNOXDELIM pDelim)
 {
 	int i;
@@ -2284,7 +2284,7 @@ PNOXNODE nox_GetNodeByName  (PNOXNODE  pNode, PUCHAR Ctlstr , ... )
 	SHORT l;
 	PNOXNODE pNodeOut;
 
-	// Build a temp string with the formated data 
+	// Build a temp string with the formated data
 	va_start(arg_ptr, Ctlstr);
 	l = vsprintf(Name, Ctlstr, arg_ptr);
 	va_end(arg_ptr);
@@ -2364,7 +2364,7 @@ VOID nox_SetNodeAttrValueVC  (PNOXNODE pNode , PLVARCHAR AttrName, PLVARCHAR Val
 }
 /* ---------------------------------------------------------------------------
 	 Find node by path, by parsing a name string and traverse the tree
-	 It can be relative by diging a Nodeent. 
+	 It can be relative by diging a Nodeent.
 	 --------------------------------------------------------------------------- */
 PUCHAR nox_GetValuePtr (PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Default)
 {
@@ -2449,7 +2449,7 @@ PUCHAR nox_splitAtrFromName (PUCHAR name)
 	 Find node by path name, by parsing a name string and traverse the tree
 	 It can be relative by giging either a Nodeent or a XML-common pointer
 	 --------------------------------------------------------------------------- */
-#pragma convert(1252)	 
+#pragma convert(1252)
 void nox_CopyValueByNameVC (PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR pName, PLVARCHAR pDefault, BOOL joinString)
 {
 	PUCHAR    pNodeKey, pAtrKey;
@@ -2496,17 +2496,17 @@ void nox_CopyValueByNameVC (PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR pName,
    --------------------------------------------------------------------------- */
 void nox_NodeMerge(PNOXNODE pDest, PNOXNODE pSource, SHORT replace)
 {
-  JWRITE jWrite;
+  NOXWRITER noxWriter;
   MERGEOPTION merge;
   switch (replace) {
      case true :  merge = MO_MERGE_REPLACE; break;
      case false:  merge = MO_MERGE_NEW    ; break;
      default   :  merge = replace;
   }
-  memset(&jWrite , 0 , sizeof(jWrite));
+  memset(&noxWriter , 0 , sizeof(noxWriter));
   if (pDest == NULL || pSource == NULL  || pSource->pNodeChildHead == NULL) return;
-  // nox_MergeList(pDest, pSource->pNodeChildHead, &jWrite, "", pSource, merge);
-  nox_MergeObj (pDest, pSource, &jWrite, merge);
+  // nox_MergeList(pDest, pSource->pNodeChildHead, &noxWriter, "", pSource, merge);
+  nox_MergeObj (pDest, pSource, &noxWriter, merge);
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
@@ -2585,7 +2585,7 @@ PNOXNODE  nox_ArrayPush (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
 	 Appends an array to the end of another array
 	 --------------------------------------------------------------------------- */
 #pragma convert(1252)
-PNOXNODE  nox_ArrayAppend  (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
+PNOXNODE  nox_Append  (PNOXNODE pDest, PNOXNODE pSource , BOOL16 copyP)
 {
 	PNOXNODE  pNewNode, pNode, pNext;
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -3029,6 +3029,12 @@ PNOXNODE  nox_SetDecByNameVC (PNOXNODE pNode, PLVARCHAR Name, FIXEDDEC Value , L
 PNOXNODE  nox_Dec (FIXEDDEC Value )
 {
 	UCHAR  s [32];
+	int   posn=1 ,desctype , datatype , descinf1 , descinf2, datalen;
+   _FEEDBACK fb;
+
+   // get the parameter type and length
+   CEEDOD (&posn , &desctype , &datatype , &descinf1 , &descinf2 , &datalen , &fb);
+
 	dec2str(s, Value);
 	return NewNode (NULL, stre2a(s,s), LITERAL );
 }
@@ -3065,7 +3071,7 @@ PNOXNODE  nox_SetStrByNameVC (PNOXNODE pNode, PLVARCHAR pName, PLVARCHAR pValue,
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    if (pParms->OpDescList->NbrOfParms == 4 && nullIf == ON) {
       return nox_SetValueByName(pNode , plvc2str(pName) , NULL , LITERAL );
-   } 
+   }
 	return nox_SetValueByName(pNode , plvc2str(pName) , plvc2str(pValue) ,VALUE);
 }
 PNOXNODE  nox_StrVC (PLVARCHAR pValue )
@@ -3080,7 +3086,7 @@ PNOXNODE  nox_SetEvalByNameVC (PNOXNODE pNode, PLVARCHAR Name, PLVARCHAR pValue)
 	return nox_SetValueByName(pNode , plvc2str(Name) , plvc2str(pValue) , PARSE_STRING );
 }
 /* -------------------------------------------------------------
-	 Set null values - set by name, simple wrappers to 
+	 Set null values - set by name, simple wrappers to
 	 nox_SetValueByName
 	 ------------------------------------------------------------- */
 PNOXNODE  nox_SetNullByName (PNOXNODE pNode, PUCHAR Name)
@@ -3124,7 +3130,7 @@ FIXEDDEC nox_GetValueDecVC (PNOXNODE pNode , PLVARCHAR NameP  , FIXEDDEC dftParm
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PLVARCHAR  path  =  (pParms->OpDescList->NbrOfParms >= 2) ? NameP  : PLVARCHARNULL;
 	FIXEDDEC   dft   =  (pParms->OpDescList->NbrOfParms >= 3) ? dftParm : 0;
-	
+
 	PUCHAR  value;
 
 	value = nox_GetValuePtr    (pNode , plvc2str(path) , NULL ) ;
@@ -3237,7 +3243,7 @@ void nox_GetNodeNameVC (PLVARCHAR pRes, PNOXNODE pNode)
 {
 	pRes->Length = 0;
 	if (pNode && pNode->Name) {
-		pRes->Length = memSize(pNode->Name) -1; // with out the zero term 
+		pRes->Length = memSize(pNode->Name) -1; // with out the zero term
 		memcpy(pRes->String , pNode->Name , pRes->Length);
 	}
 }
@@ -3247,7 +3253,7 @@ void nox_GetNodeAttrValueVC (PLVARCHAR pRes, PNOXNODE pNode ,PLVARCHAR pAttrName
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PLVARCHAR dft = (pParms->OpDescList->NbrOfParms >= 4) ? pDefaultValue : PLVARCHARNULL;
 	PUCHAR value =  nox_GetNodeAttrValuePtr  ( pNode , plvc2str(pAttrName),  plvc2str(dft)) ;
-	pRes->Length = memSize(value) -1; // with out the zero term 
+	pRes->Length = memSize(value) -1; // with out the zero term
 	memcpy(pRes->String , value , pRes->Length);
 }
 // -------------------------------------------------------------
@@ -3346,7 +3352,7 @@ void nox_GetAttrValueVC (PLVARCHAR pRes, PNOXATTR pAttr, PLVARCHAR pDefaultValue
 
 	pRes->Length = 0;
 	if (pAttr &&  pAttr->Value ) {
-		pRes->Length = memSize(pAttr->Value) -1; // with out the zero term 
+		pRes->Length = memSize(pAttr->Value) -1; // with out the zero term
 		memcpy(pRes->String , pAttr->Value, pRes->Length);
 	}
 
@@ -3524,7 +3530,7 @@ INT64 nox_MemUse(VOID)
 }
 // ---------------------------------------------------------------------------
 // Empty placeholder for the export vector in the binder source;
-// Please replace with your code anytime 
+// Please replace with your code anytime
 // ---------------------------------------------------------------------------
 void dummy001 (VOID) {}
 

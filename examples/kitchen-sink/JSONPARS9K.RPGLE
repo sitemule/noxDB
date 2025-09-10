@@ -15,7 +15,7 @@
         //------------------------------------------------------------- *
 
         *inlr = *on;
-        
+
         // Normal parse a file
         pJson = Nox_ParseFile ('/samples/json/simple.json');
 
@@ -24,7 +24,7 @@
         pJson2 = Nox_ParseFile ('/samples/json/demo.json');
         pNode = nox_Locate(pJson2 : '/o/f');
         name =  nox_GetStr(pNode);   // Show john
-        //nox_NodeDelete(pNode);        // Delete john
+        //nox_Delete(pNode);        // Delete john
 
         // !! don't use close when using segments!!
         // !! Nox_Close(pJson2);  << Dont do this in segments

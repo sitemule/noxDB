@@ -21,7 +21,7 @@
         pSegment1 = nox_SegmentSelectNo(1);
         pJson1 = Nox_ParseFile ('/samples/json/demo.json');
         pNode = nox_Locate(pJson1 : '/'); // Delete root ... empty all
-        nox_NodeDelete(pNode);        // Delete john
+        nox_Delete(pNode);        // Delete john
 
 
         // Load an other json into a new memory segment

@@ -149,7 +149,7 @@ dcl-proc main;
     // a sub-node in an other object/array. here it just an example and have no effect
     // Also you can omit the result - but returns the receiving array so you can "chain" this function
     // ie "moveObjectInto"
-    pRes  = nox_arrayAppend(pCustList : pMoreCust: NOX_MOVE_UNLINK);
+    pRes  = nox_Append(pCustList : pMoreCust: NOX_MOVE_UNLINK);
 
     // How many are there in the array?
     len  = nox_getLength(pCustList);
