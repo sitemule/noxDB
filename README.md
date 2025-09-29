@@ -1,6 +1,6 @@
 # noxDB – Not Only XML….
-This branch is "work in progress" - merging the "EBCDIC" master, aiming at havinf the graph 100% in UTF-8 and tighten this up. 
- 
+This branch is "work in progress" - merging the "EBCDIC" master, aiming at havinf the graph 100% in UTF-8 and tighten this up.
+
 
 
 Nox is an opensource framework that makes it easy to work with XML, JSON and SQL with one single approach - from within RPG.
@@ -18,7 +18,7 @@ It is as simple as this in your RPG program:
 ```
 // load a resultset from the product table
 sql   = 'Select * from product';
-pRows = nox_sqlResultSet(sql);
+pRows = nox_sqlResultSet(pCon: sql);
 
 // Produce a JSON stream file in the root of the IFS
 nox_writeJsonStmf(pRows  :

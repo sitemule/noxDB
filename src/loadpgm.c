@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- */
 /* SYSIFCOPT(*IFSIO) OPTION(*EXPMAC *SHOWINC)                    */
 /* Program . . . : CALLsRVPGM                                    */
@@ -27,10 +27,9 @@
 #include "apierr.h"
 #include "parms.h"
 #include "trycatch.h"
-#include "utl100.h"
-#include "mem001.h"
-
-#include "jsonxml.h"
+#include "strUtil.h"
+#include "memUtil.h"
+#include "noxDbUtf8.h"
 
 extern UCHAR BraBeg;
 extern UCHAR BraEnd;
@@ -678,7 +677,7 @@ PNOXNODE  nox_ProcedureMeta ( PUCHAR library , PUCHAR Program , PUCHAR Procedure
    }
    return NULL;
 }
-//  --------------------------------------------------------------------------- 
+//  ---------------------------------------------------------------------------
 #pragma convert(1252)
 NOX_DTYPE convertDataType (PUCHAR type)
 {

@@ -11,6 +11,8 @@ LONG   astrTrimLen(PUCHAR str);
 LONG   strtrim(PUCHAR str);
 LONG   astrtrim(PUCHAR str);
 LONG   asprintf (PUCHAR res, PUCHAR ctrlstr , ... );
+LONG   ae_sprintf (PUCHAR res, PUCHAR ctrlstr , ... );
+
 LONG   a2i (PUCHAR str);
 LGL isOn (int boolExpr);
 PUCHAR strchrreplace(PUCHAR out , PUCHAR in , PUCHAR from , PUCHAR to );

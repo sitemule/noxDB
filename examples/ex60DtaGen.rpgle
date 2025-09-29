@@ -22,13 +22,13 @@
 // call qsys.create_sql_sample('CORPDATA');
 //
 // Important: You need to set the CCSID of the source to the CCSID of the
-//            traget ccsid of the running job.
+//            target ccsid of the running job.
 //            otherwise special chars will be strange for constants.
 //            This project is by default set to CCSID 500
 //            do a CHGJOBCCSID(500) before running these examples.
 //            This only applies to program constants !!
 //
-// Note:      This program is build with UTF-8, so all CHAR/VARCHAR are in UTF-8
+// Note:      This program is/can be build with UTF-8, so all CHAR/VARCHAR are in UTF-8
 //            This is not an requirement - you can use any CCSID you like
 //
 //
@@ -386,6 +386,7 @@ dcl-proc example7;
 	dcl-s pProj        pointer;
 	dcl-s pOutputRows  pointer;
 	dcl-s handle       char(1);
+    dcl-s Msg          varchar(1024) ;
     Dcl-DS empList     likeds(nox_iterator);
     Dcl-DS projList    likeds(nox_iterator);
 
@@ -394,6 +395,12 @@ dcl-proc example7;
 		 from corpdata.employee  -
 		 limit 100               -
 	');
+
+    if Nox_Error(pEmp) ;
+        msg = nox_Message(pEmp);
+        nox_joblog ( msg );
+        return;
+    endif;
 
     // note - here we also pick the EMPNO from the iterator graph done by ${EMPNO}
     empList = nox_setIterator(pEmp);
@@ -421,6 +428,13 @@ dcl-proc example7;
    		    limit 50 ':
             emplist.this
         );
+
+        if Nox_Error(pProj) ;
+            msg = nox_Message(pProj);
+            nox_joblog ( msg );
+            return;
+        endif;
+
         projList = nox_setIterator(pProj);
         DoW nox_ForEach(projList);
             clear response.employees(empList.count).projects(projList.count);

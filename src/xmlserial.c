@@ -149,7 +149,7 @@ static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT 
 
       indentXml ( pStream, cdatamode , level);
       stream_puts (pStream , "<");
-      stream_puts (pStream , pNode->Name );
+      stream_puts (pStream , pNode->Name ? pNode->Name : "row");
 
       for (pAttrTemp = pNode->pAttrList; pAttrTemp ; pAttrTemp = pAttrTemp->pAttrSibling){
          if (pNode->newlineInAttrList) {
@@ -194,7 +194,7 @@ static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT 
 
          stream_puts (pStream , CdataEnd);
          stream_puts (pStream , "</");
-         stream_puts (pStream , pNode->Name);
+         stream_puts (pStream , pNode->Name ? pNode->Name : "row");
          stream_puts (pStream , ">");
       }
 

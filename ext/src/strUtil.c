@@ -1023,9 +1023,26 @@ LONG asprintf (PUCHAR res, PUCHAR ctrlstr , ... )
 	va_start(arg_ptr, eCtrlstr);
 	len = vsprintf(res, eCtrlstr, arg_ptr);
 	va_end(arg_ptr);
-   stre2a (res  , res );
+   stre2a (res  , res ); // TODO !! <<< Is this correct?
    return len;
 }
+// ---------------------------------------------------------------------------
+// Get all parms in ascii but result is in EBCDIC
+// ---------------------------------------------------------------------------
+LONG ae_sprintf (PUCHAR res, PUCHAR ctrlstr , ... )
+{
+   LONG len;
+   va_list arg_ptr;
+
+   stra2e (ctrlstr , ctrlstr);
+	// Build a temp string with the formated data  */
+	va_start(arg_ptr, ctrlstr);
+	len = vsprintf(res, ctrlstr, arg_ptr);
+	va_end(arg_ptr);
+   stra2e (res  , res );
+   return len;
+}
+
 // ---------------------------------------------------------------------------
 // real ascii version of atoi
 // ---------------------------------------------------------------------------

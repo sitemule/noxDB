@@ -42,7 +42,7 @@
 #include "e2aa2e.h"
 
 // Global thread vars
-__thread UCHAR jxMessage[512];
+__thread UCHAR jxMessage[512]; // EBCDIC !!
 __thread BOOL  jxError = false;
 
 //  BOOL  skipBlanks = TRUE;
@@ -1396,9 +1396,11 @@ void nox_NodeInsertSiblingAfter( PNOXNODE pRef, PNOXNODE pSibling)
 	pRef->pNodeSibling     = pSibling;
 }
 // ---------------------------------------------------------------------------
-void AddNode(PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc)
+void nox_NodeInsert (PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc)
 {
 	if (pDest   == NULL) return;
+
+	pSource = nox_NodeUnlink(pSource);      // Now I am my own root
 
 	switch ( refloc) {
 		case RL_LAST_CHILD:
@@ -1494,7 +1496,7 @@ PNOXNODE nox_NodeCopy (PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc)
 	if (pSource == NULL) return;
 
 	pNewNode = nox_NodeClone  (pSource);
-	AddNode(pDest, pNewNode, refloc);
+	nox_NodeInsert (pDest, pNewNode, refloc);
 	return pNewNode;
 
 }
@@ -1520,17 +1522,17 @@ PNOXNODE NewNode  (PUCHAR Name , PUCHAR Value, NODETYPE type)
 	return pNode;
 }
 // ---------------------------------------------------------------------------
-PNOXNODE nox_NodeInsert (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type)
+PNOXNODE nox_NodeInsertNew (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type)
 {
     PNOXNODE  pNewNode  = NewNode  (Name , Value, type);
-	AddNode(pDest, pNewNode, refloc);
+	nox_NodeInsert (pDest, pNewNode, refloc);
 	return pNewNode;
 }
-PNOXNODE nox_NodeInsertVC (PNOXNODE pDest, REFLOC refloc, PLVARCHAR Name , PLVARCHAR Value, NODETYPE typeP)
+PNOXNODE nox_NodeInsertNewVC (PNOXNODE pDest, REFLOC refloc, PLVARCHAR Name , PLVARCHAR Value, NODETYPE typeP)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	NODETYPE type =  pParms->OpDescList->NbrOfParms >= 5 ? typeP : VALUE;
-	return  nox_NodeInsert  (pDest, refloc , plvc2str(Name) , plvc2str(Value), type);
+	return  nox_NodeInsertNew  (pDest, refloc , plvc2str(Name) , plvc2str(Value), type);
 }
 // ---------------------------------------------------------------------------
 PNOXNODE nox_NewObject ()
@@ -2759,7 +2761,7 @@ PNOXNODE nox_CreateSubNodes  (PNOXNODE pNodeRoot , PUCHAR Path )
 	if  (pName[0] == BRABEG && pName[1] == BRAEND) {   // the empty array: []
 		pName += 2;
 		pNodeRoot->type = ARRAY;
-		pParentNode = nox_NodeInsert (pNodeRoot, RL_LAST_CHILD, NULL , NULL, VALUE);
+		pParentNode = nox_NodeInsertNew (pNodeRoot, RL_LAST_CHILD, NULL , NULL, VALUE);
 		isNewArray = true;
 	} else if  (*pName == BRABEG) {
 		pName ++ ;
@@ -2795,14 +2797,14 @@ PNOXNODE nox_CreateSubNodes  (PNOXNODE pNodeRoot , PUCHAR Path )
 				if (pParentNode->type != ARRAY) {
 					pParentNode->type = OBJECT;
 				}
-				pNodeTemp = nox_NodeInsert (pParentNode, RL_LAST_CHILD, pName , NULL, isNewArray ? ARRAY : nodeType);
+				pNodeTemp = nox_NodeInsertNew (pParentNode, RL_LAST_CHILD, pName , NULL, isNewArray ? ARRAY : nodeType);
 			}
 
 			// The [] syntax  - Add the new entry to the array
 			if (isNewArray) {
 				freeNodeValue(pNodeTemp);     // Can not have values if we have childrens
 				pNodeTemp->type = ARRAY ;     // When i have childrne then i must be an object or array
-				pNodeTemp = nox_NodeInsert (pNodeTemp, RL_LAST_CHILD, NULL , NULL, nodeType);
+				pNodeTemp = nox_NodeInsertNew (pNodeTemp, RL_LAST_CHILD, NULL , NULL, nodeType);
 				pName = pEnd + 2;
 				if (isNextDelimiter(*pName))  pName++;
 				isNewArray = false; // Done with array chekking
@@ -3062,9 +3064,15 @@ PNOXNODE  nox_Bool (BOOL  Value )
 /* -------------------------------------------------------------
 	 Set string value by name
 	 ------------------------------------------------------------- */
-PNOXNODE  nox_SetStrByName (PNOXNODE pNode, PUCHAR pName, PUCHAR pValue)
+PNOXNODE  nox_SetAsciiByName (PNOXNODE pNode, PUCHAR pName, PUCHAR pValue)
 {
 	return nox_SetValueByName(pNode , pName , pValue , VALUE );
+}
+PNOXNODE  nox_SetStrByName (PNOXNODE pNode, PUCHAR pName, PUCHAR pValue)
+{
+	UCHAR temp [strlen(pValue) + 1];
+	stre2a(temp,pValue);
+	return nox_SetValueByName(pNode , pName , temp , VALUE );
 }
 PNOXNODE  nox_SetStrByNameVC (PNOXNODE pNode, PLVARCHAR pName, PLVARCHAR pValue, LGL nullIf)
 {

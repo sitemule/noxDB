@@ -20,13 +20,13 @@
 //  B: Include the noxDbUtf8 prototypes from QRPGLEREF member NOXDBUTF8
 //
 // Important: You need to set the CCSID of the source to the CCSID of the
-//            traget ccsid of the running job.
+//            target ccsid of the running job.
 //            otherwise special chars will be strange for constants.
 //            This project is by default set to CCSID 500
 //            do a CHGJOBCCSID(500) before running these examples.
 //            This only applies to program constants !!
 //
-// Note:      This program is build with UTF-8, so all CHAR/VARCHAR are in UTF-8
+// Note:      This program is/can be build with UTF-8, so all CHAR/VARCHAR are in UTF-8
 //            This is not an requirement - you can use any CCSID you like
 //
 //

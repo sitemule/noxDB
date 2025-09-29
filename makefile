@@ -12,7 +12,7 @@ SHELL=/QOpenSys/pkgs/bin/bash
 # binder source file and rpg module can be remove with the clean step (make clean)
 .PHONY=all
 BIN_LIB=NOXDBUTF8
-LIBLIST=$(BIN_LIB) 
+LIBLIST=$(BIN_LIB)
 TARGET_CCSID=*JOB
 TARGET_RELEASE=V7R3M0
 
@@ -81,7 +81,7 @@ SOURCE  := $(shell find src -name "*.cpp" -o -name "*.c" -o -name "*.clle" )
 
 
 
-all:  $(BIN_LIB).lib link githash hdr $(EXTERNALS) $(SOURCE) noxDbUtf8.bnddir noxDbUtf8.srvpgm 
+all:  $(BIN_LIB).lib link githash hdr $(EXTERNALS) $(SOURCE) noxDbUtf8.bnddir noxDbUtf8.srvpgm
 
 
 %.lib:
@@ -90,10 +90,10 @@ all:  $(BIN_LIB).lib link githash hdr $(EXTERNALS) $(SOURCE) noxDbUtf8.bnddir no
 # QOAR are for unknow reasons not in /QIBM/include
 # We make link to them for copyright reasons - no copy
 link:
-	-mkdir -p ./ext/include/qoar/h
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./ext/include/qoar/h/qrntypes
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./ext/include/qoar/h/qrndtagen
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./ext/include/qoar/h/qrndtainto
+	-mkdir -p ./ext/include/qoar
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./ext/include/qoar/qrntypes.h
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./ext/include/qoar/qrndtagen.h
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./ext/include/qoar/qrndtainto.h
 
 
 $(EXTERNALS) $(SOURCE): FORCE
@@ -109,13 +109,13 @@ noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/csv.c s
 						src/iterator.c src/http.c src/generic.c src/trace.clle src/datagen.c src/githash.c \
 						ext/src/memUtil.c ext/src/parms.c ext/src/sndpgmmsg.c ext/src/stream.c ext/src/timestamp.c \
 						ext/src/trycatch.c \
-						ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c 
+						ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c
 	@# You may be wondering what this ugly string is. It's a list of objects created from the dep list that end with .c or .clle.
 	$(eval MODULES = $(notdir $(basename $(filter %.c %.clle %.cpp, $^))))
 	compile.py --stmf="src/$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" \
 		--flags="MODULE($(MODULES)) ALWLIBUPD(*YES) TGTRLS($(TARGET_RELEASE)) DETAIL(*BASIC)"
 
-noxDbUtf8.bnddir: 
+noxDbUtf8.bnddir:
 	-system "DLTBNDDIR  BNDDIR($(BIN_LIB)/$(BIN_LIB))"
 	-system "CRTBNDDIR  BNDDIR($(BIN_LIB)/$(BIN_LIB))"
 	-system "ADDBNDDIRE BNDDIR($(BIN_LIB)/$(BIN_LIB)) OBJ(($(BIN_LIB)/$(BIN_LIB) *SRVPGM))"
@@ -127,7 +127,7 @@ hdr:
 
 	-system -i "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(132)"
 	-system -i "CRTSRCPF FILE($(BIN_LIB)/H) RCDLEN(132)"
-  
+
 	system "CPYFRMSTMF FROMSTMF('headers/noxDbUtf8.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDbUtf8.mbr') MBROPT(*REPLACE)"
 #	system "CPYFRMSTMF FROMSTMF('headers/noxDbUtf8JSON.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDbUtf8JSON.mbr') MBROPT(*REPLACE)"
 #	system "CPYFRMSTMF FROMSTMF('headers/noxDbUtf8XML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDbUtf8XML.mbr') MBROPT(*REPLACE)"
@@ -137,7 +137,7 @@ all:
 	@echo Done - Check list above for errors!
 
 .PHONY: update
-update: 
+update:
 	-system -q "UPDSRVPGM ($(BIN_LIB)/NOXDBUTF8) MODULE($(BIN_LIB)/$(OBJ))"
 
 cleanup:
@@ -147,7 +147,7 @@ cleanup:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/RELEASE) OBJTYPE(*FILE)"
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/TS*)      OBJTYPE(*PGM)"
 
-release: cleanup 
+release: cleanup
 	@echo " -- Creating noxDbUtf8 release. --"
 	@echo " -- Creating save file. --"
 	system "CRTSAVF FILE($(BIN_LIB)/RELEASE)"
@@ -165,7 +165,7 @@ release: cleanup
 	@echo "  > RSTLIB SAVLIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE)"
 	@echo ""
 	@echo "Or restore into existing application library"
-	@echo "  > RSTOBJ OBJ(*ALL) SAVLIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) MBROPT(*ALL) ALWOBJDIF(*FILELVL) RSTLIB(yourlib)     
+	@echo "  > RSTOBJ OBJ(*ALL) SAVLIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) MBROPT(*ALL) ALWOBJDIF(*FILELVL) RSTLIB(yourlib)
 
 FORCE:
 

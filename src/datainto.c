@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* --------------------------------------------------------------- *
  * Company . . . : System & Method A/S                             *
  * Design  . . . : Niels Liisberg                                  *
@@ -25,20 +25,14 @@
 #include "mem001.h"
 #include "varchar.h"
 #include "noxDbUtf8.h"
-
-
-#ifdef QOAR_INCLUDE_IFS
-#include  <qoar/h/qrndtainto>
-#else
-#include  "/QSYS.LIB/QOAR.LIB/H.FILE/QRNDTAINTO.MBR"
-#endif
+#include "qoar/qrndtainto.h"
 
 
 static PJXNODE pRoot;
 static iconv_t iconvCd;
 static BOOL first = true;
 
-// TODO !!! ensure UTF-8 
+// TODO !!! ensure UTF-8
 
 // Portotype can not move to generic header since dubble defintion i IBM headers :(
 static void  nox_dataIntoMapNode  (PJXNODE pNode, QrnDiParm_T * pParms, SHORT level);

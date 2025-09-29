@@ -1,11 +1,11 @@
 // CMD:CRTCMOD
-/* --------------------------------------------------------------- 
- * Company . . . : System & Method A/S                             
- * Design  . . . : Niels Liisberg                                  
- * Function  . . : NOX - Serializer from RPGLE structures          
- *                                                                 
- * By     Date       Task    Description                           
- * NL     09.03.2021 0000000 New program                           
+/* ---------------------------------------------------------------
+ * Company . . . : System & Method A/S
+ * Design  . . . : Niels Liisberg
+ * Function  . . : NOX - Serializer from RPGLE structures
+ *
+ * By     Date       Task    Description
+ * NL     09.03.2021 0000000 New program
  * trace:
  * ADDENVVAR QIBM_RPG_DATA_GEN_TRACE VALUE('*STDOUT')
  * --------------------------------------------------------------- */
@@ -28,10 +28,10 @@
 #include "noxDbUtf8.h"
 #include "xlate.h"
 
-#include  "qoar/h/qrntypes"
-#include  "qoar/h/qrndtagen"
+#include  "qoar/qrntypes.h"
+#include  "qoar/qrndtagen.h"
 
-// NOTE ALL constants is UTF-8
+// NOTE !!! ALL constants are UTF-8
 #pragma convert(1252)
 
 // TODO !!! - Check reintrant

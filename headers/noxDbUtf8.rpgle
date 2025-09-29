@@ -14,11 +14,19 @@
 /endif
 /define  NOX_DEF
 
+
+Dcl-S UTF8_1K  varchar(1024:4)     CCSID(*UTF8) Template;
+Dcl-S UTF8_1M  varchar(1048572:4)  CCSID(*UTF8) Template;
+Dcl-S UTF8_16M varchar(16773100:4)  CCSID(*UTF8) Template;
+//Dcl-S UTF8_1G  varchar(1073741820:4) CCSID(*UTF8) Template;
+//Dcl-S UTF8_2G  varchar(2147483644:4) CCSID(*UTF8) Template;
+
+// The UTF8_MAX can be set from 16M to 2G dependent of your OS
+Dcl-S UTF8_MAX like(UTF8_16M) CCSID(*UTF8) Template;
 // 1M minus length of 4 bytes
 Dcl-S UTF8     varchar(1048572:4)  CCSID(*UTF8) Template;
-Dcl-S UTF8_MAX varchar(16773100:4) CCSID(*UTF8) Template;
-Dcl-S UTF8_1M  varchar(1048572:4)  CCSID(*UTF8) Template;
-Dcl-S UTF8_1K  varchar(1024:4)     CCSID(*UTF8) Template;
+
+
 Dcl-C UTF8_BOM const(-1208);
 Dcl-S FIXEDDEC Packed(30:15) Template;
 
@@ -310,7 +318,7 @@ End-PR;
 // @param (input) Node
 // @param (input) New node name
 ///
-Dcl-PR nox_NodeRename Ind extproc(*CWIDEN : 'nox_NodeRenameVC');
+Dcl-PR nox_Rename Ind extproc(*CWIDEN : 'nox_NodeRenameVC');
   pNode          Pointer    value;
   NodeName       Like(UTF8_1K) const options(*varsize);
 End-PR;
@@ -1048,9 +1056,9 @@ End-PR;
 
 
 ///
-// Node Insert
+// NodeInsertNew
 //
-// Creates a new node and insert that into eexisting root node
+// Creates a new node and insert that into existing root node
 //
 // <br><br>
 //
@@ -1070,7 +1078,7 @@ End-PR;
 // @param (input) Node type: Refere to above "node type"
 // @return the new created node
 ///
-Dcl-PR nox_NodeInsert Pointer extproc(*CWIDEN : 'nox_NodeInsertVC');
+Dcl-PR nox_NodeInsertNew Pointer extproc(*CWIDEN : 'nox_NodeInsertNewVC');
   // node. Retrive from Locate()
   pRootNode      Pointer    value;
   //Reference location to where it arrive
@@ -1083,16 +1091,51 @@ Dcl-PR nox_NodeInsert Pointer extproc(*CWIDEN : 'nox_NodeInsertVC');
   Type           Uns(5)     value options(*nopass);
 End-PR;
 
+
+///
+// NodeInsert
+//
+// Insert an existing node into the graph. If the node is already part of another graph it
+// will be unlinked from that graph first.
+//
+//
+// <br><br>
+//
+// The reference location indicates where the new node will be moved into relative
+// to the passed node. Possible value are
+// <ul>
+//   <li>NOX_FIRST_CHILD</li>
+//   <li>NOX_LAST_CHILD</li>
+//   <li>NOX_BEFORE_SIBLING</li>
+//   <li>NOX_AFTER_SIBLING</li>
+// </ul>
+//
+// @param (output) Node
+// @param (input) Reference location
+// @param (input) Name of node
+// @param (input) Node value
+// @param (input) Node type: Refere to above "node type"
+// @return the new created node
+///
+Dcl-PR nox_NodeInsert Pointer extproc(*CWIDEN : 'nox_NodeInsert');
+  // node. Retrive from Locate()
+  pDestination   Pointer    value;
+  // node. Retrive from Locate()
+  pSource        Pointer    value;
+  //Reference location to where it arrive
+  RefLocation    Int(10)    value;
+End-PR;
+
 ///
 // Delete node
 //
 // The passed node and all child nodes are remove from the noxDB object graph.
-// The memory is freed and the pointer is set to <code>*null</code>.
+// The memory is freed.
 //
 // @param (input) Node (<code>*null</code> will be ignored)
 ///
-Dcl-PR nox_Delete extproc(*CWIDEN : 'nox_Delete');
-  pNode      Pointer;
+Dcl-PR nox_Delete extproc(*CWIDEN : 'nox_NodeDelete');
+  pNode      Pointer value;
 End-PR;
 
 ///
@@ -1106,7 +1149,7 @@ End-PR;
 //
 // @info The unlinked node is no longer connected to its former object graph
 //       and its resources must be freed with a call to
-//       <code>nox_close(unlinkedNode)</code>.
+//       <code>nox_delete(unlinkedNode)</code>.
 ///
 Dcl-PR nox_NodeUnlink Pointer extproc(*CWIDEN : 'nox_NodeUnlink');
   pNode          Pointer    value;

@@ -92,7 +92,7 @@ PNOXNODE static sqlErrorObject(PUCHAR sqlstmt)
 	PNOXNODE pError = nox_NewObject();
 	nox_SetBoolByName (pError , "success" ,  OFF);
 	nox_SetStrByName  (pError , "msg"     ,  jxMessage);
-	nox_SetStrByName  (pError , "stmt"    ,  sqlstmt);
+	nox_SetAsciiByName  (pError , "stmt"    ,  sqlstmt);
 	messageList (pError);
 
 	return pError;
@@ -134,7 +134,7 @@ static int check_error (PNOXSQLCONNECT pCon, PNOXSQL pSQL)
 
 	length = 0;
 	rc = SQLGetDiagRec(hType , handle, 1, psqlState, psqlCode, psqlMsgDta,  sizeof(sqlMsgDta), &length);
-	asprintf( jxMessage , "%-5.5s %-*.*s" , psqlState, length, length, psqlMsgDta);
+	ae_sprintf( jxMessage , "%-5.5s %-*.*s" , psqlState, length, length, psqlMsgDta);
 	nox_sqlClose (&pSQL); // Free the data
 	jxError = true;
 
@@ -189,6 +189,7 @@ int nox_sqlExecDirectTrace(PNOXSQLCONNECT pCon, PNOXSQL pSQL , int hstmt, PUCHAR
 {
 
 	int rc, rc2;
+	BOOL doClose = FALSE;
 	SQLSMALLINT   length   = 0;
 	LONG          lrc;
 	PUCHAR        psqlState  = "";
@@ -198,14 +199,19 @@ int nox_sqlExecDirectTrace(PNOXSQLCONNECT pCon, PNOXSQL pSQL , int hstmt, PUCHAR
 	memset ( pCon->sqlState , ' ' , 5);
 	ts_nowstr(pTrc->tsStart); // TODO !!! not form global
 	rc = SQLExecDirect( hstmt, sqlstmt, SQL_NTS);
-	if (rc != SQL_SUCCESS) {
+	if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+		doClose = TRUE;
+		jxError = TRUE;
 		rc2= SQLGetDiagRec(SQL_HANDLE_STMT,hstmt,1,pCon->sqlState,&pCon->sqlCode, pTrc->text,sizeof(pTrc->text), &length);
-		asprintf( jxMessage , "%-5.5s %0.*s" , pCon->sqlState , length, pTrc->text);
-		nox_sqlClose (&pSQL); // Free the data
+		ae_sprintf( jxMessage , "%-5.5s %0.*s" , pCon->sqlState , length, pTrc->text);
 	}
 	pTrc->text [length] = '\0';
 	ts_nowstr(pTrc->tsEnd); // TODO !!! not form global
 	nox_traceInsert ( pSQL , sqlstmt , pCon->sqlState);
+
+	if (doClose) {
+		nox_sqlClose (&pSQL); // Free the data
+	}
 	return rc; // we have an error
 }
 /* ------------------------------------------------------------- */
@@ -459,23 +465,18 @@ PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, L
 
 	UCHAR sqlTempStmt[32766];
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PNOXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 2 ) ? pSqlParmsP : NULL;
+	PNOXNODE pSqlParms =  (pParms->OpDescList->NbrOfParms >= 2 ) ? pSqlParmsP : NULL;
    LONG   format      =  (pParms->OpDescList->NbrOfParms >= 3 ) ? formatP : 0;
    LONG   start       =  (pParms->OpDescList->NbrOfParms >= 4 ) ? startP : NOXDB_FIRST_ROW; // begining
    LONG   limit       =  (pParms->OpDescList->NbrOfParms >= 5 ) ? limitP : NOXDB_ALL_ROWS; // all rows
-
 	LONG   attrParm;
 	LONG   i;
 	UCHAR  typeName [256];
    LONG   tprc;
-
-	//   PNOXSQL pSQL = nox_sqlNewStatement (pParms->OpDescList->NbrOfParms >= 2 ? pSqlParms  :NULL);
 	PNOXSQL pSQL;
    SQLINTEGER  dummyInt , isTrue,descLen;
    SQLSMALLINT len ,dummyShort;
-
-	BOOL scroll = pParms->OpDescList->NbrOfParms <= 2; // Typicall from CALL from RPG
-
+	BOOL scroll = pParms->OpDescList->NbrOfParms <= 3; // Typicall from CALL from RPG
 	int rc;
 
 	jxError = false; // Assume OK
@@ -803,14 +804,14 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 
 			// Null data is the same for all types
 			if (buflen  ==  SQL_NULL_DATA) {
-				nox_NodeInsert (pRow , RL_LAST_CHILD, pCol->colname , NULL,  NOX_LITERAL );
+				nox_NodeInsertNew (pRow , RL_LAST_CHILD, pCol->colname , NULL,  NOX_LITERAL );
 			} else {
 
 				memset ( buf + buflen, 0 , 2); // Zero term - also UNICODE
 
 				switch( pCol->coltype) {
 					case SQL_BOOLEAN    :
-                  nox_NodeInsert (
+                  nox_NodeInsertNew (
 							pRow ,
 							RL_LAST_CHILD,
 							pCol->colname ,
@@ -839,7 +840,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 						OutLen = XlateBuffer  (pSQL->pCon->iconv, temp , pInBuf, inbytesleft);
 						temp[OutLen] = '\0';
 
-						nox_NodeInsert (pRow , RL_LAST_CHILD, pCol->colname , temp,  pCol->nodeType );
+						nox_NodeInsertNew (pRow , RL_LAST_CHILD, pCol->colname , temp,  pCol->nodeType );
 
 						break;
 					}
@@ -868,7 +869,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 
 						}
 
-						nox_NodeInsert (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
+						nox_NodeInsertNew (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
 						break ;
 					}
 
@@ -895,7 +896,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 							}
 						}
 
-						nox_NodeInsert (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
+						nox_NodeInsertNew (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
 						break;
 					}
 				}
@@ -1055,7 +1056,7 @@ PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
 		SQLINTEGER descNo;
 
 		// Add name
-		nox_NodeInsert (pField  , RL_LAST_CHILD, "name" , pCol->colname,  VALUE );
+		nox_NodeInsertNew (pField  , RL_LAST_CHILD, "name" , pCol->colname,  VALUE );
 
 		// Add type
 		switch( pCol->coltype) {
@@ -1084,23 +1085,23 @@ PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
 				}
 			}
 		}
-		nox_NodeInsert (pField  , RL_LAST_CHILD, "datatype" , type,  VALUE );
+		nox_NodeInsertNew (pField  , RL_LAST_CHILD, "datatype" , type,  VALUE );
 
 		asprintf(temp , "%d" ,  pCol->coltype);
-		nox_NodeInsert (pField  , RL_LAST_CHILD, "sqltype" , temp ,  LITERAL);
+		nox_NodeInsertNew (pField  , RL_LAST_CHILD, "sqltype" , temp ,  LITERAL);
 
 		// Add size
 		asprintf(temp , "%d" , pCol->displaysize);
-		nox_NodeInsert (pField  , RL_LAST_CHILD, "size"     , temp,  LITERAL  );
+		nox_NodeInsertNew (pField  , RL_LAST_CHILD, "size"     , temp,  LITERAL  );
 
 		// Add decimal precission
 		if  (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE
 		&&   pCol->scale > 0) {
 			asprintf(temp , "%d" , pCol->scale);
-			nox_NodeInsert (pField  , RL_LAST_CHILD, "prec"     , temp,  LITERAL  );
+			nox_NodeInsertNew (pField  , RL_LAST_CHILD, "prec"     , temp,  LITERAL  );
 		}
 
-		nox_NodeInsert (pField  , RL_LAST_CHILD, "header" , pCol->header, VALUE  );
+		nox_NodeInsertNew (pField  , RL_LAST_CHILD, "header" , pCol->header, VALUE  );
 
 		// Push to array
 		nox_ArrayPush (pFields , pField, FALSE);
@@ -1639,9 +1640,10 @@ void nox_TraceSetId (PNOXSQLCONNECT pCon, INT64 trid)
 /* ------------------------------------------------------------- */
 void nox_traceInsert (PNOXSQL pSQL, PUCHAR stmt , PUCHAR sqlState)
 {
-	int rc;
+	if (pSQL == NULL || pSQL->pCon == NULL ) return;
 	PNOXTRACE pTrc = &pSQL->pCon->sqlTrace; // !!! TODO not from global !!!
 	if (pTrc->doTrace == OFF) return;
+	int rc;
 	rc = SQLBindParameter(pTrc->handle,3,SQL_PARAM_INPUT,SQL_C_CHAR,SQL_CHAR    ,   5,0,sqlState,0,NULL);
 	rc = SQLBindParameter(pTrc->handle,7,SQL_PARAM_INPUT,SQL_C_CHAR,SQL_VARCHAR ,8192,0,stmt,0,NULL);
 
@@ -2097,7 +2099,7 @@ PNOXSQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 	// Note - this is invers: Default to IBM i naming
 	attrParm = pCon->options.sqlNaming == ON ? SQL_FALSE : SQL_TRUE;
 	rc = SQLSetEnvAttr  (pCon->henv, SQL_ATTR_SYS_NAMING, &attrParm  , 0);
-	/* Dont test since the activations groupe might be reclaimed, and a new "session" is on..
+	/ * Dont test since the activations groupe might be reclaimed, and a new "session" is on..
 	if (rc != SQL_SUCCESS ) {
 		check_error (NULL);
 		nox_sqlDisconnect ();

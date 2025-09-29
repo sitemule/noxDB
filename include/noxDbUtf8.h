@@ -324,6 +324,7 @@ void nox_NodeFreeNodeOnly(PNOXNODE pNode);
 LGL nox_isNode  (PNOXNODE pNode);
 void nox_NodeRename(PNOXNODE pNode, PUCHAR name);
 PNOXNODE nox_NodeUnlink  (PNOXNODE  pNode);
+void nox_NodeInsert (PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc);
 void nox_NodeInsertChildHead( PNOXNODE pRoot, PNOXNODE pChild);
 void nox_NodeInsertChildTail( PNOXNODE pRoot, PNOXNODE pChild);
 void nox_NodeInsertSiblingBefore( PNOXNODE pRef, PNOXNODE pSibling);
@@ -424,7 +425,7 @@ FIXEDDEC nox_GetNodeValueDec (PNOXNODE pNode , FIXEDDEC DefaultValue);
 PUCHAR   nox_GetNodeNamePtr  (PNOXNODE pNode);
 void    nox_GetNodeNameVC   (PLVARCHAR name, PNOXNODE pNode);
 
-PNOXNODE  nox_NodeInsert (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type) ;
+PNOXNODE  nox_NodeInsertNew (PNOXNODE pDest, REFLOC refloc, PUCHAR Name , PUCHAR Value, NODETYPE type) ;
 void     nox_NodeSet (PNOXNODE pNode , PUCHAR Value);
 void     nox_NodeDelete(PNOXNODE pRoot);
 void     nox_NodeReplace (PNOXNODE  pDest, PNOXNODE pSource);
@@ -478,7 +479,7 @@ BOOL    nox_HasMore(PNOXNODE pNode);
 void     nox_SkipBlanks(BOOL skip);
 BOOL    JSON_Parse(PNOXCOM pJxCom);
 BOOL    jsonParseNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCurNode) ;
-void    AddNode(PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc);
+
 PNOXNODE DupNode(PNOXNODE pSource);
 PNOXNODE NewNode (PUCHAR Name , PUCHAR Value, NODETYPE type);
 PNOXNODE CloneNode  (PNOXNODE pSource);
@@ -493,6 +494,7 @@ PNOXNODE  nox_LookupValue (PNOXNODE pDest, PUCHAR expr , BOOL16 ignorecase);
 LONG     nox_getLength (PNOXNODE pNode);
 ULONG    nox_NodeCheckSum (PNOXNODE pNode);
 
+PNOXNODE  nox_SetAsciiByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Value);
 PNOXNODE  nox_SetStrByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Value);
 PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR Name, BOOL Value);
 PNOXNODE  nox_SetDecByName (PNOXNODE pNode, PUCHAR Name, FIXEDDEC Value);

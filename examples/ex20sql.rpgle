@@ -1,0 +1,142 @@
+**free
+// ------------------------------------------------------------------------------------
+// noxDB - Not Only Xml - Its JSON, XML, SQL and more
+//
+// This tutorial will show all SQL function of the noxDbUtf8 library
+//
+// Design:  Niels Liisberg
+// Project: Sitemule.com
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//
+// Look at the header source file "QRPGLEREF" member "NOXDBUTF8"
+// for a complete description of the functionality
+//
+// When using noxDbUtf8 you need two things:
+//  A: Bind you program with "NOXDBUTF8" Bind directory
+//  B: Include the noxDbUtf8 prototypes from QRPGLEREF member NOXDBUTF8
+//
+// Important: You need to set the CCSID of the source to the CCSID of the
+//            target ccsid of the running job.
+//            otherwise special chars will be strange for constants.
+//            This project is by default set to CCSID 500
+//            do a CHGJOBCCSID(500) before running these examples.
+//            This only applies to program constants !!
+//
+// Note:      This program is/can be build with UTF-8, so all CHAR/VARCHAR are in UTF-8
+//            This is not an requirement - you can use any CCSID you like
+//
+// This sample uses the demo SQL schema made from ACS run SQL scripts:
+// call qsys.create_sql_sample('CORPDATA');
+//
+//
+// try/build:
+// cd '/prj/NOXDBUTF8'
+// addlible NOXDBUTF8
+// chgjobccsid(500)
+// call
+// ------------------------------------------------------------------------------------
+Ctl-Opt BndDir('NOXDBUTF8') CCSID(*CHAR:*UTF8);
+Ctl-Opt dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt:*nounref) ALWNULL(*USRCTL);
+Ctl-Opt main(main);
+/include qrpgleref,noxDbUtf8
+
+// Global connection pointer
+dcl-s pCon         pointer;
+
+
+// ------------------------------------------------------------------------------------
+dcl-proc main;
+    dcl-s memuse       int(20);
+
+    // Take a snapshot of the memory usage before we start
+    memuse = nox_memUse();
+
+    // Connect to the database - using the noxDbUtf8 driver. This is global for all examples
+    pCon = nox_sqlConnect();
+
+    example1();
+
+on-exit;
+    // Always remember to delete used memory !!
+    nox_sqlDisconnect(pCon);
+    if memuse <> nox_memuse();
+        dsply 'Ups - forgot to clean something up';
+    endif;
+
+end-proc;
+
+// ------------------------------------------------------------------------------------
+// Load a graph with data from a Db2 table and export it as JSON and XML
+// Default is a simple array of rows
+// ------------------------------------------------------------------------------------
+dcl-proc example1;
+
+
+
+	dcl-s pEmployees   pointer;
+    dcl-s Msg          varchar(1024) ccsid(*jobrun);
+
+    // Load all employees into a graph and return the pointer to the graph object
+	pEmployees = nox_sqlResultSet(pCon:
+        'select *                -
+		 from corpdata.employee  -
+	');
+
+    // Was there a problem ?   If so - write the message to the joblog and return
+    // Note we use an on-error to clean up
+    if Nox_Error(pEmployees) ;
+        msg = nox_Message(pEmployees);
+        nox_joblog ( msg );
+        return;
+    endif;
+
+
+    // Let's see what we got - both as JSON and XML - note the 1208 is the UTF-8 CCSID
+    nox_WriteJsonStmf(pEmployees:'/prj/noxDbUtf8/testout/ex20-employees1.json':1208:*OFF);
+    nox_WriteXmlStmf (pEmployees:'/prj/noxDbUtf8/testout/ex20-employees1.xml' :1208:*OFF);
+
+
+on-exit;
+    // Always remember to delete used memory !!
+	nox_delete(pEmployees);
+
+end-proc;
+// ------------------------------------------------------------------------------------
+// Load a graph with data from a Db2 table and export it as JSON and XML
+// Default is a simple array of rows
+// ------------------------------------------------------------------------------------
+dcl-proc example2;
+
+
+
+	dcl-s pEmployees   pointer;
+    dcl-s Msg          varchar(1024) ccsid(*jobrun);
+
+    // Load all employees into a graph and return the pointer to the graph object
+	pEmployees = nox_sqlResultSet(pCon:
+        'select *                -
+		 from corpdata.employee  -
+	');
+
+    // Was there a problem ?   If so - write the message to the joblog and return
+    // Note we use an on-error to clean up
+    if Nox_Error(pEmployees) ;
+        msg = nox_Message(pEmployees);
+        nox_joblog ( msg );
+        return;
+    endif;
+
+
+    // Let's see what we got - both as JSON and XML - note the 1208 is the UTF-8 CCSID
+    nox_WriteJsonStmf(pEmployees:'/prj/noxDbUtf8/testout/ex20-employees1.json':1208:*OFF);
+    nox_WriteXmlStmf (pEmployees:'/prj/noxDbUtf8/testout/ex20-employees1.xml' :1208:*OFF);
+
+
+on-exit;
+    // Always remember to delete used memory !!
+	nox_delete(pEmployees);
+
+end-proc;

@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- *
  * Company . . . : System & Method A/S                           *
  * Design  . . . : Niels Liisberg                                *
@@ -106,7 +106,7 @@ BOOL isTermChar(UCHAR c)
 	}
 }
 //---------------------------------------------------------------------------
-TOK getTok(PNOXCOM pJxCom) 
+TOK getTok(PNOXCOM pJxCom)
 {
 
 
@@ -192,7 +192,7 @@ PNOXNODE nox_AppendType (PNOXCOM pJxCom , PNOXNODE pCurNode , JSTATE type , PUCH
 		pNewNode->type = type;
 		pNewNode->signature  = NODESIG;
 	} else {
-		pNewNode = nox_NodeInsert (pCurNode , RL_LAST_CHILD, name  , NULL, type);
+		pNewNode = nox_NodeInsertNew (pCurNode , RL_LAST_CHILD, name  , NULL, type);
 	}
 	nox_ParseJsonNode (pJxCom, type , name, pNewNode);
 	return pNewNode;
@@ -239,9 +239,9 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCu
 				nox_setRootNode( pCurNode, t);
 				return FALSE;
 			} else if (memBeginsWith(t.data, NULLSTR) && t.isLiteral) {
-				pNewNode = nox_NodeInsert (pCurNode, RL_LAST_CHILD, name , NULL , VALUE);
+				pNewNode = nox_NodeInsertNew (pCurNode, RL_LAST_CHILD, name , NULL , VALUE);
 			} else {
-				pNewNode = nox_NodeInsert (pCurNode, RL_LAST_CHILD, name , t.data , VALUE);
+				pNewNode = nox_NodeInsertNew (pCurNode, RL_LAST_CHILD, name , t.data , VALUE);
 				pNewNode->isLiteral = t.isLiteral;
 			}
 			memFree (&t.data);
