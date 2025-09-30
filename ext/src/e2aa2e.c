@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- */
 /* Design  . . . : Niels Liisberg                                */
 /* Function  . . : simple translate                              */
@@ -50,6 +50,7 @@ PUCHAR stra2e(PUCHAR out, PUCHAR in)
     do  {
         *(out++)  = X1252TO277[*(in++)];
     } while (*in);
+    *out = '\0'; // Why do i have to do this ??
     return res;
 }
 PUCHAR stre2a(PUCHAR out, PUCHAR in)
@@ -58,6 +59,7 @@ PUCHAR stre2a(PUCHAR out, PUCHAR in)
     do  {
         *(out++)  = X277TO1252[*(in++)];
     } while (*in);
+    *out = '\0'; // Why do i have to do this ??
     return res;
 }
 PUCHAR mema2e(PUCHAR out, PUCHAR in, LONG len)

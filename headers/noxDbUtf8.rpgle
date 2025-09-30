@@ -27,9 +27,9 @@ Dcl-S UTF8_MAX like(UTF8_16M) CCSID(*UTF8) Template;
 Dcl-S UTF8     varchar(1048572:4)  CCSID(*UTF8) Template;
 
 
-Dcl-C UTF8_BOM const(-1208);
 Dcl-S FIXEDDEC Packed(30:15) Template;
 
+Dcl-C NOX_UTF8_BOM const(-1208);
 
 ///
 // Type of a node:
@@ -1448,8 +1448,8 @@ End-PR;
 Dcl-PR nox_WriteJsonStmf  extproc(*CWIDEN : 'nox_WriteJsonStmf');
   pNode          Pointer    value;
   FileName       Pointer    value  options(*string);
-  Ccsid          Int(10)    value;
-  Trim           Ind        value;
+  Ccsid          Int(10)    value  options(*nopass);
+  Trim           Ind        value  options(*nopass);
   Options        Pointer    value  options(*nopass:*string);
 End-PR;
 
@@ -1510,8 +1510,8 @@ End-PR;
 Dcl-PR nox_WriteXmlStmf  extproc(*CWIDEN : 'nox_WriteXmlStmf');
   pNode          Pointer    value;
   FileName       Pointer    value  options(*string);
-  Ccsid          Int(10)    value options(*nopass);
-  Trim           Ind        value options(*nopass);
+  Ccsid          Int(10)    value  options(*nopass);
+  Trim           Ind        value  options(*nopass);
   Options        Pointer    value  options(*nopass:*string);
 End-PR;
 
@@ -1610,8 +1610,8 @@ End-PR;
 Dcl-PR nox_WriteCsvStmf  extproc(*CWIDEN : 'nox_WriteCsvStmf');
   pNode          Pointer    value;
   FileName       Pointer    value  options(*string);
-  Ccsid          Int(10)    value;
-  Trim           Ind        value;
+  Ccsid          Int(10)    value  options(*nopass);
+  Trim           Ind        value  options(*nopass);
   Options        Pointer    value  options(*nopass:*string);
 End-PR;
 
@@ -2073,11 +2073,8 @@ End-PR;
 //
 // @param (input) Message text or node
 ///
-Dcl-PR nox_joblog extproc(*CWIDEN : 'nox_Joblog');
-  textOrNode pointer value options(*string);
-End-PR;
 
-Dcl-PR nox_joblogText extproc(*CWIDEN : 'nox_JoblogVC');
+Dcl-PR nox_joblog extproc(*CWIDEN : 'nox_JoblogVC');
   text  Like(UTF8_1K) const options(*varsize);
 End-PR;
 
@@ -2252,6 +2249,7 @@ Dcl-C NOX_ALLROWS const(-1);
 ///
 // Result set format option for returning the result set as an array with each
 // row contained in a seperate object inside the returned array.
+// This is default behaviour.
 ///
 Dcl-C NOX_ROWARRAY const(0);
 ///
@@ -2270,8 +2268,15 @@ Dcl-C NOX_FIELDS  const(2);
 // in the result set object property "totalRows".
 ///
 Dcl-C NOX_TOTALROWS const(4);
+
 ///
-// Result set format option for returning the column names in upper case.
+// Result set format option to return the column names in camel case.
+// "THE_COLUMN_NAME" will be returned as "theColumnName".
+// This is default behaviour.
+///
+Dcl-C NOX_CAMEL_CASE   const(0);
+///
+// Result set format option for returning the column names  "as is".
 ///
 Dcl-C NOX_SYSTEM_CASE const(8);
 ///
@@ -2285,12 +2290,7 @@ Dcl-C NOX_APPROXIMATE_TOTALROWS const(16);
 // column names.
 ///
 Dcl-C NOX_SYSTEM_NAMES  const(32);
-/// TODO - not migrated !!
-// Result set format option to return the column names in camel case.
-// "THE_COLUMN_NAME" will be returned as "theColumnName".
 
-/// Camelcase is the default
-Dcl-C NOX_CAMEL_CASE   const(0);
 
 /// TODO - not migrated !!
 // For SQL resultset

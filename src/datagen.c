@@ -28,8 +28,8 @@
 #include "noxDbUtf8.h"
 #include "xlate.h"
 
-#include  "qoar/qrntypes.h"
-#include  "qoar/qrndtagen.h"
+#include  "qoar/h/qrntypes"
+#include  "qoar/h/qrndtagen"
 
 // NOTE !!! ALL constants are UTF-8
 #pragma convert(1252)
@@ -166,7 +166,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
                     break;
             }
 
-            pValueNode = nox_NodeInsert (pNode , RL_LAST_CHILD , name , pValue, type);
+            pValueNode = nox_NodeInsertNew (pNode , RL_LAST_CHILD , name , pValue, type);
             if (first) {
                 first = false;
                 *ppRoot = pValueNode;

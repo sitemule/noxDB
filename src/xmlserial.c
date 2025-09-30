@@ -258,15 +258,23 @@ VOID nox_AsXmlText (PLVARCHAR res , PNOXNODE pNode)
 /* ---------------------------------------------------------------------------
    Write using the stream system to disk
    --------------------------------------------------------------------------- */
-void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options)
+void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int CcsidP, LGL trimOutP, PNOXNODE optionsP)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   int  Ccsid   = (pParms->OpDescList->NbrOfParms >= 3) ? CcsidP  : 1208;
+   BOOL trimOut = (pParms->OpDescList->NbrOfParms >= 4 && trimOutP == OFF) ? FALSE : TRUE;
    PSTREAM pStream;
    PNOXWRITER pNoxWriter;
    UCHAR   mode[32];
+   UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
+   UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
    PUCHAR  enc;
 
    if (pNode == NULL) return;
+
+   // Negative values trigger BOM codes
+   BOOL   makeBomCode  = Ccsid < 0;
+   Ccsid = Ccsid < 0  ? - Ccsid : Ccsid;
 
    pNoxWriter = nox_NewWriter();
    pStream = stream_new (4096);
@@ -281,32 +289,42 @@ void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
    }
 
    pStream->handle = pNoxWriter;
-
-   pNoxWriter->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
+   pNoxWriter->doTrim = trimOut;
    pNoxWriter->iconv  = XlateOpen(1208 , Ccsid , false );
+
+   if (makeBomCode) {
+      switch(Ccsid) {
+         case 1208 :
+            stream_puts (pStream , sigUtf8);
+            break;
+         case 1200 :
+            stream_puts (pStream , sigUtf16);
+            break;
+      }
+   }
 
    #pragma convert(1252)
    switch(Ccsid) {
-     case 1252 :
-       enc = "WINDOWS-1252";
-       break;
-     case 1208 :
-       enc = "UTF-8";
-       break;
-     case 1200 :
-       enc = "UTF-16";
-       break;
-     case 819  :
-       enc = "ISO-8859-1";
-       break;
-     default   :
-       enc = "windows-1252";
+      case 1252 :
+         enc = "WINDOWS-1252";
+         break;
+      case 1208 :
+         enc = "UTF-8";
+         break;
+      case 1200 :
+         enc = "UTF-16";
+         break;
+      case 819  :
+         enc = "ISO-8859-1";
+         break;
+      default   :
+         enc = "windows-1252";
    }
 
    stream_puts (pStream , "<?xml version=\"1.0\" encoding=\"");
    stream_puts (pStream , enc);
    stream_puts (pStream ,"\" ?>");
-   indentXml      (pStream , 0, 0);
+   indentXml   (pStream , 0, 0);
 
    #pragma convert(0)
 

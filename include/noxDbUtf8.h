@@ -250,10 +250,10 @@ typedef _Packed struct  _NOXITERATOR {
 
 // Prototypes  - utilities
 LONG xlateMem  (iconv_t xid , PUCHAR out , PUCHAR in, LONG len);
-void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options);
 void nox_AsJsonText (PLVARCHAR retVal, PNOXNODE pNode);
 void nox_AsJsonTextList (PNOXNODE pNode, PNOXWRITER pNOXWRITER);
 void nox_AsJsonStream (PNOXNODE pNode, PSTREAM pStream);
+
 LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP);
 #pragma descriptor ( void nox_AsJsonTextMem                     (void))
 
@@ -689,6 +689,9 @@ typedef void (*NOX_DATAINTO)();
 
 
 void CheckBufSize(PNOXCOM pJxCom);
+
+PUCHAR getSystemColumnName ( PUCHAR sysColumnName, PUCHAR columnText, PUCHAR schema , PUCHAR table , PUCHAR column );
+
 
 
 #endif

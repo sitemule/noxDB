@@ -55,6 +55,7 @@ __thread UCHAR  nox_DecPoint = '.';
 // iconv_t xlate1208toE;
 iconv_t xlate_1200_to_1208;
 iconv_t xlate_Job_to_1208;
+iconv_t xlate_1208_to_1200;
 
 static INT64 LVARCHARNULL =0;
 static PLVARCHAR PLVARCHARNULL = (PLVARCHAR) &LVARCHARNULL;
@@ -72,6 +73,7 @@ void nox_Initialize()
 {
    xlate_1200_to_1208 = XlateOpen (1200 , 1208 , false);
    xlate_Job_to_1208  = XlateOpen (0    , 1208 , false);
+   xlate_1208_to_1200 = XlateOpen (1208 , 1200 , false);
 }
 // ---------------------------------------------------------------------------
 void nox_SetMessage (PUCHAR Ctlstr , ... )

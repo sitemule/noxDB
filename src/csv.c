@@ -56,9 +56,13 @@ void csvStringEscape (PUCHAR out, PUCHAR in)
    *out = '\0';
 }
 // ---------------------------------------------------------------------------
-void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options)
+void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int CcsidP, LGL trimOutP, PNOXNODE optionsP)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   int  Ccsid       = (pParms->OpDescList->NbrOfParms >= 3) ? CcsidP  : 1208;
+   BOOL trimOut     = (pParms->OpDescList->NbrOfParms >= 4 && trimOutP == OFF) ? FALSE : TRUE;
+   PNOXNODE options = (pParms->OpDescList->NbrOfParms >= 5) ? optionsP : NULL;
+
    NOXWRITER noxWriter;
    PNOXWRITER pNoxWriter = &noxWriter;
    UCHAR  mode[32];
@@ -78,12 +82,12 @@ void nox_WriteCsvStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
    pNoxWriter->outFile  = fopen ( strTrim(FileName) , mode );
    if (pNoxWriter->outFile == NULL) return;
 
-   if (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 5) {
+   if (options) {
       PNOXNODE  pOptions  = nox_ParseString((PUCHAR) options ); // When already a object: simply returns that
       comma    = *nox_GetValuePtr    (pOptions , "delimiter" , &comma );
       decpoint = *nox_GetValuePtr    (pOptions , "decPoint"  , &decpoint );
       headers  = (ON == nox_IsTrue   (pOptions , "headers"));
-      if (pOptions != options) nox_Close(&pOptions); // It was already a josn object , then don't close
+      if (pOptions != options) nox_Close(&pOptions); // It was already a object, then don't close
    }
 
    pNoxWriter->buf    = wTemp;

@@ -114,7 +114,7 @@ LGL nox_ForEach (PNOXITERATOR pIter , PLVARCHAR filterP)
 {
 
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PUCHAR filter = (pParms->OpDescList->NbrOfParms >= 2 && pathP ) ? plvc2str(filterP) : NULL;
+   PUCHAR filter = (pParms->OpDescList->NbrOfParms >= 2 && filterP ) ? plvc2str(filterP) : NULL;
 
    if (! pIter || ! pIter->this) return OFF;
 
@@ -125,20 +125,20 @@ LGL nox_ForEach (PNOXITERATOR pIter , PLVARCHAR filterP)
    }
 
    // Filter  - used by XML , that can have mixed elements at same level
-   // TODO test this !!
-   if (filter) {
-      PNOXNODE pTemp = pIter->this;
-      while (pTemp && 0 != astricmp (pTemp->Name ,filter )) {
-         pTemp = pTemp->pNodeSiblingNext;
-      }
-      if (pTemp == NULL) {
-         return OFF;
-      }
-      pIter->this = pIter->next;
-      pIter->next = pIter->next->pNodeSiblingNext;
-      pIter->isLast  = pIter->next ? OFF:ON;
-      return ON;
-   }
+   // TODO test/implement this !!
+   /// if (filter) {
+   ///    PNOXNODE pTemp = pIter->this;
+   ///    while (pTemp && 0 != astricmp (pTemp->Name ,filter )) {
+   ///       pTemp = pTemp->pNodeSiblingNext;
+   ///    }
+   ///    if (pTemp == NULL) {
+   ///       return OFF;
+   ///    }
+   ///    pIter->this = pIter->next;
+   ///    pIter->next = pIter->next->pNodeSiblingNext;
+   ///    pIter->isLast  = pIter->next ? OFF:ON;
+   ///    return ON;
+   /// }
 
    // The first Node is already set up in the initializer of the iterator
    if (pIter->count == 0) { // Note the "isFirst" flag is for our client - not for this logic

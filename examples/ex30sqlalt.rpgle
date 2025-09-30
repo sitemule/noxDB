@@ -154,11 +154,13 @@ dcl-proc example1b;
                     nox_int(58):
                     nox_int(60)
                 ) :
-                'Colours'    : nox_Array('White':
-                                         'Black':
-                                         'Green':
-                                         'Red':
-                                         'Blue')
+                'Colours'    : nox_Array(
+                    'White':
+                    'Black':
+                    'Green':
+                    'Red':
+                    'Blue'
+                )
             )
         )
     );
@@ -196,7 +198,7 @@ dcl-proc example2;
 
     // Test errors:
     If nox_Error(pStock) ;
-        nox_joblogText(nox_Message(pStock));
+        nox_joblog(nox_Message(pStock));
         Return;
     EndIf;
 
@@ -307,7 +309,7 @@ dcl-proc example3;
 
     // Test errors:
     If nox_Error(pStock) ;
-        nox_joblogText(nox_Message(pStock));
+        nox_joblog(nox_Message(pStock));
         Return;
     EndIf;
 
@@ -426,7 +428,7 @@ dcl-proc example4;
 
     // Test errors:
     If nox_Error(pStock) ;
-        nox_joblogText(nox_Message(pStock));
+        nox_joblog(nox_Message(pStock));
         Return;
     EndIf;
 

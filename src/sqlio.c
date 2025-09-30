@@ -208,7 +208,7 @@ int nox_sqlExecDirectTrace(PNOXSQLCONNECT pCon, PNOXSQL pSQL , int hstmt, PUCHAR
       rc2= SQLGetDiagRec(SQL_HANDLE_STMT,hstmt,1,pCon->sqlState,&pCon->sqlCode, pTrc->text,sizeof(pTrc->text), &length);
       pTrc->text[length] = '\0';
       stra2e (jxMessage  , pTrc->text );
-      nox_Joblog (jxMessage);
+      joblog (jxMessage);
    }
    pTrc->text [length] = '\0';
    ts_nowstr(pTrc->tsEnd); // TODO !!! not form global
@@ -327,58 +327,6 @@ static PNOXSQL nox_sqlNewStatement(PNOXSQLCONNECT pCon, PNOXNODE pSqlParms, BOOL
 /* ------------------------------------------------------------- */
 // ------------------------------------------------------------------
 // https://www.ibm.com/docs/en/i/7.4?topic=program-null-capable-fields
-// ------------------------------------------------------------------
-static PUCHAR getSystemColumnName ( PUCHAR sysColumnName, PUCHAR columnText, PUCHAR schema , PUCHAR table , PUCHAR column )
-{
-
-   #pragma mapinc("QADBILFI", "QSYS/QADBILFI(*all)" , "both key nullflds", "_P", "RecBuf" , "")
-   #include "/QSYS.LIB/QTEMP.LIB/QACYXTRA.FILE/QADBILFI.MBR"
-   typedef QDBIFLD_both_t SYSCOLR, * PSYSCOLR;
-   typedef QDBIFLD_key_t  SYSCOLK;
-
-   _RIOFB_T * fb;
-   SYSCOLR sysColR;
-   SYSCOLK sysColK;
-   int keylen;
-   int i;
-
-   static _RFILE * fSysCol = null;
-   if ((fSysCol = _Ropen ("QSYS/QADBILFI" , "rr,nullcap=Y")) == NULL) {
-      nox_Joblog ( "Not able to open QADBILFI: %s",  strerror(errno)) ;
-      return sysColumnName;
-   }
-
-   // memset will not work on "volatile" in null maps
-   for (i=0; i< fSysCol->null_map_len     ; i ++) { fSysCol->in_null_map[i]= '0';}
-   for (i=0; i< fSysCol->null_key_map_len ; i ++) { fSysCol->null_key_map[i]= '0';}
-
-   padncpy  (sysColK.DBILIB , schema , sizeof(sysColK.DBILIB));
-   str2vc   (&sysColK.DBILFI , table  );
-   keylen = sizeof(sysColK.DBILIB) + sysColK.DBILFI.len;
-
-   // Get format and part info  by table / file name:
-   fb = _Rreadk (fSysCol  ,&sysColR , sizeof(SYSCOLR) ,
-                 __KEY_EQ | __NULL_KEY_MAP  , &sysColK , keylen);
-   if (fb->num_bytes == 0) {
-      return NULL;
-   }
-   // Now have the format and part no
-   // now move the format and part into key
-   sysColK.DBIFMP = sysColR.DBIFMP;
-   memcpy   (sysColK.DBIFMT , sysColR.DBIFMT , sizeof ( sysColK.DBIFMT ));
-   str2vc   ((PVAR_CHAR) &sysColK.DBILFL , column );
-
-   // We have the complete key -  get the name for column
-   fb = _Rreadk (fSysCol  ,&sysColR , sizeof(SYSCOLR) , __KEY_EQ  , &sysColK , sizeof(SYSCOLK));
-   if (fb->num_bytes == 0) {
-      return NULL;
-   }
-   strtrimncpy ( sysColumnName , sysColR.DBIINT , sizeof(sysColR.DBIINT));
-   substr ( columnText ,  sysColR.DBITXT.data , sysColR.DBITXT.len);
-
-   return sysColumnName;
-
-}
 
 // ------------------------------------------------------------------
 static PUCHAR  getSysNameForColumn ( PUCHAR sysColumnName, PUCHAR columnText, SQLHSTMT hstmt , SQLSMALLINT columnNo)
@@ -403,7 +351,19 @@ static PUCHAR  getSysNameForColumn ( PUCHAR sysColumnName, PUCHAR columnText, SQ
    table  [len2] = '\0';
    column [len3] = '\0';
 
-   return  getSystemColumnName ( sysColumnName, columnText, schema , table , column);
+   // need to convert all the Db2 data from ascii to EBCDIC
+   stra2e (schema  , schema );
+   stra2e (table   , table );
+   stra2e (column  , column );
+
+   PUCHAR pSysName =  getSystemColumnName ( sysColumnName, columnText, schema , table , column);
+
+   // need to convert all the meta data  from EBCDIC to ascii
+   stre2a (sysColumnName , sysColumnName );
+   stra2e (columnText    , columnText );
+
+   return pSysName;
+
 }
 
 /* -------------------------------------------------------------
@@ -1087,17 +1047,25 @@ PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
          case SQL_WVARCHAR:    type = "wvarchar"       ; break;
          case SQL_GRAPHIC:     type = "graphic"        ; break;
          case SQL_VARGRAPHIC:  type = "vargraphic"     ; break;
-         default: {
-            if (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE ) {
-               if (pCol->scale > 0) {
-                  type = "dec"     ;
-               } else {
-                  type = "int"     ;
-               }
+
+         case SQL_DECIMAL:
+         case SQL_INTEGER:
+         case SQL_SMALLINT:
+         case SQL_FLOAT:
+         case SQL_REAL   :
+         case SQL_DOUBLE :
+         case SQL_BIGINT: {
+            if (pCol->scale > 0) {
+               type = "dec"     ;
             } else {
-               asprintf(temp ,"unknown%d" , pCol->coltype);
-               type = temp;
+               type = "int"     ;
             }
+            break;
+         }
+
+         default: {
+            asprintf(temp ,"unknown%d" , pCol->coltype);
+            type = temp;
          }
       }
       nox_NodeInsertNew (pField  , RL_LAST_CHILD, "datatype" , type,  VALUE );
@@ -1110,8 +1078,7 @@ PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
       nox_NodeInsertNew (pField  , RL_LAST_CHILD, "size"     , temp,  LITERAL  );
 
       // Add decimal precission
-      if  (pCol->coltype >= SQL_NUMERIC && pCol->coltype <= SQL_DOUBLE
-      &&   pCol->scale > 0) {
+      if  (0==strcmp ( type , "dec" )) {
          asprintf(temp , "%d" , pCol->scale);
          nox_NodeInsertNew (pField  , RL_LAST_CHILD, "prec"     , temp,  LITERAL  );
       }

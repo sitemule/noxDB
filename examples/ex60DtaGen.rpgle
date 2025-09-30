@@ -55,6 +55,9 @@ dcl-ds empprojact_t  extname('CORPDATA/EMPPROJACT') qualified template end-ds;
 dcl-proc main;
     dcl-s memuse       int(20);
 
+    // Take a snapshot of the memory usage before we start
+    memuse = nox_memUse();
+
     // Connect to the database - using the noxDbUtf8 driver. This is global for all examples
     pCon = nox_sqlConnect();
 
@@ -70,7 +73,7 @@ on-exit;
     // Always remember to delete used memory !!
     nox_sqlDisconnect(pCon);
     if memuse <> nox_memuse();
-        dsply 'Ups - forgot to clean something up';
+        nox_joblog('Ups - forgot to clean something up');
     endif;
 
 end-proc;

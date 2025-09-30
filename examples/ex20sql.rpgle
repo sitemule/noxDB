@@ -60,12 +60,13 @@ dcl-proc main;
     example1();
     example2();
     example3();
+    example4();
 
 on-exit;
     // Always remember to delete used memory !!
     nox_sqlDisconnect(pCon);
     if memuse <> nox_memuse();
-        nox_joblogText('Ups - forgot to clean something up');
+        nox_joblog('Ups - forgot to clean something up');
     endif;
 
 end-proc;
@@ -94,7 +95,9 @@ dcl-proc example1;
         return;
     endif;
 
-    // Let's see what we got - both as JSON and XML - note the 1208 is the UTF-8 CCSID
+    // Let's see what we got - both as JSON and XML
+    // note the 1208 is the UTF-8 CCSID and optional.
+    // note the *OFF for indented output. When *ON to get a condensed output
     nox_WriteJsonStmf(pEmployees:'/prj/noxDbUtf8/testout/ex20-employees1.json':1208:*OFF);
     nox_WriteXmlStmf (pEmployees:'/prj/noxDbUtf8/testout/ex20-employees1.xml' :1208:*OFF);
 
@@ -133,9 +136,11 @@ dcl-proc example2;
     endif;
 
 
-    // Let's see what we got - both as JSON and XML - note the 1208 is the UTF-8 CCSID
-    nox_WriteJsonStmf(pStock:'/prj/noxDbUtf8/testout/ex20-stock1.json':1208:*OFF);
-    nox_WriteXmlStmf (pStock:'/prj/noxDbUtf8/testout/ex20-stock1.xml' :1208:*OFF);
+    // Let's see what we got - both as JSON and XML - detault is 1208 and condensed
+    // note: here we use UTF-8 with BOM code. That is CCSID 1208
+    // note: *ON is condensed output
+    nox_WriteJsonStmf(pStock:'/prj/noxDbUtf8/testout/ex20-stock1.json':NOX_UTF8_BOM:*ON);
+    nox_WriteXmlStmf (pStock:'/prj/noxDbUtf8/testout/ex20-stock1.xml' :NOX_UTF8_BOM:*ON);
 
 
 on-exit;
@@ -145,7 +150,7 @@ on-exit;
 end-proc;
 // ------------------------------------------------------------------------------------
 // Load a graph with data from a Db2 table and export it as JSON and XML
-// note - use the case we gice them by the select statement
+// note - use the NOX_SYSTEM_CASE aka we give them by the select statement
 // ------------------------------------------------------------------------------------
 dcl-proc example3;
 
@@ -171,9 +176,11 @@ dcl-proc example3;
     );
 
 
-    // Let's see what we got - both as JSON and XML - note the 1208 is the UTF-8 CCSID
-    nox_WriteJsonStmf(pStock:'/prj/noxDbUtf8/testout/ex20-stock3.json':1208:*OFF);
-    nox_WriteXmlStmf (pStock:'/prj/noxDbUtf8/testout/ex20-stock3.xml' :1208:*OFF);
+    // Let's see what we got
+    // note here we use the default: CCSID 1208 aka UTF-8 and condensed output
+
+    nox_WriteJsonStmf(pStock:'/prj/noxDbUtf8/testout/ex20-stock3.json');
+    nox_WriteXmlStmf (pStock:'/prj/noxDbUtf8/testout/ex20-stock3.xml' );
 
 
 on-exit;
@@ -181,3 +188,36 @@ on-exit;
     nox_delete(pStock);
 
 end-proc;
+
+// ------------------------------------------------------------------------------------
+// NOX_SYSTEM_NAMES
+// ------------------------------------------------------------------------------------
+dcl-proc example4;
+
+    dcl-s pRows   pointer;
+
+    // Load all employees into a graph and return the pointer to the graph object
+    // Note - we have implicit error hadling . If there is an error we get an error object back
+    pRows = nox_sqlResultSet(pCon:
+        'select * from noxdbdemo.sysnames':
+        *null: // no parameters
+        NOX_SYSTEM_NAMES   +  // Use the "for system name" names and not the comlumn name
+        NOX_SYSTEM_CASE    +  // Use the names as they are - no camelCase or upperCase
+        NOX_GRACEFUL_ERROR +  // Errors are retuned as an error object
+        NOX_META           +  // Include meta data about the result set
+        NOX_FIELDS         +  // Include field descriptions
+        NOX_TOTALROWS         // Include total rows in the meta data
+    );
+
+    // Let's see what we got - both as JSON and XML - using default condensed UTF8
+    nox_WriteJsonStmf(pRows:'/prj/noxDbUtf8/testout/ex20-sysnames.json');
+    nox_WriteXmlStmf (pRows:'/prj/noxDbUtf8/testout/ex20-sysnames.xml' );
+
+
+on-exit;
+    // Always remember to delete used memory !!
+    nox_delete(pRows);
+
+end-proc;
+
+

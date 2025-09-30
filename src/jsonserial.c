@@ -103,7 +103,7 @@ void checkParentRelation(PNOXNODE pNode , PNOXNODE pParent)
 {
     if (pNode->pNodeParent != pParent) {
       try {
-         nox_Joblog("Invalid parent relation %s , %s for %s",
+         joblog("Invalid parent relation %s , %s for %s",
             pNode->pNodeParent->Name,
             pParent->Name,
             pNode->Name
@@ -272,9 +272,11 @@ VOID nox_AsJsonText (PLVARCHAR res, PNOXNODE pNode)
 }
 /* ---------------------------------------------------------------------------
     --------------------------------------------------------------------------- */
-void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options)
+void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int CcsidP, LGL trimOutP, PNOXNODE optionsP)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   int  Ccsid   = (pParms->OpDescList->NbrOfParms >= 3) ? CcsidP  : 1208;
+   BOOL trimOut = (pParms->OpDescList->NbrOfParms >= 4 && trimOutP == OFF) ? FALSE : TRUE;
    PSTREAM pStream;
    NOXWRITER  noxWriter;
    PNOXWRITER pNoxWriter= &noxWriter;
@@ -299,7 +301,7 @@ void nox_WriteJsonStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut,
    pNoxWriter->outFile  = fopen ( strTrim(FileName) , mode );
    if (pNoxWriter->outFile == NULL) return;
 
-   pNoxWriter->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
+   pNoxWriter->doTrim = trimOut;
    pNoxWriter->iconv  = XlateOpen(1208, Ccsid, false);
 
    if (makeBomCode) {

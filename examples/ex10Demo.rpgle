@@ -99,7 +99,7 @@ dcl-proc main;
     // Just to see the progress:
     nox_WriteJsonStmf(pCustomer : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer.json' : UTF8_BOM : *OFF);
     debug = nox_asJsonText(pCustomer);
-    nox_joblogText ( debug );
+    nox_joblog ( debug );
 
     // Step 1.a: alternativ - you can also make it with the object builder:
     // Here you make atomic value nodes in the graph, and create a new object on the fly
@@ -119,7 +119,7 @@ dcl-proc main;
     // Just to see the progress:
     nox_WriteJsonStmf(pCustomer2 : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer2.json' : UTF8_BOM : *OFF);
     debug = nox_asJsonText(pCustomer);
-    nox_joblogText ( debug );
+    nox_joblog ( debug );
 
     // Step 2: Build an array with customers
     // note the arrayPush can push it to either head or tail
@@ -128,7 +128,7 @@ dcl-proc main;
 
     // Just to see the progress:
     debug = nox_asJsonText(pCustList);
-    nox_joblogText ( debug );
+    nox_joblog ( debug );
 
     // step3: now we get the rest of customers from the database;
     pMoreCust = nox_sqlResultSet(pCon:
@@ -142,7 +142,7 @@ dcl-proc main;
 
     // Just to see the progress:
     debug = nox_asJsonText(pMoreCust);
-    nox_joblogText ( debug );
+    nox_joblog ( debug );
 
     // now we have the list
     // Note: the MOVE_UNLINK can be used if the array was already
@@ -156,14 +156,14 @@ dcl-proc main;
 
     // Just to see the progress:
     debug = nox_asJsonText(pCustList);
-    nox_joblogText ( debug );
+    nox_joblog ( debug );
 
     // Lets sort the array on highest "creditLimit" and then "name"
     nox_arraySort(pCustList : 'creditLimit:DESC,name:ASC' );
 
     // Just to see the progress:
     debug = nox_asJsonText(pCustList);
-    nox_joblogText ( debug );
+    nox_joblog ( debug );
 
 
     // I only want the first 5
@@ -174,7 +174,7 @@ dcl-proc main;
 
     // Just to see the progress:
     debug = nox_asJsonText(pTopFive);
-    nox_joblogText ( debug );
+    nox_joblog ( debug );
 
     // we can caluculate the checksum, to see later if anyone have touched the object graph
     checksum = nox_NodeCheckSum(pTopFive);
@@ -199,19 +199,19 @@ dcl-proc main;
 
     // Just to see the progress:
     debug = nox_asJsonText(pTopFive);
-    nox_joblogText ( debug );
+    nox_joblog ( debug );
 
     // Was there some issues?
     if Nox_Error(pTopFive) ;
         msg = nox_Message(pTopFive);
-        nox_joblogText ( msg );
+        nox_joblog ( msg );
         nox_dump(pTopFive);
         return;
     endif;
 
     // Is the checksum the same?
     if checksum <> nox_NodeCheckSum(pTopFive);
-        nox_joblogText ('Invlaid checksum');
+        nox_joblog ('Invlaid checksum');
     endif;
 
     // now create a object with that array and call it "topFive":
@@ -220,7 +220,7 @@ dcl-proc main;
 
     // Just to see the progress:
     debug = nox_asJsonText(pCustObject);
-    nox_joblogText ( debug );
+    nox_joblog ( debug );
 
     // let's loop through all items and get them back to RPG variables:
     // note: we could have used pTopFive - but for fun we locate from the top
@@ -261,7 +261,7 @@ dcl-proc main;
 
     // Just to see the progress:
     debug = nox_asJsonText(pCustomer);
-    nox_joblogText ( debug );
+    nox_joblog ( debug );
 
 // Note: We always delete everything in our exit handler
 // it is OK to delete an already deleted node - it just does nothing
@@ -276,6 +276,6 @@ on-exit;
     nox_delete(pTopFive);
 
     if memuse <> nox_memuse();
-        nox_joblogText('Ups - forgot to clean something up?');
+        nox_joblog('Ups - forgot to clean something up?');
     endif;
 end-proc;

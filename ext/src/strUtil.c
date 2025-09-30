@@ -24,7 +24,22 @@
 #include "strUtil.h"
 #include "e2aa2e.h"
 
+// -------------------------------------------------------------
+// real ascii version of atoi
+// -------------------------------------------------------------
+#pragma convert(1252)
+LONG a2i (PUCHAR s)
+{
+   LONG res = 0;
+   BOOL sign = TRUE;
+   for (;*s;s++) {
+      if (*s == '-') sign = FALSE;
+      if (*s >= '0' && *s <= '9') res = 10 * res + (*s - '0');;
+   }
 
+   return (sign? res : -res);
+}
+#pragma convert(0)
 // -------------------------------------------------------------
 // copy a string and return number of bytes copied
 // -------------------------------------------------------------
@@ -39,24 +54,24 @@ int cpy  (PUCHAR out , PUCHAR in)
 // -------------------------------------------------------------
 int strIcmp (PUCHAR s1, PUCHAR s2)
 {
-    int c =0;
-    do {
+   int c =0;
+   do {
       c = toUpper(*(s1++)) - toUpper(*(s2++));
-    } while (c == 0 && *s1 && *s2);
+   } while (c == 0 && *s1 && *s2);
 
-    return c;
+   return c;
 }
 // -------------------------------------------------------------
 // strIcmp  is stricmp in ascii
 // -------------------------------------------------------------
 int astrIcmp (PUCHAR s1, PUCHAR s2)
 {
-    int c =0;
-    do {
+   int c =0;
+   do {
       c = atoUpper(*(s1++)) - atoUpper(*(s2++));
-    } while (c == 0 && *s1 && *s2);
+   } while (c == 0 && *s1 && *s2);
 
-    return c;
+   return c;
 }
 // -------------------------------------------------------------
 #pragma convert(1252)
@@ -87,11 +102,11 @@ PUCHAR aCamelCase (PUCHAR out , PUCHAR in)
 // -------------------------------------------------------------
 int memIcmp (PUCHAR s1, PUCHAR s2 , int len)
 {
-    int c =0;
-    while (len-- > 0 && c==0) {
+   int c =0;
+   while (len-- > 0 && c==0) {
       c = toUpper(*(s1++)) - toUpper(*(s2++));
-    }
-    return c;
+   }
+   return c;
 }
 // -------------------------------------------------------------
 // memmem
@@ -99,16 +114,16 @@ int memIcmp (PUCHAR s1, PUCHAR s2 , int len)
 PUCHAR memmem  (PUCHAR heystack , ULONG haystackLen,
                        PUCHAR needle , ULONG needleLen)
 {
-    PUCHAR p = heystack;
-    PUCHAR end = heystack + haystackLen;
-    while (p < end) {
-        if (*p == *needle
-        &&   0 == memcmp ( p , needle , needleLen)) {
-            return p;
-        }
-        p++;
-    }
-    return NULL;
+   PUCHAR p = heystack;
+   PUCHAR end = heystack + haystackLen;
+   while (p < end) {
+      if (*p == *needle
+      &&   0 == memcmp ( p , needle , needleLen)) {
+         return p;
+      }
+      p++;
+   }
+   return NULL;
 }
 
 // -------------------------------------------------------------
@@ -133,21 +148,21 @@ UCHAR toLower(UCHAR c)
    }
 }
 // -------------------------------------------------------------
+#pragma convert(1252)
 UCHAR atoUpper (UCHAR c)
 {
-#pragma convert(1252)
    if (c >= 'a' && c <= 'z') return c - ( 'a' - 'A');
    return c;
-#pragma convert(0)
 }
+#pragma convert(0)
 // -------------------------------------------------------------
+#pragma convert(1252)
 UCHAR atoLower (UCHAR c)
 {
-#pragma convert(1252)
    if (c >= 'A' && c <= 'Z') return c + ( 'a' - 'A');
    return c;
-#pragma convert(0)
 }
+#pragma convert(0)
 // -------------------------------------------------------------
 // strIstr is strstr that ignores the case
 // is trturns the pointer to "key" with in base
@@ -158,12 +173,12 @@ PUCHAR strIstr(PUCHAR base, PUCHAR key )
    SHORT keylen = strlen (key);
 
    while (*base) {
-     if  (toUpper(*base) == k) {
-        if (memIcmp (base , key , keylen) == 0) {  /* Found !! */
-           return base;
-        }
-     }
-     base ++;
+      if  (toUpper(*base) == k) {
+         if (memIcmp (base , key , keylen) == 0) {  /* Found !! */
+            return base;
+         }
+      }
+      base ++;
    }
    return NULL;
 }
@@ -177,12 +192,12 @@ PUCHAR astrIstr(PUCHAR base, PUCHAR key )
    SHORT keylen = strlen (key);
 
    while (*base) {
-     if  (atoUpper(*base) == k) {
-        if (amemIcmp (base , key , keylen) == 0) {  /* Found !! */
-           return base;
-        }
-     }
-     base ++;
+      if  (atoUpper(*base) == k) {
+         if (amemIcmp (base , key , keylen) == 0) {  /* Found !! */
+            return base;
+         }
+      }
+      base ++;
    }
    return NULL;
 }
@@ -195,13 +210,13 @@ PUCHAR strchrreplace(PUCHAR out , PUCHAR in , PUCHAR from , PUCHAR to )
    PUCHAR pf, pt, res = out;
 
    for (;*in; in++, out++) {
-     *out = *in;
-     for   (pf=from, pt=to ;*pf;pf++, pt++)  {
-       if (*in == *pf) {
-         *out = *pt;
-         break;
-       }
-     }
+      *out = *in;
+      for   (pf=from, pt=to ;*pf;pf++, pt++)  {
+         if (*in == *pf) {
+            *out = *pt;
+            break;
+         }
+      }
    }
    *out = '\0';
    return res;
@@ -219,14 +234,14 @@ LONG  memstrreplace(PUCHAR buf , LONG len , PUCHAR from , PUCHAR to )
    end = in + len;
 
    while (in<end) {
-     if (*in == *from
-     &&  memcmp (in , from  , lFrom) ==0) {
-       memcpy(out , to , lTo);
-       out += lTo;
-       in += lFrom;
-     } else {
-       *(out++) = *(in++);
-     }
+      if (*in == *from
+      &&  memcmp (in , from  , lFrom) ==0) {
+         memcpy(out , to , lTo);
+         out += lTo;
+         in += lFrom;
+      } else {
+         *(out++) = *(in++);
+      }
    }
    free(inbuf);
    return out - buf;
@@ -247,13 +262,13 @@ PUCHAR memstr(PUCHAR base, PUCHAR key, LONG len )
    SHORT keylen = strlen (key);
 
    while (len>0) {
-     if  (*base == k) {
-        if (memcmp (base , key , keylen) == 0) {  /* Found !! */
-           return base;
-        }
-     }
-     base ++;
-     len --;
+      if  (*base == k) {
+         if (memcmp (base , key , keylen) == 0) {  /* Found !! */
+            return base;
+         }
+      }
+      base ++;
+      len --;
    }
    return NULL;
 }
@@ -263,25 +278,25 @@ PUCHAR memIstr(PUCHAR base, PUCHAR key, LONG len )
    SHORT keylen = strlen (key);
 
    while (len>0) {
-     if  (toUpper(*base) == k) {
-        if (memIcmp (base , key , keylen) == 0) {  /* Found !! */
-           return base;
-        }
-     }
-     base ++;
-     len --;
+      if  (toUpper(*base) == k) {
+         if (memIcmp (base , key , keylen) == 0) {  /* Found !! */
+            return base;
+         }
+      }
+      base ++;
+      len --;
    }
    return NULL;
 }
 SHORT amemIcmp (PUCHAR m1 , PUCHAR m2 , LONG len)
 {
    while (len) {
-     UCHAR c1 = atoUpper(*m1);
-     UCHAR c2 = atoUpper(*m2);
-     if (c1 > c2) return 1;
-     if (c1 < c2) return -1;
-     len --;
-     m1++;m2++;
+      UCHAR c1 = atoUpper(*m1);
+      UCHAR c2 = atoUpper(*m2);
+      if (c1 > c2) return 1;
+      if (c1 < c2) return -1;
+      len --;
+      m1++;m2++;
    }
    return 0;
 }
@@ -291,13 +306,13 @@ PUCHAR amemIstr(PUCHAR base, PUCHAR key, LONG len )
    UCHAR k = atoUpper(key[0]);
 
    while (len>0) {
-     if  (atoUpper(*base) == k) {
-       if (amemIcmp (base , key , keylen) == 0) {  /* Found !! */
-          return base;
-       }
-     }
-     base ++;
-     len --;
+      if  (atoUpper(*base) == k) {
+         if (amemIcmp (base , key , keylen) == 0) {  /* Found !! */
+            return base;
+         }
+      }
+      base ++;
+      len --;
    }
    return NULL;
 }
@@ -316,7 +331,6 @@ BOOL   amemiBeginsWith(PUCHAR base  ,PUCHAR key)
    int l = strlen ( key);
    return amemIcmp (base , key , l) == 0;
 }
-
 // -------------------------------------------------------------
 // firstnonblank returns pointer to the string > ' '
 // -------------------------------------------------------------
@@ -349,30 +363,30 @@ PUCHAR lastnonblank(PUCHAR in)
 // -------------------------------------------------------------
 PUCHAR righttrim(PUCHAR in)
 {
-  PUCHAR p = lastnonblank(in);
-  * (p+1) = '\0';
-  return in;
+   PUCHAR p = lastnonblank(in);
+   * (p+1) = '\0';
+   return in;
 }
 // -------------------------------------------------------------
 // trim both
 // -------------------------------------------------------------
 PUCHAR trim(PUCHAR in)
 {
-  PUCHAR out, end, begin, ret;
-  BOOL   docopy = false;
-  ret = begin = end = out = in;
-  while (*in) {
-     if (*in > ' ') {
-        docopy = true;
-     }
-     if (docopy) {
-       *(out++) = *in;
-       if (*in > ' ') end = out;  // Store that address just after the nonblank char
-     }
-     in++;
-  }
-  *end = '\0';
-  return ret;
+   PUCHAR out, end, begin, ret;
+   BOOL   docopy = false;
+   ret = begin = end = out = in;
+   while (*in) {
+      if (*in > ' ') {
+         docopy = true;
+      }
+      if (docopy) {
+         *(out++) = *in;
+         if (*in > ' ') end = out;  // Store that address just after the nonblank char
+      }
+      in++;
+   }
+   *end = '\0';
+   return ret;
 }
 // -------------------------------------------------------------
 // trim both
@@ -380,21 +394,21 @@ PUCHAR trim(PUCHAR in)
 #pragma convert(1252)
 PUCHAR atrim(PUCHAR in)
 {
-  PUCHAR out, end, begin, ret;
-  BOOL   docopy = false;
-  ret = begin = end = out = in;
-  while (*in) {
-     if (*in > ' ') {
-        docopy = true;
-     }
-     if (docopy) {
-       *(out++) = *in;
-       if (*in > ' ') end = out;  // Store that address just after the nonblank char
-     }
-     in++;
-  }
-  *end = '\0';
-  return ret;
+   PUCHAR out, end, begin, ret;
+   BOOL   docopy = false;
+   ret = begin = end = out = in;
+   while (*in) {
+      if (*in > ' ') {
+         docopy = true;
+      }
+      if (docopy) {
+         *(out++) = *in;
+         if (*in > ' ') end = out;  // Store that address just after the nonblank char
+      }
+      in++;
+   }
+   *end = '\0';
+   return ret;
 }
 #pragma convert(0)
 // -------------------------------------------------------------
@@ -402,20 +416,20 @@ PUCHAR atrim(PUCHAR in)
 // -------------------------------------------------------------
 PUCHAR righttrimlen(PUCHAR in , LONG size)
 {
-  PUCHAR p = in + size -1 ;
-  for   (;p >= in && * p <= ' ' ; p--);
-  * (p+1) = '\0';
-  return in;
+   PUCHAR p = in + size -1 ;
+   for (;p >= in && * p <= ' ' ; p--);
+   * (p+1) = '\0';
+   return in;
 }
 // -------------------------------------------------------------
 // righttrimlen - start from length
 // -------------------------------------------------------------
 LONG lenrighttrimlen(PUCHAR in , LONG size)
 {
-  PUCHAR p = in + size -1 ;
-  if (size <= 0) return 0;
-  for   (;p >= in && * p <= ' ' ; p--, size --);
-  return size;
+   PUCHAR p = in + size -1 ;
+   if (size <= 0) return 0;
+   for (;p >= in && * p <= ' ' ; p--, size --);
+   return size;
 }
 // -------------------------------------------------------------
 // lastnonblank returns pointer to the last char > ' '
@@ -426,9 +440,9 @@ PUCHAR lastnonblankfrom(PUCHAR in, LONG from)
    PUCHAR p = in;
    while  (from --) {
       if (*p  > ' ') {
-        end = p;
+         end = p;
       } else if (*p == '\0') {
-        break;
+         break;
       }
       p++;
    }
@@ -450,11 +464,11 @@ PUCHAR strtrimncpy(PUCHAR out , PUCHAR in , LONG maxlen)
          }
       }
       if (! findfirst) {
-        *out = *in;
-        if (*out > ' ') {
-          end = out + 1; // Where the zero termination will be
-        }
-        out++;
+         *out = *in;
+         if (*out > ' ') {
+            end = out + 1; // Where the zero termination will be
+         }
+         out++;
       }
       in++;
    }
@@ -478,11 +492,11 @@ PUCHAR strtrimcpy(PUCHAR out , PUCHAR in)
          }
       }
       if (! findfirst) {
-        *out = *in;
-        if (*out > ' ') {
-          end = out + 1; // Where the zero termination will be
-        }
-        out++;
+         *out = *in;
+         if (*out > ' ') {
+            end = out + 1; // Where the zero termination will be
+         }
+         out++;
       }
       in++;
    }
@@ -502,7 +516,7 @@ PUCHAR substr(PUCHAR out , PUCHAR in , LONG len)
    }
 
    if (out == NULL) {
-     system("DSPJOB OUTPUT(*PRINT) OPTION(*PGMSTK)");
+      system("DSPJOB OUTPUT(*PRINT) OPTION(*PGMSTK)");
    }
 
    memcpy(out, in , len);
@@ -576,15 +590,14 @@ PUCHAR padncpy(PUCHAR dst, PUCHAR src, SHORT dstlen)
 // ---------------------------------------------------------------------------
 PUCHAR pad(PUCHAR s , LONG l)
 {
-  BOOL   dopad = FALSE;
-  PUCHAR r = s;
-  LONG   i;
-  for (i = 0; i< l; i++,s++) {
-    if (*s  < ' ') dopad = TRUE;
-    if (dopad) *s = ' ';
-
-  }
-  return r;
+   BOOL   dopad = FALSE;
+   PUCHAR r = s;
+   LONG   i;
+   for (i = 0; i< l; i++,s++) {
+      if (*s  < ' ') dopad = TRUE;
+      if (dopad) *s = ' ';
+   }
+   return r;
 }
 // ---------------------------------------------------------------------------
 PUCHAR strrighttrimcpy(PUCHAR dst, PUCHAR src)
@@ -595,7 +608,7 @@ PUCHAR strrighttrimcpy(PUCHAR dst, PUCHAR src)
    while (*src) {
       *dst = *src;
       if (*dst > ' ') {
-        end = dst;
+         end = dst;
       }
       dst ++;
       src ++;
@@ -612,7 +625,7 @@ PUCHAR strrighttrimncpy(PUCHAR dst, PUCHAR src, LONG len)
    while (*src && len-- > 0) {
       *dst = *src;
       if (*dst > ' ') {
-        end = dst;
+         end = dst;
       }
       dst ++;
       src ++;
@@ -625,9 +638,9 @@ PUCHAR str2upper (PUCHAR out, PUCHAR in )
 {
    PUCHAR r = out;
    if (in) {
-     while (*in ) {
-        *(r++)   = toUpper(*(in++));
-     }
+      while (*in ) {
+         *(r++)   = toUpper(*(in++));
+      }
    }
    *r= '\0';
    return out;
@@ -637,9 +650,9 @@ PUCHAR astr2upper (PUCHAR out, PUCHAR in )
 {
    PUCHAR r = out;
    if (in) {
-     while (*in ) {
-        *(r++)   = atoUpper(*(in++));
-     }
+      while (*in ) {
+         *(r++)   = atoUpper(*(in++));
+      }
    }
    *r= '\0';
    return out;
@@ -649,9 +662,9 @@ PUCHAR str2lower (PUCHAR out, PUCHAR in )
 {
    PUCHAR r = out;
    if (in) {
-     while (*in ) {
-        *(r++)   = toLower(*(in++));
-     }
+      while (*in ) {
+         *(r++)   = toLower(*(in++));
+      }
    }
    *r= '\0';
    return out;
@@ -661,9 +674,9 @@ PUCHAR astr2lower (PUCHAR out, PUCHAR in )
 {
    PUCHAR r = out;
    if (in) {
-     while (*in ) {
-        *(r++)   = atoLower(*(in++));
-     }
+      while (*in ) {
+         *(r++)   = atoLower(*(in++));
+      }
    }
    *r= '\0';
    return out;
@@ -672,13 +685,13 @@ PUCHAR astr2lower (PUCHAR out, PUCHAR in )
 UCHAR hexchar2int (UCHAR c)
 {
    if (c >= '0' && c <= '9') {
-     return (c - '0');
+      return (c - '0');
    }
    if (c >= 'A' && c <= 'F') {
-     return (c - 'A' + 10);
+      return (c - 'A' + 10);
    }
    if (c >= 'a' && c <= 'f') {
-     return (c - 'a' + 10);
+      return (c - 'a' + 10);
    }
 }
 // ---------------------------------------------------------------------------
@@ -690,11 +703,11 @@ PUCHAR binMem2Hex (PUCHAR out , PUCHAR in , LONG len)
    SHORT i;
 
    for (i=0; i < len  ; i++) {
-     c = in[i] ;
-     *(res++) = h[c / 16];
-     *(res++) = h[c % 16];
+      c = in[i] ;
+      *(res++) = h[c / 16];
+      *(res++) = h[c % 16];
    }
-    *(res++) = '\0';   // Can be a string
+   *(res++) = '\0';   // Can be a string
    return out;
 }
 // ---------------------------------------------------------------------------
@@ -703,7 +716,7 @@ PUCHAR hex2BinMem (PUCHAR out , PUCHAR in , LONG len)
    PUCHAR  res = out;
 
    while (len-- > 0) {
-     *(out++) = (16 * hexchar2int(*(in++)) + hexchar2int(*(in++)));
+      *(out++) = (16 * hexchar2int(*(in++)) + hexchar2int(*(in++)));
    }
    return res;
 }
@@ -759,17 +772,17 @@ FIXEDDEC str2dec(PUCHAR str , UCHAR decPoint)
          if (!firstDigit) firstDigit = p;
          lastDigit = p;
          if (DecFound) {
-           if (++Prec <= 15) {
-              Decs  *= 10D;
-              Temp = (c - '0');
-              Temp /= Decs;
-              Res += Temp;
-           }
+            if (++Prec <= 15) {
+               Decs  *= 10D;
+               Temp = (c - '0');
+               Temp /= Decs;
+               Res += Temp;
+            }
          } else {
-           if (Dec < 15) {
-             Res = Res * 10D + (c - '0');
-             if (Res > 0D) Dec++;
-           }
+            if (Dec < 15) {
+               Res = Res * 10D + (c - '0');
+               if (Res > 0D) Dec++;
+            }
          }
       } else if (c == decPoint) {
          DecFound = TRUE;
@@ -801,17 +814,17 @@ FIXEDDEC astr2dec(PUCHAR str , UCHAR decPoint)
          if (!firstDigit) firstDigit = p;
          lastDigit = p;
          if (DecFound) {
-           if (++Prec <= 15) {
-              Decs  *= 10D;
-              Temp = (c - '0');
-              Temp /= Decs;
-              Res += Temp;
-           }
+            if (++Prec <= 15) {
+               Decs  *= 10D;
+               Temp = (c - '0');
+               Temp /= Decs;
+               Res += Temp;
+            }
          } else {
-           if (Dec < 15) {
-             Res = Res * 10D + (c - '0');
-             if (Res > 0D) Dec++;
-           }
+            if (Dec < 15) {
+               Res = Res * 10D + (c - '0');
+               if (Res > 0D) Dec++;
+            }
          }
       } else if (c == decPoint) {
          DecFound = TRUE;
@@ -828,17 +841,17 @@ FIXEDDEC astr2dec(PUCHAR str , UCHAR decPoint)
 // ---------------------------------------------------------------------------
 LONG packedMem2Int(PUCHAR buf, SHORT bytes)
 {
-    SHORT i;
-    LONG  res  = 0;
-    for(i=0;i<bytes-1; i++,buf++) {
-       res = 10 * res + (*buf >> 4);
-       res = 10 * res + (*buf & 0x0f);
-    }
-    res = 10 * res + (*buf >> 4);
-    if ((*buf & 0x0F) != 0x0F) {
+   SHORT i;
+   LONG  res  = 0;
+   for(i=0;i<bytes-1; i++,buf++) {
+      res = 10 * res + (*buf >> 4);
+      res = 10 * res + (*buf & 0x0f);
+   }
+   res = 10 * res + (*buf >> 4);
+   if ((*buf & 0x0F) != 0x0F) {
       res = - res;
-    }
-    return res;
+   }
+   return res;
 }
 // ---------------------------------------------------------------------------
 #pragma convert(1252)
@@ -852,7 +865,6 @@ void nox_strQuote (PLVARCHAR out, PLVARCHAR in)
    for (i=0;i<in->Length;i++) {
       if (*is == '\'') *os++ = '\'';
       *os++ = *is++;
-
    }
    *os++ = '\'';
    *os++ = '\0';
@@ -867,8 +879,8 @@ PUCHAR stripLeadingZeros(PUCHAR out, PUCHAR s)
    BOOL   Neg = FALSE;
 
    if (*p == '-') {
-     p++;
-     Neg = TRUE;
+      p++;
+      Neg = TRUE;
    }
 
    // NULL returns 0. Also it could be a single '-' from the abowe
@@ -878,13 +890,13 @@ PUCHAR stripLeadingZeros(PUCHAR out, PUCHAR s)
    }
 
    while (*p == '0') {
-     p ++;
+      p ++;
    }
    if (p > s && ! isdigit(*p)) p --;
 
    if (Neg) {
-     p--;
-     *p = '-';
+      p--;
+      *p = '-';
    }
    strcpy(out , p);
    return (out);
@@ -907,11 +919,11 @@ PUCHAR fmtPacked(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint
          *pOut++ = decPoint;
       }
       if (HighNibbel) {
-          *pOut++ = '0' + (*in >> 4);
-          HighNibbel = FALSE;
+         *pOut++ = '0' + (*in >> 4);
+         HighNibbel = FALSE;
       } else {
-          *pOut++ = '0' + (*in++ & 0x0f);
-          HighNibbel = TRUE;
+         *pOut++ = '0' + (*in++ & 0x0f);
+         HighNibbel = TRUE;
       }
    }
    *pOut = '\0';
@@ -941,36 +953,36 @@ PUCHAR fmtZoned(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint)
 // ---------------------------------------------------------------------------
 LGL isOn (int boolExpr)
 {
-    return ( boolExpr ? ON : OFF);
+   return ( boolExpr ? ON : OFF);
 }
 // ---------------------------------------------------------------------------
 PUCHAR strlastchr(PUCHAR str , UCHAR c)
 {
-     PUCHAR p, found = NULL;
-     while ( p = strchr(str , c )) {
-        found = p;
-        str = p +1;
-     }
-     return found;
+   PUCHAR p, found = NULL;
+   while ( p = strchr(str , c )) {
+      found = p;
+      str = p +1;
+   }
+   return found;
 }
 PUCHAR blob2str  (PBLOB pb)
 {
-    pb->String[pb->Length] = '\0';
-    return  pb->String;
+   pb->String[pb->Length] = '\0';
+   return  pb->String;
 }
 // ---------------------------------------------------------------------------
 static LONG _trimlen(PUCHAR str, UCHAR c)
 {
-    PUCHAR end = str;
-    LONG l=0,len=0;
-    while (*end) {
-       l++;
-       if (*end > c) {
-         len = l ;
-       }
-       end++;
-    }
-    return len;
+   PUCHAR end = str;
+   LONG l=0,len=0;
+   while (*end) {
+      l++;
+      if (*end > c) {
+      len = l ;
+      }
+      end++;
+   }
+   return len;
 }
 LONG strTrimLen(PUCHAR str)
 {
@@ -1004,14 +1016,14 @@ LONG asprintf (PUCHAR res, PUCHAR ctrlstr , ... )
    LONG len;
    va_list arg_ptr;
 
-   stra2e (ctrlstr , ctrlstr);
+   stra2e (ctrlstr , ctrlstr); // Note!! We nede to restore this after duty
 
-   // Build a temp string with the formated data  */
+   // Build a temp string with the formated data
    va_start(arg_ptr, ctrlstr);
    len = vsprintf(res, ctrlstr, arg_ptr);
    va_end(arg_ptr);
 
-   stre2a (ctrlstr , ctrlstr);
+   stre2a (ctrlstr , ctrlstr); // Note!! restore  after duty
    stre2a (res  , res );
    return len;
 }
@@ -1023,28 +1035,15 @@ LONG ae_sprintf (PUCHAR res, PUCHAR ctrlstr , ... )
    LONG len;
    va_list arg_ptr;
 
-   stra2e (ctrlstr , ctrlstr);
-   // Build a temp string with the formated data  */
+   stra2e (ctrlstr , ctrlstr); // Note!! We nede to restore this after duty
+   // Build a temp string with the formated data
    va_start(arg_ptr, ctrlstr);
    len = vsprintf(res, ctrlstr, arg_ptr);
    va_end(arg_ptr);
 
-   stre2a (ctrlstr , ctrlstr);
+   stre2a (ctrlstr , ctrlstr); // Note!! restore  after duty
    stra2e (res  , res );
    return len;
 }
 
-// -------------------------------------------------------------------------------------
-// real ascii version of atoi
-// -------------------------------------------------------------------------------------
-LONG a2i (PUCHAR s)
-{
-   LONG res = 0;
-   BOOL sign = TRUE;
-   for (;*s;s++) {
-      if (*s == '-') sign = FALSE;
-      if (*s >= '0' && *s <= '9') res = 10 * res + (*s - '0');;
-   }
 
-   return (sign? res : -res);
-}

@@ -86,15 +86,17 @@ all:  $(BIN_LIB).lib link githash hdr $(EXTERNALS) $(SOURCE) noxDbUtf8.bnddir no
 
 %.lib:
 	-system -q "CRTLIB $* TYPE(*TEST)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL)     OBJTYPE(*MODULE)"
+
+
 
 # QOAR are for unknow reasons not in /QIBM/include
 # We make link to them for copyright reasons - no copy
 link:
-	-mkdir -p ./ext/include/qoar
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./ext/include/qoar/qrntypes.h
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./ext/include/qoar/qrndtagen.h
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./ext/include/qoar/qrndtainto.h
-
+	-mkdir -p ./ext/include/qoar/h
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./ext/include/qoar/h/qrntypes
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./ext/include/qoar/h/qrndtagen
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./ext/include/qoar/h/qrndtainto
 
 $(EXTERNALS) $(SOURCE): FORCE
 	$(CC)
@@ -104,9 +106,9 @@ githash:
 	-echo "// CMD:CRTCMOD" > src/githash.c
 	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(GIT_SHORT) (hash: $(GIT_HASH) ) build: $(TS)\")" >> src/githash.c
 
-noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/csv.c src/xmlparser.c \
+noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/syscolname.c src/csv.c src/xmlparser.c \
 						src/jsonparser.c src/jsonserial.c src/xmlserial.c src/tostream.c src/reader.c \
-						src/iterator.c src/http.c src/generic.c src/trace.clle src/datagen.c src/githash.c \
+						src/iterator.c src/http.c src/generic.c src/trace.clle src/datagen.c src/datainto.c src/githash.c \
 						ext/src/memUtil.c ext/src/parms.c ext/src/sndpgmmsg.c ext/src/stream.c ext/src/timestamp.c \
 						ext/src/trycatch.c \
 						ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c
@@ -144,8 +146,9 @@ cleanup:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL)     OBJTYPE(*MODULE)"
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/QSRVSRC)  OBJTYPE(*FILE)"
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/EVFEVENT) OBJTYPE(*FILE)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/RELEASE) OBJTYPE(*FILE)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/RELEASE)  OBJTYPE(*FILE)"
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/TS*)      OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/EX*)      OBJTYPE(*PGM)"
 
 release: cleanup
 	@echo " -- Creating noxDbUtf8 release. --"

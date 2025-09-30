@@ -62,7 +62,7 @@ dcl-proc iterArray export;
   iterator = nox_setIterator(json);
   dow (nox_forEach(iterator));
     value = nox_getStr(iterator.this);
-    nox_joblogText( value);
+    nox_joblog( value);
   enddo;
 
   on-exit;
@@ -82,7 +82,7 @@ dcl-proc iterValues export;
   iterator = nox_setIterator(json : 'values');
   dow (nox_forEach(iterator));
     value = nox_getValueStr(iterator.this);
-    nox_joblogText( value);
+    nox_joblog( value);
   enddo;
 
   on-exit;
@@ -101,9 +101,9 @@ dcl-proc iterKeys export;
   iterator = nox_setIterator(json);
   dow (nox_forEach(iterator));
     value = nox_getName(iterator.this);
-    nox_joblogText( value);
+    nox_joblog( value);
     value = nox_getValueStr(iterator.this);
-    nox_joblogText( value);
+    nox_joblog( value);
   enddo;
 
   on-exit;
