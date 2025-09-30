@@ -44,7 +44,7 @@ static void  nox_dataIntoMapObject  (PJXNODE pParent, QrnDiParm_T * pParms, SHOR
     SHORT nextLevel = level +1;
 
     pParms->env->QrnDiStartStruct (pParms->handle);
-    for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
+    for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSiblingNext) {
         if  ( pNode->Name && *pNode->Name > 0) {
             // TODO !! Only report names for nodes  - not null
             // TODO !! Implement real null support when IBM has the API ready
@@ -66,7 +66,7 @@ static void  nox_dataIntoMapArray (PJXNODE pParent, QrnDiParm_T * pParms, SHORT 
     SHORT nextLevel = level +1;
 
     pParms->env->QrnDiStartArray  (pParms->handle);
-    for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
+    for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSiblingNext) {
         nox_dataIntoMapNode (pNode , pParms, nextLevel);
     }
     pParms->env->QrnDiEndArray  (pParms->handle);
@@ -114,7 +114,7 @@ static void  nox_dataIntoMapNode  (PJXNODE pNode, QrnDiParm_T * pParms, SHORT le
         }
     }
 }
-/* 	---------------------------------------------------------------------------
+/*    ---------------------------------------------------------------------------
     --------------------------------------------------------------------------- */
 static void   nox_dataIntoMapper (QrnDiParm_T * pParms)
 {
@@ -129,7 +129,7 @@ static void   nox_dataIntoMapper (QrnDiParm_T * pParms)
     pParms->env->QrnDiFinish (pParms->handle );
 
 }
-/* 	---------------------------------------------------------------------------
+/*    ---------------------------------------------------------------------------
     --------------------------------------------------------------------------- */
 nox_DATAINTO nox_dataInto (PJXNODE pNode)
 {

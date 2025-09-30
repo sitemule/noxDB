@@ -41,7 +41,7 @@ static iconv_t iconvCd;
 
 typedef void (*NOX_DATAGEN)();
 
-/* 	---------------------------------------------------------------------------
+/*    ---------------------------------------------------------------------------
     Implement;
     https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_74/rzasm/roaDataGenExample.htm
     https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/rzasm/rzasmpdf.pdf

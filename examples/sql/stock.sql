@@ -1,4 +1,4 @@
--- drop schema noxdbdemo;
+﻿-- drop schema noxdbdemo;
 create schema noxdbdemo;
 set schema noxdbdemo;
 
@@ -36,7 +36,7 @@ insert into noxdbdemo.stock (sku, department, main_category, sub_category, descr
 ('Cycles', 'Mountain', 'E-bikes', 'MTB', 'Mountain bike with 21 gears', 299.99),
 ('Skis', 'Sports', 'Winter Sports', 'Ski Equipment', 'Alpine skis with bindings', 499.99),
 ('Tennis Racket', 'Sports', 'Racquet Sports', 'Tennis Equipment', 'Professional tennis racket with strings', 89.99),
-('??????','??????????', '?????????? ???????', '??????? ???????', '???? ????? ??? ????' , 266.88 );
+('Αλιεία','Αθλητισμός', 'Εξοπλισμός αλιείας', 'Ανοιχτή θάλασσα', 'Βαρύ σύρμα για τόνο' , 266.88 );
 
 
 truncate table noxdbdemo.sizes;
@@ -54,7 +54,7 @@ insert into noxdbdemo.sizes (main_category, stock_level, text, number) values
 ('E-bikes', 1, null, 58),
 ('E-bikes', 1, null, 60),
 
-('?????????? ???????', 2,  '5mm x 1000m' , null)
+('Εξοπλισμός αλιείας', 2,  '5mm x 1000m' , null)
 ;
 
 truncate table noxdbdemo.colurs;
@@ -77,4 +77,5 @@ Select *
 from noxdbdemo.stock
 left join noxdbdemo.sizes  on stock.main_category = sizes.main_category
 left join noxdbdemo.colurs on stock.main_category = colurs.main_category
-where stock.sku = '??????';
+where stock.sku = 'Αλιεία';
+

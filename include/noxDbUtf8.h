@@ -13,9 +13,9 @@
 #ifndef OCCURENS_TYPE
 #define OCCURENS_TYPE
 typedef enum {
-	OC_NONE = 0,
-	OC_NEXT_FOLLOWS = 1,
-	OC_EITHER_OR = 2
+   OC_NONE = 0,
+   OC_NEXT_FOLLOWS = 1,
+   OC_EITHER_OR = 2
 } OCCURENS , *POCCURENS;
 #endif
 
@@ -30,7 +30,6 @@ a \
 */
 
 #pragma convert(1252)
-
 #define  UBOUND    "UBOUND"
 #define  NULLSTR   "null"
 #define  TRUESTR   "true"
@@ -41,6 +40,8 @@ a \
 #define  SLASHGT   "/>"
 #define  BRABRAGT  "]]>"
 #define  CDATA     "<![CDATA["
+#define  DELIMITERS   "/\\@[] .{}'\""
+#pragma convert(0)
 
 #define  APOS         0x27
 #define  QUOT         0x22
@@ -65,190 +66,182 @@ a \
 #define  HASH         0x23
 #define  CR           0x0d
 #define  COMMA        0x2c
-#define  DELIMITERS   "/\\@[] .{}'\""
-#pragma convert(0)
 
 
 typedef enum {
-	NOX_FORMAT_DEFAULT     = 0,
-	NOX_FORMAT_CDATA       = 1
+   NOX_FORMAT_DEFAULT     = 0,
+   NOX_FORMAT_CDATA       = 1
 } FORMAT_OPTION , *PFORMAT_OPTION;
 
 typedef enum {
-	NOX_STREAM_JSON     = 0,
-	NOX_STREAM_XML      = 1,
-	NOX_STREAM_CSV      = 2
+   NOX_STREAM_JSON     = 0,
+   NOX_STREAM_XML      = 1,
+   NOX_STREAM_CSV      = 2
 } STREAM_OPTION , *PSTREAM_OPTION;
 
 
 #define ATTRSIG 0x05
 typedef struct _NOXATTR {
-	UCHAR  signature; // always hex 05
-	LONG   Handle;
-	PUCHAR Name;
-	PUCHAR Value;
-	struct _NOXATTR    * pAttrSibling;
-	PVOID pNodeParent;
+   UCHAR  signature; // always hex 05
+   PUCHAR Name;
+   PUCHAR Value;
+   struct _NOXATTR    * pAttrSibling;
+   PVOID pNodeParent;
 } NOXATTR, *PNOXATTR;
 
 typedef enum {
-	UNKNOWN             = 0,
-	OBJECT              = 1,
-	ARRAY               = 2,
-	PARSE_STRING        = 3,
-	POINTER_VALUE       = 4,
-	VALUE               = 5,
-	NOX_VALUE           = 5,
-	ROOT                = 6,
-	LITERAL             = 16,
-	NOX_LITERAL         = 16,
-	CLONE_OLD           = 17,  // Was OBJLNK - Obsolete yes but maps to CLONE in appplication
-	CLONE               = 18,  // Obsolete ... NO
-	EVALUATE            = 19,  // Obsolete ??
-	NOX_POINTER 	     = 20,  // Internal objects
-	NOX_SUBGRAPH        = 21,  // Sub-graph, will be serialized but maintained elsewhere
-	OBJMOVE             = 2048,
-	// Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
-	// Note: "Merge options" are fit in here... from belowe
-	NT_MOVE             =2048,  // Unlink the source and move it to destination
-	NT_ALLOW_PRIMITIVES =4096   // Allow strings ints and other valyes to evaluate with PARSE_STRING
+   UNKNOWN             = 0,
+   OBJECT              = 1,
+   ARRAY               = 2,
+   PARSE_STRING        = 3,
+   POINTER_VALUE       = 4,
+   VALUE               = 5,
+   NOX_VALUE           = 5,
+   ROOT                = 6,
+   LITERAL             = 16,
+   NOX_LITERAL         = 16,
+   CLONE_OLD           = 17,  // Was OBJLNK - Obsolete yes but maps to CLONE in appplication
+   CLONE               = 18,  // Obsolete ... NO
+   EVALUATE            = 19,  // Obsolete ??
+   NOX_POINTER         = 20,  // Internal objects
+   NOX_SUBGRAPH        = 21,  // Sub-graph, will be serialized but maintained elsewhere
+   OBJMOVE             = 2048,
+   // Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
+   // Note: "Merge options" are fit in here... from belowe
+   NT_MOVE             =2048,  // Unlink the source and move it to destination
+   NT_ALLOW_PRIMITIVES =4096   // Allow strings ints and other valyes to evaluate with PARSE_STRING
 
 } NODETYPE, *PNODETYPE;
 typedef NODETYPE  JSTATE, *PJSTATE;
 
 typedef enum {
-	// Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
-	MO_MERGE_NEW      =   256,  // Only new elements are merged - existing are left untouched
-	MO_MERGE_MATCH    =   512,  // Merge and replace only existing nodes
-	MO_MERGE_REPLACE  =  1024   // Merge all: replace if it exists and append new nodes if not exists
+   // Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
+   MO_MERGE_NEW      =   256,  // Only new elements are merged - existing are left untouched
+   MO_MERGE_MATCH    =   512,  // Merge and replace only existing nodes
+   MO_MERGE_REPLACE  =  1024   // Merge all: replace if it exists and append new nodes if not exists
 } MERGEOPTION , *PMERGEOPTION;
 
 #define NODESIG  0x04
 typedef struct _NOXNODE {
-	UCHAR  signature; // always hex 05
-	LONG   Handle;
-	PUCHAR Name;
-	SHORT  Seq;
-	PNOXATTR pAttrList;
-	PUCHAR Value;
-	struct _NOXNODE * pNodeParent;
-	struct _NOXNODE * pNodeChildHead;
-	struct _NOXNODE * pNodeChildTail;
-	struct _NOXNODE * pNodeSibling;
-	LONG     Count;
-	BOOL     newlineInAttrList;
-	PUCHAR   Comment;
-	NODETYPE type;
-	BOOL     doCount;
-	LONG     lineNo;
-	BOOL     isLiteral;
-	SHORT    ccsid;
-	FORMAT_OPTION options;
+   UCHAR  signature; // always hex 04
+   PUCHAR Name;
+   PNOXATTR pAttrList;
+   PUCHAR Value;
+   struct _NOXNODE * pNodeParent;
+   struct _NOXNODE * pNodeChildHead;
+   struct _NOXNODE * pNodeChildTail;
+   struct _NOXNODE * pNodeSiblingNext;
+   struct _NOXNODE * pNodeSiblingPrevious;
+   LONG     Count;
+   BOOL     newlineInAttrList;
+   PUCHAR   Comment;
+   NODETYPE type;
+   BOOL     doCount;
+   LONG     lineNo;
+   BOOL     isLiteral;
+   SHORT    ccsid;
+   FORMAT_OPTION options;
 } NOXNODE, *PNOXNODE;
 
-typedef struct _NOXSEGMENT {
-	LONG    nodeCount;
-	PNOXNODE * nodeArray;
-} NOXSEGMENT , *PNOXSEGMENT;
 
 typedef enum {
-	nox_FIND_START_TOKEN,
-	nox_DETERMIN_TAG_TYPE,
-	nox_FIND_END_TOKEN,
-	nox_BUILD_NAME,
-	nox_COLLECT_DATA,
-	nox_ATTR_NAME,
-	nox_ATTR_VALUE,
-	nox_DELIMITER,
-	nox_EXIT,
-	nox_EXIT_ERROR
+   nox_FIND_START_TOKEN,
+   nox_DETERMIN_TAG_TYPE,
+   nox_FIND_END_TOKEN,
+   nox_BUILD_NAME,
+   nox_COLLECT_DATA,
+   nox_ATTR_NAME,
+   nox_ATTR_VALUE,
+   nox_DELIMITER,
+   nox_EXIT,
+   nox_EXIT_ERROR
 } XMLSTATE, *PXMLSTATE;
 
 
 typedef struct {
-	PNOXNODE pNodeRoot;
-	FILE *  File;
-	PUCHAR  FileName;
-	XMLSTATE State;
-	//UCHAR   FileBuf[65535];
-	UCHAR   dummy[32]; // Extra space after buffer for swapping
-	PUCHAR  pFileBuf;
-	PUCHAR  Data;
-	LONG    DataIx;
-	LONG    DataSize;
-	UCHAR   StartName [32768];
-	LONG    StartNameIx;
-	UCHAR   EndName [32768];
-	LONG    EndNameIx;
-	PUCHAR  pName;
-	PLONG   pNameIx;
-	LONG    Level;
-	PNOXNODE pNodeWorkRoot;
-	PNOXNODE pNodeCurrent;
-	PNOXATTR *pAttr;
-	LONG    Count;
-	UCHAR   fnyt;
-	LONG    LineCount;
-	LONG    ColCount;
-	PUCHAR  StreamBuf;
-	UCHAR   e2aTbl[256];
-	BOOL    UseIconv;
-	iconv_t Iconv;
-	BOOL    LittleEndian;
-	LONG    StartLine;
-	PUCHAR  Comment;
-	BOOL    isJson;
-	BOOL    hasRoot;
-	LONG    tokenNo;
+   PNOXNODE pNodeRoot;
+   FILE *  File;
+   PUCHAR  FileName;
+   XMLSTATE State;
+   //UCHAR   FileBuf[65535];
+   UCHAR   dummy[32]; // Extra space after buffer for swapping
+   PUCHAR  pFileBuf;
+   PUCHAR  Data;
+   LONG    DataIx;
+   LONG    DataSize;
+   UCHAR   StartName [32768];
+   LONG    StartNameIx;
+   UCHAR   EndName [32768];
+   LONG    EndNameIx;
+   PUCHAR  pName;
+   PLONG   pNameIx;
+   LONG    Level;
+   PNOXNODE pNodeWorkRoot;
+   PNOXNODE pNodeCurrent;
+   PNOXATTR *pAttr;
+   LONG    Count;
+   UCHAR   fnyt;
+   LONG    LineCount;
+   LONG    ColCount;
+   PUCHAR  StreamBuf;
+   UCHAR   e2aTbl[256];
+   BOOL    UseIconv;
+   iconv_t Iconv;
+   BOOL    LittleEndian;
+   LONG    StartLine;
+   PUCHAR  Comment;
+   BOOL    isJson;
+   BOOL    hasRoot;
+   LONG    tokenNo;
 } NOXCOM , * PNOXCOM;
 
 typedef enum {
-	RL_FIRST_CHILD = 1,
-	RL_LAST_CHILD = 2,
-	RL_BEFORE_SIBLING = 3,
-	RL_AFTER_SIBLING = 4,
-	RL_REPLACE = 5
+   RL_FIRST_CHILD = 1,
+   RL_LAST_CHILD = 2,
+   RL_BEFORE_SIBLING = 3,
+   RL_AFTER_SIBLING = 4,
+   RL_REPLACE = 5
 } REFLOC, *PREFLOC;
 
 typedef struct _TOK{
-	BOOL    isEof;
-	UCHAR   token ;
-	BOOL    isLiteral;
-	LONG    len;
-	PUCHAR  data;
-	LONG    count;
+   BOOL    isEof;
+   UCHAR   token ;
+   BOOL    isLiteral;
+   LONG    len;
+   PUCHAR  data;
+   LONG    count;
 } TOK, *PTOK;
 
 typedef _Packed struct  _NOXWRITER      {
-	FILE *  outFile;
-	iconv_t iconv;
-	PUCHAR  buf;
-	SHORT   level;
-	SHORT   prevLevel;
-	LONG    lineNo;
-	BOOL    doTrim;
-	BOOL    useDefaultFormat;
-	BOOL    isDefaultFormatDetected;
-	ULONG   bufLen;
-	ULONG   maxSize;
-	BOOL    wasHere;
-	PVOID   scratchPad; // Pointer to any user data
+   FILE *  outFile;
+   iconv_t iconv;
+   PUCHAR  buf;
+   SHORT   level;
+   SHORT   prevLevel;
+   LONG    lineNo;
+   BOOL    doTrim;
+   BOOL    useDefaultFormat;
+   BOOL    isDefaultFormatDetected;
+   ULONG   bufLen;
+   ULONG   maxSize;
+   BOOL    wasHere;
+   PVOID   scratchPad; // Pointer to any user data
 } NOXWRITER, * PNOXWRITER;
 
 typedef _Packed struct  _NOXITERATOR {
-	PNOXNODE   root;
-	PNOXNODE   this;
-	LGL       isList;
-	LGL       isFirst;
-	LGL       isLast;
-	LGL       isRecursive;
-	VARCHAR1  comma;
-	LONG      count;
-	LONG      length;
-	LONG      size;
-	PNOXNODE * list;
-	LGL       doBreak;
-	PNOXNODE   next;
+   PNOXNODE   root;
+   PNOXNODE   this;
+   LGL       isList;
+   LGL       isFirst;
+   LGL       isLast;
+   LGL       isRecursive;
+   VARCHAR1  comma;
+   LONG      count;
+   LONG      length;
+   LONG      size;
+   PNOXNODE * list;
+   LGL       doBreak;
+   PNOXNODE   next;
 } NOXITERATOR , * PNOXITERATOR ;
 
 
@@ -359,7 +352,9 @@ NOXITERATOR nox_SetIterator (PNOXNODE pNode , PUCHAR path);
 NOXITERATOR nox_SetRecursiveIterator (PNOXNODE pNode , PUCHAR path);
 #pragma descriptor ( void nox_SetRecursiveIterator              (void))
 
-LGL nox_ForEach (PNOXITERATOR pIter);
+LGL nox_ForEach (PNOXITERATOR pIter , PLVARCHAR filterP);
+#pragma descriptor ( void nox_ForEach                 (void))
+
 PNOXNODE nox_GetParent(PNOXNODE pNode);
 SHORT nox_GetNodeType (PNOXNODE pNode);
 
@@ -476,6 +471,7 @@ LGL     nox_IsJson (PNOXNODE pNode);
 BOOL    nox_HasMore(PNOXNODE pNode);
 
 /* Internals */
+void nox_Initialize(void);
 void     nox_SkipBlanks(BOOL skip);
 BOOL    JSON_Parse(PNOXCOM pJxCom);
 BOOL    jsonParseNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name , PNOXNODE pCurNode) ;
@@ -518,52 +514,52 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, BOOL useLocale);
 #define NOXDB_ALL_ROWS -1
 
 typedef _Packed struct  {
-	 SQLHSTMT      hstmt;
-	 BOOL          allocated;
-	 BOOL          exec;
+   SQLHSTMT      hstmt;
+   BOOL          allocated;
+   BOOL          exec;
 } NOXSQLSTMT, * PNOXSQLSTMT;
 
 typedef _Packed struct  {
-	 SQLCHAR       colname[256]; // !!!! TODO !!! set len to 32!!
-	 SQLCHAR       sysname  [64];
-	 SQLCHAR       realname [64];
-	 SQLSMALLINT   coltype;
-	 SQLSMALLINT   colnamelen;
-	 SQLSMALLINT   nullable;
-	 SQLINTEGER    collen;
-	 SQLSMALLINT   scale;
-	 SQLINTEGER    outlen;
-	 SQLCHAR *     data;
-	 SQLINTEGER    displaysize;
-	 NODETYPE      nodeType;
-	 SQLCHAR       header[256];
-	 SQLCHAR       text[128];
-	 BOOL          isId;
+   SQLCHAR       colname[256]; // !!!! TODO !!! set len to 32!!
+   SQLCHAR       sysname  [64];
+   SQLCHAR       realname [64];
+   SQLSMALLINT   coltype;
+   SQLSMALLINT   colnamelen;
+   SQLSMALLINT   nullable;
+   SQLINTEGER    collen;
+   SQLSMALLINT   scale;
+   SQLINTEGER    outlen;
+   SQLCHAR *     data;
+   SQLINTEGER    displaysize;
+   NODETYPE      nodeType;
+   SQLCHAR       header[256];
+   SQLCHAR       text[128];
+   BOOL          isId;
 } NOXCOL, * PNOXCOL;
 
 
 typedef _Packed struct  {
-	 LGL         hexSort;
-	 LGL         sqlNaming;
-	 UCHAR       DateSep;
-	 LONG        DateFmt;
-	 UCHAR       TimeSep;
-	 LONG        TimeFmt;
-	 UCHAR       DecimalPoint;
-	 LGL         upperCaseColName;
-	 LGL         autoParseContent;
+   LGL         hexSort;
+   LGL         sqlNaming;
+   UCHAR       DateSep;
+   LONG        DateFmt;
+   UCHAR       TimeSep;
+   LONG        TimeFmt;
+   UCHAR       DecimalPoint;
+   LGL         upperCaseColName;
+   LGL         autoParseContent;
 }  SQLOPTIONS, * PSQLOPTIONS;
 
 typedef _Packed struct  {
-	 LGL         doTrace;
-	 UCHAR       lib[11];
-	 SQLHSTMT    handle;
-	 UCHAR       tsStart [27];
-	 UCHAR       tsEnd   [27];
-	 LONG        sqlCode;
-	 UCHAR       text  [256];
-	 UCHAR       job [29];
-	 INT64       trid;
+   LGL         doTrace;
+   UCHAR       lib[11];
+   SQLHSTMT    handle;
+   UCHAR       tsStart [27];
+   UCHAR       tsEnd   [27];
+   LONG        sqlCode;
+   UCHAR       text  [256];
+   UCHAR       job [29];
+   INT64       trid;
 }  NOXTRACE  , * PNOXTRACE;
 
 #define  COMMENT_SIZE 4096
@@ -572,51 +568,51 @@ typedef _Packed struct  {
 #define  LOOK_AHEAD_SIZE (65535-512)
 
 typedef _Packed struct  {
-	 SQLHENV       henv;
-	 SQLHDBC       hdbc;
-	 PNOXNODE      pOptions;
-	 BOOL          pOptionsCleanup;
-	 SQLOPTIONS    options;
-	 iconv_t       iconv;
-	 UCHAR         sqlState[5];
-	 LONG          sqlCode;
-	 UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
-	 NOXSQLSTMT    stmts[NOXSQLSTMT_MAX];
-	 SHORT         stmtIx;
-	 NOXTRACE      sqlTrace;
-	 BOOL          transaction;
+   SQLHENV       henv;
+   SQLHDBC       hdbc;
+   PNOXNODE      pOptions;
+   BOOL          pOptionsCleanup;
+   SQLOPTIONS    options;
+   iconv_t       iconv;
+   UCHAR         sqlState[5];
+   LONG          sqlCode;
+   UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
+   NOXSQLSTMT    stmts[NOXSQLSTMT_MAX];
+   SHORT         stmtIx;
+   NOXTRACE      sqlTrace;
+   BOOL          transaction;
 } NOXSQLCONNECT , * PNOXSQLCONNECT;
 
 typedef _Packed struct  {
 // SQLHENV       henv;
 // SQLHDBC       hdbc;
 // SQLHSTMT      hstmt;
-	 PNOXSQLSTMT   pstmt;
-	 PUCHAR        sqlstmt;
-	 SQLSMALLINT   nresultcols;
-	 SQLINTEGER    rowcount;
-	 SQLRETURN     rc;
+   PNOXSQLSTMT   pstmt;
+   PUCHAR        sqlstmt;
+   SQLSMALLINT   nresultcols;
+   SQLINTEGER    rowcount;
+   SQLRETURN     rc;
 // PNOXNODE       pRowNode;
 // SQLOPTIONS    options;
 // PNOXNODE       pOptions;
 // BOOL          deleteOptions;
-	 PNOXCOL        cols;
-	 PNOXSQLCONNECT pCon;
-	 LONG           maxColSize;
+   PNOXCOL        cols;
+   PNOXSQLCONNECT pCon;
+   LONG           maxColSize;
 
 } NOXSQL, * PNOXSQL;
 
 
 typedef enum _NOX_RESULTSET {
-	NOX_META       = 1,
-	NOX_FIELDS     = 2,
-	NOX_TOTALROWS  = 4,
-	NOX_UPPERCASE  = 8,
-	NOX_APROXIMATE_TOTALROWS = 16,
-	NOX_SYSTEM_NAMES 		= 32,
-	NOX_CAMEL_CASE 			= 64,
-	NOX_GRACEFUL_ERROR 		= 128,
-	NOX_COLUMN_TEXT   		= 256
+   NOX_CAMEL_CASE = 0,
+   NOX_META       = 1,
+   NOX_FIELDS     = 2,
+   NOX_TOTALROWS  = 4,
+   NOX_SYSTEM_CASE  = 8,
+   NOX_APROXIMATE_TOTALROWS = 16,
+   NOX_SYSTEM_NAMES       = 32,
+   NOX_GRACEFUL_ERROR       = 128,
+   NOX_COLUMN_TEXT         = 256
 } NOX_RESULTSET, *PNOX_RESULTSET;
 
 typedef _Packed struct _SQLCHUNK {

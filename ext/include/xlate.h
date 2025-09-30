@@ -20,6 +20,8 @@ PUCHAR     XlateFromAnyAscii2ebcdic (PUCHAR outStr, PUCHAR inStr);
 
 // Using iconv_t
 LONG       XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen ) ;
+PUCHAR     XlateString (iconv_t cd, PUCHAR out , PUCHAR in );
+
 iconv_t    XlateOpen (int FromCCSID, int ToCCSID, int reportError);
 
 

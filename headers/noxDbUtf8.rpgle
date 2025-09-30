@@ -1237,11 +1237,11 @@ Dcl-C NOX_COPY_CLONE  const(1);
 //
 // @param (output) Destination array or object (to)
 // @param (input) Source array or object (from)
-// @param (input) Push operation mode (nox_MOVE_UNLINK (default) or nox_COPY_CLONE)
+// @param (input) Push operation mode (NOX_MOVE_UNLINK (default) or NOX_COPY_CLONE)
 // @return Destination array or object
 ///
 Dcl-PR nox_Append Pointer extproc(*CWIDEN :'nox_Append');
-  pDestArray     Pointer    value;
+  pDestNode      Pointer    value;
   pSourceNode    Pointer    value;
   copy           Uns(5)     value options(*nopass);
 End-PR;
@@ -1256,8 +1256,8 @@ End-PR;
 // @param (input) Array or JSON array string
 // @param (input) From index (1-based)
 // @param (input) To index (-1 = all nodes from "from" index to till the end)
-// @param (input) Copy operation mode. nox_MOVE_UNLINK (default) removes the "sliced"
-//        nodes from the source array. nox_COPY_CLONE leaves the nodes in
+// @param (input) Copy operation mode. NOX_MOVE_UNLINK (default) removes the "sliced"
+//        nodes from the source array. NOX_COPY_CLONE leaves the nodes in
 //        the source array and just copies the nodes to the new array.
 // @return New array with the "sliced" nodes
 ///
@@ -1394,19 +1394,6 @@ Dcl-PR nox_MoveObjectInto Pointer extproc(*CWIDEN : 'nox_NodeMoveIntoVC');
   pSourceObj     Pointer    value;
 End-PR;
 
-///
-// Appped to and object or array
-//
-//
-// @param (input/output) Destination object
-// @param (input) Sibling to append
-// @return Destination object
-//
-///
-Dcl-PR nox_AppendObject Pointer extproc(*CWIDEN : 'nox_NodeAppend');
-  pDestObj       Pointer    value;
-  pSiblin        Pointer    value;
-End-PR;
 ///
 // Move node into object graph
 //
@@ -1713,10 +1700,12 @@ End-PR;
 // iteration and free up memory.
 //
 // @param (input) Iterator
+// @param (input) Filter - I.e. XML can have mixed names at same level.
 // @return *on if there is another entry , *off if the iteration ended
 ///
 Dcl-PR nox_forEach Ind extproc(*CWIDEN : 'nox_ForEach');
   iterator  likeds( nox_Iterator);
+  filter    Like(UTF8_1K) const options(*nopass:*varsize);
 End-PR;
 
 
@@ -2075,7 +2064,7 @@ Dcl-PR nox_MemUse Uns(20) extproc(*CWIDEN : 'nox_MemUse');
 End-PR;
 
 
-/// TODO - not migrated !!
+///
 // Log message
 //
 // Sends an info message to the job log. The passed message can either be text
@@ -2088,25 +2077,10 @@ Dcl-PR nox_joblog extproc(*CWIDEN : 'nox_Joblog');
   textOrNode pointer value options(*string);
 End-PR;
 
-Dcl-PR nox_joblogUtf8 extproc(*CWIDEN : 'nox_JoblogVC');
-  textOrNode Like(UTF8_1K) const options(*varsize);
+Dcl-PR nox_joblogText extproc(*CWIDEN : 'nox_JoblogVC');
+  text  Like(UTF8_1K) const options(*varsize);
 End-PR;
 
-
-///
-// mapix - map index to pointer
-//
-// Maintain at list of index numbers to database CLOB/BLOB
-// fields since pointers can not be shared in SQL
-// @param (input) pointer to pointer to node
-// @param (input) index  number ( 1= first )
-//
-// @return *ON if found
-///
-Dcl-PR nox_mapIx Ind extproc(*CWIDEN:'nox_MapIx' );
-  ppNode         Pointer;
-  Index          Uns(10)    value;
-End-PR;
 
 
 ///
@@ -2299,7 +2273,7 @@ Dcl-C NOX_TOTALROWS const(4);
 ///
 // Result set format option for returning the column names in upper case.
 ///
-Dcl-C NOX_UPPERCASE const(8);
+Dcl-C NOX_SYSTEM_CASE const(8);
 ///
 // Result set format option for returning the approximate number of total
 // rows in the result set object property "totalRows". This option executes
@@ -2315,8 +2289,8 @@ Dcl-C NOX_SYSTEM_NAMES  const(32);
 // Result set format option to return the column names in camel case.
 // "THE_COLUMN_NAME" will be returned as "theColumnName".
 
-/// TODO - not migrated !!
-Dcl-C NOX_CAMEL_CASE   const(64);
+/// Camelcase is the default
+Dcl-C NOX_CAMEL_CASE   const(0);
 
 /// TODO - not migrated !!
 // For SQL resultset

@@ -79,6 +79,17 @@ LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen )
 
 }
 
+PUCHAR XlateString (iconv_t cd, PUCHAR out , PUCHAR in )
+{
+   size_t inbytesleft = strlen(in);
+   size_t outbytesleft =  LONG_MAX;
+   PUCHAR pIn = in;
+   PUCHAR pOut = out;
+   size_t rc = iconv (cd, &pIn, &inbytesleft, &pOut, &outbytesleft);
+   out [LONG_MAX - outbytesleft] = '\0';
+   return out;
+}
+
 /* ------------------------------------------------------------- */
 /*
 void XlateXdClose  (PXLATEDESC pXd)

@@ -39,37 +39,37 @@ static PNOXWRITER nox_NewWriter (void);
 
 /* ---------------------------------------------------------------------------
    Local write implementation
-	--------------------------------------------------------------------------- */
+   --------------------------------------------------------------------------- */
 PNOXWRITER nox_NewWriter ()
 {
-	PNOXWRITER pNoxWriter = malloc (sizeof(NOXWRITER));
-	memset(pNoxWriter , 0 , sizeof(NOXWRITER));
-	#pragma convert(1252)
-	// XlateBuf(&pNoxWriter->braBeg , "[]{}\\\"" , 6, 1252 ,0 ); ;
-	#pragma convert(0)
-	return pNoxWriter;
+   PNOXWRITER pNoxWriter = malloc (sizeof(NOXWRITER));
+   memset(pNoxWriter , 0 , sizeof(NOXWRITER));
+   #pragma convert(1252)
+   // XlateBuf(&pNoxWriter->braBeg , "[]{}\\\"" , 6, 1252 ,0 ); ;
+   #pragma convert(0)
+   return pNoxWriter;
 }
 /* ---------------------------------------------------------------------------
    Local write implementation
-	--------------------------------------------------------------------------- */
+   --------------------------------------------------------------------------- */
 VOID nox_DeleteWriter (PNOXWRITER  pNoxWriter)
 {
-	free(pNoxWriter);
+   free(pNoxWriter);
 }
 /* ---------------------------------------------------------------------------
    Put newline and tabs accoringly to the indention level
    --------------------------------------------------------------------------- */
-static void indentXml (	PSTREAM pStream , SHORT cdatamode, SHORT level)
+static void indentXml (   PSTREAM pStream , SHORT cdatamode, SHORT level)
 {
    PNOXWRITER pNoxWriter = (PNOXWRITER) pStream->handle;
-	if (! pNoxWriter->doTrim && ! cdatamode) {
+   if (! pNoxWriter->doTrim && ! cdatamode) {
 
-  	   if(!pNoxWriter->wasHere) {
-	      pNoxWriter->wasHere = true;
-	   } else {
+        if(!pNoxWriter->wasHere) {
+         pNoxWriter->wasHere = true;
+      } else {
          stream_putc (pStream,0x0d);
          stream_putc (pStream,0x0a);
-   	}
+      }
 
       while (level-- > 0) {
          stream_putc (pStream,0x09);
@@ -117,8 +117,8 @@ static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT 
    &&  pNode->pNodeParent == NULL
    &&  pNode->Name        == NULL) {
       PNOXNODE pTemp;
-      for ( pTemp = pNode ; pTemp; pTemp= pTemp->pNodeSibling) {
-	      xmlStream (pTemp->pNodeChildHead ,pStream , FALSE, level);
+      for ( pTemp = pNode ; pTemp; pTemp= pTemp->pNodeSiblingNext) {
+         xmlStream (pTemp->pNodeChildHead ,pStream , FALSE, level);
       }
       return;
    }
@@ -204,7 +204,7 @@ static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT 
       CdataBegin = "";
       CdataEnd   = "";
 
-      pNode = pNode->pNodeSibling;
+      pNode = pNode->pNodeSiblingNext;
    }
 
 }
@@ -212,7 +212,7 @@ static void xmlStream (PNOXNODE pNode, PSTREAM pStream,  SHORT cdatamode, SHORT 
 // ----------------------------------------------------------------------------
 void  xmlStreamRunner   (PSTREAM pStream)
 {
-	PNOXNODE  pNode = pStream->context;
+   PNOXNODE  pNode = pStream->context;
    xmlStream (pNode , pStream , FALSE , 0);
 }
 
@@ -221,69 +221,69 @@ void  xmlStreamRunner   (PSTREAM pStream)
    --------------------------------------------------------------------------- */
 LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
 {
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PSTREAM  pStream;
-	LONG     len;
-	PNOXWRITER  pNoxWriter;
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PSTREAM  pStream;
+   LONG     len;
+   PNOXWRITER  pNoxWriter;
 
 
-	if (pNode == NULL) return 0;
-	if (pNode->signature != NODESIG) {
-		strcpy (buf, (PUCHAR) pNode);
-		return strlen(buf);
-	}
+   if (pNode == NULL) return 0;
+   if (pNode->signature != NODESIG) {
+      strcpy (buf, (PUCHAR) pNode);
+      return strlen(buf);
+   }
 
-	pStream = stream_new (4096);
-	pStream->writer  = nox_memWriter;
-	pStream->handle = pNoxWriter = nox_NewWriter();
-	pNoxWriter->buf = buf;
-	pNoxWriter->doTrim = true;
+   pStream = stream_new (4096);
+   pStream->writer  = nox_memWriter;
+   pStream->handle = pNoxWriter = nox_NewWriter();
+   pNoxWriter->buf = buf;
+   pNoxWriter->doTrim = true;
    pNoxWriter->maxSize =
           pParms->OpDescList == NULL
-		|| (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3 ) ? maxLenP : MEMMAX;
+      || (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3 ) ? maxLenP : MEMMAX;
 
-	xmlStream (pNode , pStream , FALSE , 0);
-	len = pStream->totalSize;
-	stream_putc   (pStream,'\0');
-	stream_delete (pStream);
-	nox_DeleteWriter(pNoxWriter);
-	return  len;
+   xmlStream (pNode , pStream , FALSE , 0);
+   len = pStream->totalSize;
+   stream_putc   (pStream,'\0');
+   stream_delete (pStream);
+   nox_DeleteWriter(pNoxWriter);
+   return  len;
 
 }
 // ---------------------------------------------------------------------------
 VOID nox_AsXmlText (PLVARCHAR res , PNOXNODE pNode)
 {
-	res->Length = nox_AsXmlTextMem (pNode , res->String, MEMMAX);
+   res->Length = nox_AsXmlTextMem (pNode , res->String, MEMMAX);
 }
 /* ---------------------------------------------------------------------------
    Write using the stream system to disk
    --------------------------------------------------------------------------- */
 void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options)
 {
-	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	PSTREAM pStream;
-	PNOXWRITER pNoxWriter;
-	UCHAR   mode[32];
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PSTREAM pStream;
+   PNOXWRITER pNoxWriter;
+   UCHAR   mode[32];
    PUCHAR  enc;
 
-	if (pNode == NULL) return;
+   if (pNode == NULL) return;
 
-	pNoxWriter = nox_NewWriter();
-	pStream = stream_new (4096);
-	pStream->writer = nox_fileWriter;
+   pNoxWriter = nox_NewWriter();
+   pStream = stream_new (4096);
+   pStream->writer = nox_fileWriter;
 
-	sprintf(mode , "wb,o_ccsid=%d", Ccsid);
-	unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
-	pNoxWriter->outFile  = fopen ( strTrim(FileName) , mode );
-	if (pNoxWriter->outFile == NULL) {
-		nox_DeleteWriter(pNoxWriter);
-		return;
-	}
+   sprintf(mode , "wb,o_ccsid=%d", Ccsid);
+   unlink  ( strTrim(FileName)); // Just to reset the CCSID which will not change if file exists
+   pNoxWriter->outFile  = fopen ( strTrim(FileName) , mode );
+   if (pNoxWriter->outFile == NULL) {
+      nox_DeleteWriter(pNoxWriter);
+      return;
+   }
 
-	pStream->handle = pNoxWriter;
+   pStream->handle = pNoxWriter;
 
-	pNoxWriter->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
-	pNoxWriter->iconv  = XlateOpen(1208 , Ccsid , false );
+   pNoxWriter->doTrim = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4 && trimOut == OFF) ? FALSE : TRUE;
+   pNoxWriter->iconv  = XlateOpen(1208 , Ccsid , false );
 
    #pragma convert(1252)
    switch(Ccsid) {
@@ -310,11 +310,11 @@ void nox_WriteXmlStmf (PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, 
 
    #pragma convert(0)
 
-	xmlStream ( pNode, pStream, FALSE , 0);
+   xmlStream ( pNode, pStream, FALSE , 0);
 
-	stream_delete (pStream);
-	fclose(pNoxWriter->outFile);
-	iconv_close(pNoxWriter->iconv);
-	nox_DeleteWriter(pNoxWriter);
+   stream_delete (pStream);
+   fclose(pNoxWriter->outFile);
+   iconv_close(pNoxWriter->iconv);
+   nox_DeleteWriter(pNoxWriter);
 }
 

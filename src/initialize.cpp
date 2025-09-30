@@ -1,7 +1,8 @@
-// CMD:CRTCPPMOD 
+// CMD:CRTCPPMOD
 
 #include <cstdlib>
 //extern "C" void nox_setDelimitersByCcsid (int);
+extern "C" void nox_Initialize (void);
 extern "C" void nox_sqlDisconnect (void *);
 
 
@@ -19,6 +20,7 @@ class Entry_Exit
 
     Entry_Exit::Entry_Exit(void) {
         //nox_setDelimitersByCcsid (0);
+        nox_Initialize();
         m_nEntry = 0;
     }
 

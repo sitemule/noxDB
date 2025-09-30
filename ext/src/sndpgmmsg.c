@@ -51,7 +51,7 @@ void nox_JoblogVC(PLVARCHAR text)
    UCHAR temp [1024];
    stra2e (temp  , plvc2str(text));
    Xlatestr (temp, temp, 277, 0);
-	nox_Joblog  ( "%s" , temp);
+   nox_Joblog  ( "%s" , temp);
 }
 
 

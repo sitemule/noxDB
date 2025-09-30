@@ -8,6 +8,9 @@
     "files.encoding": "windows1252",
     "editor.tabSize": 3,
     "files.trimTrailingWhitespace": true,
+    "[sql]": {
+        "files.encoding": "utf8"
+    },
     "[json]": {
         "files.encoding": "utf8"
     },

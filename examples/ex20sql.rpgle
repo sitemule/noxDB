@@ -58,12 +58,14 @@ dcl-proc main;
     pCon = nox_sqlConnect();
 
     example1();
+    example2();
+    example3();
 
 on-exit;
     // Always remember to delete used memory !!
     nox_sqlDisconnect(pCon);
     if memuse <> nox_memuse();
-        dsply 'Ups - forgot to clean something up';
+        nox_joblogText('Ups - forgot to clean something up');
     endif;
 
 end-proc;
@@ -75,15 +77,14 @@ end-proc;
 dcl-proc example1;
 
 
-
-	dcl-s pEmployees   pointer;
+    dcl-s pEmployees   pointer;
     dcl-s Msg          varchar(1024) ccsid(*jobrun);
 
     // Load all employees into a graph and return the pointer to the graph object
-	pEmployees = nox_sqlResultSet(pCon:
+    pEmployees = nox_sqlResultSet(pCon:
         'select *                -
-		 from corpdata.employee  -
-	');
+         from corpdata.employee  -
+    ');
 
     // Was there a problem ?   If so - write the message to the joblog and return
     // Note we use an on-error to clean up
@@ -93,7 +94,6 @@ dcl-proc example1;
         return;
     endif;
 
-
     // Let's see what we got - both as JSON and XML - note the 1208 is the UTF-8 CCSID
     nox_WriteJsonStmf(pEmployees:'/prj/noxDbUtf8/testout/ex20-employees1.json':1208:*OFF);
     nox_WriteXmlStmf (pEmployees:'/prj/noxDbUtf8/testout/ex20-employees1.xml' :1208:*OFF);
@@ -101,42 +101,83 @@ dcl-proc example1;
 
 on-exit;
     // Always remember to delete used memory !!
-	nox_delete(pEmployees);
+    nox_delete(pEmployees);
 
 end-proc;
 // ------------------------------------------------------------------------------------
 // Load a graph with data from a Db2 table and export it as JSON and XML
-// Default is a simple array of rows
+// note - by default columns are in camelCase
 // ------------------------------------------------------------------------------------
 dcl-proc example2;
 
 
-
-	dcl-s pEmployees   pointer;
+    dcl-s pStock   pointer;
     dcl-s Msg          varchar(1024) ccsid(*jobrun);
 
     // Load all employees into a graph and return the pointer to the graph object
-	pEmployees = nox_sqlResultSet(pCon:
-        'select *                -
-		 from corpdata.employee  -
-	');
+    pStock = nox_sqlResultSet(pCon:
+        'select -
+          sku,-
+          department ,-
+          main_category,-
+          sub_category -
+        from noxdbdemo.stock '
+    );
 
     // Was there a problem ?   If so - write the message to the joblog and return
     // Note we use an on-error to clean up
-    if Nox_Error(pEmployees) ;
-        msg = nox_Message(pEmployees);
+    if Nox_Error(pStock) ;
+        msg = nox_Message(pStock);
         nox_joblog ( msg );
         return;
     endif;
 
 
     // Let's see what we got - both as JSON and XML - note the 1208 is the UTF-8 CCSID
-    nox_WriteJsonStmf(pEmployees:'/prj/noxDbUtf8/testout/ex20-employees1.json':1208:*OFF);
-    nox_WriteXmlStmf (pEmployees:'/prj/noxDbUtf8/testout/ex20-employees1.xml' :1208:*OFF);
+    nox_WriteJsonStmf(pStock:'/prj/noxDbUtf8/testout/ex20-stock1.json':1208:*OFF);
+    nox_WriteXmlStmf (pStock:'/prj/noxDbUtf8/testout/ex20-stock1.xml' :1208:*OFF);
 
 
 on-exit;
     // Always remember to delete used memory !!
-	nox_delete(pEmployees);
+    nox_delete(pStock);
+
+end-proc;
+// ------------------------------------------------------------------------------------
+// Load a graph with data from a Db2 table and export it as JSON and XML
+// note - use the case we gice them by the select statement
+// ------------------------------------------------------------------------------------
+dcl-proc example3;
+
+    dcl-s pStock   pointer;
+
+    // Load all employees into a graph and return the pointer to the graph object
+    // Note - we have implicit error hadling . If there is an error we get an error object back
+    pStock = nox_sqlResultSet(pCon:
+        'select -
+          sku "SKU",-
+          department "departmentName",-
+          main_category "mainCategory",-
+          sub_category "subCategory"-
+        from noxdbdemo.stock':
+        *null: // no parameters
+        NOX_SYSTEM_CASE    +  // Use the names as they are - no camelCase or upperCase
+        NOX_GRACEFUL_ERROR +  // Errors are retuned as an error object
+        NOX_META           +  // Include meta data about the result set
+        NOX_FIELDS         +  // Include field descriptions
+        NOX_TOTALROWS      :  // Include total rows in the meta data
+        2 : // From row 2
+        15  // Max 15 rows
+    );
+
+
+    // Let's see what we got - both as JSON and XML - note the 1208 is the UTF-8 CCSID
+    nox_WriteJsonStmf(pStock:'/prj/noxDbUtf8/testout/ex20-stock3.json':1208:*OFF);
+    nox_WriteXmlStmf (pStock:'/prj/noxDbUtf8/testout/ex20-stock3.xml' :1208:*OFF);
+
+
+on-exit;
+    // Always remember to delete used memory !!
+    nox_delete(pStock);
 
 end-proc;
