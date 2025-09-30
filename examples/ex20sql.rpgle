@@ -2,7 +2,7 @@
 // ------------------------------------------------------------------------------------
 // noxDB - Not Only Xml - Its JSON, XML, SQL and more
 //
-// This tutorial will show all SQL function of the noxDbUtf8 library
+// This tutorial will show how the get data with SQL in noxDb
 //
 // Design:  Niels Liisberg
 // Project: Sitemule.com
@@ -62,8 +62,8 @@ dcl-proc main;
     example3();
     example4();
 
+// Always remember to delete used memory !!
 on-exit;
-    // Always remember to delete used memory !!
     nox_sqlDisconnect(pCon);
     if memuse <> nox_memuse();
         nox_joblog('Ups - forgot to clean something up');
@@ -102,8 +102,8 @@ dcl-proc example1;
     nox_WriteXmlStmf (pEmployees:'/prj/noxDbUtf8/testout/ex20-employees1.xml' :1208:*OFF);
 
 
+// Always remember to delete used memory !!
 on-exit;
-    // Always remember to delete used memory !!
     nox_delete(pEmployees);
 
 end-proc;
@@ -143,8 +143,8 @@ dcl-proc example2;
     nox_WriteXmlStmf (pStock:'/prj/noxDbUtf8/testout/ex20-stock1.xml' :NOX_UTF8_BOM:*ON);
 
 
+// Always remember to delete used memory !!
 on-exit;
-    // Always remember to delete used memory !!
     nox_delete(pStock);
 
 end-proc;
@@ -166,7 +166,7 @@ dcl-proc example3;
           sub_category "subCategory"-
         from noxdbdemo.stock':
         *null: // no parameters
-        NOX_SYSTEM_CASE    +  // Use the names as they are - no camelCase or upperCase
+        NOX_SYSTEM_CASE    +  // Use the names as they are - no camelCase
         NOX_GRACEFUL_ERROR +  // Errors are retuned as an error object
         NOX_META           +  // Include meta data about the result set
         NOX_FIELDS         +  // Include field descriptions
@@ -183,14 +183,16 @@ dcl-proc example3;
     nox_WriteXmlStmf (pStock:'/prj/noxDbUtf8/testout/ex20-stock3.xml' );
 
 
+// Always remember to delete used memory !!
 on-exit;
-    // Always remember to delete used memory !!
     nox_delete(pStock);
 
 end-proc;
 
 // ------------------------------------------------------------------------------------
 // NOX_SYSTEM_NAMES
+// This shows the "for system name" feature of Db2 that is not available
+// in other frameworks.
 // ------------------------------------------------------------------------------------
 dcl-proc example4;
 
@@ -202,7 +204,7 @@ dcl-proc example4;
         'select * from noxdbdemo.sysnames':
         *null: // no parameters
         NOX_SYSTEM_NAMES   +  // Use the "for system name" names and not the comlumn name
-        NOX_SYSTEM_CASE    +  // Use the names as they are - no camelCase or upperCase
+        NOX_SYSTEM_CASE    +  // Use the names as they are - no camelCase
         NOX_GRACEFUL_ERROR +  // Errors are retuned as an error object
         NOX_META           +  // Include meta data about the result set
         NOX_FIELDS         +  // Include field descriptions
@@ -214,8 +216,8 @@ dcl-proc example4;
     nox_WriteXmlStmf (pRows:'/prj/noxDbUtf8/testout/ex20-sysnames.xml' );
 
 
+// Always remember to delete used memory !!
 on-exit;
-    // Always remember to delete used memory !!
     nox_delete(pRows);
 
 end-proc;

@@ -1346,12 +1346,12 @@ PNOXNODE nox_sqlResultRowVC ( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE p
    return nox_sqlResultRow ( pCon, plvc2str(sqlstmt), pSqlParms, start,format);
 }
 /* ------------------------------------------------------------- */
-PNOXNODE nox_sqlValues ( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP , LONG formatP)
+PNOXNODE nox_sqlValuesVC ( PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP , LONG formatP)
 {
 
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
-   LONG    format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;
+   LONG    format     = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;
    PNOXNODE pResult;
    PNOXNODE pChild ;
    UCHAR   stmtBuf [32760];

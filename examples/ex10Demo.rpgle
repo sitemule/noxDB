@@ -97,7 +97,7 @@ dcl-proc main;
     nox_setBool(pCustomer:'isNice'     : (10 > 1)); // Logical expression
 
     // Just to see the progress:
-    nox_WriteJsonStmf(pCustomer : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer.json' : UTF8_BOM : *OFF);
+    nox_WriteJsonStmf(pCustomer : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer.json' : NOX_UTF8_BOM : *OFF);
     debug = nox_asJsonText(pCustomer);
     nox_joblog ( debug );
 
@@ -117,7 +117,7 @@ dcl-proc main;
     );
 
     // Just to see the progress:
-    nox_WriteJsonStmf(pCustomer2 : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer2.json' : UTF8_BOM : *OFF);
+    nox_WriteJsonStmf(pCustomer2 : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer2.json' : NOX_UTF8_BOM : *OFF);
     debug = nox_asJsonText(pCustomer);
     nox_joblog ( debug );
 
@@ -181,7 +181,7 @@ dcl-proc main;
 
     // and save it to disk:
     // You can use UTF8_BOM if you need the BOM-siganture
-    nox_WriteJsonStmf(pTopFive : '/prj/noxDbUtf8/testout/ex01Tutorial-topfive.json' : UTF8_BOM : *OFF);
+    nox_WriteJsonStmf(pTopFive : '/prj/noxDbUtf8/testout/ex01Tutorial-topfive.json' : NOX_UTF8_BOM : *OFF);
 
     // Now what do we need to clean up:
     // pCustList? yes

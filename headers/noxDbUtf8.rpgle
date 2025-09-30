@@ -104,6 +104,84 @@ Dcl-C NOX_FORMAT_DEFAULT const(0);
 Dcl-C NOX_FORMAT_CDATA const(1);
 
 
+/// SQL options for resultset, values rows etc
+///
+// All rows should be returned.
+///
+Dcl-C NOX_ALLROWS const(-1);
+
+///
+// Result set format option for returning the result set as an array with each
+// row contained in a seperate object inside the returned array.
+// This is default behaviour.
+///
+Dcl-C NOX_ROWARRAY const(0);
+///
+// Result set format option for additionally returning meta data with the
+// result set in the property "metaData". This option triggers returning the
+// result set to be an object instead of the default array.
+///
+Dcl-C NOX_META    const(1);
+///
+// Result set format option for additionally returning meta data about the
+// table columns with the result set in the property "metaData.fields".
+///
+Dcl-C NOX_FIELDS  const(2);
+///
+// Result set format option for returning the total number of rows returned
+// in the result set object property "totalRows".
+///
+Dcl-C NOX_TOTALROWS const(4);
+
+///
+// Result set format option to return the column names in camel case.
+// "THE_COLUMN_NAME" will be returned as "theColumnName".
+// This is default behaviour.
+///
+Dcl-C NOX_CAMEL_CASE   const(0);
+///
+// Result set format option for returning the column names  "as is".
+///
+Dcl-C NOX_SYSTEM_CASE const(8);
+///
+// Result set format option for returning the approximate number of total
+// rows in the result set object property "totalRows". This option executes
+// faster than nox_TOTALROWS but is not as precise.
+///
+Dcl-C NOX_APPROXIMATE_TOTALROWS const(16);
+
+/// TODO - migrated, test  !!
+// Result set format option to return system column names instead of sql
+// column names.
+///
+Dcl-C NOX_SYSTEM_NAMES  const(32);
+
+/// TODO - not migrated !!
+// When resultset, row or values contains CLOB's or XML columns,
+// noxDb will automatically parse and load these columvalues into the graph.
+// In som cases you will need to handle this process manually
+// and disable the auto prarser.
+// Autoparsing is default behaviour 
+///
+Dcl-C NOX_DISABLE_AUTO_PARSER const(64);
+
+
+/// TODO - not migrated !!
+// For SQL resultset
+// If set: resultSets will return a success:false
+// and set the message to the apropiate SQL error text
+// If not set:  a *NULL pointer is returned and
+// you have to handle the error manually
+///
+Dcl-C NOX_GRACEFUL_ERROR   const(128);
+
+/// TODO - not migrated !!
+// Result set format option to return extra column text label
+///
+Dcl-C NOX_COLUMN_TEXT   const(256);
+
+
+
 ///
 // Parse file
 //
@@ -2138,7 +2216,7 @@ End-PR;
 //       retrieve the error message. also the getSqlCode() can be usefull
 //
 
-///
+/// TODO - Depricate this !!!!!!!
 // SQL : Set SQL options
 //
 // This needs to be the first call if any SQL options need to be set.
@@ -2170,7 +2248,7 @@ Dcl-PR nox_sqlSetOptions  extproc(*CWIDEN: 'nox_sqlSetOptions');
   parms          Like(UTF8) const options(*nopass:*varsize);
 End-PR;
 
-/// TODO - not migrated !!
+/// TODO - Depricate this !!!!!!!
 // retrive currens SQL setting
 Dcl-PR nox_sqlGetOptions Like(UTF8) extproc(*CWIDEN : 'nox_sqlGetOptions');
   pConnection    pointer value;
@@ -2184,13 +2262,13 @@ End-PR;
 //
 // @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL statement valid for a SET statmet
-// @param (input) Template values (context)
+// @param (input) Template values object (context) or string
 // @param (input) Result value format options
 // @return Result object of values : array, object or single values value
 ///
 Dcl-PR nox_sqlValues pointer extproc(*CWIDEN: 'nox_sqlValuesVC');
   pConnection    pointer value;
-  statement      pointer value options(*string);
+  statement      Like(UTF8) const options(*varsize);
   templateValues pointer value options(*string : *nopass);
   formatOptions  int(10) value options(*nopass);
 End-PR;
@@ -2203,7 +2281,7 @@ End-PR;
 //
 // @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL statement
-// @param (input) Template values (context)
+// @param (input) Template values object (context) or string
 // @param (input) start row ( 1 = first (default) )
 // @param (input) Result set format options
 // @return Result set or <code>*null</code> if the SELECT returns no rows
@@ -2226,7 +2304,7 @@ End-PR;
 //
 // @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL statement
-// @param (input) Template values (context)
+// @param (input) Template values object (context) or string
 // @param (input) Start ( 1 = first (default) )
 // @param (input) Max. number of rows (default: nox_ALLROWS)
 // @param (input) Result set format options
@@ -2241,70 +2319,6 @@ Dcl-PR nox_sqlResultSet Pointer extproc(*CWIDEN: 'nox_sqlResultSetVC');
   limit          Int(10)    value options(*nopass);
 End-PR;
 
-///
-// All rows should be returned.
-///
-Dcl-C NOX_ALLROWS const(-1);
-
-///
-// Result set format option for returning the result set as an array with each
-// row contained in a seperate object inside the returned array.
-// This is default behaviour.
-///
-Dcl-C NOX_ROWARRAY const(0);
-///
-// Result set format option for additionally returning meta data with the
-// result set in the property "metaData". This option triggers returning the
-// result set to be an object instead of the default array.
-///
-Dcl-C NOX_META    const(1);
-///
-// Result set format option for additionally returning meta data about the
-// table columns with the result set in the property "metaData.fields".
-///
-Dcl-C NOX_FIELDS  const(2);
-///
-// Result set format option for returning the total number of rows returned
-// in the result set object property "totalRows".
-///
-Dcl-C NOX_TOTALROWS const(4);
-
-///
-// Result set format option to return the column names in camel case.
-// "THE_COLUMN_NAME" will be returned as "theColumnName".
-// This is default behaviour.
-///
-Dcl-C NOX_CAMEL_CASE   const(0);
-///
-// Result set format option for returning the column names  "as is".
-///
-Dcl-C NOX_SYSTEM_CASE const(8);
-///
-// Result set format option for returning the approximate number of total
-// rows in the result set object property "totalRows". This option executes
-// faster than nox_TOTALROWS but is not as precise.
-///
-Dcl-C NOX_APPROXIMATE_TOTALROWS const(16);
-/// TODO - not migrated !!
-// Result set format option to return system column names instead of sql
-// column names.
-///
-Dcl-C NOX_SYSTEM_NAMES  const(32);
-
-
-/// TODO - not migrated !!
-// For SQL resultset
-// If set: resultSets will return a success:false
-// and set the message to the apropiate SQL error text
-// If not set:  a *NULL pointer is returned and
-// you have to handle the error manually
-///
-Dcl-C NOX_GRACEFUL_ERROR   const(128);
-
-/// TODO - not migrated !!
-// Result set format option to return extra column text label
-///
-Dcl-C NOX_COLUMN_TEXT   const(256);
 
 
 
@@ -2315,7 +2329,7 @@ Dcl-C NOX_COLUMN_TEXT   const(256);
 //
 // @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL statement
-// @param (input) Template values (context) - string or noxDb graph
+// @param (input) Template values object (context) - string or noxDb graph or string
 // @param (input) Result set format options
 // @return SQL handle
 //
@@ -2406,7 +2420,7 @@ End-PR;
 //
 // @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL statement
-// @param (input) Template values (context)
+// @param (input) Template values object (context) or string
 // @return <code>*on</code> if an error occured else <code>*off</code>
 ///
 Dcl-PR nox_sqlExec Ind extproc(*CWIDEN:'nox_sqlExecVC'  );
