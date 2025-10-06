@@ -1,4 +1,4 @@
-// CMD:CRTCMOD 
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- */
 /* Date  . . . . : 14.09.2014                                    */
 /* Design  . . . : Niels Liisberg                                */
@@ -28,9 +28,6 @@
 #include "parms.h"
 #include "memUtil.h"
 
-static INT64 used = 0;
-static INT64 allocated = 0;
-static INT64 deallocated = 0;
 static INT64 balance = 0;
 static INT64 limit   = (5.0 * 1000.0 * 1000.0);
 static BOOL  debug   = true;
@@ -39,7 +36,6 @@ static BOOL  debug   = true;
 PVOID memAlloc (ULONG len)
 {
     ULONG totlen = len + sizeof(MEMHDR);
-    ULONG used;
     _C_mallinfo_t info;
     int           rc;
     PMEMHDR mem =  _C_TS_malloc(totlen);
@@ -63,7 +59,6 @@ PVOID memAlloc (ULONG len)
     mem->signature = MEMSIG;
     mem->size      = len;
 
-    allocated  += totlen;
     balance    += totlen;
 
     // Debugging !!!
@@ -103,7 +98,6 @@ void memFree (PVOID * pp)
    }
    mem->signature = 0; // Enusre that we release the signature
    totlen = mem->size + sizeof(MEMHDR);
-   deallocated += totlen;
    balance     -= totlen;
    // free (mem);
    _C_TS_free(mem);
@@ -125,7 +119,7 @@ PUCHAR memStrDup(PUCHAR s)
 PVOID memAllocClear(ULONG len)
 {
     PUCHAR p = memAlloc (len);
-    memset (p , '\0' , len); 
+    memset (p , '\0' , len);
     return p;
 }
 // -------------------------------------------------------------
@@ -134,11 +128,13 @@ PVOID memRealloc (PVOID * p, ULONG len)
     PUCHAR oldMem = *p;
     if (oldMem)  {
        PMEMHDR mem = (PMEMHDR) (oldMem - sizeof(MEMHDR)) ;
-       LONG newSize  =  len+ sizeof(MEMHDR);
+       balance -= mem->size;
+
+       LONG newSize  =  len + sizeof(MEMHDR);
        // PMEMHDR newMem = realloc(mem , newSize);   // Preserve space for the signature
        PMEMHDR newMem =  _C_TS_realloc(mem , newSize);   // Preserve space for the signature
-       balance += newSize - newMem->size;
-       newMem->size = newSize;
+       balance += len;
+       newMem->size = len;
        *p = (PUCHAR)newMem + sizeof(MEMHDR);      // Return the pointer after the header
     } else {
        *p = memAlloc(len);
@@ -219,8 +215,6 @@ PVOID memShare (PUCHAR path, ULONG len)
 void memStat (void)
 {
    printf("\n");
-   printf("Allocated: %-16.16lld " , allocated);
-   printf("Deallocated: %-16.16lld " , deallocated);
    printf("Balance: %-16.16lld\n" , balance);
 }
 // -------------------------------------------------------------

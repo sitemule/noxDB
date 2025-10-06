@@ -66,6 +66,7 @@ dcl-proc main;
     example3();
     example4();
     example5();
+    example6();
 
 // Always remember to delete used memory !!
 on-exit;
@@ -237,7 +238,7 @@ dcl-proc example5;
         1
     );
 
-    myTrace ('First' : pJson);
+    myTrace ('one row in array' : pJson);
 
     // Here we give it uppercase names ( lower is default but upper, lower or any works)
     data-into customer       %data('':'case=upper') %parser(nox_DataInto(pJson));
@@ -248,6 +249,55 @@ on-exit;
     nox_delete(pJson);
 
 end-proc;
+// ------------------------------------------------------------------------------------
+// UTF-8
+// 1) Here we use SYSTEM_CASE to get the exact names as in the database
+// that is uppercase and we tell data-into to use upper case names  as well
+// 2) we are using the "alias" to get the same structure but with alias names in
+// that is provided by noxDb.
+//
+// this is the best practice
+// ------------------------------------------------------------------------------------
+dcl-proc example6;
+
+
+    // This is the data structure we map the object graph into:
+    // The name "rows" is in the data-into statement
+    // The "dim" causes it to be an array:
+    dcl-ds stock       extname('NOXDBDEMO/STOCK') qualified alias dim(100) inz  end-ds;
+    dcl-s  pJson       pointer;
+    dcl-s  pOutputRows pointer;
+    dcl-s  handle      char(1);
+
+    pJson = nox_sqlResultSet (pCon:
+        'Select * from noxdbdemo.stock':
+        *null:
+        NOX_ROWARRAY + NOX_SYSTEM_CASE
+    );
+
+    myTrace ('UTF-8' : pJson);
+
+    // Now the magic: the pJson object graph is send to the mapper
+    data-into stock
+        %data('':'case=upper allowextra=yes allowmissing=yes')
+        %parser(nox_DataInto(pJson));
+
+    // and produce a output JSON file from the datastructure
+    data-gen %subarr(stock:1:nox_GetLength(pJson))
+        %data(handle:'')
+        %gen (nox_DataGen(pOutputRows));
+        //%gen (nox_DataGen(pOutputRows):'case=upper');
+
+    nox_WriteJsonStmf(pOutputRows:'/prj/noxdbutf8/testout/ex70DtInto-1.json':1208:*OFF);
+
+
+
+// Always remember to delete used memory !!
+on-exit;
+    nox_delete(pJson);
+
+end-proc;
+
 // ------------------------------------------------------------------------------------
 // myTrace - an example of a trace procedure for debugging and unit test
 // This will be called each time you interact with the objec graph - if set by

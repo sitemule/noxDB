@@ -36,8 +36,9 @@
 
 // TODO !!! - Check reintrant
 
+static BOOL upperCaseNames = false;
 static PNOXNODE * ppRoot;
-static iconv_t iconvCd;
+extern iconv_t xlate_1200_to_1208;
 
 typedef void (*NOX_DATAGEN)();
 
@@ -50,12 +51,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
 {
     static PNOXNODE pNode;
     static BOOL first = false;
-    static BOOL buildIconv  = true;
 
-    if (buildIconv) {
-        buildIconv  = false;
-        iconvCd = XlateOpen (13488, 1208 , false);
-    }
 
     switch ( pParms->event) {
         case QrnDgEvent_01_StartMultiple    : {
@@ -75,8 +71,12 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
         case QrnDgEvent_05_StartStruct      : {
             PNOXNODE pObj;
             UCHAR name [256];
-            LONG namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            LONG namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
+
+            if (! upperCaseNames) {
+                aCamelCase (name, name);
+            }
 
             pObj  = nox_NewObject();
             nox_NodeRename(pObj ,  name);
@@ -95,8 +95,12 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
         case QrnDgEvent_07_StartScalarArray : {
             PNOXNODE pArr;
             UCHAR name [256];
-            ULONG namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            ULONG namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
+
+            if (! upperCaseNames) {
+                aCamelCase (name, name);
+            }
 
             pArr = nox_NewArray();
             nox_NodeRename(pArr ,  name);
@@ -115,8 +119,12 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
         case QrnDgEvent_09_StartStructArray : {
             PNOXNODE pArr;
             UCHAR name [256];
-            ULONG namelen = XlateBuffer(iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            ULONG namelen = XlateBuffer(xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
+
+            if (! upperCaseNames) {
+                aCamelCase (name, name);
+            }
 
             pArr = nox_NewArray();
             nox_NodeRename(pArr ,  name);
@@ -134,17 +142,21 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
         }
         case QrnDgEvent_11_ScalarValue      : {
             PNOXNODE pValueNode;
-            UCHAR value [32766];
+            UCHAR value [pParms->u.scalar.valueLenBytes];
             ULONG valuelen;
             PUCHAR pValue = value;
             UCHAR name [256];
             ULONG namelen;
             NODETYPE  type;
 
-            namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
-            valuelen = XlateBuffer (iconvCd, value , (PUCHAR) pParms->u.scalar.value  , pParms->u.scalar.valueLenBytes);
+            if (! upperCaseNames) {
+                aCamelCase (name, name);
+            }
+
+            valuelen = XlateBuffer (xlate_1200_to_1208, value , (PUCHAR) pParms->u.scalar.value  , pParms->u.scalar.valueLenBytes);
             value[valuelen] = '\0';
 
             switch (pParms->u.scalar.dataType) {
@@ -186,5 +198,8 @@ NOX_DATAGEN  nox_DataGen (PNOXNODE * ppNode, PUCHAR optionsP)
 {
     PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
     ppRoot = ppNode; // not reentrant
+
+    // TODO - Sysname !!
+
     return &nox_dataGenMapper;
 }
