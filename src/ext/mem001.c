@@ -28,9 +28,6 @@
 #include "parms.h"
 #include "mem001.h"
 
-static INT64 used = 0;
-static INT64 allocated = 0;
-static INT64 deallocated = 0;
 static INT64 balance = 0;
 static INT64 limit   = (5.0 * 1000.0 * 1000.0);
 static BOOL  debug   = true;
@@ -63,7 +60,6 @@ PVOID memAlloc (UINT64 len)
     mem->signature = MEMSIG;
     mem->size      = len;
 
-    allocated  += totlen;
     balance    += totlen;
 
     // Debugging !!!
@@ -103,7 +99,6 @@ void memFree (PVOID * pp)
    }
    mem->signature = 0; // Enusre that we release the signature
    totlen = mem->size + sizeof(MEMHDR);
-   deallocated += totlen;
    balance     -= totlen;
    // free (mem);
    _C_TS_free(mem);
@@ -144,12 +139,15 @@ PVOID memRealloc (PVOID * p, UINT64 len)
     PUCHAR oldMem = *p;
     if (oldMem)  {
        PMEMHDR mem = (PMEMHDR) (oldMem - sizeof(MEMHDR)) ;
+       balance -= mem->size ;
+
        UINT64 newSize  =  len+ sizeof(MEMHDR);
        // _C_TS_realloc64 does not exists !! reacclo only work up to 2G
        //PMEMHDR newMem =  _C_TS_realloc64(mem , newSize);   // Preserve space for the signature
        PMEMHDR newMem =  _C_TS_realloc(mem , newSize);   // Preserve space for the signature
-       balance += newSize - newMem->size;
-       newMem->size = newSize;
+       newMem->size = len;
+       balance += len;
+
        *p = (PUCHAR)newMem + sizeof(MEMHDR);      // Return the pointer after the header
     } else {
        *p = memAlloc(len);
@@ -230,8 +228,6 @@ PVOID memShare (PUCHAR path, UINT64 len)
 void memStat (void)
 {
    printf("\n");
-   printf("Allocated: %-16.16lld " , allocated);
-   printf("Deallocated: %-16.16lld " , deallocated);
    printf("Balance: %-16.16lld\n" , balance);
 }
 // -------------------------------------------------------------
