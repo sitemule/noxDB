@@ -161,7 +161,7 @@ Dcl-C NOX_SYSTEM_NAMES  const(32);
 // noxDb will automatically parse and load these columvalues into the graph.
 // In som cases you will need to handle this process manually
 // and disable the auto prarser.
-// Autoparsing is default behaviour 
+// Autoparsing is default behaviour
 ///
 Dcl-C NOX_DISABLE_AUTO_PARSER const(64);
 
@@ -2181,7 +2181,7 @@ End-PR;
 Dcl-PR nox_httpRequest Pointer extproc(*CWIDEN:'nox_httpRequest');
   url            Like(UTF8) const options(*varsize);
   pReqNode       pointer value;
-  options        Like(UTF8) const options(*nopass:*varsize);
+  options        pointer value options(*string : *nopass);
   format         pointer value options(*string : *nopass);
 End-PR;
 
@@ -2662,6 +2662,35 @@ End-PR;
 ///
 Dcl-PR nox_TraceSetId  extproc(*CWIDEN : 'nox_TraceSetId');
   traceId        Int(20)    value; // Ccsid of inpur file
+End-PR;
+///
+// Write to IFS file
+//
+// Write a varchar in UTF 8 format to the IFS.
+// data will be overwritten if file exists
+//
+// @param (input) data to be written to the IFS
+// @param (input) file name and path
+//
+///
+Dcl-PR nox_IfsWrite  Pointer extproc(*CWIDEN:'nox_IfsWrite');
+  payload        Like(UTF8) const options(*varsize);
+  path           pointer value options(*string );
+End-PR;
+
+
+///
+// Append to IFS file
+//
+// Append  a varchar in UTF 8 format to the IFS,
+//
+// @param (input) data to be written to the IFS
+// @param (input) file name and path
+//
+///
+Dcl-PR nox_IfsAppend  Pointer extproc(*CWIDEN:'nox_IfsAppend');
+  payload        Like(UTF8) const options(*varsize);
+  path           pointer value options(*string );
 End-PR;
 
 

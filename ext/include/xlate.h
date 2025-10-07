@@ -2,27 +2,18 @@
 #define XLATE_H
 #include <iconv.h>
 #include <QTQICONV.h>
-typedef _Packed struct _XLATEDESC   {
-   iconv_t Iconv;
-   BOOL    Open;
-   int     FromCCSID;
-   int     ToCCSID;
-} XLATEDESC , * PXLATEDESC;
-PXLATEDESC XlateXdOpen ( int FromCCSID, int ToCCSID);
-ULONG      XlateXdBuf(PXLATEDESC xd , PUCHAR OutBuf, PUCHAR InBuf , ULONG Len);
-VARCHAR    XlateXdStr(PXLATEDESC xd , PVARCHAR InBuf);
-LONG       XlateXdSprintf (PXLATEDESC pxd, PUCHAR out , PUCHAR Ctlstr,...);
-VOID       XlateXdClose( PXLATEDESC xd);
-ULONG      XlateBuf(PUCHAR OutBuf, PUCHAR InBuf , ULONG Len, int FromCCSID, int ToCCSID);
-VARCHAR    XlateStr (PVARCHAR In ,  int FromCCSID, int ToCCSID);
-PUCHAR     Xlatestr (PUCHAR out, PUCHAR in , int FromCCSID, int ToCCSID);
-PUCHAR     XlateFromAnyAscii2ebcdic (PUCHAR outStr, PUCHAR inStr);
+
+VARCHAR    XlateStr (PVARCHAR In ,  LONG FromCCSID, LONG ToCCSID);
+PUCHAR     Xlatestr (PUCHAR out, PUCHAR in , LONG FromCCSID, LONG ToCCSID);
 
 // Using iconv_t
+iconv_t    XlateOpen (LONG FromCCSID, LONG ToCCSID, BOOL reportError);
 LONG       XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen ) ;
 PUCHAR     XlateString (iconv_t cd, PUCHAR out , PUCHAR in );
+PUCHAR     XlateBuffer2str (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen );
+VOID       XlateClode(iconv_t cd);
 
-iconv_t    XlateOpen (int FromCCSID, int ToCCSID, int reportError);
+
 
 
 #endif

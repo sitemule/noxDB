@@ -32,6 +32,7 @@
 #include "strUtil.h"
 
 
+extern iconv_t xlate_1200_to_1208;
 
 // LONG  dbgStep=0;
 
@@ -72,7 +73,7 @@ static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
                }
             }
 
-            l = XlateBuf(p  , (PUCHAR) &n , 2 , 13488, 1208 );
+            l = XlateBuffer (xlate_1200_to_1208, p , (PUCHAR) &n , 2);
             if (l==0 || *p <= ' ') { // Invalid char or replacement char ..
                *p = '.';
                p++;

@@ -36,9 +36,11 @@
 // chgjobccsid(500)
 // call
 // ------------------------------------------------------------------------------------
+Ctl-Opt copyright('Sitemule - System & Method (C), 2025');
 Ctl-Opt BndDir('NOXDBUTF8') CCSID(*CHAR:*UTF8);
 Ctl-Opt dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt:*nounref) ALWNULL(*USRCTL);
-Ctl-Opt main(main);
+Ctl-Opt main(main) ;
+
 /include qrpgleref,noxDbUtf8
 
 // ------------------------------------------------------------------------------------

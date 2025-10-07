@@ -37,9 +37,11 @@
 // chgjobccsid(500)
 // call ...
 // ------------------------------------------------------------------------------------
+Ctl-Opt copyright('Sitemule - System & Method (C), 2025');
 Ctl-Opt BndDir('NOXDBUTF8') CCSID(*CHAR:*JOBRUN); // CCSID(*CHAR:*UTF8);
 Ctl-Opt dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt:*nounref) ALWNULL(*USRCTL);
-Ctl-Opt main(main);
+Ctl-Opt main(main) ;
+
 /include qrpgleref,noxDbUtf8
 
 // Global connection pointer
@@ -288,7 +290,7 @@ dcl-proc example6;
         %gen (nox_DataGen(pOutputRows));
         //%gen (nox_DataGen(pOutputRows):'case=upper');
 
-    nox_WriteJsonStmf(pOutputRows:'/prj/noxdbutf8/testout/ex70DtInto-1.json':1208:*OFF);
+    nox_WriteJsonStmf(pOutputRows:'/prj/noxdbutf8/testout/ex70-Data-Into-1.json':1208:*OFF);
 
 
 

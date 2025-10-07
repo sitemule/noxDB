@@ -119,6 +119,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
         case QrnDgEvent_09_StartStructArray : {
             PNOXNODE pArr;
             UCHAR name [256];
+            
             ULONG namelen = XlateBuffer(xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 

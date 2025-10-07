@@ -23,7 +23,7 @@
 
 
 /* ------------------------------------------------------------- */
-iconv_t XlateOpen (int FromCCSID, int ToCCSID , int reportError)
+iconv_t XlateOpen (LONG FromCCSID, LONG ToCCSID , BOOL reportError)
 {
    QtqCode_T To;
    QtqCode_T From;
@@ -48,25 +48,6 @@ iconv_t XlateOpen (int FromCCSID, int ToCCSID , int reportError)
    return QtqIconvOpen( &To, &From);
 }
 /* ------------------------------------------------------------- */
-/* *
-PXLATEDESC XlateXdOpen (int FromCCSID, int ToCCSID)
-{
-   PXLATEDESC pXd = malloc(sizeof(XLATEDESC));
-
-   pXd->FromCCSID = FromCCSID ;
-   pXd->ToCCSID   = ToCCSID;
-
-   // Get descriptor
-   pXd->Iconv = XlateOpen (FromCCSID, ToCCSID, false);
-   pXd->Open = (pXd->Iconv.return_value != -1);
-   if (! pXd->Open) {
-      free (pXd);
-      return (NULL); // invalid CCSID
-   }
-   return (pXd);  // Number of bytes converted
-}
-   */
-/* ------------------------------------------------------------- */
 LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen )
 {
    size_t inbytesleft = inLen;
@@ -78,7 +59,7 @@ LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen )
    return (rc < 0) ? -1: LONG_MAX - outbytesleft;
 
 }
-
+/* ------------------------------------------------------------- */
 PUCHAR XlateString (iconv_t cd, PUCHAR out , PUCHAR in )
 {
    size_t inbytesleft = strlen(in);
@@ -89,59 +70,20 @@ PUCHAR XlateString (iconv_t cd, PUCHAR out , PUCHAR in )
    out [LONG_MAX - outbytesleft] = '\0';
    return out;
 }
-
 /* ------------------------------------------------------------- */
-/*
-void XlateXdClose  (PXLATEDESC pXd)
+PUCHAR XlateBuffer2str (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen )
 {
-   if ( pXd == NULL) return;
-   iconv_close (pXd->Iconv);
-   free (pXd);
+   size_t inbytesleft = inLen;
+   size_t outbytesleft =  LONG_MAX;
+   PUCHAR pIn = in;
+   PUCHAR pOut = out;
+   size_t rc = iconv (cd, &pIn, &inbytesleft, &pOut, &outbytesleft);
+   out [LONG_MAX - outbytesleft] = '\0';
+   return out;
 }
-*/
+
 /* ------------------------------------------------------------- */
-/*
-ULONG XlateXdBuf(PXLATEDESC pXd, PUCHAR OutBuf, PUCHAR InBuf , ULONG Len)
-{
-   PUCHAR pOutBuf;
-   PUCHAR pInBuf;
-   int i;
-   size_t OutLen, inbytesleft, outbytesleft;
-   size_t before, rc;
-
-   if (Len ==0 ) return 0;
-
-   if (pXd == NULL
-   ||  pXd->FromCCSID == pXd->ToCCSID) {
-      memcpy(OutBuf, InBuf , Len);
-      return Len;
-   }
-
-   before = outbytesleft = Len * 4; // Max size of UTF8 expand to 4 times bytes
-   inbytesleft  = Len;
-
-   pOutBuf = OutBuf;
-   pInBuf  = InBuf;
-
-   // Do Conversion
-   rc = iconv (pXd->Iconv, &pInBuf, &inbytesleft, &pOutBuf, &outbytesleft);
-   if (rc == -1) return (-1);
-
-   OutLen  = before - outbytesleft;
-   return (OutLen);  // Number of bytes converted
-}
-   */
-/* ------------------------------------------------------------- */
-/*
-VARCHAR XlateXdStr (PXLATEDESC pXd, PVARCHAR In )
-{
-   VARCHAR Result;
-   Result.Length = XlateXdBuf(pXd ,Result.String , In->String , In->Length );
-   return (Result);
-}
-*/
-/* ------------------------------------------------------------- */
-ULONG XlateBuf(PUCHAR OutBuf, PUCHAR InBuf , ULONG Len, int FromCCSID, int ToCCSID)
+ULONG XlateBuf(PUCHAR OutBuf, PUCHAR InBuf , ULONG Len, LONG FromCCSID, LONG ToCCSID)
 {
    iconv_t iconv;
    ULONG OutLen;
@@ -162,7 +104,7 @@ ULONG XlateBuf(PUCHAR OutBuf, PUCHAR InBuf , ULONG Len, int FromCCSID, int ToCCS
    return (OutLen);  // Number of bytes converted
 }
 /* ------------------------------------------------------------- */
-VARCHAR XlateStr (PVARCHAR In ,  int FromCCSID, int ToCCSID)
+VARCHAR XlateStr (PVARCHAR In ,  LONG FromCCSID, LONG ToCCSID)
 {
    VARCHAR Result;
 
@@ -170,53 +112,9 @@ VARCHAR XlateStr (PVARCHAR In ,  int FromCCSID, int ToCCSID)
    return (Result);
 }
 /* ------------------------------------------------------------- */
-PUCHAR Xlatestr (PUCHAR out, PUCHAR in, int FromCCSID, int ToCCSID)
+PUCHAR Xlatestr (PUCHAR out, PUCHAR in, LONG FromCCSID, LONG ToCCSID)
 {
-   int len = XlateBuf(out, in , strlen(in)  , FromCCSID, ToCCSID);
+   LONG len = XlateBuf(out, in , strlen(in)  , FromCCSID, ToCCSID);
    out[len] = 0;
    return out;
 }
-/* ------------------------------------------------------------- */
-/*
-PUCHAR XlateFromAnyAscii2ebcdic (PUCHAR outStr, PUCHAR inStr)
-{
-  PXLATEDESC pXd;
-  int inLen = strlen (inStr);
-  int xLen;
-  int isCCSID;
-  PUCHAR temp;
-
-  // First guess the input ccssid by converting it to unicode...
-  pXd =  XlateXdOpen(1208 , 1200 );
-  temp   = malloc(inLen  *2);  // Unicode requires double size
-  xLen = XlateXdBuf(pXd , temp   , inStr , inLen  );
-  XlateXdClose(pXd);
-  free(temp);
-  isCCSID = (xLen == -1) ? 1252 : 1208;
-
-  // next convet to current job ccsid
-  pXd =  XlateXdOpen(isCCSID, 0 );
-  xLen = XlateXdBuf(pXd , outStr , inStr , inLen  );
-  XlateXdClose(pXd);
-  outStr[xLen] = '\0';
-  return outStr;
-}
-*/
-/* ------------------------------------------------------------- */
-/*
-LONG  XlateXdSprintf (PXLATEDESC pxd, PUCHAR out, PUCHAR Ctlstr,...)
-{
-   va_list arg_ptr;
-   UCHAR   temp1[65535];
-   LONG    len1, len2;
-   SHORT   l,i;
-
-   // Build a temp string with the formated data
-   va_start(arg_ptr, Ctlstr);
-   len1 = vsprintf(temp1, Ctlstr, arg_ptr);
-   va_end(arg_ptr);
-
-   len2 = XlateXdBuf(pxd , out , temp1  , len1);
-   return len2;
-}
-   */

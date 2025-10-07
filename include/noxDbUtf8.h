@@ -74,6 +74,13 @@ typedef enum {
 } FORMAT_OPTION , *PFORMAT_OPTION;
 
 typedef enum {
+	FMT_JSON,
+	FMT_XML,
+	FMT_TEXT
+} DATAFORMAT , *PDATAFORMAT;
+
+
+typedef enum {
    NOX_STREAM_JSON     = 0,
    NOX_STREAM_XML      = 1,
    NOX_STREAM_CSV      = 2

@@ -54,8 +54,9 @@ __thread UCHAR  nox_DecPoint = '.';
 // iconv_t xlateEto1208;
 // iconv_t xlate1208toE;
 iconv_t xlate_1200_to_1208;
-iconv_t xlate_Job_to_1208;
 iconv_t xlate_1208_to_1200;
+iconv_t xlate_job_to_1208;
+iconv_t xlate_1208_to_job;
 
 static INT64 LVARCHARNULL =0;
 static PLVARCHAR PLVARCHARNULL = (PLVARCHAR) &LVARCHARNULL;
@@ -72,8 +73,9 @@ static NOX_TRACE_PROC nox_trace = null;
 void nox_Initialize()
 {
    xlate_1200_to_1208 = XlateOpen (1200 , 1208 , false);
-   xlate_Job_to_1208  = XlateOpen (0    , 1208 , false);
    xlate_1208_to_1200 = XlateOpen (1208 , 1200 , false);
+   xlate_job_to_1208  = XlateOpen (0    , 1208 , false);
+   xlate_1208_to_job  = XlateOpen (1208 , 0    , false);
 }
 // ---------------------------------------------------------------------------
 void nox_SetMessage (PUCHAR Ctlstr , ... )
@@ -1598,6 +1600,15 @@ void nox_NodeDelete(PNOXNODE pNode)
    PNOXNODE  pTemp;
 
    if (pNode == NULL) return;
+
+   // Perhaps a basic memory chunk ( not a node?)
+   if (pNode->signature != NODESIG) {
+      PMEMHDR mem = (PMEMHDR) ((PUCHAR) pNode - sizeof(MEMHDR)) ;
+      if (mem->signature == MEMSIG ) {
+         memFree (&pNode);
+      }
+      return;
+   }
 
    nox_NodeUnlink (pNode);
    nox_FreeChildren (pNode);
@@ -3388,7 +3399,7 @@ PNOXNODE ensureNode (PNOXNODE pNode)
       return nox_NodeUnlink (pNode);
    } else {
       UCHAR temp [strlen((PUCHAR) pNode)*2];
-      XlateString (xlate_Job_to_1208, temp , (PUCHAR) pNode );
+      XlateString (xlate_job_to_1208, temp , (PUCHAR) pNode );
       return  NewNode  (NULL, temp, VALUE);
    }
 }
@@ -3403,6 +3414,7 @@ PNOXNODE nox_Object (PVOID pFirst, ...)
    PVOID  pNext;
    PLVARCHAR pName;
    PNOXNODE  pNode;
+   // int   posn1=1 ,desctype1 , datatype1 , descinf11 , descinf21, MsgLen;
 
    if (parms > 0) {
 
@@ -3411,7 +3423,8 @@ PNOXNODE nox_Object (PVOID pFirst, ...)
       for(i = 0; i< parms / 2;i++){
          pName = (i== 0) ? pFirst: va_arg(arg_list, PVOID);
          pNode = va_arg(arg_list, PVOID);
-
+         // CEEDOD (&posn1 , &desctype1 , &datatype1 , &descinf11 , &descinf21 , &MsgLen , NULL);
+         // posn1+= 2;
          pNode = ensureNode (pNode);
          nox_NodeRename(pNode, plvc2str(pName));
          nox_NodeInsertChildTail (pObject, pNode );
