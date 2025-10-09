@@ -1,2 +1,2 @@
 // CMD:CRTCMOD
-#pragma comment(copyright,"System & Method A/S - Sitemule: git checkout 484e75b (hash: 484e75bc9098b4bcf801b8337cf6b6878b07093a ) build: ")
+#pragma comment(copyright,"System & Method A/S - Sitemule: git checkout 9b6f204 (hash: 9b6f2045c9cc9daefd1bd8a1afda324915bf5865 ) build: ")

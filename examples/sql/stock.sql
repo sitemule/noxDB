@@ -10,8 +10,10 @@ create or replace table noxdbdemo.stock (
     main_category varchar(50) ccsid 1208,
     sub_category varchar(50) ccsid 1208,
     description varchar(100) ccsid 1208,
-    price decimal(10 , 2)
-
+    price decimal(10 , 2),
+    price_date date not null default current date,
+    price_time time not null default current time,
+    updated_at timestamp not null default current timestamp
 );
 
 create or replace table noxdbdemo.sizes  (

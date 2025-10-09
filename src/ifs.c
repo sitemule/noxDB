@@ -18,34 +18,21 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <ctype.h>
 #include <leod.h>
-#include <decimal.h>
-#include <wchar.h>
-#include <errno.h>
 
-#include <sys/stat.h>
 #include "ostypes.h"
 #include "varchar.h"
-#include "xlate.h"
-
+#include "parms.h"
 
 // ---------------------------------------------------------------------------
-void nox_IfsWrite  (PLVARCHAR data,PUCHAR file)
+void nox_WriteStrStmf  (PLVARCHAR data,PUCHAR file , LGL appendP)
 {
+     PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+     BOOL append = (pParms->OpDescList->NbrOfParms >= 3 && appendP == ON);
+
      FILE * f;
      int l;
-     f = fopen(file , "wb,o_ccsid=1208");
-     l = fwrite (data->String, 1 , data->Length , f);
-     fclose(f);
-}
-// ---------------------------------------------------------------------------
-void nox_IfsAppend  (PLVARCHAR data,PUCHAR file)
-{
-     FILE * f;
-     int l;
-     f = fopen(file , "ab,o_ccsid=1208");
+     f = fopen(file , append ? "ab,o_ccsid=1208" : "wb,o_ccsid=1208");
      l = fwrite (data->String, 1 , data->Length , f);
      fclose(f);
 }

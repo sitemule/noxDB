@@ -1597,22 +1597,33 @@ void nox_NodeSetAsPointer (PNOXNODE pNode , PUCHAR Value)
 // ---------------------------------------------------------------------------
 void nox_NodeDelete(PNOXNODE pNode)
 {
-   PNOXNODE  pTemp;
+   PMEMHDR   pMemHdr;
 
    if (pNode == NULL) return;
 
-   // Perhaps a basic memory chunk ( not a node?)
-   if (pNode->signature != NODESIG) {
-      PMEMHDR mem = (PMEMHDR) ((PUCHAR) pNode - sizeof(MEMHDR)) ;
-      if (mem->signature == MEMSIG ) {
-         memFree (&pNode);
-      }
+   // a nox node?
+   if (pNode->signature == NODESIG) {
+      nox_NodeUnlink (pNode);
+      nox_FreeChildren (pNode);
+      nox_NodeFree(pNode);
       return;
    }
 
-   nox_NodeUnlink (pNode);
-   nox_FreeChildren (pNode);
-   nox_NodeFree(pNode);
+   // Perhaps a basic memory chunk ? ( not a node)
+   pMemHdr = (PMEMHDR) ((PUCHAR) pNode - sizeof(MEMHDR)) ;
+   if (pMemHdr->signature == MEMSIG ) {
+      memFree (&pNode);
+      return;
+   }
+   // Varchar mem? has the lenght (ULONG)
+   // but mem routines requires the address where the data begins ( not the length)
+   pMemHdr = (PMEMHDR) ((PUCHAR) pNode - ( sizeof(MEMHDR) - sizeof(ULONG))) ;
+   if (pMemHdr->signature == MEMSIG ) {
+      PVOID pMem = (PUCHAR) pNode + sizeof(ULONG);
+      memFree (&pMem);
+      return;
+   }
+
 }
 void nox_Delete(PNOXNODE * pNode)
 {

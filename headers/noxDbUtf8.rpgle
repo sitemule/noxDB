@@ -2331,6 +2331,8 @@ End-PR;
 // @param (input) SQL statement
 // @param (input) Template values object (context) - string or noxDb graph or string
 // @param (input) Result set format options
+// @param (input) starting row (default is first)
+// @param (input) row limit - max number of rows to fetch (default is NOX_ALLROWS)
 // @return SQL handle
 //
 // @info Any opened cursor needs to be closed with <code>nox_sqlClose</code>.
@@ -2339,9 +2341,9 @@ Dcl-PR nox_sqlOpen Pointer extproc(*CWIDEN:'nox_sqlOpenVC'  );
   pConnection    pointer value;
   sqlStmt        Like(UTF8) const options(*varsize);
   templateValues pointer value options(*string : *nopass);
-  format         int(10) value options(*nopass); // TODO - not migrated !!
-  startRow       int(10) value options(*nopass); // TODO - not migrated !!
-  limitRows      int(10) value options(*nopass); // TODO - not migrated !!
+  format         int(10) value options(*nopass);
+  startRow       int(10) value options(*nopass);
+  limitRows      int(10) value options(*nopass);
 End-PR;
 
 
@@ -2663,35 +2665,25 @@ End-PR;
 Dcl-PR nox_TraceSetId  extproc(*CWIDEN : 'nox_TraceSetId');
   traceId        Int(20)    value; // Ccsid of inpur file
 End-PR;
+
 ///
-// Write to IFS file
+// Write string to IFS file
 //
 // Write a varchar in UTF 8 format to the IFS.
 // data will be overwritten if file exists
 //
 // @param (input) data to be written to the IFS
 // @param (input) file name and path
+// @param (input) append if *on data will be appended to the file if it exists  else
 //
 ///
-Dcl-PR nox_IfsWrite  Pointer extproc(*CWIDEN:'nox_IfsWrite');
+Dcl-PR nox_WriteStrStmf  Pointer extproc(*CWIDEN:'nox_WriteStrStmf');
   payload        Like(UTF8) const options(*varsize);
   path           pointer value options(*string );
+  append         ind value options(*nopass);
 End-PR;
 
 
-///
-// Append to IFS file
-//
-// Append  a varchar in UTF 8 format to the IFS,
-//
-// @param (input) data to be written to the IFS
-// @param (input) file name and path
-//
-///
-Dcl-PR nox_IfsAppend  Pointer extproc(*CWIDEN:'nox_IfsAppend');
-  payload        Like(UTF8) const options(*varsize);
-  path           pointer value options(*string );
-End-PR;
 
 
 /// TODO - not migrated !!

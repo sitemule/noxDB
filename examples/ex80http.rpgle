@@ -144,7 +144,7 @@ dcl-proc example3;
 
    // Note: When using 'TEXT' mode, then the  response is not a node, but a pointer to a varchar(xx:4) in UTF-8.
    // After use, the correct way to dispose the memory is with nox_delete()
-   nox_IfsWrite(response:'/prj/noxdbutf8/testout/ex80-google.txt');
+   nox_WriteStrStmf(response:'/prj/noxdbutf8/testout/ex80-google.txt');
 
 
 // Always remember to delete used memory !!
@@ -185,7 +185,7 @@ dcl-proc example4;
 
    // Note: When using 'TEXT' mode, then the  response is not a node, but pointer to a varchar(xx:4) in UTF-8.
    // After use, the correct way to dispose the memory is with nox_delete()
-   nox_IfsWrite(response:'/prj/noxdbutf8/testout/ex80-text.txt');
+   nox_WriteStrStmf(response:'/prj/noxdbutf8/testout/ex80-text.txt');
 
    nox_joblog (response);
 

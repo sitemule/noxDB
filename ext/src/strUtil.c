@@ -55,11 +55,11 @@ int cpy  (PUCHAR out , PUCHAR in)
 int strIcmp (PUCHAR s1, PUCHAR s2)
 {
    int c =0;
-   do {
+   for (;;) {
       c = toUpper(*(s1++)) - toUpper(*(s2++));
-   } while (c == 0 && *s1 && *s2);
-
-   return c;
+      if (c != 0) return c;
+      if (*s1 == '\0' &&  *s2 == '\0') return 0;
+   }
 }
 // -------------------------------------------------------------
 // strIcmp  is stricmp in ascii
@@ -67,11 +67,11 @@ int strIcmp (PUCHAR s1, PUCHAR s2)
 int astrIcmp (PUCHAR s1, PUCHAR s2)
 {
    int c =0;
-   do {
+   for (;;) {
       c = atoUpper(*(s1++)) - atoUpper(*(s2++));
-   } while (c == 0 && *s1 && *s2);
-
-   return c;
+      if (c != 0) return c;
+      if (*s1 == '\0' &&  *s2 == '\0') return 0;
+   }
 }
 // -------------------------------------------------------------
 #pragma convert(1252)

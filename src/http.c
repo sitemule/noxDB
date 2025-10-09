@@ -16,9 +16,6 @@
 #include <unistd.h>
 #include <iconv.h>
 
-
-// #include <errno.h>
-
 #include <sys/stat.h>
 #include "ostypes.h"
 #include "varchar.h"
@@ -33,55 +30,61 @@ extern  iconv_t xlate_1208_to_job;
 // ---------------------------------------------------------------------------
 PUCHAR loadText (PUCHAR file, PUCHAR options)
 {
-     PUCHAR p = memAlloc(1048576);
-     FILE * f;
-     int l;
-     f = fopen(file , options);
-     l = fread(p, 1 , 1048576 , f);
-     fclose(f);
-     if (l<= 0) {
-        memFree(&p);
-        return(NULL);
-     }
-     p[l] = '\0';
-     return p;
+   FILE* f;
+   int l;
+   f = fopen(file , options);
+   fseek(f, 0L, SEEK_END);
+   int fileSize = ftell(f);
+   if (fileSize <= 0) {
+      fclose(f);
+      return NULL;
+   }
+   PUCHAR p = memAlloc(fileSize + 1);
+   fseek(f, 0L, SEEK_SET);
+   l = fread(p, 1 , fileSize , f);
+   fclose(f);
+   p[l] = '\0';
+   return p;
 }
 // ---------------------------------------------------------------------------
 PLVARCHAR loadVC (PUCHAR file)
 {
+   FILE* f;
+   int l;
 
-     FILE* f = fopen(file , "rb");
-     fseek(f, 0L, SEEK_END);
-     int fileSize = ftell(f);
-     PUCHAR p = memAlloc(fileSize);
-     PLVARCHAR ret = (PLVARCHAR) (p - sizeof(ULONG));
+   f = fopen(file , "rb");
+   fseek(f, 0L, SEEK_END);
+   int fileSize = ftell(f);
+   if (fileSize <= 0) {
+      fclose(f);
+      return NULL;
+   }
 
-     fseek(f, 0L, SEEK_SET);
-     int l = fread(p, 1 , fileSize , f);
-     fclose(f);
-     if (l<= 0) {
-        memFree(&p);
-        return(NULL);
-     }
-     return ret; // memAlloc has the length just before the payload
+   PUCHAR p = memAlloc(fileSize);
+   PLVARCHAR ret = (PLVARCHAR) (p - sizeof(ULONG));
+
+   fseek(f, 0L, SEEK_SET);
+   l = fread(p, 1 , fileSize , f);
+   fclose(f);
+   return ret; // memAlloc has the length just before the payload
 }
 // ---------------------------------------------------------------------------
 void saveText (PUCHAR file , PUCHAR data)
 {
-     FILE * f;
-     int l;
-     f = fopen(file , "wt,o_ccsid=1208");
-     l = fwrite (data, 1 , strlen(data) , f);
-     fclose(f);
+   FILE * f;
+   int l;
+   f = fopen(file , "wt,o_ccsid=1208");
+   l = fwrite (data, 1 , strlen(data) , f);
+   fclose(f);
 }
 // ---------------------------------------------------------------------------
 void saveVC  (PUCHAR file , PLVARCHAR data)
 {
-     FILE * f;
-     int l;
-     f = fopen(file , "wb,o_ccsid=1208");
-     l = fwrite (data->String, 1 , data->Length , f);
-     fclose(f);
+   FILE * f;
+   int l;
+   f = fopen(file , "wb,o_ccsid=1208");
+   l = fwrite (data->String, 1 , data->Length , f);
+   fclose(f);
 }
 // ---------------------------------------------------------------------------
 void sh (PUCHAR cmd)
@@ -186,7 +189,7 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PUCHAR  options, PUCHA
       nox_SetValueByName(pRes , "success"  , "false" , LITERAL);
       nox_SetValueByName(pRes , "reason" , p , VALUE );
       #pragma convert(0)
-      free(p);
+      memFree(&p);
    } else {
       if (dataFormat == FMT_JSON
       ||  dataFormat == FMT_XML) {

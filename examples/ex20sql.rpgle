@@ -63,6 +63,7 @@ dcl-proc main;
     example2();
     example3();
     example4();
+    example5();
 
 // Always remember to delete used memory !!
 on-exit;
@@ -220,6 +221,93 @@ dcl-proc example4;
 
 // Always remember to delete used memory !!
 on-exit;
+    nox_delete(pRows);
+
+end-proc;
+
+
+// ------------------------------------------------------------------------------------
+// Row by row
+// This example shows how to use SQL cursors to fetch one row at a time and
+// build an array of rows.
+// NOTE: nox_sqlFetchNext is a factory meaning it creates a new object for each row
+// ------------------------------------------------------------------------------------
+dcl-proc example5;
+
+    dcl-s pRow    pointer;
+    dcl-s pRows   Pointer;
+    dcl-s pSqlHnd Pointer;
+
+
+    dcl-s id int(20);
+    dcl-s sku varchar(50) ccsid(1208);
+    // TODO  !!dcl-s department  vargraph(50);
+    dcl-s department varchar(50) ccsid(1208);
+    dcl-s mainCategory varchar(50) ccsid(1208);
+    dcl-s subCategory varchar(50) ccsid(1208);
+    dcl-s description varchar(100) ccsid(1208);
+    dcl-s price     packed (10 : 2);
+    dcl-s priceDate date;
+    dcl-s priceTime time ;
+    dcl-s updatedAt timestamp;
+
+
+    // The destination object for our SQL result row
+    // and the array to contain the rows
+    pRows    = nox_newArray ();
+
+    // Open our SQL cursor. Use a simple select
+    pSqlHnd  = nox_sqlOpen(pCon:
+        'select -
+          id, -
+          sku ,-
+          department ,-
+          main_category ,-
+          sub_category, -
+          description , -
+          price, -
+          price_date , -
+          price_time , -
+          updated_at -
+        from noxdbdemo.stock':
+        *null: // no parameters
+        NOX_CAMEL_CASE     +  // convert the snake case to cemel case
+        NOX_GRACEFUL_ERROR :  // Errors are retuned as an error object
+        2 : // From row 2
+        50  // Max 50 rows
+    );
+
+    // Now iterate on each row in the resultset
+    pRow = nox_sqlFetchNext(pSqlHnd) ;
+    dow (pRow <> *NULL );
+        // Append the row to the end of the result array. Note ArrayPush will
+        // by default move the object ( not copy) to the bottom of the array.
+        nox_ArrayPush(pRows : pRow);
+
+        // You can also pull the data out from the row:
+        id           = nox_GetInt (pRow : 'id' );
+        sku          = nox_GetStr (pRow : 'sku' );
+        department   = nox_GetStr (pRow : 'department' );
+        mainCategory = nox_GetStr (pRow : 'mainCategory' );
+        subCategory  = nox_GetStr (pRow : 'subCategory' );
+        description  = nox_GetStr (pRow : 'description' );
+        price        = nox_GetDec (pRow : 'price' );
+        priceDate    = nox_GetDate(pRow : 'priceDate' );
+        priceTime    = nox_GetTime(pRow : 'priceTime' );
+        updatedAt    = nox_GetTS  (pRow : 'updatedAt' );
+
+        // Raady for the next row
+        pRow = nox_sqlFetchNext(pSqlHnd) ;
+    enddo;
+
+    // Produce a JSON stream file in the root of the IFS
+    nox_writeJsonStmf(pRows : '/prj/noxdbutf8/testout/ex20-row-by-row.json' : 1208 : *ON);
+
+
+// Always remember to delete used memory !!
+on-exit;
+    // Cleanup: Close the SQL cursor, dispose the row and the array
+    nox_sqlClose(pSqlHnd);
     nox_delete(pRows);
 
 end-proc;
