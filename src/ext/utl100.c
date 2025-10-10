@@ -39,8 +39,8 @@ int strIcmp (PUCHAR s1, PUCHAR s2)
 {
     int c =0;
     do {
-      c = toUpper(*(s1++)) - toUpper(*(s2++));
-    } while (c == 0 && *s1 && *s2);
+      c = toUpper(*s1) - toUpper(*s2);
+    } while (c == 0 && *s1++ && *s2++);
 
     return c;
 }

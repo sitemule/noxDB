@@ -143,6 +143,7 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options , PUCHAR forma
    }
    p += sprintf( p ,  " %s 2>%s;",  url , error);
    p += sprintf( p , "setccsid 1208 %s" , temp2);
+   
    shell (cmd);
 
    p =  loadText(error,"rb");
