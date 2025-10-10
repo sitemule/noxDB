@@ -191,6 +191,65 @@ static int insertMarkerValue (PUCHAR buf , PUCHAR marker, PNOXNODE parms)
    return len;
 }
 /* ------------------------------------------------------------- */
+LGL nox_sqlStartTransaction (PNOXSQLCONNECT pCon)
+{
+   int rc;
+   LONG   attrParm;
+
+   pCon->transaction = true;
+
+   attrParm = SQL_FALSE;
+   rc = SQLSetConnectAttr(pCon->hdbc, SQL_ATTR_AUTOCOMMIT, &attrParm, 0) ;
+
+   attrParm = SQL_TXN_REPEATABLE_READ;
+   // attrParm = SQL_TXN_READ_UNCOMMITTED; // does not work for updates !!! can noet bes pr- statemnet
+   rc = SQLSetConnectAttr (pCon->hdbc, SQL_ATTR_COMMIT , &attrParm  , 0);
+
+   return (rc==0) ? OFF:ON;
+}
+/* ------------------------------------------------------------- */
+static LGL nox_sqlCommitOrRollback(PNOXSQLCONNECT pCon , int type)
+{
+
+   int rc1;
+   int rc2;
+   int rc3;
+   LONG   attrParm;
+
+
+   pCon->transaction = false;
+
+   rc1 = SQLTransact (
+      SQL_HANDLE_DBC,
+      pCon->hdbc,
+      type
+   );
+
+   if (rc1!=0) {
+      //check_error (NULL);
+   }
+
+   attrParm = SQL_TXN_NO_COMMIT; // does not work with BLOBS
+   rc2 = SQLSetConnectAttr (pCon->hdbc, SQL_ATTR_COMMIT , &attrParm  , 0);
+
+   attrParm = SQL_TRUE;
+   rc3 = SQLSetConnectAttr(pCon->hdbc, SQL_ATTR_AUTOCOMMIT, &attrParm, 0) ;
+
+   return (rc1==0) ? OFF:ON;
+
+   return OFF;
+}
+/* ------------------------------------------------------------- */
+LGL nox_sqlCommit(PNOXSQLCONNECT pCon)
+{
+   return nox_sqlCommitOrRollback(pCon, SQL_COMMIT_HOLD);
+}
+/* ------------------------------------------------------------- */
+LGL nox_sqlRollback(PNOXSQLCONNECT pCon)
+{
+   return nox_sqlCommitOrRollback(pCon, SQL_ROLLBACK_HOLD);
+}
+/* ------------------------------------------------------------- */
 int nox_sqlExecDirectTrace(PNOXSQLCONNECT pCon, PNOXSQL pSQL , int hstmt, PUCHAR sqlstmt)
 {
 
