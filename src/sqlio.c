@@ -172,7 +172,10 @@ static int insertMarkerValue (PUCHAR buf , PUCHAR marker, PNOXNODE parms)
    pNode = nox_GetNode   ( parms , marker);
    if (pNode) {
       value = nox_GetValuePtr  ( pNode , "" , NULL );
-      if (pNode->isLiteral) {
+      if (value == NULL) {
+         strcpy(buf, "null");
+         len = strlen(buf);
+      } else if (pNode->isLiteral) {
          strcpy(buf, value);
          len = strlen(buf);
       } else {
@@ -180,7 +183,7 @@ static int insertMarkerValue (PUCHAR buf , PUCHAR marker, PNOXNODE parms)
       }
    } else {
       // TODO !! Experimental  - not found gives an empty string
-      // Then statemnet will not fail
+      // Then statement will not fail
       strcpy(buf, "''");
       len = 2;
    }
@@ -246,7 +249,7 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PNOXNODE parms)
          markerLen = in - pMarker ;
          if (markerLen > 0) {
             substr(marker , pMarker , markerLen );
-            atrim(marker);
+            a_trim_both(marker);
             out += insertMarkerValue (out , marker, pParms );
          }
          if (*in == '}') in++; // skip the termination
@@ -382,11 +385,11 @@ PUCHAR finalSQLPart (PUCHAR stmt)
 }
 BOOL findHasLimit  (PUCHAR sqlStmt)
 {
-   PUCHAR p = astrIstr(sqlStmt, "limit ");
+   PUCHAR p = a_stristr(sqlStmt, "limit ");
    if (p && *(p -1) == ' ') {
       UCHAR temp [10];
       substr ( temp , p+6, 3);
-      if ( astr2dec ( temp , ',' ) > 0) {
+      if ( a_str_to_dec ( temp , ',' ) > 0) {
          return true;
       }
    }
@@ -397,11 +400,11 @@ BOOL findHasLimit  (PUCHAR sqlStmt)
 /* ------------------------------------------------------------- */
 BOOL findHasOffset  (PUCHAR sqlStmt)
 {
-   PUCHAR p = astrIstr(sqlStmt, "offset ");
+   PUCHAR p = a_stristr(sqlStmt, "offset ");
    if (p && *(p -1) == ' ') {
       UCHAR temp [10];
       substr ( temp , p+6, 3);
-      if ( astr2dec ( temp , ',' ) > 0) {
+      if ( a_str_to_dec ( temp , ',' ) > 0) {
          return true;
       }
    }
@@ -412,9 +415,9 @@ BOOL findHasOffset  (PUCHAR sqlStmt)
 /* ------------------------------------------------------------- */
 BOOL findHasFetch  (PUCHAR sqlStmt)
 {
-   PUCHAR p = astrIstr(sqlStmt, "fetch ");
+   PUCHAR p = a_stristr(sqlStmt, "fetch ");
    if (p && *(p -1) == ' ') {
-      PUCHAR p2 = astrIstr(p , "first ");
+      PUCHAR p2 = a_stristr(p , "first ");
       if (p2 && *(p2 -1) == ' ') {
             return true;
       }
@@ -503,11 +506,11 @@ PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, L
       hasFetch  = findHasFetch  (lookFrom);
 
       if (limit > 0 && ! hasFetch && ! hasLimit) {
-         asprintf (sqlTempStmt + strlen(sqlTempStmt)," limit %ld ", limit);
+         a_sprintf (sqlTempStmt + strlen(sqlTempStmt)," limit %ld ", limit);
       }
       // Note !! Offset is "Number if rows to skip" therefor the -1 from the "start"
       if (start > 1 && ! hasOffset) {
-         asprintf (sqlTempStmt + strlen(sqlTempStmt)," offset %ld ", start - 1);
+         a_sprintf (sqlTempStmt + strlen(sqlTempStmt)," offset %ld ", start - 1);
       }
       if (pCon->transaction == false ) {
          strcat ( sqlTempStmt , " with ur");
@@ -582,26 +585,26 @@ PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, L
          if (format & (NOX_SYSTEM_CASE)) {
             strcpy  (pCol->colname , pCol->sysname);
          }  else {
-            aCamelCase(pCol->colname, pCol->sysname);
+            a_camel_case(pCol->colname, pCol->sysname);
          }
       } else {
          if (format & (NOX_SYSTEM_CASE)) {
             // strcpy  (pCol->colname , pCol->colname);
          }  else {
-            aCamelCase(pCol->colname, pCol->colname);
+            a_camel_case(pCol->colname, pCol->colname);
          }
       }
       // } else if (format & (NOX_CAMEL_CASE)) {
-      //    aCamelCase(pCol->colname, pCol->colname);
+      //    a_camel_case(pCol->colname, pCol->colname);
       // } else if (format & (NOX_UPPERCASE)) {
       // It is upper NOW
       // nox_sqlUpperCaseNames(pSQL);
 
       ///} else if (OFF == nox_IsTrue (pCon->pOptions ,"uppercasecolname")) {
       ///   UCHAR temp [256];
-      ///   astr2upper  (temp , pCol->colname);
+      ///   a_str2upper  (temp , pCol->colname);
       ///   if (strcmp (temp , pCol->colname) == 0) {
-      ///      astr2lower  (pCol->colname , pCol->colname);
+      ///      a_str_to_lower  (pCol->colname , pCol->colname);
       ///   }
       ///}
 
@@ -827,7 +830,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
                   // skip leading blanks
                   for (;*p == ' '; p++);
 
-                  len = astrTrimLen(p);
+                  len = a_str_trim_len(p);
                   p[len] = '\0';
 
                   // Have to fix .00 numeric as 0.00
@@ -851,7 +854,7 @@ PNOXNODE nox_sqlFormatRow  (PNOXSQL pSQL)
 
                   if (pCol->coltype != SQL_BLOB
                   &&  pCol->coltype != SQL_CLOB) {
-                     len = astrTrimLen(p);
+                     len = a_str_trim_len(p);
                      p[len] = '\0';
                   }
 
@@ -929,14 +932,15 @@ void nox_sqlClose (PNOXSQL * ppSQL)
    int rc;
    PNOXSQL pSQL = * ppSQL;
 
-   if (pSQL->pCon->options.hexSort == ON ) {
-      LONG attrParm = SQL_TRUE ;
-      rc = SQLSetEnvAttr (pSQL->pCon->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
-      pSQL->pCon->options.hexSort = OFF;
-   }
 
    // Do we have an active statement ...
    if (pSQL) {
+
+      if (pSQL->pCon->options.hexSort == ON ) {
+         LONG attrParm = SQL_TRUE ;
+         rc = SQLSetEnvAttr (pSQL->pCon->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
+         pSQL->pCon->options.hexSort = OFF;
+      }
 
       memFree(&pSQL->cols);
       pSQL->nresultcols = 0; // !! Done
@@ -1064,22 +1068,22 @@ PNOXNODE nox_buildMetaFields ( PNOXSQL pSQL )
          }
 
          default: {
-            asprintf(temp ,"unknown%d" , pCol->coltype);
+            a_sprintf(temp ,"unknown%d" , pCol->coltype);
             type = temp;
          }
       }
       nox_NodeInsertNew (pField  , RL_LAST_CHILD, "datatype" , type,  VALUE );
 
-      asprintf(temp , "%d" ,  pCol->coltype);
+      a_sprintf(temp , "%d" ,  pCol->coltype);
       nox_NodeInsertNew (pField  , RL_LAST_CHILD, "sqltype" , temp ,  LITERAL);
 
       // Add size
-      asprintf(temp , "%d" , pCol->displaysize);
+      a_sprintf(temp , "%d" , pCol->displaysize);
       nox_NodeInsertNew (pField  , RL_LAST_CHILD, "size"     , temp,  LITERAL  );
 
       // Add decimal precission
       if  (0==strcmp ( type , "dec" )) {
-         asprintf(temp , "%d" , pCol->scale);
+         a_sprintf(temp , "%d" , pCol->scale);
          nox_NodeInsertNew (pField  , RL_LAST_CHILD, "prec"     , temp,  LITERAL  );
       }
 
@@ -1107,8 +1111,8 @@ LONG nox_sqlNumberOfRows(PNOXSQLCONNECT pCon ,PUCHAR sqlstmt)
    // Find the last select ( there can be more when using "with")
 
    p = sqlstmt;
-   w = astrIstr(p, "with ");
-   p = astrIstr(p , "select ");
+   w = a_stristr(p, "with ");
+   p = a_stristr(p , "select ");
 
    if (w == NULL || w > p) {
       lastSelect = p;
@@ -1124,7 +1128,7 @@ LONG nox_sqlNumberOfRows(PNOXSQLCONNECT pCon ,PUCHAR sqlstmt)
                if (para == 0) {
                   for (w++; *w == ' '; w++);
                   if ( *w != ',') {
-                  lastSelect = astrIstr(w , "select ");
+                  lastSelect = a_stristr(w , "select ");
                   goto outer;
                   }
                }
@@ -1137,17 +1141,17 @@ LONG nox_sqlNumberOfRows(PNOXSQLCONNECT pCon ,PUCHAR sqlstmt)
    if (lastSelect == NULL) return 0;
 
    // We need to replace all columns between "select" and  "from"  with the count(*)
-   from  = astrIstr(lastSelect , " from ");
+   from  = a_stristr(lastSelect , " from ");
    if (from == NULL) return 0;
 
    // remove order by - if any
-   orderby = astrIstr(from  , " order ");
+   orderby = a_stristr(from  , " order ");
    if (orderby) {
       *orderby = '\0';
    }
 
    // remove "with ur" - if any
-   withur = astrIstr(from  , " with ur");
+   withur = a_stristr(from  , " with ur");
    if (withur) {
       *withur = '\0';
    }
@@ -1200,7 +1204,7 @@ void nox_sqlUpperCaseNames(PNOXSQL pSQL)
    int i;
    for (i = 0; i < pSQL->nresultcols; i++) {
       PNOXCOL pCol = &pSQL->cols[i];
-      astr2upper (pCol->colname , pCol->colname);
+      a_str2upper (pCol->colname , pCol->colname);
    }
 }
 */
@@ -1525,26 +1529,26 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
    int     colno;
    UCHAR   temp [128];
 
-   stmt += asprintf (stmt , "update %s set " , table);
+   stmt += strjoin (stmt , "update " , table , " set " );
 
    pNode    =  nox_GetNodeChild (pSqlParms);
    for ( colno=1; pNode; colno++) {
       if (! isIdColumn(hMetastmt, colno)) {
          name  = nox_GetNodeNamePtr   (pNode);
-         astr2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+         a_str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
          if  (nodeisnull(pNode)) {
-            stmt += asprintf (stmt , "%s%s=NULL" , comma , temp);
+            stmt += strjoin (stmt , comma , temp ,"=NULL");
          } else if  (nodeisblank(pNode)) {
-            stmt += asprintf (stmt , "%s%s=default" , comma , temp);    // because timesstamp / date can be set as ''
+            stmt += strjoin (stmt , comma , temp ,"=default" );    // because timesstamp / date can be set as ''
          } else {
-            stmt += asprintf (stmt , "%s%s=?"  , comma , temp);
+            stmt += strjoin (stmt , comma , temp ,"=?"  );
          }
          comma = ",";
       }
       pNode = nox_GetNodeNext(pNode);
    }
 
-   stmt += asprintf (stmt , " %s " , where);
+   stmt += strjoin (stmt , " " , where , " ");
 }
 /* ------------------------------------------------------------- */
 static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
@@ -1560,19 +1564,19 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
    UCHAR   temp [128];
    PUCHAR  pMarker = markers;
 
-   stmt += asprintf (stmt , "insert into  %s (" , table);
+   stmt += strjoin  (stmt , "insert into " , table , " (" );
 
    pNode = nox_GetNodeChild (pSqlParms);
    for ( colno=1; pNode; colno++) {
       if (! isIdColumn(hMetaStmt, colno)) {
          if (!nodeisnull(pNode)) {
             name     = nox_GetNodeNamePtr   (pNode);
-            astr2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
-            stmt    += asprintf (stmt , "%s%s" , comma , temp);
+            a_str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+            stmt    += strjoin (stmt , comma , temp);
             if  (nodeisblank(pNode)) {
-               pMarker+= asprintf (pMarker , "%sdefault" , comma);    // because timesstamp / date can be set as ''
+               pMarker+= strjoin (pMarker , comma ,"default" );    // because timesstamp / date can be set as ''
             } else {
-               pMarker+= asprintf (pMarker , "%s?" , comma);
+               pMarker+= strjoin (pMarker , comma , "?" );
             }
             comma = ",";
          }
@@ -1580,24 +1584,24 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
       pNode = nox_GetNodeNext(pNode);
    }
 
-   stmt += asprintf (stmt , ") values( ");
-   stmt += asprintf (stmt , markers);
-   stmt += asprintf (stmt , ")") ;
+   stmt += strjoin (stmt , ") values(" ,  markers , ")") ;
 }
 /* ------------------------------------------------------------- */
 void createTracetable(PNOXSQLCONNECT pCon)
 {
    PNOXTRACE pTrc = &pCon->sqlTrace;
    UCHAR  t [512];
-   PUCHAR s = "CREATE            TABLE %s/sqlTrace (       "
+   strjoin (t ,
+      "CREATE TABLE " , pTrc->lib, ".sqlTrace ("
       "   STSTART TIMESTAMP NOT NULL WITH DEFAULT,        "
       "   STEND TIMESTAMP NOT NULL WITH DEFAULT,          "
       "   STSQLSTATE CHAR(5) NOT NULL WITH DEFAULT,         "
       "   STTEXT VARCHAR ( 256) NOT NULL WITH DEFAULT,      "
       "   STJOB  VARCHAR ( 30) NOT NULL WITH DEFAULT,       "
       "   STTRID BIGINT NOT NULL WITH DEFAULT,              "
-      "   STSQLSTMT VARCHAR ( 8192) NOT NULL WITH DEFAULT)  ";
-   asprintf(t , s , pTrc->lib);
+      "   STSQLSTMT VARCHAR ( 8192) NOT NULL WITH DEFAULT)  ");
+
+
    pTrc->doTrace =  OFF; // So we don't end up in a recusive death spiral
    nox_sqlExec(pCon, t , NULL);
    pTrc->doTrace =  ON;
@@ -1673,7 +1677,7 @@ SHORT  doInsertOrUpdate(
 
    if (pSQL == NULL || pSQL->pstmt == NULL) return -1;
 
-   astr2upper(table , table);
+   a_str2upper(table , table);
 
    // Now we have the colume definitions - now build the update statement:
    if (update) {
@@ -1835,19 +1839,19 @@ static PNOXSQL buildMetaStmt (PNOXSQLCONNECT pCon, PUCHAR table, PNOXNODE pRow)
    SQLRETURN rc;
    PNOXSQL    pSQLmeta = nox_sqlNewStatement (pCon, NULL, false, false);
 
-   stmt += asprintf (stmt , "select ");
+   stmt += cpy (stmt , "select ");
 
    comma = "";
    pNode    =  nox_GetNodeChild (pRow);
    while (pNode) {
       name  = nox_GetNodeNamePtr   (pNode);
-      astr2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
-      stmt += asprintf (stmt , "%s%s" , comma , temp);
+      a_str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+      stmt += strjoin (stmt , comma ,temp);
       comma = ",";
       pNode = nox_GetNodeNext(pNode);
    }
 
-   stmt += asprintf (stmt , " from %s where 1=0 with ur" , table);
+   stmt += strjoin  (stmt , " from " , table , " where 1=0 with ur");
 
    // prepare the statement that provides the columns
    rc = SQLPrepare(pSQLmeta->pstmt->hstmt , sqlTempStmt, SQL_NTS);
@@ -1915,8 +1919,8 @@ LGL nox_sqlUpdate (PNOXSQLCONNECT pCon, PUCHAR table  , PNOXNODE pRow , PUCHAR w
 {
    UCHAR  whereStr [1024];
    for(; *where == ' ' ; where++); // skip leading blanks
-   if (*where > ' ' && ! amemiBeginsWith(where, "where")) {
-      asprintf (whereStr , "where %s" , where);
+   if (*where > ' ' && ! a_memiBeginsWith(where, "where")) {
+      strjoin (whereStr , "where ", where);
       where = whereStr;
    }
    return nox_sqlUpdateOrInsert  (pCon, true , table  , pRow , where, pSqlParms);
@@ -1925,8 +1929,8 @@ LGL nox_sqlUpdate (PNOXSQLCONNECT pCon, PUCHAR table  , PNOXNODE pRow , PUCHAR w
 LGL nox_sqlUpdateVC (PNOXSQLCONNECT pCon, PLVARCHAR table  , PNOXNODE pRow , PLVARCHAR whereP, PNOXNODE pSqlParmsP  )
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 3) ? plvc2str(whereP) : "";
-   PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
+   PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 4) ? plvc2str(whereP) : "";
+   PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 5) ? pSqlParmsP : NULL;
    return nox_sqlUpdate (pCon, plvc2str (table)   , pRow , where, pSqlParms);
 }
 /* ------------------------------------------------------------- */
@@ -1937,8 +1941,8 @@ LGL nox_sqlInsert (PNOXSQLCONNECT pCon, PUCHAR table  , PNOXNODE pRow , PUCHAR w
 LGL nox_sqlInsertVC (PNOXSQLCONNECT pCon,PLVARCHAR table  , PNOXNODE pRow , PLVARCHAR whereP, PNOXNODE pSqlParmsP  )
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PUCHAR  where    =  (pParms->OpDescList->NbrOfParms >= 3) ? plvc2str(whereP) : "";
-   PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
+   PUCHAR  where    =  (pParms->OpDescList->NbrOfParms >= 4) ? plvc2str(whereP) : "";
+   PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 5) ? pSqlParmsP : NULL;
    return nox_sqlUpdateOrInsert  (pCon, false , plvc2str(table)  , pRow , where , pSqlParms);
 }
 /* ------------------------------------------------------------- */
@@ -1956,8 +1960,8 @@ LGL nox_sqlUpsert (PNOXSQLCONNECT pCon, PUCHAR table  , PNOXNODE pRow , PUCHAR w
 LGL nox_sqlUpsertVC (PNOXSQLCONNECT pCon, PLVARCHAR table  , PNOXNODE pRow , PLVARCHAR whereP, PNOXNODE pSqlParmsP  )
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 3) ? plvc2str(whereP) : "";
-   PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
+   PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 4) ? plvc2str(whereP) : "";
+   PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 5) ? pSqlParmsP : NULL;
    return nox_sqlUpsert (pCon, plvc2str(table)  , pRow , where, pSqlParms);
 
 }
@@ -1967,16 +1971,15 @@ LGL nox_sqlUpsertVC (PNOXSQLCONNECT pCon, PLVARCHAR table  , PNOXNODE pRow , PLV
 LONG nox_sqlGetInsertId (PNOXSQLCONNECT pCon)
 {
    LONG    id;
-   PNOXNODE pRow;
-   // PUCHAR  sqlStmt = "values IDENTITY_VAL_LOCAL() as id ";
+   PNOXNODE pRow, pChild;
    // PUCHAR  sqlStmt = "values IDENTITY_VAL_LOCAL() into :id";
-   PUCHAR  sqlStmt = "Select IDENTITY_VAL_LOCAL() as id from sysibm/sysdummy1";
+   // PUCHAR  sqlStmt = "Select IDENTITY_VAL_LOCAL() as id from sysibm.sysdummy1";
+   PUCHAR  sqlStmt = "values identity_val_local()";
 
    // Get that only row
    pRow = nox_sqlResultRow(pCon, sqlStmt, NULL,1,0);
-
-   id = a2i(nox_GetValuePtr(pRow, "id", NULL));
-
+   pChild  = nox_GetNodeChild (pRow);
+   id = a2i(nox_GetValuePtr(pChild, NULL , "-1"));
    nox_NodeDelete (pRow);
 
    return id ;
@@ -2013,22 +2016,22 @@ void nox_sqlSetOptions (PNOXSQLCONNECT pCon, PNOXNODE pOptionsP)
       value = nox_GetNodeValuePtr  (pNode , NULL);
 
       // Is header overriden by userprogram ?
-      if (amemiBeginsWith(name , "upperCaseColName")) {
+      if (a_memiBeginsWith(name , "upperCaseColName")) {
          po->upperCaseColName = *value == 't'? ON:OFF; // for true
       }
-      else if (amemiBeginsWith(name , "autoParseContent")) {
+      else if (a_memiBeginsWith(name , "autoParseContent")) {
          po->autoParseContent = *value == 't' ? ON:OFF; // for true
       }
-      else if (amemiBeginsWith(name , "decimalPoint")) {
+      else if (a_memiBeginsWith(name , "decimalPoint")) {
          po->DecimalPoint = *value;
       }
-      else if (amemiBeginsWith(name , "sqlNaming")) {
+      else if (a_memiBeginsWith(name , "sqlNaming")) {
          po->sqlNaming = *value == 't' ? ON:OFF; // for true
          attrParm = po->sqlNaming == OFF; // sysname is invers of SQL naming :(
          rc = SQLSetConnectAttr     (pCon->hdbc , SQL_ATTR_DBC_SYS_NAMING, &attrParm  , 0);
       }
       // NOTE !! hexSort can only be set at environlevel - befor connect time !!!
-      // else if (amemiBeginsWith(name , "hexSort")) {
+      // else if (a_memiBeginsWith(name , "hexSort")) {
       //   po->hexSort = *value == 't' ? ON:OFF; // for true
       //}
       if (rc  != SQL_SUCCESS ) {

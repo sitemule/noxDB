@@ -51,11 +51,11 @@ static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
       c = *(in);
       if (c == AMP) {
          PUCHAR kwd = in+1;
-         if       (amemiBeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
-         else if  (amemiBeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
-         else if  (amemiBeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
-         else if  (amemiBeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
-         else if  (amemiBeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
+         if       (a_memiBeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
+         else if  (a_memiBeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
+         else if  (a_memiBeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
+         else if  (a_memiBeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
+         else if  (a_memiBeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
          else if  (in[1] == HASH) {
             USHORT n = 0;
             int l = 0;
@@ -150,7 +150,7 @@ void nox_AppendName (PNOXCOM pJxCom)
          pJxCom->State = nox_EXIT_ERROR;
          return;
       }
-      if (astrIcmp(pJxCom->pName , pJxCom->pNodeWorkRoot->Name) != 0) {
+      if (a_stricmp(pJxCom->pName , pJxCom->pNodeWorkRoot->Name) != 0) {
          nox_SetMessage( "Invalid end tag </%s> for start tag <%s> at (%d:%d)" ,
             pJxCom->pName , pJxCom->pNodeWorkRoot->Name, pJxCom->LineCount, pJxCom->ColCount);
          pJxCom->State = nox_EXIT_ERROR;
@@ -220,7 +220,7 @@ void nox_CopyCdata (PNOXCOM pJxCom)
 
    nox_SkipChars(pJxCom , sizeof("<![CDATA[") -2) ; // omit the zero terminator
    p = nox_GetChar(pJxCom);
-   while (! amemiBeginsWith(p , BRABRAGT  ) &&  pJxCom->State != nox_EXIT) {  // the "]]>"
+   while (! a_memiBeginsWith(p , BRABRAGT  ) &&  pJxCom->State != nox_EXIT) {  // the "]]>"
       CheckBufSize(pJxCom);
       pJxCom->Data[pJxCom->DataIx++] = *p;
       p = nox_GetChar(pJxCom);
@@ -239,7 +239,7 @@ void nox_AppendData (PNOXCOM pJxCom)
 /* Still a valid name � */
    if (c == LT ) {
    // Check for CDATA stream ... copy until ]]>
-      if (amemiBeginsWith(pJxCom->pFileBuf , CDATA )) {   // the "<![CDATA["
+      if (a_memiBeginsWith(pJxCom->pFileBuf , CDATA )) {   // the "<![CDATA["
          nox_CopyCdata (pJxCom);
          return;
       }
@@ -338,18 +338,18 @@ BOOL nox_ParseXml (PNOXCOM pJxCom)
          case nox_DETERMIN_TAG_TYPE:
 
                #pragma convert(1252)
-            if (amemiBeginsWith(p , REMARK  )) {  // the "!--"
+            if (a_memiBeginsWith(p , REMARK  )) {  // the "!--"
                int commentIx =0;
                do {
                   p = nox_GetChar(pJxCom);
                   if (commentIx < COMMENT_SIZE -1) {
                      pJxCom->Comment[commentIx++] = *p;
                   }
-               } while (! amemiBeginsWith (p , ENDREMARK ) && pJxCom->State != nox_EXIT);  // EndRemark "-->"
+               } while (! a_memiBeginsWith (p , ENDREMARK ) && pJxCom->State != nox_EXIT);  // EndRemark "-->"
                   #pragma convert(0)
                pJxCom->Comment[commentIx-1] = '\0';
                pJxCom->State = nox_FIND_END_TOKEN;
-            } else if (amemiBeginsWith(p , DOCTYPE  )) {  // the "!DOCTYPE"
+            } else if (a_memiBeginsWith(p , DOCTYPE  )) {  // the "!DOCTYPE"
                pJxCom->State = nox_FIND_END_TOKEN;
             } else if (c == QUESTION) {  // the ?
                pJxCom->State = nox_FIND_END_TOKEN;

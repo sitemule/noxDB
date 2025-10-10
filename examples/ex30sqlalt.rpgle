@@ -2,7 +2,8 @@
 // ------------------------------------------------------------------------------------
 // noxDB - Not Only Xml - Its JSON, XML, SQL and more
 //
-// This tutorial will show all SQL function of the noxDbUtf8 library
+// This tutorial will show how to achive the same result in different ways
+// with parsing, constructing and reading with SQL function
 //
 // Design:  Niels Liisberg
 // Project: Sitemule.com
@@ -41,7 +42,7 @@
 Ctl-Opt copyright('Sitemule - System & Method (C), 2025');
 Ctl-Opt BndDir('NOXDBUTF8') CCSID(*CHAR:*UTF8);
 Ctl-Opt dftactgrp(*NO) ACTGRP('QILE') option(*nodebugio:*srcstmt:*nounref) ALWNULL(*USRCTL);
-Ctl-Opt main(main) ;
+Ctl-Opt main(main);
 
 /include qrpgleref,noxDbUtf8
 
@@ -60,11 +61,12 @@ dcl-proc main;
     // Connect to the database - using the noxDbUtf8 driver. This is global for all examples
     pCon = nox_sqlConnect();
 
-    example1a();
-    example1b();
+    // Run the examples
+    example1();
     example2();
     example3();
     example4();
+    example5();
 
 on-exit;
     // Always remember to delete used memory !!
@@ -80,7 +82,7 @@ end-proc;
 // Later we will construct the same JSON by using the SQL resultset
 // and the iterator to build the JSON object.
 // --------------------------------------------------------------
-dcl-proc example1a;
+dcl-proc example1;
 
     Dcl-S pJson              Pointer;
 
@@ -95,6 +97,10 @@ dcl-proc example1a;
                     "Sub-Category": "racing"-
                 },-
                 "Sizes": [51,55, ["S", "L", "XL"],58,60]-
+                "price": 311.95,-
+                "priceDate": "2025-12-31",-
+                "priceTime": "12.13.14",-
+                "updatedAt": "2025-12-31-12.13.14"-
             },-
             {-
                 "Department": "Mountain",-
@@ -112,18 +118,21 @@ dcl-proc example1a;
             }-
         ]-
     }');
+
     // Dump it as an IFS file
-    nox_WriteJsonStmf(pJson:'/prj/noxdbutf8/testout/stock1a.json':1208:*OFF);
+    nox_WriteJsonStmf(pJson:'/prj/noxdbutf8/testout/ex30-stock1.json':1208:*OFF);
 
 on-exit;
    nox_delete(pJson);
 end-proc;
 
 // -------------------------------------------------------------
-// Same as example1a - but we use the object builder functions
+// Same as example1 - but we use the object builder functions
 // nox_Object and nox_Array
+// It also demonstrate the atomic functions:
+//   nox_int, nox_str, nox_dec, nox_date, nox_time, nox_ts
 // --------------------------------------------------------------
-dcl-proc example1b;
+dcl-proc example2;
 
     Dcl-S pJson              Pointer;
 
@@ -142,7 +151,11 @@ dcl-proc example1b;
                     nox_Array('S':'L':'XL'):
                     nox_int(58):
                     nox_int(60)
-                )
+                ):
+                'price': nox_dec(311.95):
+                'priceDate': nox_date(%date()):
+                'priceTime': nox_time(%time()):
+                'updatedAt': nox_ts  (%timestamp())
             ):
             nox_Object(
                 'Department' : 'Mountain' :
@@ -167,7 +180,7 @@ dcl-proc example1b;
         )
     );
     // Dump it as an IFS file
-    nox_WriteJsonStmf(pJson:'/prj/noxdbutf8/testout/stock1b.json':1208:*OFF);
+    nox_WriteJsonStmf(pJson:'/prj/noxdbutf8/testout/ex30-stock2.json':1208:*OFF);
 
 on-exit;
    nox_delete(pJson);
@@ -179,7 +192,7 @@ end-proc;
 // It uses the SQL resultset to build the JSON object.
 // by appending substructures by nested logic;
 // -------------------------------------------------------------
-dcl-proc example2;
+dcl-proc example3;
 
     Dcl-S  pJson           Pointer;
     Dcl-S  pStock          Pointer;
@@ -275,7 +288,7 @@ dcl-proc example2;
     nox_MoveObjectInto (pJson : 'Stock' : pStock);
 
 
-    nox_WriteJsonStmf(pJson:'/prj/noxdbutf8/testout/stock2.json':1208:*OFF);
+    nox_WriteJsonStmf(pJson:'/prj/noxdbutf8/testout/ex30-stock3.json':1208:*OFF);
 
 // Since everything is contained in the pJson object
 // we can delete only the final result
@@ -283,13 +296,13 @@ on-exit;
     nox_delete(pJson);
 end-proc;
 // -------------------------------------------------------------
-// This example is similar to example2, but it uses a yet
+// This example is similar to example3, but it uses a yet
 // simpler aproach by manipulating the graph
 // It uses the SQL resultset to build the JSON object.
 // by appending substructures by nested logic;
 // Note: This example uses noxDb >= '2026-07-01'
 // -------------------------------------------------------------
-dcl-proc example3;
+dcl-proc example4;
 
     Dcl-S  pJson           Pointer;
     Dcl-S  pStock          Pointer;
@@ -305,7 +318,11 @@ dcl-proc example3;
           sku,-
           department ,-
           main_category,-
-          sub_category -
+          sub_category, -
+          price, -
+          price_date, -
+          price_time, -
+          updated_at -
         from noxdbdemo.stock '
     );
 
@@ -393,7 +410,7 @@ dcl-proc example3;
     nox_MoveObjectInto (pJson : 'Stock' : pStock);
 
 
-    nox_WriteJsonStmf(pJson:'/prj/noxdbutf8/testout/stock3.json':1208:*OFF);
+    nox_WriteJsonStmf(pJson:'/prj/noxdbutf8/testout/ex30-stock4.json':1208:*OFF);
 
 // Since everything is contained in the pJson object
 // we can delete only the final result
@@ -402,13 +419,13 @@ on-exit;
 end-proc;
 
 // -------------------------------------------------------------
-// This example is similar to example3, but it uses a yet
+// This example is similar to example4, but it uses a yet
 // simpler aproach by manipulating the graph and object builder
 // It uses the SQL resultset to build the JSON object.
 // by appending substructures by nested logic;
 // Note: This example uses noxDb >= '2026-07-01'
 // -------------------------------------------------------------
-dcl-proc example4;
+dcl-proc example5;
 
     Dcl-S  pJson           Pointer;
     Dcl-S  pStock          Pointer;
@@ -419,12 +436,17 @@ dcl-proc example4;
     dcl-ds stockList       likeds(nox_iterator);
 
 
+    // Get the stock items. We use defaults, so names will be in camelCase
     pStock = nox_sqlResultset (pCon:
       'select -
           sku,-
           department ,-
           main_category,-
-          sub_category -
+          sub_category, -
+          price, -
+          price_date, -
+          price_time, -
+          updated_at -
         from noxdbdemo.stock '
     );
 
@@ -445,8 +467,8 @@ dcl-proc example4;
         // nox_Object "owns" it's children - they are moved into the graph
         nox_MoveObjectInto (stockList.this :
             'Category' : nox_Object(
-                'MainCategory' : nox_Locate (stockList.this: 'main_category'):
-                'Sub-Category' : nox_Locate (stockList.this: 'sub_category' )
+                'MainCategory' : nox_Locate (stockList.this: 'mainCategory'):
+                'Sub-Category' : nox_Locate (stockList.this: 'subCategory' )
             )
         );
 
@@ -518,7 +540,7 @@ dcl-proc example4;
     );
 
 
-    nox_WriteJsonStmf(pJson:'/prj/noxdbutf8/testout/stock4.json':1208:*OFF);
+    nox_WriteJsonStmf(pJson:'/prj/noxdbutf8/testout/ex30-stock5.json':1208:*OFF);
 
 // Since everything is contained in the pJson object
 // we can delete only the final result

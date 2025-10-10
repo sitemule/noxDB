@@ -75,7 +75,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
             name[namelen] = '\0';
 
             if (! upperCaseNames) {
-                aCamelCase (name, name);
+                a_camel_case (name, name);
             }
 
             pObj  = nox_NewObject();
@@ -99,7 +99,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
             name[namelen] = '\0';
 
             if (! upperCaseNames) {
-                aCamelCase (name, name);
+                a_camel_case (name, name);
             }
 
             pArr = nox_NewArray();
@@ -119,12 +119,12 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
         case QrnDgEvent_09_StartStructArray : {
             PNOXNODE pArr;
             UCHAR name [256];
-            
+
             ULONG namelen = XlateBuffer(xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
             if (! upperCaseNames) {
-                aCamelCase (name, name);
+                a_camel_case (name, name);
             }
 
             pArr = nox_NewArray();
@@ -154,7 +154,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
             name[namelen] = '\0';
 
             if (! upperCaseNames) {
-                aCamelCase (name, name);
+                a_camel_case (name, name);
             }
 
             valuelen = XlateBuffer (xlate_1200_to_1208, value , (PUCHAR) pParms->u.scalar.value  , pParms->u.scalar.valueLenBytes);

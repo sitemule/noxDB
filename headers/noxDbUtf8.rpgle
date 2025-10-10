@@ -247,7 +247,7 @@ End-PR;
 ///
 Dcl-PR nox_Message varchar(1024) extproc(*CWIDEN:'nox_MessageVC');
   // nox_Object
-  pNode          Pointer    value;
+  pNode          Pointer    value options(*nopass);
 End-PR;
 
 ///
@@ -1636,7 +1636,7 @@ End-PR;
 // @param (input) String to be quoted
 // @return Quoted string
 ///
-Dcl-PR nox_strQuote  Like(UTF8) rtnparm  extproc(*CWIDEN : 'nox_strQuote');
+Dcl-PR nox_StrQuote  Like(UTF8) rtnparm  extproc(*CWIDEN : 'nox_StrQuote');
   stringToQuote Like(UTF8) const  options(*varsize);
 End-PR;
 
@@ -2544,13 +2544,15 @@ End-PR;
 // @param (input) Pointer to database connection provided by nox_sqlConnect()
 // @param (input) SQL table name
 // @param (input) Row data as either object tree or JSON or XML string
+// @param (input) formatoption - camelCase (default) or system_case
 // @return <code>*on</code> if an error occured else <code>*off</code>
 ///
 
-Dcl-PR nox_sqlInsert Ind extproc(*CWIDEN:'nox_sqlInsertVC');
+Dcl-PR nox_sqlInsert ind extproc(*CWIDEN:'nox_sqlInsertVC');
   pConnection    pointer value;
   table          Like(UTF8_1K) const options(*varsize);
   row            pointer value;
+  formatOptions  int(10) value options(*nopass);
 End-PR;
 
 ///

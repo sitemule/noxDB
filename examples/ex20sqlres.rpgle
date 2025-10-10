@@ -2,7 +2,7 @@
 // ------------------------------------------------------------------------------------
 // noxDB - Not Only Xml - Its JSON, XML, SQL and more
 //
-// This tutorial will show how the get data with SQL in noxDb
+// This tutorial will show how the get data with SQL in noxDb - resultSet
 //
 // Design:  Niels Liisberg
 // Project: Sitemule.com
@@ -228,9 +228,14 @@ end-proc;
 
 // ------------------------------------------------------------------------------------
 // Row by row
-// This example shows how to use SQL cursors to fetch one row at a time and
-// build an array of rows.
+// This low-level example shows how to use SQL cursors to fetch one row at a time and
+// build an array of rows. This is more code - but you have full control.
+// and demostrates how to resultsets are constructed
 // NOTE: nox_sqlFetchNext is a factory meaning it creates a new object for each row
+// here we use nox_ArrayPush to append the row to the array, which by default
+// moves the object to the array - so we do not have to delete each row after use.
+// If are not using nox_ArrayPush you need to delete each row after use to avoid memory leaks.
+// using nox_delete(pRow);  after use
 // ------------------------------------------------------------------------------------
 dcl-proc example5;
 
@@ -280,6 +285,7 @@ dcl-proc example5;
     // Now iterate on each row in the resultset
     pRow = nox_sqlFetchNext(pSqlHnd) ;
     dow (pRow <> *NULL );
+    
         // Append the row to the end of the result array. Note ArrayPush will
         // by default move the object ( not copy) to the bottom of the array.
         nox_ArrayPush(pRows : pRow);

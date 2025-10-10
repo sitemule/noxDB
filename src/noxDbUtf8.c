@@ -240,11 +240,11 @@ static void nox_XmlDecode (PUCHAR out, PUCHAR in , ULONG inlen)
       c = *(in);
       if (c == AMP) {
          PUCHAR kwd = in+1;
-         if       (amemiBeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
-         else if  (amemiBeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
-         else if  (amemiBeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
-         else if  (amemiBeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
-         else if  (amemiBeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
+         if       (a_memiBeginsWith(kwd ,"lt;"))  { *(p++) = LT  ; in += 4; }
+         else if  (a_memiBeginsWith(kwd ,"gt;"))  { *(p++) = GT  ; in += 4; }
+         else if  (a_memiBeginsWith(kwd ,"amp;")) { *(p++) = AMP ; in += 5; }
+         else if  (a_memiBeginsWith(kwd ,"apos;")){ *(p++) = APOS; in += 6; }
+         else if  (a_memiBeginsWith(kwd ,"quot;")){ *(p++) = QUOT; in += 6; }
          else if  (in[1] == HASH) {
             int n = 0;
             in += 2; // Skip the '&#'
@@ -414,7 +414,7 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
       if (*subword(key, fields, kix , ",") == '\0') break;
       subword(keys[kix], key, 0 , ":");
       subword(descStr  , key, 1 , ":");
-      descending[kix] = amemiBeginsWith(descStr , "desc");
+      descending[kix] = a_memiBeginsWith(descStr , "desc");
    }
 
    do {
@@ -1831,7 +1831,7 @@ PNOXNODE nox_lookupByXpath (PNOXNODE pRootNode, PUCHAR * ppName)
          PNOXATTR pAtr = nox_AttributeLookup  (pNodeTemp, keyName);
          if (pAtr && pAtr->Value) {
             // Does the value match
-            if (amemIcmp(compVal , pAtr->Value, compLen) == comp
+            if (a_memicmp(compVal , pAtr->Value, compLen) == comp
             &&  pAtr->Value[compLen] == '\0') {
                return pNodeTemp;
             }
@@ -1847,7 +1847,7 @@ PNOXNODE nox_lookupByXpath (PNOXNODE pRootNode, PUCHAR * ppName)
          if (pNode && pNode->Value) {
 
             // Does the value match
-            if (amemIcmp(compVal , pNode->Value, compLen) == comp
+            if (a_memicmp(compVal , pNode->Value, compLen) == comp
             &&  pNode->Value[compLen] == '\0') {
                return pNodeTemp;
             }
@@ -1894,7 +1894,7 @@ PNOXNODE  nox_FindNodeAtIndex(PNOXNODE pNode , PUCHAR Key , int index , BOOL Ski
    while (pNode) {
 
       CurName = nox_NodeName (pNode, SkipNameSpace);
-      if (CurName && astrIcmp(Key , CurName) == 0) {
+      if (CurName && a_stricmp(Key , CurName) == 0) {
          if (index == i) return (pNode); // Found :)
          i++;
       }
@@ -1939,7 +1939,7 @@ static BOOL isNextDelimiter(UCHAR c)
 #pragma convert(1252)
 BOOL nox_isUbound (PUCHAR name)
 {
-   return (amemIcmp(name  , "[UBOUND]" , 8) == 0);
+   return (a_memicmp(name  , "[UBOUND]" , 8) == 0);
 }
 #pragma convert(0)
 /* ---------------------------------------------------------------------------
@@ -1991,7 +1991,7 @@ static PNOXNODE nox_lookUpSiblingByName(PNOXNODE pNode , PUCHAR keyName)
       }
 
       // Name Match ? Go one step deeper
-      if (astrIcmp(keyName, curName) == 0) {  // Found
+      if (a_stricmp(keyName, curName) == 0) {  // Found
          return pNode;  // This level found, setup for itterarion
       }
       // No ! try next
@@ -2022,7 +2022,7 @@ static PNOXNODE nox_CalculateUbound(PNOXNODE pNode , PUCHAR key , BOOL SkipNameS
    while (pNodeTemp) {
       // Skip namespace ? - when namespace is a *:
       PUCHAR CurName = nox_NodeName (pNodeTemp, SkipNameSpace);
-      if (CurName && astrIcmp(key , CurName) == 0) {
+      if (CurName && a_stricmp(key , CurName) == 0) {
          pNode->Count ++;
       }
       pNodeTemp=pNodeTemp->pNodeSiblingNext;
@@ -2168,7 +2168,7 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
          nox_GetKeyFromName (tempKey , &SkipNameSpace , refName);
 
          #pragma convert(1252)
-         if (amemIcmp (pName , UBOUND , 6) == 0) {
+         if (a_memicmp (pName , UBOUND , 6) == 0) {
             return nox_CalculateUbound(refNode, tempKey, SkipNameSpace);
          }
          #pragma convert(0)
@@ -2299,7 +2299,7 @@ PNOXATTR nox_AttributeLookup   (PNOXNODE pNode, PUCHAR Name)
    pAttr = pNode->pAttrList;
 
    while (pAttr) {
-      if (amemIcmp (Name ,pAttr->Name , NameLen ) == 0
+      if (a_memicmp (Name ,pAttr->Name , NameLen ) == 0
       &&  pAttr->Name[NameLen] == '\0') {
          return (pAttr);
       }
@@ -2411,22 +2411,25 @@ PUCHAR nox_GetValuePtr (PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Default)
             ||  pParms->OpDescList->NbrOfParms == 0
             ||  pParms->OpDescList->NbrOfParms >= 3) ? Default : "";
 
-   PUCHAR    pNodeKey, pAtrKey;
+   PUCHAR    pNodeKey;
+   PUCHAR    pAtrKey = NULL;
    PNOXATTR  pAtr;
-   PNOXNODE   pNode;
+   PNOXNODE  pNode;
    static UCHAR temp [10];
 
    if (pNodeRoot == NULL) {
       return dft;
    }
 
-   pAtrKey = strchr(Name, MASTERSPACE);
+   if (Name) {
+      pAtrKey = strchr(Name, MASTERSPACE);
 
-   if (pAtrKey) {
-      PUCHAR pExp = strchr(Name, BRABEG);
-      if  (pExp == null || pAtrKey  < pExp) {
-         *pAtrKey = '\0'; // Terminate the Node
-         pAtrKey ++;     // atribute is the next
+      if (pAtrKey) {
+         PUCHAR pExp = strchr(Name, BRABEG);
+         if  (pExp == null || pAtrKey  < pExp) {
+            *pAtrKey = '\0'; // Terminate the Node
+            pAtrKey ++;     // atribute is the next
+         }
       }
    }
 
@@ -2737,7 +2740,7 @@ PNOXNODE  nox_LookupValue (PNOXNODE pNode, PUCHAR expr, BOOL16 ignorecaseP)
 
    // Dynamic set the compare function
    int (*pComp) (PUCHAR s1 , PUCHAR s2);
-   pComp = ignorecase ? astrIcmp : strcmp ;
+   pComp = ignorecase ? a_stricmp : strcmp ;
 
    // Works for array and objects
    if (pNode == NULL || ( pNode->type != ARRAY && pNode->type != OBJECT)) return NULL;
@@ -3406,7 +3409,9 @@ void nox_GetAttrValueVC (PLVARCHAR pRes, PNOXATTR pAttr, PLVARCHAR pDefaultValue
 // -------------------------------------------------------------
 PNOXNODE ensureNode (PNOXNODE pNode)
 {
-   if (pNode->signature == NODESIG) {
+   if (pNode == NULL) {
+      return  NewNode  (NULL, NULL , LITERAL);
+   } else if (pNode->signature == NODESIG) {
       return nox_NodeUnlink (pNode);
    } else {
       UCHAR temp [strlen((PUCHAR) pNode)*2];
@@ -3476,19 +3481,22 @@ LGL  nox_Error (PNOXNODE  pNode)
     return ( jxError || pNode == NULL) ? ON : OFF;
 }
 // -------------------------------------------------------------
-PUCHAR nox_ErrStr (PNOXNODE PNOXNODE)
+PUCHAR nox_ErrStr (PNOXNODE pNode)
 {
    return jxMessage;
 }
 // -------------------------------------------------------------
-VARCHAR1024 nox_MessageVC  (PNOXNODE PNOXNODE)
+VARCHAR1024 nox_MessageVC  (PNOXNODE pNode)
 {
+   // PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   // if (pParms->OpDescList->NbrOfParms > 0)  {
+
    VARCHAR1024 res;
    str2vc (&res ,  jxMessage);
    return res;
 }
 // -------------------------------------------------------------
-VOID nox_SetApiErr (PNOXNODE PNOXNODE, PAPIERR pApiErr)
+VOID nox_SetApiErr (PNOXNODE pNode, PAPIERR pApiErr)
 {
    strcpy (pApiErr->msgid , "CPF9898");
    substr  (pApiErr->msgdta , jxMessage ,pApiErr->size - 25 );  // not inc. the header

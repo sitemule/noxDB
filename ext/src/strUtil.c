@@ -23,6 +23,7 @@
 #include "varchar.h"
 #include "strUtil.h"
 #include "e2aa2e.h"
+#include "parms.h"
 
 // -------------------------------------------------------------
 // real ascii version of atoi
@@ -50,32 +51,19 @@ int cpy  (PUCHAR out , PUCHAR in)
    return (l);
 }
 // -------------------------------------------------------------
-// strIcmp  is stricmp in ccsid 277
-// -------------------------------------------------------------
-int strIcmp (PUCHAR s1, PUCHAR s2)
-{
-   int c =0;
-   for (;;) {
-      c = toUpper(*(s1++)) - toUpper(*(s2++));
-      if (c != 0) return c;
-      if (*s1 == '\0' &&  *s2 == '\0') return 0;
-   }
-}
-// -------------------------------------------------------------
 // strIcmp  is stricmp in ascii
 // -------------------------------------------------------------
-int astrIcmp (PUCHAR s1, PUCHAR s2)
+int a_stricmp (PUCHAR s1, PUCHAR s2)
 {
    int c =0;
-   for (;;) {
-      c = atoUpper(*(s1++)) - atoUpper(*(s2++));
-      if (c != 0) return c;
-      if (*s1 == '\0' &&  *s2 == '\0') return 0;
-   }
+   do {
+      c = a_to_upper(*s1) - a_to_upper(*s2);
+   } while ( c == 0 && *s1++ && *s2++);
+   return c;
 }
 // -------------------------------------------------------------
 #pragma convert(1252)
-PUCHAR aCamelCase (PUCHAR out , PUCHAR in)
+PUCHAR a_camel_case (PUCHAR out , PUCHAR in)
 {
 
    PUCHAR ret = out;
@@ -86,10 +74,10 @@ PUCHAR aCamelCase (PUCHAR out , PUCHAR in)
          upperNext = true;
       } else {
          if (upperNext) {
-            *(out++) = atoUpper(*in);
+            *(out++) = a_to_upper(*in);
             upperNext = false;
          } else {
-            *(out++) = atoLower (*in);
+            *(out++) = a_to_lower (*in);
          }
       }
    }
@@ -149,7 +137,7 @@ UCHAR toLower(UCHAR c)
 }
 // -------------------------------------------------------------
 #pragma convert(1252)
-UCHAR atoUpper (UCHAR c)
+UCHAR a_to_upper (UCHAR c)
 {
    if (c >= 'a' && c <= 'z') return c - ( 'a' - 'A');
    return c;
@@ -157,7 +145,7 @@ UCHAR atoUpper (UCHAR c)
 #pragma convert(0)
 // -------------------------------------------------------------
 #pragma convert(1252)
-UCHAR atoLower (UCHAR c)
+UCHAR a_to_lower (UCHAR c)
 {
    if (c >= 'A' && c <= 'Z') return c + ( 'a' - 'A');
    return c;
@@ -183,17 +171,17 @@ PUCHAR strIstr(PUCHAR base, PUCHAR key )
    return NULL;
 }
 // -------------------------------------------------------------
-// astrIstr is strstr that ignores the case in ascii
-// is trturns the pointer to "key" with in base
+// a_stristr is strstr that ignores the case in ascii
+// is returns the pointer to "key" with in base
 // -------------------------------------------------------------
-PUCHAR astrIstr(PUCHAR base, PUCHAR key )
+PUCHAR a_stristr(PUCHAR base, PUCHAR key )
 {
-   UCHAR k = atoUpper(key[0]) ;
+   UCHAR k = a_to_upper(key[0]) ;
    SHORT keylen = strlen (key);
 
    while (*base) {
-      if  (atoUpper(*base) == k) {
-         if (amemIcmp (base , key , keylen) == 0) {  /* Found !! */
+      if  (a_to_upper(*base) == k) {
+         if (a_memicmp (base , key , keylen) == 0) {  /* Found !! */
             return base;
          }
       }
@@ -288,11 +276,11 @@ PUCHAR memIstr(PUCHAR base, PUCHAR key, LONG len )
    }
    return NULL;
 }
-SHORT amemIcmp (PUCHAR m1 , PUCHAR m2 , LONG len)
+SHORT a_memicmp (PUCHAR m1 , PUCHAR m2 , LONG len)
 {
    while (len) {
-      UCHAR c1 = atoUpper(*m1);
-      UCHAR c2 = atoUpper(*m2);
+      UCHAR c1 = a_to_upper(*m1);
+      UCHAR c2 = a_to_upper(*m2);
       if (c1 > c2) return 1;
       if (c1 < c2) return -1;
       len --;
@@ -300,14 +288,14 @@ SHORT amemIcmp (PUCHAR m1 , PUCHAR m2 , LONG len)
    }
    return 0;
 }
-PUCHAR amemIstr(PUCHAR base, PUCHAR key, LONG len )
+PUCHAR a_memistr(PUCHAR base, PUCHAR key, LONG len )
 {
    SHORT keylen = strlen (key);
-   UCHAR k = atoUpper(key[0]);
+   UCHAR k = a_to_upper(key[0]);
 
    while (len>0) {
-      if  (atoUpper(*base) == k) {
-         if (amemIcmp (base , key , keylen) == 0) {  /* Found !! */
+      if  (a_to_upper(*base) == k) {
+         if (a_memicmp (base , key , keylen) == 0) {  /* Found !! */
             return base;
          }
       }
@@ -326,10 +314,10 @@ BOOL   memiBeginsWith(PUCHAR base  ,PUCHAR key)
    int l = strlen ( key);
    return memIcmp (base , key , l) == 0;
 }
-BOOL   amemiBeginsWith(PUCHAR base  ,PUCHAR key)
+BOOL   a_memiBeginsWith(PUCHAR base  ,PUCHAR key)
 {
    int l = strlen ( key);
-   return amemIcmp (base , key , l) == 0;
+   return a_memicmp (base , key , l) == 0;
 }
 // -------------------------------------------------------------
 // firstnonblank returns pointer to the string > ' '
@@ -392,7 +380,7 @@ PUCHAR trim(PUCHAR in)
 // trim both
 // -------------------------------------------------------------
 #pragma convert(1252)
-PUCHAR atrim(PUCHAR in)
+PUCHAR a_trim_both(PUCHAR in)
 {
    PUCHAR out, end, begin, ret;
    BOOL   docopy = false;
@@ -646,12 +634,12 @@ PUCHAR str2upper (PUCHAR out, PUCHAR in )
    return out;
 }
 // ---------------------------------------------------------------------------
-PUCHAR astr2upper (PUCHAR out, PUCHAR in )
+PUCHAR a_str2upper (PUCHAR out, PUCHAR in )
 {
    PUCHAR r = out;
    if (in) {
       while (*in ) {
-         *(r++)   = atoUpper(*(in++));
+         *(r++)   = a_to_upper(*(in++));
       }
    }
    *r= '\0';
@@ -670,12 +658,12 @@ PUCHAR str2lower (PUCHAR out, PUCHAR in )
    return out;
 }
 // ---------------------------------------------------------------------------
-PUCHAR astr2lower (PUCHAR out, PUCHAR in )
+PUCHAR a_str_to_lower (PUCHAR out, PUCHAR in )
 {
    PUCHAR r = out;
    if (in) {
       while (*in ) {
-         *(r++)   = atoLower(*(in++));
+         *(r++)   = a_to_lower(*(in++));
       }
    }
    *r= '\0';
@@ -796,7 +784,7 @@ FIXEDDEC str2dec(PUCHAR str , UCHAR decPoint)
 }
 // ---------------------------------------------------------------------------
 #pragma convert(1252)
-FIXEDDEC astr2dec(PUCHAR str , UCHAR decPoint)
+FIXEDDEC a_str_to_dec(PUCHAR str , UCHAR decPoint)
 {
    PUCHAR p;
    FIXEDDEC        Res   = 0D;
@@ -855,7 +843,7 @@ LONG packedMem2Int(PUCHAR buf, SHORT bytes)
 }
 // ---------------------------------------------------------------------------
 #pragma convert(1252)
-void nox_strQuote (PLVARCHAR out, PLVARCHAR in)
+void nox_StrQuote (PLVARCHAR out, PLVARCHAR in)
 {
    PUCHAR os = out->String;
    PUCHAR is = in->String;
@@ -988,7 +976,7 @@ LONG strTrimLen(PUCHAR str)
 {
    return _trimlen(str, 0x40);
 }
-LONG astrTrimLen(PUCHAR str)
+LONG a_str_trim_len(PUCHAR str)
 {
    return _trimlen( str, 0x20);
 }
@@ -1006,12 +994,15 @@ PUCHAR strTrim(PUCHAR s)
    return _trim ( s , 0x40);
 }
 // ---------------------------------------------------------------------------
-PUCHAR astrTrim(PUCHAR s)
+PUCHAR a_str_trim(PUCHAR s)
 {
    return _trim ( s , 0x20);
 }
 // ---------------------------------------------------------------------------
-LONG asprintf (PUCHAR res, PUCHAR ctrlstr , ... )
+// ascii out, controlstring ascii , data EBCDIC
+// every thing is converted back to ASCII
+// Be carefull
+LONG a_sprintf (PUCHAR res, PUCHAR ctrlstr , ... )
 {
    LONG len;
    va_list arg_ptr;
@@ -1027,6 +1018,26 @@ LONG asprintf (PUCHAR res, PUCHAR ctrlstr , ... )
    stre2a (res  , res );
    return len;
 }
+// ---------------------------------------------------------------------------
+// Ascii in all parameters. ascii  out
+// data can only be strings
+// ---------------------------------------------------------------------------
+LONG aa_sprintf (PUCHAR res, PUCHAR ctrlstr , ... )
+{
+   LONG len;
+   va_list arg_ptr;
+
+   stra2e (ctrlstr , ctrlstr); // Note!! We nede to restore this after duty
+
+   // Build a temp string with the formated data
+   va_start(arg_ptr, ctrlstr);
+   len = vsprintf(res, ctrlstr, arg_ptr);
+   va_end(arg_ptr);
+
+   stre2a (ctrlstr , ctrlstr); // Note!! restore  after duty
+   return len;
+}
+
 // -------------------------------------------------------------------------------------
 // Get all parms in ascii but result is in EBCDIC
 // -------------------------------------------------------------------------------------
@@ -1044,6 +1055,27 @@ LONG ae_sprintf (PUCHAR res, PUCHAR ctrlstr , ... )
    stre2a (ctrlstr , ctrlstr); // Note!! restore  after duty
    stra2e (res  , res );
    return len;
+}
+// -------------------------------------------------------------------------------------
+LONG strjoin  (PUCHAR out, ...)
+{
+   va_list arg_list;
+   PUCHAR end = out;
+
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   int parms = pParms->OpDescList->NbrOfParms;
+
+   if (parms > 1) {
+      va_start(arg_list, out);
+      for(int i = 1; i < parms; i++){
+         PUCHAR value = va_arg(arg_list, PUCHAR);
+         strcpy ( end , value);
+         end += strlen(value);
+      }
+      va_end(arg_list);
+   }
+
+   return end - out;
 }
 
 
