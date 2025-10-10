@@ -7,6 +7,7 @@ create or replace table noxdbdemo.icproduct (
 	description  char(256)  not null default '' ,
 	manuid char(30)  not null default '' ,
 	price decimal(11, 2) not null default 0 ,
+	price_date date not null default current_date,
 	stockcnt decimal(11, 0) not null default 0 ,
 	stockdate date not null default current_date
 ) rcdfmt productr   ;
@@ -273,4 +274,7 @@ values
 ('2300','QV-R41','Digitalkamera - 40 Mpix - optisk zoom: 3 x - understøttet hukommelse: MMC, SD','CASIO','2743.95','0',now()),
 ('2310','QV-R51','Digitalkamera - 50 Mpix - optisk zoom: 3 x - understøttet hukommelse: MMC, SD','CASIO','2615.52','0',now()),
 ('2320','SP-500 UltraZoom','Digitalkamera - 60 Mpix - optisk zoom: 10 x - understøttet hukommelse: xD-Picture Card','OLYMPUS','2846.15','0',now()),
-('233','µDIGITAL 600 ex','Super flex OL TWO2','OLYMPUS','2498.70','233',now())
+('233','µDIGITAL 600 ex','Super flex OL TWO2','OLYMPUS','2498.70','233',now());
+
+
+Select * from noxdbdemo.icproduct;

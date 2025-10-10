@@ -50,8 +50,9 @@
              text    = json_getStr (pRow : 'description');
              text    = json_getStr (pRow : 'MANUID');
              numbers = json_getNum (pRow : 'PRICE');
+             dates   = json_getDate(pRow : 'PRICEDATE');
              ints    = json_getNum (pRow : 'STOCKCNT');
-             dates   = %date(json_getStr (pRow : 'STOCKDATE'));
+             dates   = json_getDate(pRow : 'STOCKDATE');
              json_NodeDelete(pRow); // Always dispose it before get the next - IMPORTANT
              pRow = json_sqlFetchNext(sqlhnd);
           EndDo;
@@ -63,5 +64,3 @@
 
           // That's it..
           *inlr = *on;
-
-
