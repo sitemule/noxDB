@@ -78,6 +78,7 @@ typedef enum {
 typedef NODETYPE  JSTATE, *PJSTATE;
 
 
+#pragma enum (2)
 typedef enum {
 	// Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
 	MO_MERGE_NEW      =   256,  // Only new elements are merged - existing are left untouched
@@ -85,6 +86,7 @@ typedef enum {
 	MO_MERGE_REPLACE  =  1024,  // Merge all: replace if it exists and append new nodes if not exists
 	MO_MERGE_MOVE     =  2048   // When added - moving from source  to destination
 } MERGEOPTION , *PMERGEOPTION;
+#pragma enum (pop)
 
 typedef enum {
 	FMT_JSON,

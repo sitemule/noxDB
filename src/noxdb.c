@@ -921,53 +921,41 @@ static void  jx_MergeObj  (PJXNODE pDest, PJXNODE pSource, PJWRITE pjWrite, MERG
 }
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
-void  jx_MergeObjects (PJXNODE pDest, PJXNODE pSource , MERGEOPTION merge)
+void  jx_MergeObjects (PJXNODE pDest, PJXNODE pSource , MERGEOPTION mergeP)
 {
-   PJXNODE pSourceNode, pDestNode, pNext;
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   MERGEOPTION  merge = pParms->OpDescList->NbrOfParms >= 3 ? mergeP : MO_MERGE_NEW;
+   PJXNODE pSourceNode, pDestNode, pNext , pFrom;
+   BOOL cloneNodes =  (merge & MO_MERGE_MOVE) == 0;
 
-   if (pDest ==NULL ||pSource == NULL) return;
+   if (pDest == NULL || pSource == NULL) return;
 
-   if (merge & MO_MERGE_MOVE) {
-      pSourceNode =  pSource->pNodeChildHead;
-      while (pSourceNode) {
-         pNext = pSourceNode->pNodeSibling; // Need to keep the next at this point, since "move" will prmote nodes as roots
+   pFrom = cloneNodes ? jx_NodeClone (pSource): pSource ;
 
-         pDestNode = jx_GetNode  (pDest, pSourceNode->Name);
-         if (pDestNode) {
-            if ((merge & MO_MERGE_REPLACE)
-            ||  (merge & MO_MERGE_MATCH)) {
-               jx_NodeMoveInto  (pDest , pSourceNode->Name , pSourceNode );
-            }
-         } else {
-            if ((merge & MO_MERGE_REPLACE)
-            ||  (merge & MO_MERGE_NEW)) {
-               jx_NodeMoveInto  (pDest , pSourceNode->Name , pSourceNode );
-            }
+   pSourceNode =  pFrom->pNodeChildHead;
+
+   while (pSourceNode) {
+      pNext = pSourceNode->pNodeSibling; // Need to keep the next at this point, since "move" will prmote nodes as roots
+
+      pDestNode = jx_GetNode  (pDest, pSourceNode->Name);
+      if (pDestNode) {
+         if ((merge & MO_MERGE_REPLACE)
+         ||  (merge & MO_MERGE_MATCH)) {
+            jx_NodeDelete  (pDestNode);
+            jx_NodeMoveInto  (pDest , pSourceNode->Name , pSourceNode );
          }
-         pSourceNode = pNext;
-      }
-
-   } else {
-
-      pSourceNode =  pSource->pNodeChildHead;
-      while (pSourceNode) {
-
-         pDestNode = jx_GetNode  (pDest, pSourceNode->Name);
-         if (pDestNode) {
-            if (merge == MO_MERGE_REPLACE) {
-               jx_NodeDelete (pDestNode);
-               jx_InsertByName (pDest , pSourceNode->Name , pSourceNode );
-            } else {
-               if (pSourceNode->type == OBJECT) {
-                  jx_MergeObjects  (pDestNode ,  pSourceNode , merge);
-               }
-            }
-         } else {
-            jx_InsertByName (pDest , pSourceNode->Name , pSourceNode );
+      } else {
+         if ((merge & MO_MERGE_REPLACE)
+         ||  (merge & MO_MERGE_NEW)) {
+            jx_NodeMoveInto  (pDest , pSourceNode->Name , pSourceNode );
          }
-         pSourceNode = pSourceNode->pNodeSibling;
       }
+      pSourceNode = pNext;
+   }
 
+   // Delete leftovers
+   if (cloneNodes ) {
+      jx_NodeDelete (pFrom);
    }
 
 }
