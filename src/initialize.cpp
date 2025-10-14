@@ -1,5 +1,4 @@
-
-
+// CMD:CRTCPPMOD
 #include <cstdlib>
 //extern "C" void nox_setDelimitersByCcsid (int);
 extern "C" void nox_Initialize (void);

@@ -1,4 +1,4 @@
-
+// CMD:CRTCMOD
 /* --------------------------------------------------------------- *
  * Company . . . : System & Method A/S                             *
  * Design  . . . : Niels Liisberg                                  *
@@ -13,9 +13,10 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <iconv.h>
-
-
 #include <sys/stat.h>
+
+#include "qoar/h/qrndtainto"
+
 #include "ostypes.h"
 #include "sndpgmmsg.h"
 #include "trycatch.h"
@@ -24,7 +25,6 @@
 #include "memUtil.h"
 #include "varchar.h"
 #include "noxDbUtf8.h"
-#include "qoar/h/qrndtainto"
 
 
 static PNOXNODE pRoot;

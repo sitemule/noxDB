@@ -27,9 +27,9 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #include <QTQICONV.h>
 
 #include "ostypes.h"
-#include "xlate.h"
 #include "varchar.h"
 #include "e2aa2e.h"
+#include "xlate.h"
 #include "strutil.h"
 #include "minmax.h"
 #include "parms.h"
@@ -38,10 +38,6 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #include "timestamp.h"
 #include "sndpgmmsg.h"
 
-#define NOXDB_UNKNOWN_SQL_DATATYPE -99
-#define NOXDB_MAX_PARMS  4096
-#define NOXDB_FIRST_ROW -1
-#define NOXDB_ALL_ROWS  -1
 
 // Until 7.5
 #ifndef SQL_BOOLEAN
@@ -1812,29 +1808,54 @@ SHORT  doInsertOrUpdate(
             realLength = strlen(value);
          }
 
-        // Long data > 32K will be chopped into chunks for update.
-	// Set parameters based on total data to send.
-	SQLINTEGER lbytes = realLength;
-	SQLINTEGER cbTextSize = SQL_DATA_AT_EXEC;
+         // Long data > 32K will be chopped into chunks for update.
+         if (realLength > 32000) {
+            // Set parameters based on total data to send.
+            SQLINTEGER lbytes = realLength;
+            SQLINTEGER cbTextSize = SQL_DATA_AT_EXEC;
 
-	// Bind the parameter marker.
-	rc  = SQLBindParameter (
-		pSQL->pstmt->hstmt, // hstmt
-		bindColNo,
-		SQL_PARAM_INPUT,  // fParamType
-		SQL_C_CHAR,       // fCType
-		Col.coltype,      // FSqlType
-		lbytes,           // cbColDef
-		0,                // ibScale
-		pNode,            // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
-		0,                // cbValueMax
-		&cbTextSize       // pcbValue
-	);
+            // Bind the parameter marker.
+            rc  = SQLBindParameter (
+               pSQL->pstmt->hstmt, // hstmt
+               bindColNo,
+               SQL_PARAM_INPUT,  // fParamType
+               SQL_C_CHAR,       // fCType
+               Col.coltype,      // FSqlType
+               lbytes,           // cbColDef
+               0,                // ibScale
+               pNode,            // rgbValue - store the complete node. Here SQL RPC are very flexible - any pointer
+               0,                // cbValueMax
+               &cbTextSize       // pcbValue
+            );
+            if ( rc  != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO && rc != SQL_NEED_DATA ) {
+               check_error (pSQL->pCon, pSQL);
+               return rc; // we have an error
+            }
 
-	if ( rc  != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO && rc != SQL_NEED_DATA ) {
-		check_error (pSQL->pCon, pSQL);
-		return rc; // we have an error
-	}
+         } else {
+
+            // length  !!! 1234,56 gives 6 digits                                              //GIT
+            SQLINTEGER colLen = Col.coltype  == SQL_TIMESTAMP ? Col.collen : realLength + Col.scale;  //GIT
+            sql_nts = SQL_NTS;
+
+            rc = SQLBindParameter(
+               pSQL->pstmt->hstmt,
+               bindColNo,
+               SQL_PARAM_INPUT,
+               SQL_C_CHAR,
+               Col.coltype,
+               colLen,       // column len - Take care: timestamp need real length of colum. Numbers need string le//GIT
+               Col.scale,    // presition
+               value,
+               0,
+               &sql_nts // NULL terminated string -(pointer to length variable)
+            );
+         }
+
+         if (rc != SQL_SUCCESS ) {
+            check_error (pSQL->pCon, pSQL);
+            return rc; // we have an error
+         }
       }
       pNode = nox_GetNodeNext(pNode);
    }
@@ -1850,17 +1871,6 @@ SHORT  doInsertOrUpdate(
          PUCHAR  value = nox_GetNodeValuePtr (pNode , NULL);
          LONG    lbytes = strlen(value);
 
-         if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
-            freeme = true;
-            value = memAlloc(pColData->collen);
-            lbytes  = jx_AsJsonTextMem (pNode , value ,  pColData->collen );
-            value [lbytes] = '\0';
-         } else {
-            freeme = false;
-            value = jx_GetNodeValuePtr  (pNode , NULL);
-            lbytes = pColData->collen;
-         }
-
          while (lbytes > cbBatch) {
             rc = SQLPutData(pSQL->pstmt->hstmt, value , cbBatch);
             lbytes -= cbBatch;
@@ -1869,19 +1879,14 @@ SHORT  doInsertOrUpdate(
 
          // Put final batch.
          rc = SQLPutData(pSQL->pstmt->hstmt, value, lbytes);
-         if (rc != SQL_SUCCESS) {
-            check_error (pSQL);
-            return rc; // we have an error
-         }
-
-        // Local serialized work string
-         if (freeme) {
-            memFree(&value);
-         }
 
          // Setup next column
-         rc = SQLParamData(pSQL->pstmt->hstmt, &pNode );
+         rc = SQLParamData(pSQL->pstmt->hstmt, &pNode  );
       }
+   }
+
+   for(i=0;i<valArrIx; i++) {
+      memFree(&valArr[i]);
    }
 
    if (rc != SQL_SUCCESS && rc != SQL_NO_DATA_FOUND) {

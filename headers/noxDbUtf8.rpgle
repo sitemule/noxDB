@@ -79,17 +79,31 @@ Dcl-C NOX_ALLOW_PRIMITIVES const(4096);
 Dcl-C NOX_PARSE   const(2051);
 
 // Merge options:
-// Modifiers to "add" / "or" into "JSON_EVAL"
+// Modifiers to "add" / "or" into "NOX_EVAL"
 /if not defined(MO_MERGE)
 /define  MO_MERGE
+///
 // Only new elements are merged - existing
 // are left untouched
+///
 Dcl-C MO_MERGE_NEW const(256);
+
+///
 // Merge and replace only existing nodes.
+///
 Dcl-C MO_MERGE_MATCH const(512);
+
+///
 // Merge all: replace if it exists and
 // append new nodes if not exists
-Dcl-C MO_MERGE_REPLACE const(1024 );
+///
+Dcl-C MO_MERGE_REPLACE const(1024);
+
+///
+//Move from source into destination when this is added, otherwise nodes are copied
+///
+Dcl-C MO_MERGE_MOVE const(2048);
+
 /endif
 
 Dcl-C NOX_CHILD_LIST const('[0]');
@@ -1433,15 +1447,17 @@ Dcl-C NOX_REPLACE const(1);
 // <br><br>
 // The options parameter determines what happens if a node with the same name
 // exists in both object trees.
+// Default is MO_MERGE_NEW which means that only new nodes from the source and copied
+// Optional: can be ORED / + with MO_MERGE_MOVE to move the source nodes instead of copying them.
 //
 // @param (input/output) Destination object tree
 // @param (input) Source object tree
-// @param (input) Merge option:  MO_MERGE_NEW,MO_MERGE_MATCH,MO_MERGE_REPLACE,MO_MERGE_MOVE )
+// @param (input) Merge option:  MO_MERGE_NEW,MO_MERGE_MATCH,MO_MERGE_REPLACE ( ORED + MO_MERGE_MOVE )
 ///
 Dcl-PR nox_MergeObjects Pointer extproc(*CWIDEN : 'nox_MergeObjects');
   pDestObj       Pointer    value;
   pSourceObj     Pointer    value;
-  Type           Uns(5)     value;
+  mergeOption    Uns(5)     value;
 End-PR;
 ///
 // Move object into
@@ -2156,6 +2172,18 @@ Dcl-PR nox_joblog extproc(*CWIDEN : 'nox_JoblogVC');
   text  Like(UTF8_1K) const options(*varsize);
 End-PR;
 
+///
+// Assert
+//
+// Internal unit test helper - Logs the message if the OK paramter is FASLE ( *OFF)
+//
+// @param (input) Message text or node
+// @param (input) OK if FALSE the message will be logged ( default to JOBLOG)
+///
+Dcl-PR nox_assert extproc(*CWIDEN : 'nox_Assert');
+  text  pointer value options(*string);
+  ok    ind  value options(*nopass);
+End-PR;
 
 
 ///

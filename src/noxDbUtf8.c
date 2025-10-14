@@ -907,34 +907,44 @@ static void  nox_MergeObj  (PNOXNODE pDest, PNOXNODE pSource, PNOXWRITER pNoxWri
    }
 }
 // ---------------------------------------------------------------------------
-void  nox_MergeObjects (PNOXNODE pDest, PNOXNODE pSource , MERGEOPTION merge)
+// ---------------------------------------------------------------------------
+void  nox_MergeObjects (PNOXNODE pDest, PNOXNODE pSource , MERGEOPTION mergeP)
 {
-   PNOXNODE  p;
-   UCHAR tempname[256];
-   PNOXNODE pDestNode , pEdt ;
-   PNOXNODE pSourceNode;
-   int ix =0;
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   MERGEOPTION  merge = pParms->OpDescList->NbrOfParms >= 3 ? mergeP : MO_MERGE_NEW;
+   PNOXNODE pSourceNode, pDestNode, pNext , pFrom;
+   BOOL cloneNodes =  (merge & MO_MERGE_MOVE) == 0;
 
-   if (pDest ==NULL ||pSource == NULL) return;
+   if (pDest == NULL || pSource == NULL) return;
 
-   pSourceNode =  pSource->pNodeChildHead;
+   pFrom = cloneNodes ? nox_NodeClone (pSource): pSource ;
+
+   pSourceNode =  pFrom->pNodeChildHead;
+
    while (pSourceNode) {
+      pNext = pSourceNode->pNodeSiblingNext; // Need to keep the next at this point, since "move" will prmote nodes as roots
 
       pDestNode = nox_GetNode  (pDest, pSourceNode->Name);
       if (pDestNode) {
-         if (merge == MO_MERGE_REPLACE) {
-            nox_NodeDelete (pDestNode);
-            nox_InsertByName (pDest , pSourceNode->Name , pSourceNode );
-         } else {
-            if (pSourceNode->type == OBJECT) {
-               nox_MergeObjects  (pDestNode ,  pSourceNode , merge);
-            }
+         if ((merge & MO_MERGE_REPLACE)
+         ||  (merge & MO_MERGE_MATCH)) {
+            nox_NodeDelete  (pDestNode);
+            nox_NodeMoveInto  (pDest , pSourceNode->Name , pSourceNode );
          }
       } else {
-         nox_InsertByName (pDest , pSourceNode->Name , pSourceNode );
+         if ((merge & MO_MERGE_REPLACE)
+         ||  (merge & MO_MERGE_NEW)) {
+            nox_NodeMoveInto  (pDest , pSourceNode->Name , pSourceNode );
+         }
       }
-      pSourceNode = pSourceNode->pNodeSiblingNext;
+      pSourceNode = pNext;
    }
+
+   // Delete leftovers
+   if (cloneNodes ) {
+      nox_NodeDelete (pFrom);
+   }
+
 }
 // ---------------------------------------------------------------------------
 // Delete nodes which are NULL

@@ -1,4 +1,4 @@
-
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- */
 /* SYSIFCOPT(*IFSIO) OPTION(*EXPMAC *SHOWINC)                    */
 /* Module  . . . : callproc                                      */

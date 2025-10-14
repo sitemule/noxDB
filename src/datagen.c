@@ -1,4 +1,4 @@
-
+// CMD:CRTCMOD
 /* ---------------------------------------------------------------
  * Company . . . : System & Method A/S
  * Design  . . . : Niels Liisberg
@@ -15,9 +15,12 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <iconv.h>
-
-
 #include <sys/stat.h>
+
+#include  "qoar/h/qrntypes"
+#include  "qoar/h/qrndtagen"
+
+
 #include "ostypes.h"
 #include "sndpgmmsg.h"
 #include "trycatch.h"
@@ -28,8 +31,6 @@
 #include "noxDbUtf8.h"
 #include "xlate.h"
 
-#include  "qoar/h/qrntypes"
-#include  "qoar/h/qrndtagen"
 
 // NOTE !!! ALL constants are UTF-8
 #pragma convert(1252)

@@ -1,0 +1,204 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile current file",
+            "command": "ssh -t MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDButf8/;gmake current SRC=${relativeFile} MODULE=${fileBasenameNoExtension}' ",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "c",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+                "pattern": {
+                    "regexp": "(.*),\\s+(\\d+).(\\d+):\\s+(.*)",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4
+                }
+            }
+        },
+        {
+            "label": "Compile Service program noxDB",
+            "command": "ssh MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDButf8/;gmake all'",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Compile Test modules for noxDB",
+            "command": "ssh MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDButf8/test/;gmake'",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Compile current example file",
+            "command": "ssh -t MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDButf8/examples/;gmake compile SRC=${fileBasename}'",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "c",
+                "fileLocation": ["relative", "${workspaceRoot}/examples"],
+                "pattern": {
+                    // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
+                    "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    // "severity": 4,
+                    "message": 4
+                }
+            }
+        },
+        {
+            "label": "Compile current test file",
+            "command": "ssh -t MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDButf8/test/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Compile current unit test file",
+            "command": "${workspaceFolder}/.sitemule/unittests.sh \"${workspaceRoot}\" \"${workspaceFolderBasename}\" \"${relativeFile}\" \"${fileBasename}\"",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "c",
+                "fileLocation": ["relative", "${workspaceRoot}/unittests"],
+                "pattern": {
+                    // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
+                    "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    // "severity": 4,
+                    "message": 4
+                }
+            }
+        },
+        {
+            "label": "Make release savefile",
+            "command": "ssh MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDButf8/;gmake release'",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Synchronize local to remote",
+            "type": "shell",
+            "command": "${workspaceFolder}/.sitemule/rsync.sh",
+            "options": {
+                "env": {
+                    "FILE_BASE_NAME": "${fileBasename}",
+                    "FILE_REL_PATH": "${relativeFile}",
+                    "FOLDER_BASE_NAME": "${workspaceFolderBasename}",
+                    "FOLDER_ROOT": "${workspaceRoot}"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Compile current unit test file",
+            "type": "shell",
+            "dependsOn": [
+                "Synchronize local to remote"
+            ],
+            "command": "${workspaceFolder}/.sitemule/remote_run.sh ${workspaceFolder}/.sitemule/unittests.sh",
+            "options": {
+                "env": {
+                    "FILE_BASE_NAME": "${fileBasename}",
+                    "FILE_REL_PATH": "${relativeFile}",
+                    "FOLDER_BASE_NAME": "${workspaceFolderBasename}",
+                    "FOLDER_ROOT": "${workspaceRoot}"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": "unittests/*.rpgle",
+            },
+            "problemMatcher": {
+                "owner": "RPG",
+                "fileLocation": ["relative", "${workspaceRoot}/unittests"],
+                "pattern": {
+                    // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
+                    "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    // "severity": 4,
+                    "message": 4
+                }
+            }
+        },
+        {
+            "label": "Build all from local",
+            "type": "shell",
+            "dependsOn": [
+                "Synchronize local to remote"
+            ],
+            "command": "${workspaceFolder}/.sitemule/remote_run.sh ${workspaceFolder}/.sitemule/build_noxdb.sh",
+            "options": {
+                "env": {
+                    "FILE_BASE_NAME": "${fileBasename}",
+                    "FILE_REL_PATH": "${relativeFile}",
+                    "FOLDER_BASE_NAME": "${workspaceFolderBasename}",
+                    "FOLDER_ROOT": "${workspaceRoot}"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "RPG",
+                "fileLocation": ["relative", "${workspaceRoot}"],
+                "pattern": {
+                    // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
+                    "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    // "severity": 4,
+                    "message": 4
+                }
+            }
+        }
+
+    ]
+}

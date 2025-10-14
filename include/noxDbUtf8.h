@@ -121,12 +121,15 @@ typedef enum {
 } NODETYPE, *PNODETYPE;
 typedef NODETYPE  JSTATE, *PJSTATE;
 
+#pragma enum (2)
 typedef enum {
    // Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
    MO_MERGE_NEW      =   256,  // Only new elements are merged - existing are left untouched
    MO_MERGE_MATCH    =   512,  // Merge and replace only existing nodes
-   MO_MERGE_REPLACE  =  1024   // Merge all: replace if it exists and append new nodes if not exists
+   MO_MERGE_REPLACE  =  1024,   // Merge all: replace if it exists and append new nodes if not exists
+   MO_MERGE_MOVE     =  2048   // Extra parm to be OR'ed for movine and not clone / copy
 } MERGEOPTION , *PMERGEOPTION;
+#pragma enum (pop)
 
 #define NODESIG  0x04
 typedef struct _NOXNODE {
@@ -519,6 +522,9 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, BOOL useLocale);
 
 #define NOXDB_FIRST_ROW 1
 #define NOXDB_ALL_ROWS -1
+#define NOXDB_UNKNOWN_SQL_DATATYPE -99
+#define NOXDB_MAX_PARMS  4096
+
 
 typedef _Packed struct  {
    SQLHSTMT      hstmt;
@@ -565,7 +571,7 @@ typedef struct {
    SHORT       type  ;
    SQLSMALLINT mode     ;
    SQLSMALLINT sqlType  ;
-   PJXNODE     pNode        ;
+   PNOXNODE    pNode        ;
    PUCHAR      pData       ;
    BOOL        isBool;
 } PROCPARM ,* PPROCPARM;
