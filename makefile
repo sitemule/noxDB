@@ -1,48 +1,69 @@
-
 #-----------------------------------------------------------
 # User-defined part start
 #
-
+# The shell we use
+SHELL=/QOpenSys/pkgs/bin/bash
 # NOTE - UTF is not allowed for ILE source (yet) - so convert to WIN-1252
+# NOTE!! gmake is case sensitive for targets !!
+
 
 # BIN_LIB is the destination library for the service program.
 # the rpg modules and the binder source file are also created in BIN_LIB.
 # binder source file and rpg module can be remove with the clean step (make clean)
-BIN_LIB=NOXDB
-DBGVIEW=*ALL
+.PHONY=all
+BIN_LIB=NOXDBUTF8
+LIBLIST=$(BIN_LIB)
 TARGET_CCSID=*JOB
-TARGET_RLS=*PRV
+TARGET_RELEASE=V7R3M0
 
-# Need this with release 7.3 / 7.4  since /QIBM/include
-#DEFINE=QOAR_INCLUDE_IFS
+# CL - settings
+CLLE_FLAGS=DBGVIEW(*ALL) TGTRLS($(TARGET_RELEASE))
+CLLE_INCLUDE=*SRCFILE
 
 
-# Do not touch below
-INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'
+# C - Settings
+C_FLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) DBGVIEW(*ALL) TGTRLS($(TARGET_RELEASE))
+#DEBUG C_FLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO)  TGTRLS($(TARGET_RELEASE))
+C_INCLUDE='/QIBM/include' 'include' 'ext/include'
 
-CCFLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) INCDIR($(INCLUDE)) DBGVIEW($(DBGVIEW)) DEFINE($(DEFINE)) TGTCCSID($(TARGET_CCSID)) TGTRLS($(TARGET_RLS))
+# CPP - Settings
+CPP_FLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO) DBGVIEW(*ALL) TGTRLS($(TARGET_RELEASE))
+#DEBUG C_FLAGS=OPTIMIZE(10) ENUM(*INT) TERASPACE(*YES) STGMDL(*INHERIT) SYSIFCOPT(*IFSIO)  TGTRLS($(TARGET_RELEASE))
+CPP_INCLUDE='/QIBM/include' 'include' 'ext/include'
 
-# For current compile:
-CCFLAGS2=OPTION(*STDLOGMSG) OUTPUT(*print) $(CCFLAGS)
+# RPG - Settings
+RPGLE_INCLUDE='./..'
+RPGLE_FLAGS=DBGVIEW(*LIST)
 
+# SQLRPG - Settings
+SQLRPG_INCLUDE='./..'
+SQLRPG_FLAGS=DBGVIEW(*LIST) RPGPPOPT(*LVL2)
+
+
+# CMD - Settings
+CMD_FLAGS=PRDLIB($(BIN_LIB)) REPLACE(*YES)
+CMD_INCLUDE=
+
+# DSPF - Settings
+DSPF_FLAGS=REPLACE(*YES)
+DSPF_INCLUDE=
+
+# SQL - Settings
+SQL_FLAGS=COMMIT(*NONE)
+SQL_INCLUDE=
 
 #
 # User-defined part end
 #-----------------------------------------------------------
 
-# Dependency list
-# For vsCode / single file then i.e.: gmake current sqlio.c
-ifeq "$(suffix $(SRC))" ".c"
-current:
-	system -i "CRTCMOD MODULE($(BIN_LIB)/$(MODULE)) SRCSTMF('$(SRC)') $(CCFLAGS2) "
-	system -i "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/$(MODULE))"
-endif
-
-ifeq "$(suffix $(SRC))" ".cpp"
-current:
-	system "CRTCPPMOD MODULE($(BIN_LIB)/$(MODULE)) SRCSTMF('$(SRC)') $(CCFLAGS2) "
-	system "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/$(MODULE))"
-endif
+#-----------------------------------------------------------
+# Compile macro
+#-----------------------------------------------------------
+UC = $(shell echo '$1' | tr '[:lower:]' '[:upper:]')
+CC = $(eval FILEEXT = $(call UC,$(subst .,,$(suffix $@)))) \
+	$(eval FLAGS   = $(FILEEXT)_FLAGS) \
+	$(eval INCLUDE = $(FILEEXT)_INCLUDE) \
+	@compile.py --stmf="$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" --flags="$($(FLAGS))" --include="$($(INCLUDE))"
 
 ifeq ($(GIT_SHORT),)
 GIT_SHORT := $(shell git rev-parse --short HEAD)
@@ -52,117 +73,104 @@ ifeq ($(GIT_HASH),)
 GIT_HASH := $(shell git rev-parse --verify HEAD)
 endif
 
-TS := $(shell date +'%F-%H.%M.%S' )
-
-all:  $(BIN_LIB).lib link hdr githash jsonxml.srvpgm jsonxml.bnddir
-
-jsonxml.srvpgm: initialize.cpp noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlserial.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c loadpgm.c callproc.c trace.clle githash.c ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
-
 #-----------------------------------------------------------
+
+# Dependency list ---  list all
+EXTERNALS := $(shell find ext -name "*.c" -o -name  "*.clle" )
+SOURCE  := $(shell find src -name "*.cpp" -o -name "*.c" -o -name "*.clle" )
+
+
+
+all:  $(BIN_LIB).lib link githash hdr $(EXTERNALS) $(SOURCE) noxDbUtf8.bnddir noxDbUtf8.srvpgm
+
 
 %.lib:
 	-system -q "CRTLIB $* TYPE(*TEST)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL)     OBJTYPE(*MODULE)"
+
+
 
 # QOAR are for unknow reasons not in /QIBM/include
+# We make link to them for copyright reasons - no copy
 link:
-	-mkdir -p ./headers/qoar/h
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./headers/qoar/h/qrntypes
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./headers/qoar/h/qrndtagen
-	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./headers/qoar/h/qrndtainto
+	-mkdir -p ./ext/include/qoar/h
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNTYPES.MBR ./ext/include/qoar/h/qrntypes
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAGEN.MBR ./ext/include/qoar/h/qrndtagen
+	-ln -s /QSYS.LIB/QOAR.LIB/H.file/QRNDTAINTO.MBR ./ext/include/qoar/h/qrndtainto
 
-hdr:
-	sed "s/ jx_/ json_/g; s/ JX_/ json_/g" headers/JSONXML.rpgle > headers/JSONPARSER.rpgle
-	sed "s/ jx_/ xml_/g; s/ JX_/ xml_/g" headers/JSONXML.rpgle > headers/XMLPARSER.rpgle
+$(EXTERNALS) $(SOURCE): FORCE
+	$(CC)
 
-	cp headers/JSONPARSER.rpgle headers/NOXDB.rpgle
-	sed "s/**FREE//g" headers/XMLPARSER.rpgle >> headers/NOXDB.rpgle
-
-
-	-system -q "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(200)"
-	-system -q "CRTSRCPF FILE($(BIN_LIB)/H) RCDLEN(200)"
-
-	system "CPYFRMSTMF FROMSTMF('headers/JSONPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONPARSER.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/XMLPARSER.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/XMLPARSER.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/NOXDB.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/NOXDB.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/JSONXML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONXML.mbr') MBROPT(*REPLACE)"
-	system "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/JSONXML.mbr') MBROPT(*REPLACE)"
-
-
-# get the git hash and put it into the version file so it becomes part of the copyright notice in the service program
 githash:
 	touch src/githash.c
-	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(GIT_SHORT) (hash: $(GIT_HASH) ) build: $(TS)\")" > src/githash.c
+	-echo "// CMD:CRTCMOD" > src/githash.c
+	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(GIT_SHORT) (hash: $(GIT_HASH) ) build: $(TS)\")" >> src/githash.c
 
-%.bnddir:
-	@-system -q "DLTBNDDIR BNDDIR($(BIN_LIB)/$*)"
-	@system -q "CRTBNDDIR BNDDIR($(BIN_LIB)/$*)"
-	@system -q "ADDBNDDIRE BNDDIR($(BIN_LIB)/$*) OBJ((*LIBL/JSONXML *SRVPGM *IMMED))"
-
-%.c:
-	@system -q "CHGATR OBJ('src/$*.c') ATR(*CCSID) VALUE(1252)"
-	system "CRTCMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCSTMF('src/$*.c') $(CCFLAGS)"
-
-%.cpp:
-	@system -q "CHGATR OBJ('src/$*.cpp') ATR(*CCSID) VALUE(1252)"
-	system "CRTCPPMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCSTMF('src/$*.cpp') $(CCFLAGS)"
-
-%.clle:
-	@system -q "CHGATR OBJ('src/$*.clle') ATR(*CCSID) VALUE(1252)"
-	@-system -q "CRTSRCPF FILE($(BIN_LIB)/QCLLESRC) RCDLEN(200)"
-	@system -q "CPYFRMSTMF FROMSTMF('src/$*.clle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCLLESRC.file/$(notdir $*).mbr') MBROPT(*REPLACE)"
-	system "CRTCLMOD MODULE($(BIN_LIB)/$(notdir $*)) SRCFILE($(BIN_LIB)/QCLLESRC) DBGVIEW($(DBGVIEW)) TGTRLS($(TARGET_RLS))"
-
-%.srvpgm:
-	@-system -q "CRTSRCPF FILE($(BIN_LIB)/QSRVSRC) RCDLEN(200)"
-	@system "CPYFRMSTMF FROMSTMF('headers/$*.binder') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QSRVSRC.file/$*.mbr') MBROPT(*replace)"
-
+noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/syscolname.c src/csv.c src/xmlparser.c \
+						src/jsonparser.c src/jsonserial.c src/xmlserial.c src/tostream.c src/reader.c src/ifs.c \
+						src/iterator.c src/http.c src/generic.c src/trace.clle src/datagen.c src/datainto.c src/githash.c \
+						ext/src/memUtil.c ext/src/parms.c ext/src/sndpgmmsg.c ext/src/stream.c ext/src/timestamp.c \
+						ext/src/trycatch.c \
+						ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c
 	@# You may be wondering what this ugly string is. It's a list of objects created from the dep list that end with .c or .clle.
-	@$(eval modules := $(patsubst %,$(BIN_LIB)/%,$(basename $(filter %.c %.cpp %.clle,$(notdir $^)))))
+	$(eval MODULES = $(notdir $(basename $(filter %.c %.clle %.cpp, $^))))
+	compile.py --stmf="src/$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" \
+		--flags="MODULE($(MODULES)) ALWLIBUPD(*YES) TGTRLS($(TARGET_RELEASE)) DETAIL(*BASIC)"
 
-	system -q -kpieb "CRTSRVPGM SRVPGM($(BIN_LIB)/$*) MODULE($(modules)) SRCFILE($(BIN_LIB)/QSRVSRC) ACTGRP(QILE) ALWLIBUPD(*YES) DETAIL(*BASIC) TGTRLS($(TARGET_RLS))"
+noxDbUtf8.bnddir:
+	-system "DLTBNDDIR  BNDDIR($(BIN_LIB)/$(BIN_LIB))"
+	-system "CRTBNDDIR  BNDDIR($(BIN_LIB)/$(BIN_LIB))"
+	-system "ADDBNDDIRE BNDDIR($(BIN_LIB)/$(BIN_LIB)) OBJ(($(BIN_LIB)/$(BIN_LIB) *SRVPGM))"
 
-	@for module in $(modules); do\
-		system -q "dltmod $$module" ; \
-	done
+
+hdr:
+#	sed "s/ nox_/ json_/g; s/ NOX_/ JSON_/g" headers/noxDbUtf8.rpgle > headers/noxDbUtf8JSON.rpgle
+#	sed "s/ nox_/ xml_/g; s/ NOX_/ XML_/g" headers/noxDbUtf8.rpgle > headers/noxDbUtf8XML.rpgle
+
+	-system -i "CRTSRCPF FILE($(BIN_LIB)/QRPGLEREF) RCDLEN(132)"
+	-system -i "CRTSRCPF FILE($(BIN_LIB)/H) RCDLEN(132)"
+
+	system "CPYFRMSTMF FROMSTMF('headers/noxDbUtf8.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDbUtf8.mbr') MBROPT(*REPLACE)"
+#	system "CPYFRMSTMF FROMSTMF('headers/noxDbUtf8JSON.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDbUtf8JSON.mbr') MBROPT(*REPLACE)"
+#	system "CPYFRMSTMF FROMSTMF('headers/noxDbUtf8XML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/noxDbUtf8XML.mbr') MBROPT(*REPLACE)"
+	system "CPYFRMSTMF FROMSTMF('include/noxDbUtf8.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/noxDbUtf8.mbr') MBROPT(*REPLACE)"
 
 all:
-	@echo Build success!
+	@echo Done - Check list above for errors!
 
-clean:
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL) OBJTYPE(*MODULE)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/XMLPARS*) OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/JSONPARS*) OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/JXTEST*) 	 OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/JSONSQL*)  OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/HTTPX*)    OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/ISSUE*)    OBJTYPE(*PGM)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/EVFEVENT)  OBJTYPE(*file)"
-	-system -q "DLTOBJ OBJ($(BIN_LIB)/RELEASE)   OBJTYPE(*file)"
+.PHONY: update
+update:
+	-system -q "UPDSRVPGM ($(BIN_LIB)/NOXDBUTF8) MODULE($(BIN_LIB)/$(OBJ))"
 
+cleanup:
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/*ALL)     OBJTYPE(*MODULE)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/QSRVSRC)  OBJTYPE(*FILE)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/EVFEVENT) OBJTYPE(*FILE)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/RELEASE)  OBJTYPE(*FILE)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/TS*)      OBJTYPE(*PGM)"
+	-system -q "DLTOBJ OBJ($(BIN_LIB)/EX*)      OBJTYPE(*PGM)"
 
-release: clean
-	@echo " -- Creating noxdb release. --"
+release: cleanup
+	@echo " -- Creating noxDbUtf8 release. --"
 	@echo " -- Creating save file. --"
 	system "CRTSAVF FILE($(BIN_LIB)/RELEASE)"
 	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) DTACPR(*HIGH) OMITOBJ((RELEASE *FILE))"
-	-mkdir -p release
-	-rm ./release/release.savf
-	system "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release.savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"
+	-rm -r release
+	-mkdir release
+	system "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release-noxDbUtf8.savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"
 	@echo " -- Cleaning up... --"
 	system "DLTOBJ OBJ($(BIN_LIB)/RELEASE) OBJTYPE(*FILE)"
 	@echo " -- Release created! --"
 	@echo ""
 	@echo "To install the release, run:"
 	@echo "  > CRTLIB $(BIN_LIB)"
-	@echo "  > CPYFRMSTMF FROMSTMF('./release/release.savf') TOMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') MBROPT(*REPLACE) CVTDTA(*NONE)"
+	@echo "  > CPYFRMSTMF FROMSTMF('./release/release-noxDbUtf8.savf') TOMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') MBROPT(*REPLACE) CVTDTA(*NONE)"
 	@echo "  > RSTLIB SAVLIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE)"
 	@echo ""
+	@echo "Or restore into existing application library"
+	@echo "  > RSTOBJ OBJ(*ALL) SAVLIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) MBROPT(*ALL) ALWOBJDIF(*FILELVL) RSTLIB(yourlib)
+
+FORCE:
 
 
 
-# For vsCode / single file then i.e.: gmake current sqlio.c
-example:
-	system -i "CRTBNDRPG PGM($(BIN_LIB)/$(SRC)) SRCSTMF('examples/$(SRC).rpgle') DBGVIEW(*ALL)" > error.txt
-
-test:
-	system -i "CRTBNDRPG PGM($(BIN_LIB)/$(SRC)) SRCSTMF('test/$(SRC).rpgle') DBGVIEW(*ALL)" > error.txt

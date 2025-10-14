@@ -1,11 +1,13 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL) */
-/* --------------------------------------------------------------- *
- * Company . . . : System & Method A/S                             *
- * Design  . . . : Niels Liisberg                                  *
- * Function  . . : NOX - Serializer from RPGLE structures          *
- *                                                                 *
- * By     Date       Task    Description                           *
- * NL     09.03.2021 0000000 New program                           *
+
+/* ---------------------------------------------------------------
+ * Company . . . : System & Method A/S
+ * Design  . . . : Niels Liisberg
+ * Function  . . : NOX - Serializer from RPGLE structures
+ *
+ * By     Date       Task    Description
+ * NL     09.03.2021 0000000 New program
+ * trace:
+ * ADDENVVAR QIBM_RPG_DATA_GEN_TRACE VALUE('*STDOUT')
  * --------------------------------------------------------------- */
 #include <stdio.h>
 #include <string.h>
@@ -19,43 +21,37 @@
 #include "ostypes.h"
 #include "sndpgmmsg.h"
 #include "trycatch.h"
-#include "rtvsysval.h"
 #include "parms.h"
-#include "utl100.h"
-#include "mem001.h"
+#include "strUtil.h"
+#include "memUtil.h"
 #include "varchar.h"
-#include "jsonxml.h"
+#include "noxDbUtf8.h"
 #include "xlate.h"
 
-#ifdef QOAR_INCLUDE_IFS
-#include  <qoar/h/qrntypes>
-#include  <qoar/h/qrndtagen>
-#else
-#include  "/QSYS.LIB/QOAR.LIB/H.FILE/QRNTYPES.MBR"
-#include  "/QSYS.LIB/QOAR.LIB/H.FILE/QRNDTAGEN.MBR"
-#endif
+#include  "qoar/h/qrntypes"
+#include  "qoar/h/qrndtagen"
 
+// NOTE !!! ALL constants are UTF-8
+#pragma convert(1252)
 
-static PJXNODE * ppRoot;
-static iconv_t iconvCd;
+// TODO !!! - Check reintrant
 
-typedef void (*JX_DATAGEN)();
+static BOOL upperCaseNames = false;
+static PNOXNODE * ppRoot;
+extern iconv_t xlate_1200_to_1208;
 
-/* 	---------------------------------------------------------------------------
+typedef void (*NOX_DATAGEN)();
+
+/*    ---------------------------------------------------------------------------
     Implement;
     https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_74/rzasm/roaDataGenExample.htm
     https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/rzasm/rzasmpdf.pdf
     --------------------------------------------------------------------------- */
-void  jx_dataGenMapper (QrnDgParm_T * pParms)
+void  nox_dataGenMapper (QrnDgParm_T * pParms)
 {
-    static PJXNODE pNode;
+    static PNOXNODE pNode;
     static BOOL first = false;
-    static BOOL buildIconv  = true;
 
-    if (buildIconv) {
-        buildIconv  = false;
-        iconvCd = XlateOpenDescriptor (13488, 0 , false);
-    }
 
     switch ( pParms->event) {
         case QrnDgEvent_01_StartMultiple    : {
@@ -73,14 +69,18 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             break;
         }
         case QrnDgEvent_05_StartStruct      : {
-            PJXNODE pObj;
+            PNOXNODE pObj;
             UCHAR name [256];
-            LONG namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            LONG namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
-            pObj  = jx_NewObject(NULL);
-            jx_NodeRename(pObj ,  name);
-            jx_NodeInsertChildTail (pNode , pObj);
+            if (! upperCaseNames) {
+                a_camel_case (name, name);
+            }
+
+            pObj  = nox_NewObject();
+            nox_NodeRename(pObj ,  name);
+            nox_NodeInsertChildTail (pNode , pObj);
             pNode = pObj;
             if (first) {
                 first = false;
@@ -89,18 +89,22 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             break;
         }
         case QrnDgEvent_06_EndStruct        : {
-            pNode = jx_GetNodeParent (pNode);
+            pNode = nox_GetNodeParent (pNode);
             break;
         }
         case QrnDgEvent_07_StartScalarArray : {
-            PJXNODE pArr;
+            PNOXNODE pArr;
             UCHAR name [256];
-            ULONG namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            ULONG namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
-            pArr = jx_NewArray(NULL);
-            jx_NodeRename(pArr ,  name);
-            jx_NodeInsertChildTail (pNode , pArr);
+            if (! upperCaseNames) {
+                a_camel_case (name, name);
+            }
+
+            pArr = nox_NewArray();
+            nox_NodeRename(pArr ,  name);
+            nox_NodeInsertChildTail (pNode , pArr);
             pNode = pArr;
             if (first) {
                 first = false;
@@ -109,18 +113,23 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             break;
         }
         case QrnDgEvent_08_EndScalarArray   : {
-            pNode = jx_GetNodeParent (pNode);
+            pNode = nox_GetNodeParent (pNode);
             break;
         }
         case QrnDgEvent_09_StartStructArray : {
-            PJXNODE pArr;
+            PNOXNODE pArr;
             UCHAR name [256];
-            ULONG namelen = XlateBuffer(iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+
+            ULONG namelen = XlateBuffer(xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
-            pArr = jx_NewArray(NULL);
-            jx_NodeRename(pArr ,  name);
-            jx_NodeInsertChildTail (pNode , pArr);
+            if (! upperCaseNames) {
+                a_camel_case (name, name);
+            }
+
+            pArr = nox_NewArray();
+            nox_NodeRename(pArr ,  name);
+            nox_NodeInsertChildTail (pNode , pArr);
             pNode = pArr;
             if (first) {
                 first = false;
@@ -129,22 +138,26 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             break;
         }
         case QrnDgEvent_10_EndStructArray   : {
-            pNode = jx_GetNodeParent (pNode);
+            pNode = nox_GetNodeParent (pNode);
             break;
         }
         case QrnDgEvent_11_ScalarValue      : {
-            PJXNODE pValueNode;
-            UCHAR value [32766];
+            PNOXNODE pValueNode;
+            UCHAR value [pParms->u.scalar.valueLenBytes];
             ULONG valuelen;
             PUCHAR pValue = value;
             UCHAR name [256];
             ULONG namelen;
             NODETYPE  type;
 
-            namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
 
-            valuelen = XlateBuffer (iconvCd, value , (PUCHAR) pParms->u.scalar.value  , pParms->u.scalar.valueLenBytes);
+            if (! upperCaseNames) {
+                a_camel_case (name, name);
+            }
+
+            valuelen = XlateBuffer (xlate_1200_to_1208, value , (PUCHAR) pParms->u.scalar.value  , pParms->u.scalar.valueLenBytes);
             value[valuelen] = '\0';
 
             switch (pParms->u.scalar.dataType) {
@@ -166,7 +179,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
                     break;
             }
 
-            pValueNode = jx_NodeAdd (pNode , RL_LAST_CHILD , name , pValue, type);
+            pValueNode = nox_NodeInsertNew (pNode , RL_LAST_CHILD , name , pValue, type);
             if (first) {
                 first = false;
                 *ppRoot = pValueNode;
@@ -182,9 +195,12 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
 // ---------------------------------------------------------------------------
 // The main entry point for the data generation
 // ---------------------------------------------------------------------------
-JX_DATAGEN jx_dataGen (PJXNODE * ppNode, PUCHAR optionsP)
+NOX_DATAGEN  nox_DataGen (PNOXNODE * ppNode, PUCHAR optionsP)
 {
     PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
     ppRoot = ppNode; // not reentrant
-    return &jx_dataGenMapper;
+
+    // TODO - Sysname !!
+
+    return &nox_dataGenMapper;
 }

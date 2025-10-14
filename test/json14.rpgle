@@ -1,5 +1,5 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
 
         /include 'headers/JSONPARSER.rpgle'
 
@@ -7,17 +7,17 @@
         Dcl-S msg          Varchar(50);
         Dcl-S n            Varchar(50);
         Dcl-S v            Varchar(50);
-
+        
         Dcl-S Result Varchar(50);
 
         Dcl-DS list  likeds(json_iterator);
-
+        
         Dcl-C OS Const(x'9C');
         Dcl-C CS Const(x'47');
-
+        
         //------------------------------------------------------------- *
 
-        dcl-pi *N;
+        Dcl-Pi JSON14;
           pResult Char(50);
         End-Pi;
 

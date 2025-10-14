@@ -1,5 +1,5 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
 
         /include 'headers/XMLPARSER.rpgle'
 
@@ -20,32 +20,32 @@
 
         //------------------------------------------------------------- *
 
-        dcl-pi *N;
+        Dcl-PI XML3;
           pResult Char(50);
         End-Pi;
 
         Result = '';
 
         // First parse the XML stream
-        pXml = xml_ParseFile('/prj/noxdb/testdata/manifest.xml');
-        if Xml_Error(pXml) ;
-           pResult = xml_Message(pXml);
-           xml_delete(pXml);
+        pXml = nox_ParseFile('./test/documents/manifest.xml');
+        if nox_Error(pXml) ;
+           pResult = nox_Message(pXml);
+           nox_delete(pXml);
            return;
         endif;
 
         // Not locate the "visit" and let it be the new temorary root
         // You can also use a comple reference from the root if you like
-        pVisit = xml_locate(pXml:'/manifest/visit');
+        pVisit = nox_locate(pXml:'/manifest/visit');
         if (pVisit =  *NULL);
            // If we did not found the "visit" element we die - remember to close the xml to avoid a leak
            pResult = 'null';
-           xml_delete(pXml);
+           nox_delete(pXml);
            return;
         endif;
 
          // Consignments is an array: use UBOUND to detect the numbers of entries
-        consignments = %int(xml_GetValue(pVisit:'consignment' +
+        consignments = %int(nox_GetValue(pVisit:'consignment' + 
                                                 OB + 'UBOUND' + CB:'0'));
 
         // Now loop for each elemnt consignments. Note - x-path use 0 as the first element
@@ -53,10 +53,10 @@
         // but from "pVisit" as root and the only the "consignment" index will work just fine
         for i = 0 to consignments -1;
            xpath = '/manifest/visit/consignment' + OB + %char(i) + CB;
-           pConsignment = xml_locate(pXml: xpath );
-           orderRef     = %int(xml_GetValue(pConsignment: 'orderRef':'0'));          // As number
-           customerCode = xml_GetValue (pConsignment: 'customerCode');        // As string
-           discrepancy  = 'NO' <>  xml_GetValue (pConsignment: 'discrepancy');      // As boolean
+           pConsignment = nox_locate(pXml: xpath );
+           orderRef     = %int(nox_GetValue(pConsignment: 'orderRef':'0'));          // As number
+           customerCode = nox_GetValue (pConsignment: 'customerCode');        // As string
+           discrepancy  = 'NO' <>  nox_GetValue (pConsignment: 'discrepancy');      // As boolean
 
            Result += %Char(orderRef) + customerCode;
         endfor;

@@ -1,9 +1,20 @@
 {
+    "files.associations": {
+        "*.sqlrpgle": "rpg",
+        "*.dmd": "json",
+        "*.widget": "javascript",
+        "ostypes.h": "c"
+    },
     "files.encoding": "windows1252",
-    "files.trimFinalNewlines": true,
+    "editor.tabSize": 3,
     "files.trimTrailingWhitespace": true,
-    "editor.tabSize": 4,
-    "editor.insertSpaces": true,
-    "prettier.tabWidth": 4,
-    "prettier.useTabs": false
+    "[sql]": {
+        "files.encoding": "utf8"
+    },
+    "[json]": {
+        "files.encoding": "utf8"
+    },
+    "[xml]": {
+        "files.encoding": "utf8"
+    }
 }

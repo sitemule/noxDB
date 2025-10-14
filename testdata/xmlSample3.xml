@@ -12,8 +12,8 @@
 		dontCompress="gif,jpeg,jpg,png"
 	/>
 	<!--
-		The response content is by default windows-1252 for backward compatability reasons only. We suggest that you change it to UTF-8 
-		and use UTF-8 for both your source and templates. If you entire system is in UTF-8 you can even gain 
+		The response content is by default windows-1252 for backward compatability reasons only. We suggest that you change it to UTF-8
+		and use UTF-8 for both your source and templates. If you entire system is in UTF-8 you can even gain
 		a performance boost by setting the "serveAlwaysUTF8" to true
 		NOTE: programs that use "setContentType(....)" overrides the defaultCharset at runtime.
 	-->
@@ -21,14 +21,14 @@
 		defaultCharset="utf-8"
 		serveAlwaysUTF8="true"
 		serveAlwaysChunks="true"
-	/>	
+	/>
 
 	<!--
 		Routing is mapped regex patterns for applications an their coresponding program names.
 		When "strict=true" only applications from this list is served
 		The "routing" tag has higher precedence that "hives"
 		The "pattern" is a regular expression match. The following match both maptest any place and and john in the begining.
-		The match is not casesensitive by default - but adding "casesensitive=true" changes that  
+		The match is not casesensitive by default - but adding "casesensitive=true" changes that
 		Note: No national charaters is supported in the match
     -->
 	<routing strict="false">
@@ -37,44 +37,44 @@
 	</routing>
 
 	<!--
-		Hives is virtual paths and maps to the associated application library and library list.  
-		Good practice is to keep a special char in the hive name (i.e. a dash) so it will not be 
-		confused by at physical path in the IFS. The hive path can point to any path 
+		Hives is virtual paths and maps to the associated application library and library list.
+		Good practice is to keep a special char in the hive name (i.e. a dash) so it will not be
+		confused by at physical path in the IFS. The hive path can point to any path
 		on the IFS - also out of the server root path. This can be used to map to
-		QNTC files on a Windows server or via a mounted NFS volume on a AIX, Linux, 
+		QNTC files on a Windows server or via a mounted NFS volume on a AIX, Linux,
 		Mac, Win or NAS-disk for images, PDF resources etc.
     -->
 
 	<hives>
-		
-		<map   
-			alias="simplemenu"    
+
+		<map
+			alias="simplemenu"
 			path="./app/menu"
-			lib="*LIBL" 
+			lib="*LIBL"
 		/>
 
-		<map   
+		<map
 			alias="ext6icb"
 			path="./app/ext6icb"
 			lib="*LIBL"
 		/>
 
-		<map   
-			alias="icebreak-admin"    
+		<map
+			alias="icebreak-admin"
 			path="."
-			lib="*LIBL" 
+			lib="*LIBL"
 		/>
-				
+
 	</hives>
 
 
-	<!-- 
-		mime types maps the files suffix with the content type required in the HTTP protocol. 
-		Also any file suffix can trigger the the activation of the application server - either as a 
+	<!--
+		mime types maps the files suffix with the content type required in the HTTP protocol.
+		Also any file suffix can trigger the the activation of the application server - either as a
 		program call, a service program procedure call or a java method call.
-		
-		Keep this list optimized with only used mime types in you application  ( don't bloat this list !!) 
-		Used but unlisted mime-types will occur as warnings in the joblog 
+
+		Keep this list optimized with only used mime types in you application  ( don't bloat this list !!)
+		Used but unlisted mime-types will occur as warnings in the joblog
 
 		Note: We can force the charset to "nothing" by setting the charset to blank. This can be used fot binary transfered files
 	-->

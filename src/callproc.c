@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC)   STGMDL(*SNGLVL) */
+
 /* ------------------------------------------------------------- */
 /* SYSIFCOPT(*IFSIO) OPTION(*EXPMAC *SHOWINC)                    */
 /* Module  . . . : callproc                                      */
@@ -34,7 +34,7 @@ typedef _SYSPTR (*ILEPROC0)();
 
 // -------------------------------------------------------------
 
-void jx_callPgm  ( _SYSPTR proc , void *  argArray[] , SHORT parms)
+void nox_callPgm  ( _SYSPTR proc , void *  argArray[] , SHORT parms)
 {
      _CALLPGMV ( &proc  , argArray , parms );
 }
@@ -44,7 +44,7 @@ void jx_callPgm  ( _SYSPTR proc , void *  argArray[] , SHORT parms)
     exists to do this AFAIN, _CALLPGMV "only" works for programs - not for
     procedures, so we have to live with this for now
 \* --------------------------------------------------------------------------- */
-void jx_callProc ( _SYSPTR proc , void *  p[64] , SHORT parms)
+void nox_callProc ( _SYSPTR proc , void *  p[64] , SHORT parms)
 {
    // Cast will not work on SYSPTR to PROC pointer so we need a VOID pointer in the middle
    PVOID pv =  proc;

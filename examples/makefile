@@ -5,12 +5,12 @@
 # i.e. you have to do a
 #    CHGJOB CCSID(500)
 # Before your examples will run.
-# If you are on 7.4 change the compile option to:
+# If you are on 7.4 change the compile option to local ccsid like:
 #
 #    RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb') PPGENOPT(*EXPINCLUDE) TGTCCSID(277)
 #
-BIN_LIB=NOXDB
-RPG_OPT=OPTION(*EVENTF *NOXREF *NOUNREF) OUTPUT(*PRINT) DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb')
+BIN_LIB=NOXDBUTF8
+RPG_OPT=OPTION(*EVENTF *NOXREF *NOUNREF *NOSHOWCPY *NOEXPDDS *NOEXT) OUTPUT(*PRINT) DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdbutf8')
 CCSID=500
 SHELL=/QOpenSys/usr/bin/qsh
 

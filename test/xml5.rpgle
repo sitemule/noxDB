@@ -1,5 +1,5 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
 
         /include 'headers/XMLPARSER.rpgle'
 
@@ -13,32 +13,32 @@
         Dcl-C OB Const(x'9E');
         Dcl-C CB Const(x'9F');
         Dcl-C AT Const(x'80');
-
+      
         //------------------------------------------------------------- *
 
-        dcl-pi *N;
+        Dcl-Pi XML5;
           pResult Char(50);
         End-Pi;
 
         Result = '';
 
-        pXml  = xml_ParseFile('/prj/noxdb/testdata/XmlSample2.xml':'syntax=LOOSE');
-        if Xml_Error(pXml ) ;
-           pResult = xml_Message(pXml);
-           xml_delete(pXml );
+        pXml  = nox_ParseFile('./test/documents/XmlSample2.xml':'syntax=LOOSE');
+        if nox_Error(pXml ) ;
+           pResult = nox_Message(pXml);
+           nox_delete(pXml );
            return;
         endif;
 
         // Count elements
-        count= %int(xml_GetValue(pXml: '/myroot/myElement' +
+        count= %int(nox_GetValue(pXml: '/myroot/myElement' +
                                        OB + 'UBOUND' + CB:'0'));
 
         for i = 0 to count -1;
-          pOut = xml_Locate(pXml: '/myroot/myElement' + OB + %char(i) + CB);
-          Result += xml_GetValue(pOut : AT + 'Myattribute1' : 'x');
+          pOut = nox_Locate(pXml: '/myroot/myElement' + OB + %char(i) + CB);
+          Result += nox_GetValue(pOut : AT + 'Myattribute1' : 'x');
         endFor;
 
         pResult = Result;
 
-        xml_delete(pXml);
+        nox_delete(pXml);
         *inlr = *on;

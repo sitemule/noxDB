@@ -1,0 +1,11 @@
+[
+	{
+		"id":12345,
+		"name":"System & Metode A/S",
+		"street":"Håndværkersvinget 8",
+		"city":"Hørsholm",
+		"greeting":"你奸",
+		"creditLimit":76543.21,
+		"created":"2025-09-06"
+	}
+]

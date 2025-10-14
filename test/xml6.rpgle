@@ -1,29 +1,20 @@
+**free
+Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' ) main(main);
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+/include 'headers/noxDb2.rpgle'
 
-        /include 'headers/XMLPARSER.rpgle'
+dcl-proc main;
+   dcl-s xml pointer;
+   dcl-s value varchar(200) ccsid(*utf8);
+   dcl-s message char(50);
 
-        Dcl-S pXml         Pointer;
+   xml = nox_parseString('<httpHeader includeErrorMsg="true"><header name="X-COUNT" value="111" />+
+              </httpHeader>');
 
-        Dcl-S result       Varchar(50);
+   value = nox_asXmlText(xml);
+   message = value;
+   dsply message;
 
-
-        //------------------------------------------------------------- *
-
-        dcl-pi *N;
-        End-Pi;
-
-        pXml  = xml_ParseFile('/prj/noxdb/testdata/XmlSample3.xml');
-        if Xml_Error(pXml ) ;
-           result  = xml_Message(pXml);
-           xml_delete(pXml );
-           return;
-        endif;
-
-        result = xml_GetStr (
-          pXml:
-          '/configuration/routing/map[1]@pattern'
-        );
-
-        xml_delete(pXml);
-        *inlr = *on;
+   on-exit;
+     nox_delete(xml);
+end-proc;

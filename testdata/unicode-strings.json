@@ -1,4 +1,4 @@
-﻿{
+{
 	"a":"A native unicode µ string",
 	"b":"A not native unicode АБВГДЕ string",
 	"c":"Escaped: Backslash \\ newline \n double quote  \"  will be stored in their hex value"

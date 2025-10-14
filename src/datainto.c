@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL) */
+
 /* --------------------------------------------------------------- *
  * Company . . . : System & Method A/S                             *
  * Design  . . . : Niels Liisberg                                  *
@@ -19,70 +19,64 @@
 #include "ostypes.h"
 #include "sndpgmmsg.h"
 #include "trycatch.h"
-#include "rtvsysval.h"
 #include "parms.h"
-#include "utl100.h"
-#include "mem001.h"
+#include "strUtil.h"
+#include "memUtil.h"
 #include "varchar.h"
-#include "jsonxml.h"
+#include "noxDbUtf8.h"
+#include "qoar/h/qrndtainto"
 
 
-#ifdef QOAR_INCLUDE_IFS
-#include  <qoar/h/qrndtainto>
-#else
-#include  "/QSYS.LIB/QOAR.LIB/H.FILE/QRNDTAINTO.MBR"
-#endif
-
-
-static PJXNODE pRoot;
-static iconv_t iconvCd;
+static PNOXNODE pRoot;
+extern iconv_t xlate_1208_to_1200;
 static BOOL first = true;
 
+// TODO !!! ensure UTF-8
 
-// Portotype can not move to generic header since dubble defintion i IBM headers :(
-static void  jx_dataIntoMapNode  (PJXNODE pNode, QrnDiParm_T * pParms, SHORT level);
+// Prototype can not move to generic header since dubble defintion i IBM headers :(
+static void  nox_DataIntoMapNode  (PNOXNODE pNode, QrnDiParm_T * pParms, SHORT level);
 
 /* --------------------------------------------------------------------------- */
-static void  jx_dataIntoMapObject  (PJXNODE pParent, QrnDiParm_T * pParms, SHORT level)
+static void  nox_DataIntoMapObject  (PNOXNODE pParent, QrnDiParm_T * pParms, SHORT level)
 {
-    PJXNODE pNode;
+    PNOXNODE pNode;
     SHORT nextLevel = level +1;
 
     pParms->env->QrnDiStartStruct (pParms->handle);
-    for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
+    for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSiblingNext) {
         if  ( pNode->Name && *pNode->Name > 0) {
             // TODO !! Only report names for nodes  - not null
             // TODO !! Implement real null support when IBM has the API ready
             if (pNode->Value || pNode->type == OBJECT || pNode->type == ARRAY) {
                 UCHAR name [256];
-                LONG namelen = XlateBuffer (iconvCd, name , pNode->Name , strlen(pNode->Name));
+                LONG namelen = XlateBuffer (xlate_1208_to_1200, name , pNode->Name , strlen(pNode->Name));
                 * ((PUSHORT) (name + namelen)) = 0; // Unicode termination
                 pParms->env->QrnDiReportName  (pParms->handle , name , namelen);
             }
         }
-        jx_dataIntoMapNode (pNode , pParms, nextLevel);
+        nox_DataIntoMapNode (pNode , pParms, nextLevel);
     }
     pParms->env->QrnDiEndStruct (pParms->handle);
 }
 /* --------------------------------------------------------------------------- */
-static void  jx_dataIntoMapArray (PJXNODE pParent, QrnDiParm_T * pParms, SHORT level)
+static void  nox_DataIntoMapArray (PNOXNODE pParent, QrnDiParm_T * pParms, SHORT level)
 {
-    PJXNODE pNode;
+    PNOXNODE pNode;
     SHORT nextLevel = level +1;
 
     pParms->env->QrnDiStartArray  (pParms->handle);
-    for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSibling) {
-        jx_dataIntoMapNode (pNode , pParms, nextLevel);
+    for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSiblingNext) {
+        nox_DataIntoMapNode (pNode , pParms, nextLevel);
     }
     pParms->env->QrnDiEndArray  (pParms->handle);
 }
 /* --------------------------------------------------------------------------- */
-static void jx_dataIntoMapValue   (PJXNODE pNode, QrnDiParm_T * pParms )
+static void nox_DataIntoMapValue   (PNOXNODE pNode, QrnDiParm_T * pParms )
 {
     // Has value?
     if (pNode->Value) {
         UCHAR value [32768];
-        LONG valuelen = XlateBuffer (iconvCd, value , pNode->Value , strlen(pNode->Value));
+        LONG valuelen = XlateBuffer (xlate_1208_to_1200, value , pNode->Value , strlen(pNode->Value));
         * ((PUSHORT) (value + valuelen)) = 0; // Unicode termination
         pParms->env->QrnDiReportValue (pParms->handle , value , valuelen);
     // Else it is some kind of null: Strings are "". Literals will return "null"
@@ -98,46 +92,46 @@ static void jx_dataIntoMapValue   (PJXNODE pNode, QrnDiParm_T * pParms )
     }
 }
 /* --------------------------------------------------------------------------- */
-/* Invalid node types are just jeft out                                          */
+/* Invalid node types are just jeft out                                        */
 /* --------------------------------------------------------------------------- */
-static void  jx_dataIntoMapNode  (PJXNODE pNode, QrnDiParm_T * pParms, SHORT level)
+static void  nox_DataIntoMapNode  (PNOXNODE pNode, QrnDiParm_T * pParms, SHORT level)
 {
     if (pNode) {
         switch (pNode->type) {
             case OBJECT:
-                jx_dataIntoMapObject  (pNode, pParms, level);
+                nox_DataIntoMapObject  (pNode, pParms, level);
                 break;
 
             case ARRAY:
-                jx_dataIntoMapArray   (pNode, pParms, level);
+                nox_DataIntoMapArray   (pNode, pParms, level);
                 break;
 
             case VALUE:
             case POINTER_VALUE:
-                jx_dataIntoMapValue   (pNode, pParms);
+                nox_DataIntoMapValue   (pNode, pParms);
                 break;
         }
     }
 }
-/* 	---------------------------------------------------------------------------
+/*    ---------------------------------------------------------------------------
     --------------------------------------------------------------------------- */
-static void   jx_dataIntoMapper (QrnDiParm_T * pParms)
+static void   nox_DataIntoMapper (QrnDiParm_T * pParms)
 {
 
-    if (first) {
-        first = false;
-        iconvCd = XlateOpenDescriptor (0, 13488, false);
-    }
+    // if (first) {
+    //     first = false;
+    //     xlate_1208_to_1200 = XlateOpenDescriptor (0, 13488, false);
+    // }
 
     pParms->env->QrnDiStart  (pParms->handle);
-    jx_dataIntoMapNode (pRoot , pParms , 0 );
+    nox_DataIntoMapNode (pRoot , pParms , 0 );
     pParms->env->QrnDiFinish (pParms->handle );
 
 }
-/* 	---------------------------------------------------------------------------
+/*    ---------------------------------------------------------------------------
     --------------------------------------------------------------------------- */
-JX_DATAINTO jx_dataInto (PJXNODE pNode)
+NOX_DATAINTO nox_DataInto (PNOXNODE pNode)
 {
     pRoot = pNode;
-    return &jx_dataIntoMapper;
+    return &nox_DataIntoMapper;
 }

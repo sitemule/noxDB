@@ -1,19 +1,19 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
-
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        
         /include 'headers/JSONPARSER.rpgle'
-
+        
         Dcl-S pJson        Pointer;
         Dcl-S sql          Varchar(512);
         Dcl-S start        Int(10);
         Dcl-S limit        Int(10);
 
         //------------------------------------------------------------- *
-
-        dcl-pi *N;
+        
+        Dcl-Pi JSONSQL6;
           pResult Char(50);
         End-Pi;
-
+        
         //First 5 rows
         start = 1;
         limit = 5;
@@ -35,5 +35,5 @@
 
         // That's it..
         *inlr = *on;
-
+        
         Return;

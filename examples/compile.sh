@@ -1,15 +1,15 @@
 #!/QOpenSys/usr/bin/qsh
 
 ## run this:  compile.sh -f JSONPARS0A.JSON-Basic-features.rpgle -l NOXDB -c 277 -o ''
-
 # --- Command runner ----------------------------------
 run() {
   cmd="$1"
-  #echo $cmd
+  echo $cmd
   system  -q -kpieb $cmd
+  #system  $cmd
   ret_code=$?
   if [ ${ret_code} != 0 ]; then
-    printf "Error: [%d] when executing command: '$cmd'" $ret_code
+    printf "Error: [%d] when executing command: '$cmd'\n" $ret_code
   fi
 }
 
@@ -79,21 +79,23 @@ elif [ $words -eq 4 ];then
   midext=$(echo ${wordlist} | cut -d' ' -f3)
 fi
 
+export QIBM_CCSID=$ccsid
 liblist -a ICEBREAK # Only for the ICEBREAK sample
 liblist -a ${obj_lib}
 touch error.txt
-setccsid 1208 error.txt
-setccsid 1208 ${file_name}
-run "CRTSRCPF $obj_lib/srctemp RCDLEN(240) ccsid($ccsid)"
-run "CPYFRMSTMF FROMSTMF('$file_name') TOMBR('/QSYS.LIB/$obj_lib.LIB/srctemp.file/srctemp.mbr')  MBROPT(*REPLACE)"
+setccsid 1252 error.txt
+setccsid 1252 ${file_name}
+echo $PWD
+run "CRTSRCPF $obj_lib/SRCTEMP RCDLEN(240) MBR(*NONE) CCSID($ccsid)"
+run "CPYFRMSTMF FROMSTMF('$file_name') TOMBR('/QSYS.LIB/$obj_lib.LIB/SRCTEMP.FILE/$object_name.MBR')  MBROPT(*REPLACE)"
 
 if [ "$midext" = "srvpgm" ]
 then
-  run "CRTRPGMOD  MODULE($obj_lib/$object_name) SRCFILE($obj_lib/srctemp) SRCMBR(SRCTEMP)  $options"
+  run "CRTRPGMOD  MODULE($obj_lib/$object_name) SRCFILE($obj_lib/SRCTEMP) SRCMBR($object_name)  $options"
   run "CRTSRVPGM  SRVPGM($obj_lib/$object_name) DETAIL(*BASIC) EXPORT(*ALL)"
 else
-  run "CRTBNDRPG  PGM($obj_lib/$object_name) SRCFILE($obj_lib/srctemp) SRCMBR(SRCTEMP) $options"
+  run "CRTBNDRPG  PGM($obj_lib/$object_name) SRCFILE($obj_lib/SRCTEMP) SRCMBR($object_name) $options"
 fi
 print_event ${file_name} ${obj_lib} ${object_name}
-run "DLTF $obj_lib/srctemp"
+#run "DLTF $obj_lib/SRCTEMP"
 exit

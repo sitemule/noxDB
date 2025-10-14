@@ -1,20 +1,20 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE');
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
 
         /include 'headers/JSONPARSER.rpgle'
 
         Dcl-S pJson        Pointer;
         Dcl-S price        Packed(15:2);
         Dcl-S text         Varchar(50);
-
+        
         //------------------------------------------------------------- *
 
-        dcl-pi *N;
+        Dcl-Pi JSON2;
           pResult Char(50);
         End-Pi;
 
         *inlr = *on;
-        pJson = Json_ParseFile ('/prj/noxdb/testdata/simple.json');
+        pJson = Json_ParseFile ('./test/documents/simple.json');
 
         if Json_Error(pJson) ;
            pResult = Json_Message(pJson);

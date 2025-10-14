@@ -1,4 +1,4 @@
-/* SYSIFCOPT(*IFSIO) TERASPACE(*YES *TSIFC) STGMDL(*SNGLVL) */
+// CMD:CRTCMOD
 /* ------------------------------------------------------------- *
  * Company . . . : System & Method A/S                           *
  * Design  . . . : Niels Liisberg                                *
@@ -7,8 +7,8 @@
  * By     Date     Task    Description                           *
  * NL     02.06.03 0000000 New program                           *
  * NL     27.02.08 0000510 Allow also no namespace for *:tag     *
- * NL     27.02.08 0000510 jx_NodeCopy                           *
- * NL     13.05.08 0000577 jx_NodeAdd / WriteNote                *
+ * NL     27.02.08 0000510 nox_NodeCopy                           *
+ * NL     13.05.08 0000577 nox_NodeInsert / WriteNote                *
  * NL     13.05.08 0000577 Support for refference location       *
  * ------------------------------------------------------------- */
 #include <stdio.h>
@@ -20,75 +20,37 @@
 #include <decimal.h>
 #include <wchar.h>
 // #include <errno.h>
+
 #include <sys/stat.h>
 #include "ostypes.h"
-#include "xlate.h"
-#include "jsonxml.h"
-#include "parms.h"
-#include "rtvsysval.h"
-#include "utl100.h"
-#include "mem001.h"
 #include "varchar.h"
+#include "xlate.h"
+#include "noxDbUtf8.h"
+#include "parms.h"
+// #include "rtvsysval.h"
+#include "memUtil.h"
+#include "strUtil.h"
 
-
-
-extern UCHAR Remark   [4];  // !--
-extern UCHAR DocType  [9];  // !DOCTYPE
-extern UCHAR EndRemark[4];  // -->
-extern UCHAR SlashGT  [3];  // />
-extern UCHAR BraBraGT [4];  // ]]>
-extern UCHAR Cdata    [10]; // <![CDATA[
-
-extern UCHAR Apos       ;
-extern UCHAR Quot       ;
-extern UCHAR Question   ;
-extern UCHAR EQ         ;
-extern UCHAR GT         ;
-extern UCHAR LT         ;
-extern UCHAR Underscore ;
-extern UCHAR Colon      ;
-extern UCHAR Dot        ;
-extern UCHAR Slash      ;
-extern UCHAR Exclmark   ;
-extern UCHAR BackSlash  ;
-extern UCHAR Masterspace;
-extern UCHAR BraBeg     ;
-extern UCHAR BraEnd     ;
-extern UCHAR CurBeg     ;
-extern UCHAR CurEnd     ;
-extern UCHAR Minus      ;
-extern UCHAR Blank      ;
-extern UCHAR Amp        ;
-extern UCHAR Hash       ;
-extern UCHAR CR         ;
-extern UCHAR Dollar     ;
-
-
-extern UCHAR jobSlash       ;
-extern UCHAR jobBackSlash   ;
-extern UCHAR jobMasterspace ;
-extern UCHAR jobBraBeg      ;
-extern UCHAR jobBraEnd      ;
-extern UCHAR jobCurBeg      ;
-extern UCHAR jobCurEnd      ;
-extern UCHAR jobQuot  ;
-extern UCHAR jobApos  ;
-extern UCHAR jobDollar  ;
-
-
-
-extern UCHAR e2aTbl[256];
-extern UCHAR a2eTbl[256];
-extern UCHAR delimiters [12];
-extern int   InputCcsid , OutputCcsid;
+// Just for debugging
 
 static LONG  dbgStep=0;
 static BOOL  skipBlanks = TRUE;
 
+// Note !! The complete file is in ASCII
+#pragma convert(1252)
 
-void jx_setDelimitersByCcsid (int ccsid)
+/* ---------------------------------------------------------------------------
+   --------------------------------------------------------------------------- */
+/*
+void initconst(int ccsid)
 {
-   XlateGetStaticConversionTables  (e2aTbl , a2eTbl , 1252 , ccsid);  // 0=Current job CCSID
+   static int prevccsid = -1;  // can not be negative => force rebuild const
+
+   // already done?
+   if ( prevccsid == ccsid) return;
+   prevccsid = ccsid;
+
+   RtvXlateTbl  (e2aTbl , a2eTbl , 1252 , ccsid);  // 0=Current job CCSID
 
    #pragma convert(1252)
    Apos       = a2eTbl['\''];
@@ -122,154 +84,79 @@ void jx_setDelimitersByCcsid (int ccsid)
    sprintf(Cdata     , "%c%c%cCDATA%c", LT, Exclmark , BraBeg, BraBeg ) ; // "<![CDATA["
    sprintf(DocType   , "%cDOCTYPE", Exclmark  ) ; // "!DOCTYPE"
 
-   delimiters [0]  = Slash;
-   delimiters [1]  = BackSlash;
-   delimiters [2]  = Masterspace;
-   delimiters [3]  = BraBeg;
-   delimiters [4]  = BraEnd;
-   delimiters [5]  = Blank;
-   delimiters [6]  = Dot;
-   delimiters [7]  = CurBeg;
-   delimiters [8]  = CurEnd;
-   delimiters [11] = Dollar;
-
-   if (ccsid == 0) {
-      jobSlash       = Slash ;
-      jobBackSlash   = BackSlash   ;
-      jobMasterspace = Masterspace ;
-      jobBraBeg      = BraBeg   ;
-      jobBraEnd      = BraEnd   ;
-      jobCurBeg      = CurBeg   ;
-      jobCurEnd      = CurEnd   ;
-      jobQuot        = Quot ;
-      jobApos        = Apos;
-      jobDollar      = Dollar;
-   }
+   delimiters [0] = Slash;
+   delimiters [1] = BackSlash;
+   delimiters [2] = Masterspace;
+   delimiters [3] = BraBeg;
+   delimiters [4] = BraEnd;
+   delimiters [5] = Blank;
+   delimiters [6] = Dot;
+   delimiters [7] = CurBeg;
+   delimiters [8] = CurEnd;
 
 }
-
-/* ---------------------------------------------------------------------------
-   --------------------------------------------------------------------------- */
-void initconst(int ccsid)
-{
-   static int prevccsid = -1;  // can not be negative => force rebuild const
-
-   // already done?
-   if ( prevccsid == ccsid) return;
-   prevccsid = ccsid;
-   jx_setDelimitersByCcsid (ccsid);
-
-}
+*/
 
 // ---------------------------------------------------------------------------
-void  jx_SkipChars(PJXCOM pJxCom , int skip)
+void  nox_SkipChars(PNOXCOM pJxCom , int skip)
 {
    int i;
    for(i=0;i<skip; i++) {
-      jx_GetChar(pJxCom);
+      nox_GetChar(pJxCom);
    }
 }
 // ---------------------------------------------------------------------------
-/* Old implementation with file support 
-PUCHAR jx_GetChar(PJXCOM pJxCom)
+PUCHAR nox_GetChar(PNOXCOM pJxCom)
 {
-   int i;
-   PUCHAR treshold;
-   static int len;
 
    /*
    if (dbgStep > 8170 ) { //       8179)
       int q = 1;
    }
-   * /
+   */
 
-   if (pJxCom->State == XML_EXIT_ERROR) {
-     return (pJxCom->pWorkBuf == NULL ? "" : pJxCom->pWorkBuf );
+   if (pJxCom->State == nox_EXIT_ERROR) {
+      return (pJxCom->pFileBuf == NULL ? "" : pJxCom->pFileBuf );
    }
 
-   if (pJxCom->File == NULL) {
-     if (pJxCom->pWorkBuf == NULL) {
-       pJxCom->pWorkBuf =  pJxCom->pStreamBuf;
-     } else {
-       pJxCom->pWorkBuf ++;
-     }
-   }
-   else {
-
-      if (pJxCom->pWorkBuf == NULL) {
-         len = readBlock(pJxCom , pJxCom->FileBuf, sizeof(pJxCom->FileBuf));
-         // printf("\nlen: %d\n" , len);
-         pJxCom->pWorkBuf = pJxCom->FileBuf;
-      } else {
-      // Increment the buffer pointer
-         treshold = pJxCom->FileBuf + len - LOOK_AHEAD_SIZE;
-         pJxCom->pWorkBuf ++;
-         if (pJxCom->pWorkBuf > treshold && ! feof(pJxCom->File)) {
-            PUCHAR temp = pJxCom->FileBuf + LOOK_AHEAD_SIZE;
-            memcpy(pJxCom->FileBuf , treshold , LOOK_AHEAD_SIZE);
-            len = readBlock(pJxCom , temp, sizeof(pJxCom->FileBuf) - LOOK_AHEAD_SIZE);
-            len += LOOK_AHEAD_SIZE;
-            //+1 because the first is allready processed and allow us to LOOK-BACK
-            pJxCom->pWorkBuf = pJxCom->FileBuf +1;
-         }
-      }
-   }
-   if (*pJxCom->pWorkBuf == '\0') {
-       pJxCom->State = XML_EXIT;
-   }
-   if (*pJxCom->pWorkBuf == CR) {
-     pJxCom->LineCount ++;
-     pJxCom->ColCount = 0;
+   if (pJxCom->pFileBuf == NULL) {
+      pJxCom->pFileBuf =  pJxCom->StreamBuf;
    } else {
-     pJxCom->ColCount ++;
+      pJxCom->pFileBuf ++;
    }
-   dbgStep++;
-   return (pJxCom->pWorkBuf);
-}
-*/
-// ---------------------------------------------------------------------------
-PUCHAR jx_GetChar(PJXCOM pJxCom)
-{
 
-   if (pJxCom->pWorkBuf == NULL) {
-      return "";
-   } else if (*pJxCom->pWorkBuf == '\0') {
-      pJxCom->State = XML_EXIT;
-   } else if (pJxCom->LineCount != 1 || pJxCom->ColCount != 0) {
-      pJxCom->pWorkBuf ++;
-   } 
-
-   if (*pJxCom->pWorkBuf == CR) {
-     pJxCom->LineCount ++;
-     pJxCom->ColCount = 0;
+   if (*pJxCom->pFileBuf == '\0') {
+      pJxCom->State = nox_EXIT;
+   }
+   if (*pJxCom->pFileBuf == CR) {
+      pJxCom->LineCount ++;
+      pJxCom->ColCount = 0;
    } else {
-     pJxCom->ColCount ++;
+      pJxCom->ColCount ++;
    }
- 
-   return pJxCom->pWorkBuf;
-
+   return (pJxCom->pFileBuf);
 }
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
-UCHAR SkipBlanks (PJXCOM pJxCom)
+UCHAR SkipBlanks (PNOXCOM pJxCom)
 {
    UCHAR c;
 
    for(;;) {
-      c  = *jx_GetChar(pJxCom);
-      if ( pJxCom->State == XML_EXIT
-      ||   pJxCom->State == XML_EXIT_ERROR ) {
+      c  = *nox_GetChar(pJxCom);
+      if ( pJxCom->State == nox_EXIT
+      ||   pJxCom->State == nox_EXIT_ERROR ) {
          return '\0';
       }
-      if (c > Blank) {
-         pJxCom->pWorkBuf --; // step back one...
+      if (c > BLANK) {
+         pJxCom->pFileBuf --; // step back one...
          return c;
       }
    }
 }
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
-void CheckBufSize(PJXCOM pJxCom)
+void CheckBufSize(PNOXCOM pJxCom)
 {
    if (pJxCom->DataIx >= pJxCom->DataSize ||  pJxCom->Data  == NULL) {
       pJxCom->DataSize += DATA_SIZE;
@@ -278,28 +165,28 @@ void CheckBufSize(PJXCOM pJxCom)
 }
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
-void jx_CheckEnd(PJXCOM pJxCom)
+void nox_CheckEnd(PNOXCOM pJxCom)
 {
-   if (*pJxCom->pWorkBuf == GT) {
-      pJxCom->State = XML_COLLECT_DATA;
+   if (*pJxCom->pFileBuf == GT) {
+      pJxCom->State = nox_COLLECT_DATA;
       if (skipBlanks) {
-        SkipBlanks(pJxCom);
+         SkipBlanks(pJxCom);
       }
       pJxCom->DataIx=0;
       pJxCom->Data[0]='\0';
       return;
    }
-   if (BeginsWith (pJxCom->pWorkBuf ,SlashGT))  {  // Check for short form   />
+   if (memBeginsWith (pJxCom->pFileBuf ,SLASHGT))  {  // Check for short form   />
       pJxCom->pNodeWorkRoot = pJxCom->pNodeWorkRoot->pNodeParent;
       pJxCom->Level --;
-      pJxCom->State = XML_FIND_START_TOKEN;
+      pJxCom->State = nox_FIND_START_TOKEN;
    }
 }
 
 /* ---------------------------------------------------------------------------
    --------------------------------------------------------------------------- */
-/*   
-int readBlock(PJXCOM pJxCom , PUCHAR buf, int size)
+/*
+int readBlock(PNOXCOM pJxCom , PUCHAR buf, int size)
 {
   int len, rlen, j;
 
@@ -322,7 +209,7 @@ int readBlock(PJXCOM pJxCom , PUCHAR buf, int size)
          pJxCom->Iconv = OpenXlate(InputCcsid  , OutputCcsid);
          len = xlate(pJxCom, buf, temp , rlen);
          if (len == -1) { // Still invalid char .. don't what to do !!!
-           pJxCom->State == XML_EXIT_ERROR;
+           pJxCom->State == nox_EXIT_ERROR;
            memFree (&temp);
            return 0;
          }
@@ -343,3 +230,4 @@ int readBlock(PJXCOM pJxCom , PUCHAR buf, int size)
   return len;
 }
 */
+

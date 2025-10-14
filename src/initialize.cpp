@@ -1,5 +1,9 @@
-extern "C" void jx_setDelimitersByCcsid (int);
-extern "C" void jx_sqlDisconnect (void);
+
+
+#include <cstdlib>
+//extern "C" void nox_setDelimitersByCcsid (int);
+extern "C" void nox_Initialize (void);
+extern "C" void nox_sqlDisconnect (void *);
 
 
 class Entry_Exit
@@ -15,12 +19,13 @@ class Entry_Exit
 };
 
     Entry_Exit::Entry_Exit(void) {
-        jx_setDelimitersByCcsid (0);
+        //nox_setDelimitersByCcsid (0);
+        nox_Initialize();
         m_nEntry = 0;
     }
 
     Entry_Exit::~Entry_Exit() {
-        jx_sqlDisconnect();
+        nox_sqlDisconnect(NULL);
         m_nExit = 0;
     }
 

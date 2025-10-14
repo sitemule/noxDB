@@ -1,8 +1,8 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
-
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+        
         /include 'headers/JSONPARSER.rpgle'
-
+        
         Dcl-S manuRow      Pointer;
         Dcl-S prodArray    Pointer;
         Dcl-S resultArray  Pointer;
@@ -11,12 +11,12 @@
         Dcl-S prodHnd      Pointer;
         Dcl-S sql          Varchar(512);
         Dcl-S json         Varchar(512);
-
+        
         Dcl-C DL Const(x'67');
 
         //------------------------------------------------------------- *
-
-        dcl-pi *N;
+        
+        Dcl-Pi JSONSQL3;
           pResult Char(50);
         End-Pi;
 

@@ -1,5 +1,5 @@
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
 
         /include 'headers/XMLPARSER.rpgle'
 
@@ -12,29 +12,29 @@
 
         //------------------------------------------------------------- *
 
-        dcl-pi *N;
+        Dcl-Pi XML1;
           pResult Char(50);
         End-Pi;
 
         Result = '';
-        pXml = xml_ParseFile('/prj/noxdb/testdata/XmlSample1.xml');
+        pXml = nox_ParseFile('./test/documents/XmlSample1.xml');
 
-        if Xml_Error(pXml) ;
-           pResult = xml_Message(pXml);
+        if nox_Error(pXml) ;
+           pResult = nox_Message(pXml);
 
         else;
-           pElem = xml_locate(pXml:'/MyRoot/MyElement');
+           pElem = nox_locate(pXml:'/MyRoot/MyElement');
            dow (pElem <> *NULL);
-              MyElem   = xml_GetElemValue (pElem : 'N/A');
-              MyString = xml_GetAttr      (pElem : 'MyAttribute1' : 'N/A');
+              MyElem   = nox_GetElemValue (pElem : 'N/A');
+              MyString = nox_GetAttr      (pElem : 'MyAttribute1' : 'N/A');
 
               Result += MyElem + MyString;
 
-              pElem = xml_GetElemNext(pElem);
+              pElem = nox_GetElemNext(pElem);
            enddo;
         endif;
 
-        xml_delete(pXml);
+        nox_delete(pXml);
 
         pResult = Result;
 

@@ -1,5 +1,5 @@
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
-
+        Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE' );
+    
         /include 'headers/JSONPARSER.rpgle'
 
         Dcl-S pJson        Pointer;
@@ -7,19 +7,21 @@
         Dcl-S Result       Varchar(50);
         Dcl-S value        Varchar(50);
         Dcl-S n            Packed(15:2);
-
-
+        
+        
+        Dcl-C OB Const(x'9E');
+        Dcl-C CB Const(x'9F');
         Dcl-S lNode  Varchar(10);
-
+        
         //------------------------------------------------------------- *
 
-        dcl-pi *N;
+        Dcl-Pi JSON4;
           pResult Char(50);
         End-Pi;
-
+        
         Result = '';
         *inlr = *on;
-        pJson = Json_ParseFile ('/prj/noxdb/testdata/demo.json');
+        pJson = Json_ParseFile ('./test/documents/demo.json');
 
         if Json_Error(pJson) ;
            pResult = Json_Message(pJson);
@@ -32,7 +34,7 @@
         n       = Json_getNum(pNode);
         Result += %Char(n);
 
-        lNode = '/a[1]' ;
+        lNode = '/a' + OB + '1' + CB;
         pNode   = Json_locate(pJson: lNode);
         n       = Json_GetNum (pNode);
         Result += %Char(n);
@@ -41,7 +43,7 @@
         value   = Json_getStr(pNode);
         Result += value;
 
-        lNode   = '/o/a[2]' ;
+        lNode   = '/o/a' + OB + '2' + CB;
         pNode   = Json_locate(pJson: lNode);
         n       = Json_GetNum(pNode);
         Result += %Char(n);

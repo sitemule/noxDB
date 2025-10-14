@@ -1,60 +1,71 @@
+**FREE
+      // build:
+      //  addlible noxdb2
+      //  cd  '/prj/noxdb2'   
+      //  CRTBNDRPG PGM(NOXDB2/JSONSQL1) SRCSTMF('/prj/noxdb2/test/jsonsql1.rpgle') dbgview(*ALL)  
+      Ctl-Opt BndDir('NOXDB2') dftactgrp(*NO) ACTGRP('QILE');
 
-        Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE' );
+      /include 'headers/JSONPARSER.rpgle'
 
-        /include 'headers/JSONPARSER.rpgle'
 
-        Dcl-S pRow         Pointer;
-        Dcl-S sqlHnd       Pointer;
+      Dcl-S pRow         Pointer;
+      Dcl-S sqlHnd       Pointer;
 
-        Dcl-S ints         Int(10);
-        Dcl-S numbers      Zoned(11:2);
-        Dcl-S text         Varchar(512);
-        Dcl-S dates        Date;
+      Dcl-S ints         Int(10);
+      Dcl-S numbers      Zoned(11:2);
+      Dcl-S text         Varchar(512);
+      Dcl-S dates        Date;
 
-        Dcl-S Result       Varchar(50);
+      Dcl-S Result       Varchar(50);
 
-        //------------------------------------------------------------- *
+      //------------------------------------------------------------- *
 
-        dcl-pi *N;
-          pResult Char(50);
-        End-Pi;
+      Dcl-Pi JSONSQL1;
+         pResult Char(50);
+      End-Pi;
 
-        Result = '';
+      Result = '';
+      
+      // Connection can be made implecit or explicit 
+      // json_sqlconnect();
 
-        // Open our SQL cursor. Use a simple select
-        sqlhnd  = json_sqlOpen(
-           'Select * from product ' +
-           'where PRODID like ''Coolpix%'' ' +
-           'fetch first 5 rows only'
-        );
+      // Open our SQL cursor. Use a simple select
+      sqlhnd  = json_sqlOpen(
+         'Select * from product ' +
+         'where PRODID like ''Coolpix%'' ' +
+         'fetch first 5 rows only'
+      );
 
-        // Was there a problem ?
-        if json_Error(sqlhnd);
-           pResult = json_Message(sqlhnd);
-           json_sqlDisconnect();
-           return;  // You can return, however the rest of the routines a roubust enough to just continue
-        endif;
+      // Was there a problem ?
+      if json_Error(sqlhnd);
+         pResult = json_message(sqlhnd);
+         json_sqlDisconnect();
+         return;  // You can return, however the rest of the routines a roubust enough to just continue
+      endif;
 
-        // Now iterate on each row in the resultset
-        pRow = json_sqlFetchNext(sqlhnd);
-        dow (pRow <> *NULL);
-           ints    = json_getNum (pRow : 'PRODKEY');
-           numbers = json_getNum (pRow : 'PRICE');
+      // Now iterate on each row in the resultset
+      pRow = json_sqlFetchNext(sqlhnd);
+      dow (pRow <> *NULL);
+         ints    = json_getInt  (pRow : 'PRODKEY');
+         numbers = json_getNum  (pRow : 'PRICE');
+         text    = json_getStr  (pRow : 'DESC');
+         dates   = json_getDate (pRow : 'STOCKDATE');
+         
+         Result += %Char(ints) + ',' + %Char(numbers) + '-';
+         
+         json_delete(pRow); // Always dispose it before get the next
+         pRow = json_sqlFetchNext(sqlhnd);
+      enddo;
 
-           text    = json_getStr (pRow : 'DESC');
-           dates   = %date(json_getStr (pRow : 'STOCKDATE'));
+      pResult = Result;
 
-           Result += %Char(ints) + ',' + %Char(numbers) + '-';
+      // Finaly and always !! close the SQL cursor and dispose the json row object
+      json_sqlClose(sqlhnd);
 
-           json_NodeDelete(pRow); // Always dispose it before get the next
-           pRow = json_sqlFetchNext(sqlhnd);
-        enddo;
+      // You can leave the connection on for succesive requests   
+      // json_sqlDisconnect();
 
-        pResult = Result;
+      // That's it..
+      *inlr = *on;
 
-        // Finaly and always !! close the SQL cursor and dispose the json row object
-        json_sqlClose(sqlhnd);
-        json_sqlDisconnect();
 
-        // That's it..
-        *inlr = *on;
