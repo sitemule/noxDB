@@ -1504,7 +1504,7 @@ PNOXNODE nox_NodeClone  (PNOXNODE pSource)
    while (pNext) {
       PNOXNODE  pNewChild = nox_NodeClone (pNext);
       nox_NodeInsertChildTail (pNewNode , pNewChild);
-      pNext=pNext->pNodeSiblingNext;
+      pNext = pNext->pNodeSiblingNext;
    }
    return pNewNode;
 }
@@ -1871,6 +1871,70 @@ PNOXNODE nox_lookupByXpath (PNOXNODE pRootNode, PUCHAR * ppName)
 #pragma convert(0)
 /* --------------------------------------------------------------------------- */
 #pragma convert(1252)
+PNOXNODE nox_lookupByExpression (PNOXNODE pRootNode, PUCHAR Name)
+{
+   PUCHAR  pEnd = findchr(Name , "=<>" , 3);
+   PUCHAR  compVal;
+   UCHAR   keyName[256];
+   int     nameLen, compLen;
+   int     comp =0;
+
+   switch(*pEnd) {
+      case '=' :  comp = 0 ; break;
+      case '<' :  comp = -1; break;
+      case '>' :  comp = 1 ; break;
+   }
+
+   compVal = pEnd +1;
+   for(;*(pEnd-1) == ' '; pEnd--);       // quick trim
+   nameLen = pEnd  - Name;
+   substr(keyName , Name , nameLen);
+
+   for(;*compVal == ' '; compVal++); // Skip blanks
+   pEnd = strchr (compVal , '\0');
+   if (pEnd == NULL) return NULL;
+   compLen = pEnd - compVal;
+
+   if (*keyName == MASTERSPACE) {
+
+      // Find by atribute value
+      PNOXNODE pNodeTemp = pRootNode;
+      substr(keyName , Name+1 , nameLen-1);
+
+      while (pNodeTemp && pNodeTemp->signature == NODESIG) {
+         PNOXATTR pAtr = nox_AttributeLookup  (pNodeTemp, keyName);
+         if (pAtr && pAtr->Value) {
+            // Does the value match
+            if (a_memicmp(compVal , pAtr->Value, compLen) == comp
+            &&  pAtr->Value[compLen] == '\0') {
+               return pNodeTemp;
+            }
+         }
+         pNodeTemp=pNodeTemp->pNodeSiblingNext;
+      }
+
+   } else {
+      // Find by value
+      PNOXNODE pNodeTemp = pRootNode == NULL? NULL:pRootNode->pNodeChildHead;
+      while (pNodeTemp && pNodeTemp->signature == NODESIG) {
+         PNOXNODE pNode = nox_GetNode  (pNodeTemp, keyName);
+         if (pNode && pNode->Value) {
+
+            // Does the value match
+            if (a_memicmp(compVal , pNode->Value, compLen) == comp
+            &&  pNode->Value[compLen] == '\0') {
+               return pNodeTemp;
+            }
+         }
+         pNodeTemp=pNodeTemp->pNodeSiblingNext;
+      }
+   }
+   return NULL;
+
+}
+#pragma convert(0)
+/* --------------------------------------------------------------------------- */
+#pragma convert(1252)
 PUCHAR nox_NodeName (PNOXNODE pNode,BOOL SkipNameSpace)
 {
    PUCHAR p;
@@ -2083,9 +2147,18 @@ int nox_getNumericKey (PUCHAR pStr, PUCHAR pEnd)
 }
 #pragma convert(0)
 /* ---------------------------------------------------------------------------
+    returns true if a ../ is given
+    --------------------------------------------------------------------------- */
+#pragma convert(1252)
+BOOL isGoUp (PUCHAR pPath)
+{
+   return (0 == memcmp (pPath , "../" , 3));
+}
+#pragma convert(0)
+/* ---------------------------------------------------------------------------
     Find node by name, by parsing a name string and traverse the tree
     --------------------------------------------------------------------------- */
-PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
+PNOXNODE nox_GetNode__  (PNOXNODE pNode, PUCHAR Name)
 {
    PUCHAR  pStart   = Name;
    PNOXNODE pNodeTemp = NULL;
@@ -2093,7 +2166,7 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
    int     Len=0, l , i, StartIx;
    LONG    index;
    PUCHAR  p, pName, pEnd = "";
-   PNOXNODE refNode;
+   PNOXNODE pRefNode;
    UCHAR   refName [256];
 
    if (pNode == NULL
@@ -2114,26 +2187,30 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
       return nox_ReturnNode (pNode, true ); // Done !! return the current node with the counter updated
    }
 
-   if (isNextDelimiter(*Name)) {
-      pNode = nox_GetRoot(pNode);
-      Name++; // Skip root
-      // dont do this - list will break since it will use the firs child on the list .. see later:
-      // if (*Name == '\0') return nox_ReturnNode (pNode, false);; // Done
-   }
+   if (isGoUp (Name)) {
+      // NOP !! for traveling upwards
+   } else {
 
+      if (isNextDelimiter(*Name)) {
+         pNode = nox_GetRoot(pNode);
+         Name++; // Skip root
+         // dont do this - list will break since it will use the firs child on the list .. see later:
+         // if (*Name == '\0') return nox_ReturnNode (pNode, false);; // Done
+      }
 
-   // By default we are searching for Nodes in objects hench Start with the
-   // First child and match; if OK the take the next level etc
-   // However - the level can be restored to the object for ie [UBOUND] or index lookup like: [123]
-   if (*Name != BRABEG) {
-      pNode = pNode->pNodeChildHead;
-      // .. but we can do it here: baically: "/" gives the first child to the root
-      if (*Name == '\0') return nox_ReturnNode (pNode, false);; // Done
+      // By default we are searching for Nodes in objects hench Start with the
+      // First child and match; if OK the take the next level etc
+      // However - the level can be restored to the object for ie [UBOUND] or index lookup like: [123]
+      if (*Name != BRABEG) {
+         pNode = pNode->pNodeChildHead;
+         // .. but we can do it here: baically: "/" gives the first child to the root
+         if (*Name == '\0') return nox_ReturnNode (pNode, false);; // Done
+      }
    }
 
    // Setup for iteration
    *refName = '\0';
-   refNode = pNode;
+   pRefNode = pNode;
    pName = Name;
 
    for (;;) {
@@ -2145,9 +2222,20 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
       }
 
       // Find delimiter, find the end of this token
-      if (*pEnd == BRABEG) {
+      if (*pName == '"') {
+         pName ++;
+         pEnd = strchr ( pName , '"');
+      }
+      else if (*pEnd == BRABEG) {
          pEnd = strchr ( pName , BRAEND);
-      } else {
+      }
+      else if ( isGoUp (pName)) {
+         pName += 3;
+         pEnd  = pName;
+         pRefNode = pNode = pNode->pNodeParent;
+         continue;
+      }
+      else {
          pEnd = findchr(pName , delimiters , sizeof(DELIMITERS)-1); // Not the zerotermination included
       }
 
@@ -2179,7 +2267,7 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
 
          #pragma convert(1252)
          if (a_memicmp (pName , UBOUND , 6) == 0) {
-            return nox_CalculateUbound(refNode, tempKey, SkipNameSpace);
+            return nox_CalculateUbound(pRefNode, tempKey, SkipNameSpace);
          }
          #pragma convert(0)
 
@@ -2188,10 +2276,10 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
 
          // When a subscription is found, then locate the occurens
          if (index >= 0) {
-            pNode = nox_lookupByIndex(refNode , tempKey, index, SkipNameSpace);
+            pNode = nox_lookupByIndex(pRefNode , tempKey, index, SkipNameSpace);
          } else {
             // X-path Node search:
-            pNode = nox_lookupByXpath(refNode , &pName);
+            pNode = nox_lookupByXpath(pRefNode , &pName);
             pEnd = pName +1;
          }
          if (pNode == NULL) return NULL;
@@ -2203,7 +2291,7 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
       }
 
       // Current node will be our reference node for subsequent iterations
-      refNode = pNode;
+      pRefNode = pNode;
 
       // Skip trailing "]" and blanks
       for (; *pEnd == BRAEND || *pEnd == BLANK ; pEnd++);    // the ']'
@@ -2226,6 +2314,157 @@ PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR Name)
       }
    }
 }
+
+/* ---------------------------------------------------------------------------
+    Shift path expression tokens and return state
+    --------------------------------------------------------------------------- */
+#pragma convert(1252)
+void tokenizePathExpression  (PEXPR_PATH exprPath)
+{
+
+   PUCHAR pEnd;
+   LONG len;
+
+   if (exprPath->pNext == NULL || *exprPath->pNext == '\0') {
+      exprPath->state = EXPR_DONE;
+      return ;
+   }
+
+   if (0 == memcmp (exprPath->pNext , "../" , 3)) {
+      exprPath->pNext += 3;
+      exprPath->state = EXPR_PARENT;
+      return;
+   }
+
+   // Subscription of some kind
+   // return EXPR_COUNT; TODO
+   if (*exprPath->pNext == BRABEG) {
+      exprPath->pNext ++;
+      pEnd =  strchr ( exprPath->pNext , BRAEND);
+      len = (pEnd == NULL) ? strlen (exprPath->pNext) : pEnd - exprPath->pNext;
+      substr (exprPath->current, exprPath->pNext, len);
+      exprPath->pNext += len + 1;
+
+      if (0 == strcmp (exprPath->current, "UBOUND") ) {
+         exprPath->state = EXPR_SUBSTRIPTION_UBOUND;
+         return;
+      }
+      exprPath->index = 0;
+      for (PUCHAR p = exprPath->current; *p ; p++) {
+         if (*p  >= '0' && *p <= '9') {
+            exprPath->index = exprPath->index * 10L + (*p - '0');
+         } else {
+            exprPath->state = EXPR_SUBSTRIPTION_PATH;
+            return;
+         }
+      }
+      exprPath->state = EXPR_SUBSTRIPTION_INDEX;
+      return;
+   }
+
+   // We have a . ?
+   if (isNextDelimiter (*exprPath->pNext) ) {
+      BOOL isRoot = (exprPath->pNext == exprPath->pStart);
+      exprPath->pNext += 1;
+      exprPath->state = isRoot ? EXPR_ROOT : EXPR_CHILD;
+      return;
+   }
+
+   // Pickup the name, and set the compare function
+   int skipFnyt;
+   if ( *exprPath->pNext == '"') {
+      exprPath->pNext++;
+      pEnd =  strchr ( exprPath->pNext , '"');
+      exprPath->cmp = &strcmp;
+      skipFnyt = 1;
+   } else {
+      pEnd = findchr(exprPath->pNext , delimiters , sizeof(DELIMITERS)-1); // Not the zerotermination included
+      exprPath->cmp = &a_stricmp;
+      skipFnyt = 0;
+   }
+
+   len = (pEnd == NULL) ? strlen (exprPath->pNext) : pEnd - exprPath->pNext;
+   substr (exprPath->current, exprPath->pNext, len);
+   exprPath->pNext += len + skipFnyt;
+   // Where previous was as "/" or "../" (root or parent)
+   // then we will not get the EXPR_CHILD - so we do both with the EXPR_FIND_CHILD state:
+   if ( exprPath->state == EXPR_ROOT || exprPath->state == EXPR_PARENT) {
+      exprPath->state =  EXPR_FIND_CHILD;
+   } else {
+      exprPath->state =  EXPR_FIND_SIBLING;
+   }
+
+}
+#pragma convert(0)
+
+/* ---------------------------------------------------------------------------
+    Find node by name, by parsing a name string and traverse the tree
+    --------------------------------------------------------------------------- */
+PNOXNODE nox_GetNode  (PNOXNODE pNode, PUCHAR pPath)
+{
+   EXPR_PATH  exprPath;
+   EXPR_STATE state;
+
+   if (pPath == NULL) return pNode;
+
+   exprPath.state = EXPR_ROOT;
+   exprPath.pNext = exprPath.pStart = pPath;
+
+   for (;;) {
+
+      if (pNode == NULL
+      ||  pNode->signature != NODESIG) {
+         return NULL;
+      }
+
+      tokenizePathExpression  (&exprPath);
+
+      switch (exprPath.state) {
+         case EXPR_DONE: {
+            return nox_ReturnNode (pNode, false); // Done !! Just want the root
+            break;
+         }
+         case EXPR_PARENT: {
+            pNode = pNode->pNodeParent;
+            break;
+         }
+         case EXPR_CHILD: {
+            pNode = pNode->pNodeChildHead;
+            break;
+         }
+         case EXPR_FIND_SIBLING: {
+            pNode = nox_lookUpSiblingByName(pNode , exprPath.current);
+            break;
+         }
+         case EXPR_FIND_CHILD: {
+            pNode = nox_lookUpSiblingByName(pNode->pNodeChildHead , exprPath.current);
+            break;
+         }
+         case EXPR_SUBSTRIPTION_PATH: {
+            pNode = nox_lookupByExpression(pNode , exprPath.current);
+            break;
+         }
+         case EXPR_SUBSTRIPTION_INDEX: {
+            pNode = nox_lookupByIndex(pNode , exprPath.current, exprPath.index, exprPath.skipNameSpace);
+            break;
+         }
+         case EXPR_SUBSTRIPTION_UBOUND: {
+            return nox_CalculateUbound(pNode, exprPath.current, exprPath.skipNameSpace);
+            break;
+         }
+         case EXPR_ROOT: {
+            pNode = nox_GetRoot(pNode);
+            break;
+         }
+         case EXPR_COUNT: {
+            nox_CountChildren(pNode);
+            return nox_ReturnNode (pNode, true ); // Done !! return the current node with the counter updated
+            break;
+         }
+      }
+   }
+}
+
 /* ---------------------------------------------------------------------------
     Find node by name, by parsing a name string and traverse the tree
     --------------------------------------------------------------------------- */
@@ -2453,7 +2692,7 @@ PUCHAR nox_GetValuePtr (PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Default)
       return pAtr->Value;
    } else if (pNode->doCount) {
       sprintf(temp , "%ld" , pNode->Count);
-      return (temp);
+      return stre2a( temp , temp);
    } else {
       if ( pNode->Value == NULL && dft != NULL) return dft;  // Note - if value is a proc ptr - Value compare to NULL
       return pNode->Value;
@@ -2480,17 +2719,25 @@ PUCHAR nox_splitAtrFromName (PUCHAR name)
 {
    int balance = 0;
    PUCHAR pEnd;
+   BOOL  isQuoted  = FALSE;
+
 
    for (pEnd = name + strlen(name)-1 ; pEnd >= name; pEnd --) {
-      if (*pEnd == MASTERSPACE && balance == 0) {
-         *pEnd  = '\0';     // Terminate the Node end giving the name to the node only
-         return (pEnd +1);  // atribute name is the next. Return that
-      }
-      else if (*pEnd == BRABEG) {
-         balance ++;
-      }
-      else if (*pEnd == BRAEND) {
-         balance ++;
+
+      if (*pEnd == '"') isQuoted = (! isQuoted);
+
+      if (! isQuoted) {
+
+         if (*pEnd == MASTERSPACE && balance == 0) {
+            *pEnd  = '\0';     // Terminate the Node end giving the name to the node only
+            return (pEnd +1);  // atribute name is the next. Return that
+         }
+         else if (*pEnd == BRABEG) {
+            balance ++;
+         }
+         else if (*pEnd == BRAEND) {
+            balance ++;
+         }
       }
    }
    return NULL;
@@ -3437,7 +3684,7 @@ PNOXNODE nox_Object (PVOID pFirst, ...)
    int parms = pParms->OpDescList->NbrOfParms;
    int i;
    PNOXNODE pObject = nox_NewObject();
-   PVOID  pNext;
+   PVOID     pNext;
    PLVARCHAR pName;
    PNOXNODE  pNode;
    // int   posn1=1 ,desctype1 , datatype1 , descinf11 , descinf21, MsgLen;
@@ -3557,7 +3804,7 @@ void nox_Clear  (PNOXNODE pNode)
       nox_FreeChildren(pNode);
    }
 }
-// ------------------------------------------------------À-------
+// ------------------------------------------------------ù-------
 void nox_Free  (PNOXNODE pNode)
 {
    nox_FreeSiblings(pNode);

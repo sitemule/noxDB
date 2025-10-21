@@ -30,17 +30,18 @@ a \
 */
 
 #pragma convert(1252)
-#define  UBOUND    "UBOUND"
-#define  NULLSTR   "null"
-#define  TRUESTR   "true"
-#define  FALSESTR  "false"
-#define  REMARK    "!--"
-#define  DOCTYPE   "!DOCTYPE"
-#define  ENDREMARK "-->"
-#define  SLASHGT   "/>"
-#define  BRABRAGT  "]]>"
-#define  CDATA     "<![CDATA["
-#define  DELIMITERS   "/\\@[] .{}'\""
+#define  UBOUND      "UBOUND"
+#define  PARENT_PATH "../"
+#define  NULLSTR     "null"
+#define  TRUESTR     "true"
+#define  FALSESTR    "false"
+#define  REMARK      "!--"
+#define  DOCTYPE     "!DOCTYPE"
+#define  ENDREMARK   "-->"
+#define  SLASHGT     "/>"
+#define  BRABRAGT    "]]>"
+#define  CDATA       "<![CDATA["
+#define  DELIMITERS  "/\\@[] .{}'\""
 #pragma convert(0)
 
 #define  APOS         0x27
@@ -66,6 +67,31 @@ a \
 #define  HASH         0x23
 #define  CR           0x0d
 #define  COMMA        0x2c
+
+
+typedef enum {
+   EXPR_DONE,
+   EXPR_ROOT,
+   EXPR_CHILD,
+   EXPR_PARENT,
+   EXPR_COUNT,
+   EXPR_FIND_SIBLING,
+   EXPR_FIND_CHILD,
+   EXPR_SUBSTRIPTION_PATH,
+   EXPR_SUBSTRIPTION_INDEX,
+   EXPR_SUBSTRIPTION_UBOUND
+} EXPR_STATE , *PEXPR_STATE;
+
+typedef struct _EXPR_PATH {
+   UCHAR  current[256];
+   PUCHAR pStart;
+   PUCHAR pNext;
+   LONG   index;
+   BOOL   skipNameSpace;
+   EXPR_STATE state;
+   int (*cmp)(const char *s1, const char *s2);  // function pointer for strcmp
+} EXPR_PATH, *PEXPR_PATH;
+
 
 
 typedef enum {
@@ -141,7 +167,7 @@ typedef struct _NOXNODE {
    struct _NOXNODE * pNodeChildHead;
    struct _NOXNODE * pNodeChildTail;
    struct _NOXNODE * pNodeSiblingNext;
-   struct _NOXNODE * pNodeSiblingPrevious;
+   struct _NOXNODE * pNodeSiblingPrevious; // TODO !! Implement back-chain
    LONG     Count;
    BOOL     newlineInAttrList;
    PUCHAR   Comment;
