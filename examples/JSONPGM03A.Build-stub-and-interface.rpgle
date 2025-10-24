@@ -85,7 +85,7 @@ dcl-proc buildStub;
         outFile  varchar(256) const;
     end-pi;
 
-    dcl-s source    varchar(600000:4);
+    dcl-s source    varchar(600000:4) ccsid(*UTF8);
     Dcl-DS elem      likeds(json_iterator);
     dcl-ds parms      likeds(json_iterator);
     dcl-ds struct    likeds(json_iterator);
@@ -144,7 +144,7 @@ end-proc;
 dcl-proc makeItem;
     dcl-pi *n;
         pItem     pointer value;
-        source   varchar(600000:4) ;
+        source   varchar(600000:4) ccsid(*UTF8);
     end-pi;
 
     source += nl+ '    ' + json_getStr(pItem : '@name');
@@ -193,7 +193,7 @@ dcl-proc makePrologue;
 
     dcl-pi *n;
         pItem     pointer value;
-        source   varchar(600000:4) ;
+        source   varchar(600000:4) ccsid(*UTF8);
     end-pi;
 
     source = (
@@ -223,7 +223,7 @@ end-proc;
 dcl-proc writeTextStmf;
 
     dcl-pi *n;
-        source varchar(600000:4) const;
+        source varchar(600000:4) ccsid(*UTF8);
         stmf   varchar(256) const;
     end-pi;
 
@@ -232,9 +232,11 @@ dcl-proc writeTextStmf;
      mode    pointer value options(*string) ;
     end-pr ;
 
-    dcl-pr fputs int(10) extproc('_C_IFS_fputs') ;
-        string pointer value options(*string) ;
-        pfile  pointer value ;
+    dcl-pr fwrite int(10) extproc('_C_IFS_fwrite') ;
+        buffer pointer value;
+        size   int(10) value;
+        len    int(10) value;
+        pfile  pointer value;
     end-pr ;
 
     dcl-pr fclose  int(10) extproc('_C_IFS_fclose') ;
@@ -245,8 +247,8 @@ dcl-proc writeTextStmf;
 
 
 
-    f = fopen(stmf:'w,ccsid=500');
-    fputs(source:f);
+    f = fopen(stmf:'w,ccsid=1208');
+    fwrite(%addr(source:*DATA) : 1 : %len(source) :f);
     fclose(f);
 
 end-proc;
