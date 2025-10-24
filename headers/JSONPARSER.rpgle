@@ -1472,10 +1472,12 @@ Dcl-C json_REPLACE const(1);
 // <br><br>
 // The options parameter determines what happens if a node with the same name
 // exists in both object trees.
+// Default is MO_MERGE_NEW which means that only new nodes from the source and copied
+// Optional: can be ORED / + with MO_MERGE_MOVE to move the source nodes instead of copying them.
 //
 // @param (input/output) Destination object tree
 // @param (input) Source object tree
-// @param (input) Merge option:  MO_MERGE_NEW,MO_MERGE_MATCH,MO_MERGE_REPLACE,MO_MERGE_MOVE )
+// @param (input) Merge option:  MO_MERGE_NEW,MO_MERGE_MATCH,MO_MERGE_REPLACE ( ORED + MO_MERGE_MOVE )
 
 ///
 Dcl-PR json_mergeObjects extproc(*CWIDEN : 'jx_MergeObjects');

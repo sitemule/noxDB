@@ -288,7 +288,7 @@ static void  copyNodeIntoBuffer (PUCHAR pParmBuffer , PJXPARMMETA pParentMeta , 
          PJXNODE pStructObj = jx_GetNodeChild (pMeta->pStructure);
          PJXPARMMETA pDef = getParmDefinition (pStructObj);
          for (int i=0; i < pMeta->dim ; i++) {
-            copyNodeIntoBuffer(pParmBuffer, pMeta , pDef ,  pArrayElement);
+            copyNodeIntoBuffer(pParmBuffer, pMeta , pDef ,  pArrayElement );
             pParmBuffer += pMeta->size;
             pArrayElement = jx_GetNodeNext(pArrayElement);
          }
@@ -302,11 +302,15 @@ static void  copyNodeIntoBuffer (PUCHAR pParmBuffer , PJXPARMMETA pParentMeta , 
       }
    } else if (pMeta->pStructure) {
       PJXNODE pValueNode = jx_GetNode ( pParmValueNode , pMeta->name);
+      // TODO experimental !!! if not each payload element maps to parameter then  map the root payload to first structure
+      if ( pValueNode == NULL && pParentMeta == NULL && pMeta->use == 'I') {
+         pValueNode = pParmValueNode;
+      }
       PJXNODE pMetaElements = jx_GetNodeChild (pMeta->pStructure);
       while (pMetaElements) {
          PJXPARMMETA pDef = getParmDefinition (pMetaElements);
          if (pDef->pStructure) {
-            copyNodeIntoBuffer (pParmBuffer, pMeta, pDef ,   pValueNode);
+            copyNodeIntoBuffer (pParmBuffer, pMeta, pDef ,   pValueNode );
          } else {
             copyNodeValueIntoBuffer ( pParmBuffer, pDef, pValueNode);
          }
