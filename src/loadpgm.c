@@ -9,6 +9,8 @@
 /*By    Date      Task   Description                         */
 /* NL     14.06.2012         New module                          */
 /* ------------------------------------------------------------- */
+#define  DEBUG 1
+
 #include <QLEAWI.h>
 #include <signal.h>
 #include <mih/stsppo.h>
@@ -365,6 +367,35 @@ static PJXNODE newReturnNode (PJXPARMMETA pMethodParm, PUCHAR pParmBuffer )
 
    UCHAR data [32000]; // TODO - dynamic size
 
+	UCHAR    signature; // always hex 00
+	UCHAR    name[PROC_NAME_MAX];
+	JX_DTYPE dType;
+	UCHAR    use;
+	ULONG    offset;
+	ULONG    size;
+	ULONG    precision;
+	ULONG    length;
+	ULONG    dim;
+
+   #ifdef DEBUG
+      UCHAR temp [30];
+      memcpy ( temp ,pParmBuffer , 30  );
+      temp[min(pMethodParm->length, 29 )] = '\0';
+
+      jx_joblog ( "%s type %c use: %c offset: %d size: %d prec: %d, len: %d, dim:%d, hex : %16.16x, dta: %s",
+         pMethodParm->name,
+         pMethodParm->dType,
+         pMethodParm->use,
+         pMethodParm->offset,
+         pMethodParm->size,
+         pMethodParm->precision,
+         pMethodParm->length,
+         pMethodParm->dim,
+         *pParmBuffer,
+         temp
+      );
+   #endif
+
    switch (pMethodParm->dType) {
       case JX_DTYPE_STRUCTURE: {
          break;
@@ -375,6 +406,9 @@ static PJXNODE newReturnNode (PJXPARMMETA pMethodParm, PUCHAR pParmBuffer )
       }
       case JX_DTYPE_VARCHAR: {
          int actlen =  (pMethodParm->precision == 4) ? *(PULONG) pParmBuffer : *(PUSHORT) pParmBuffer ;
+         if (actlen > sizeof(data) || actlen > pMethodParm->length ) {
+            actlen = min( sizeof(data) , pMethodParm->length);
+         }
          substr (data  , pParmBuffer + pMethodParm->precision ,actlen);
          break;
       }
