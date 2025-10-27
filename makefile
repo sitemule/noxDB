@@ -140,16 +140,16 @@ clean:
 	-system -q "DLTOBJ OBJ($(BIN_LIB)/RELEASE)   OBJTYPE(*file)"
 
 
-release: clean
+.PHONY: release
+release:
 	@echo " -- Creating noxdb release. --"
 	@echo " -- Creating save file. --"
 	system "CRTSAVF FILE($(BIN_LIB)/RELEASE)"
-	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) DTACPR(*HIGH) OMITOBJ((RELEASE *FILE))"
+	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) DTACPR(*HIGH) SELECT((*INCLUDE NOXDB*) (*INCLUDE JSONXML) (*INCLUDE H) (*INCLUDE QRPGLEREF))
 	-mkdir -p release
 	-rm ./release/release.savf
 	system "CPYTOSTMF FROMMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') TOSTMF('./release/release.savf') STMFOPT(*REPLACE) STMFCCSID(1252) CVTDTA(*NONE)"
-	@echo " -- Cleaning up... --"
-	system "DLTOBJ OBJ($(BIN_LIB)/RELEASE) OBJTYPE(*FILE)"
+	system "DLTF FILE($(BIN_LIB)/RELEASE)"
 	@echo " -- Release created! --"
 	@echo ""
 	@echo "To install the release, run:"
@@ -157,7 +157,6 @@ release: clean
 	@echo "  > CPYFRMSTMF FROMSTMF('./release/release.savf') TOMBR('/QSYS.lib/$(BIN_LIB).lib/RELEASE.FILE') MBROPT(*REPLACE) CVTDTA(*NONE)"
 	@echo "  > RSTLIB SAVLIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE)"
 	@echo ""
-
 
 
 # For vsCode / single file then i.e.: gmake current sqlio.c
