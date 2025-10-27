@@ -424,25 +424,23 @@ static PJXNODE newReturnNode (PJXPARMMETA pMethodParm, PUCHAR pParmBuffer )
 // Find a sibling to the structure with  name - sufixed by _LENGTH,
 // then take this values as the current length - otherwise it is the "dim" value that counts
 /* ------------------------------------------------------------- */
-
 static LONG getCurrentLength(PJXPARMMETA pMethodParm, PJXNODE pParmObj, PUCHAR pStartBuffer)
 {
-/* If the LENGTH is in the PCML - we can use this: 
+   // If the LENGTH is in the PCML - we can use this:
    PJXPARMMETA pLenMeta = pMethodParm->pLengthMeta;
    if (pLenMeta) {
-      // TODO !! Remove this guess of size when we know the real size
-      ULONG len = *(PULONG) (pStartBuffer + pLenMeta->offset);
-      if (len < 1000) {
-         jx_joblog ( "Long length %d for %s" , len , pLenMeta->name);
-         return len;
+      switch (pLenMeta->length) {
+         case  8: return *(long long *) (pStartBuffer + pLenMeta->offset);
+         case  4: return *(long *     ) (pStartBuffer + pLenMeta->offset);
+         case  2: return *(short int *) (pStartBuffer + pLenMeta->offset);
+         default: return pMethodParm->dim;
       }
-      len = *(PUSHORT) (pStartBuffer + pLenMeta->offset);
-      jx_joblog ( "Short length %d for %s" , len , pLenMeta->name);
-      return len;
    } else {
       return pMethodParm->dim;
    }
-*/
+
+/* If not we can seek for the value ...
+   TODO !!! To be depricated
    UCHAR nodeName [256];
    strcpy (nodeName , pMethodParm->name);
    strcat (nodeName, "_LENGTH");
@@ -466,6 +464,7 @@ static LONG getCurrentLength(PJXPARMMETA pMethodParm, PJXNODE pParmObj, PUCHAR p
       pNode = pNode->pNodeSibling;
    }
    return pMethodParm->dim;
+*/
 
 }
 /* ------------------------------------------------------------- */
