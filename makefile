@@ -144,6 +144,7 @@ clean:
 release:
 	@echo " -- Creating noxdb release. --"
 	@echo " -- Creating save file. --"
+	-system "DLTF FILE($(BIN_LIB)/RELEASE)"
 	system "CRTSAVF FILE($(BIN_LIB)/RELEASE)"
 	system "SAVLIB LIB($(BIN_LIB)) DEV(*SAVF) SAVF($(BIN_LIB)/RELEASE) DTACPR(*HIGH) SELECT((*INCLUDE NOXDB*) (*INCLUDE JSONXML) (*INCLUDE H) (*INCLUDE QRPGLEREF))
 	-mkdir -p release
