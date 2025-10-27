@@ -7,6 +7,14 @@
 
 // Building a stub and interface for a ILE service program
 
+// After build you can call the stub program e.g.
+// call   JSONPGM03A
+// CHGATR OBJ('/prj/noxdb/testout/NOXDB-JSONPGM00C.rpgle') ATR(*CCSID) VALUE(1252)
+// CRTRPGMOD MODULE(noxdb/STUB) SRCSTMF('/prj/noxdb/testout/NOXDB-JSONPGM00C.rpgle')
+// CRTSRVPGM SRVPGM(NOXDB/STUB) EXPORT(*ALL)
+// call JSONPGM03B ( NOXDB STUB 'GetClaimSummary                                       ')
+
+
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +47,7 @@ dcl-proc main;
     fileName = '/prj/noxdb/testout/' + %trim(lib) + '-' + %trim(pgm) ;
 
     // pMeta = getTheMeta(lib:pgm:type:pcmlFile + '.pcml');
-    pMeta = json_ParseFile ('/prj/customer/example.pcml');
+    pMeta = json_ParseFile ('/prj/noxdb/testout/nox-meta.pcml');
 
 
     buildStub(pMeta : fileName + '.rpgle');
@@ -245,9 +253,7 @@ dcl-proc writeTextStmf;
 
     dcl-s f pointer;
 
-
-
-    f = fopen(stmf:'w,ccsid=1208');
+    f = fopen(stmf:'wb,o_ccsid=1208');
     fwrite(%addr(source:*DATA) : 1 : %len(source) :f);
     fclose(f);
 

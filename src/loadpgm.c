@@ -420,20 +420,44 @@ static PJXNODE newReturnNode (PJXPARMMETA pMethodParm, PUCHAR pParmBuffer )
 
 }
 /* ------------------------------------------------------------- */
-static void  setReturnObject (PJXNODE pReturnObject, PJXNODE pParmObj , PUCHAR pParmBuffer, BOOL isArray )
+// If we have a length parameter, that is:
+// Find a sibling to the structure with  name - sufixed by _LENGTH,
+// then take this values as the current length - otherwise it is the "dim" value that counts
+/* ------------------------------------------------------------- */
+
+static LONG getCurrentLength(PJXPARMMETA pMethodParm, PUCHAR pStartBuffer)
+{
+   PJXPARMMETA pLenMeta = pMethodParm->pLengthMeta;
+   if (pLenMeta) {
+      // TODO !! Remove this guess of size when we know the real size
+      ULONG len = *(PULONG) (pStartBuffer + pLenMeta->offset);
+      if (len < 1000) {
+         jx_joblog ( "Long length %d for %s" , len , pLenMeta->name);
+         return len;
+      }
+      len = *(PUSHORT) (pStartBuffer + pLenMeta->offset);
+      jx_joblog ( "Short length %d for %s" , len , pLenMeta->name);
+      return len;
+   } else {
+      return pMethodParm->dim;
+   }
+}
+/* ------------------------------------------------------------- */
+static void  setReturnObject (PJXNODE pReturnObject, PJXNODE pParmObj , PUCHAR pParmBuffer, PUCHAR pParentBuffer, BOOL isArray )
 {
    PJXPARMMETA pMethodParm = getParmDefinition (pParmObj);
 
    if (pMethodParm->dim > 0 && isArray == FALSE) {
+      int  currentLength = getCurrentLength(pMethodParm, pParentBuffer);
       if (isAnonymousArray(pMethodParm->name)) {
          if (pMethodParm->pStructure) {
             PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
-            for (int i = 0 ; i< pMethodParm->dim ; i++) {
-               setReturnObject ( pReturnObject  , pStructObj , pParmBuffer, TRUE);
+            for (int i = 0 ; i< currentLength ; i++) {
+               setReturnObject ( pReturnObject  , pStructObj , pParmBuffer, pParentBuffer, TRUE);
                pParmBuffer += pMethodParm->size;
             }
          } else {
-            for (int i = 0 ; i< pMethodParm->dim ; i++) {
+            for (int i = 0 ; i< currentLength ; i++) {
                jx_NodeInsertChildTail  ( pReturnObject , newReturnNode (pMethodParm, pParmBuffer));
                pParmBuffer += pMethodParm->size;
             }
@@ -443,12 +467,12 @@ static void  setReturnObject (PJXNODE pReturnObject, PJXNODE pParmObj , PUCHAR p
          jx_NodeRename (pReturnArray , pMethodParm->name);
          if (pMethodParm->pStructure) {
             PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
-            for (int i = 0 ; i< pMethodParm->dim ; i++) {
-               setReturnObject ( pReturnArray  , pStructObj , pParmBuffer, TRUE);
+            for (int i = 0 ; i< currentLength ; i++) {
+               setReturnObject ( pReturnArray  , pStructObj , pParmBuffer, pParentBuffer, TRUE);
                pParmBuffer += pMethodParm->size;
             }
          } else {
-            for (int i = 0 ; i< pMethodParm->dim ; i++) {
+            for (int i = 0 ; i< currentLength ; i++) {
                jx_NodeInsertChildTail  ( pReturnArray , newReturnNode (pMethodParm, pParmBuffer));
                pParmBuffer += pMethodParm->size;
             }
@@ -459,7 +483,7 @@ static void  setReturnObject (PJXNODE pReturnObject, PJXNODE pParmObj , PUCHAR p
       PJXNODE pReturnStruct = isAnonymousArray(pMethodParm->name) ? jx_NewArray(NULL) : jx_NewObject(NULL);
       for (; pParmObj ; pParmObj = jx_GetNodeNext(pParmObj)) {
          PJXPARMMETA pStructParm = getParmDefinition (pParmObj);
-         setReturnObject ( pReturnStruct , pParmObj, pParmBuffer + pStructParm->offset, FALSE);
+         setReturnObject ( pReturnStruct , pParmObj, pParmBuffer + pStructParm->offset , pParentBuffer, FALSE);
       }
       jx_NodeInsertChildTail (pReturnObject , pReturnStruct );
    } else if (pMethodParm->dType == JX_DTYPE_STRUCTURE) {
@@ -468,11 +492,13 @@ static void  setReturnObject (PJXNODE pReturnObject, PJXNODE pParmObj , PUCHAR p
       jx_NodeRename (pReturnStruct , pMethodParm->name);
       for (; pStructObj ; pStructObj = jx_GetNodeNext(pStructObj)) {
          PJXPARMMETA pStructParm = getParmDefinition (pStructObj);
-         setReturnObject ( pReturnStruct , pStructObj, pParmBuffer + pStructParm->offset, FALSE);
+         setReturnObject ( pReturnStruct , pStructObj, pParmBuffer + pStructParm->offset, pParentBuffer, FALSE);
       }
       jx_NodeInsertChildTail (pReturnObject , pReturnStruct );
    } else {
-      jx_NodeInsertChildTail (pReturnObject , newReturnNode (pMethodParm,  pParmBuffer));
+      if ( pMethodParm->dontRender == FALSE) {
+         jx_NodeInsertChildTail (pReturnObject , newReturnNode (pMethodParm,  pParmBuffer));
+      }
    }
 }
 /* ------------------------------------------------------------- */
@@ -488,7 +514,7 @@ static PJXNODE buildReturnObject (PJXMETHOD  pMethod, PJXNODE pParms, PVOID argA
          if (pReturnObject == NULL) {
             pReturnObject = isAnonymousArray(pMethodParm->name) ? jx_NewArray(NULL) : jx_NewObject(NULL);
          }
-         setReturnObject (pReturnObject , pParmObj,  argArray [argIx], FALSE);
+         setReturnObject (pReturnObject , pParmObj,  argArray [argIx], argArray [argIx] , FALSE);
       }
    }
 
@@ -575,6 +601,7 @@ static PJXNODE  call    (PJXMETHOD pMethod , PJXNODE parms, ULONG options)
 
 /* --------------------------------------------------------------------------- *\
     Get the pcml from the program
+    https://www.ibm.com/docs/en/i/7.4.0?topic=syntax-pcml-data-tag
 \* --------------------------------------------------------------------------- */
 PJXNODE  jx_ProgramMeta ( PUCHAR library , PUCHAR Program)
 {
@@ -884,6 +911,32 @@ static PJXNODE buildParmElements(PJXNODE pPcmlProgram, PJXNODE pStructs, PLONG o
    return pParms;
 }
 /* --------------------------------------------------------------------------- *\
+   Find _Length nodes - map and set attibutes
+\* --------------------------------------------------------------------------- */
+static void setArrayLengthNodes (PJXNODE pElements)
+{
+   UCHAR nodeName [256];
+   PJXNODE pNode = pElements->pNodeChildHead;
+   while (pNode) {
+      PJXPARMMETA pParm = getParmDefinition (pNode);
+      if (pParm->dim > 0) {
+         strcpy (nodeName , pParm->name);
+         strcat (nodeName, "_LENGTH");
+         PJXNODE pLookupNode = pElements->pNodeChildHead;
+         while (pLookupNode) {
+            PJXPARMMETA pLookupParm = getParmDefinition (pLookupNode);
+            if (0==strcmp(pLookupParm->name , nodeName)) {
+               pLookupParm->dontRender = TRUE;
+               pParm->pLengthMeta = pLookupParm;
+               break;
+            }
+            pLookupNode = pLookupNode->pNodeSibling;
+         }
+      }
+      pNode = pNode->pNodeSibling;
+   }
+}
+/* --------------------------------------------------------------------------- *\
    Load all complex (if any) datatypes and make a __structs__ node
 \* --------------------------------------------------------------------------- */
 static void buildStructures ( PJXNODE pProgram , PJXNODE pPcml)
@@ -898,6 +951,7 @@ static void buildStructures ( PJXNODE pProgram , PJXNODE pPcml)
          LONG   offset = 0;
          LONG   size   = 0;
          PJXNODE pElements = buildParmElements(pPcmlStruct , pStructs , &offset, &size, pProgram);
+         setArrayLengthNodes (pElements);
          jx_SetNodeAttrValueInt (pElements , "size", size);
          jx_NodeMoveInto (pStructs, structureName, pElements );
          pPcmlStruct = jx_GetNodeNext(pPcmlStruct);

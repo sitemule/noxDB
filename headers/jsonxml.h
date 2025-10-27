@@ -303,9 +303,9 @@ typedef struct _JXPARMMETA  {
 	UCHAR    separatorChar;
 	NODETYPE graphDataType;
 	PJXNODE  pStructure;
+	struct _JXPARMMETA* pLengthMeta;
+	BOOL     dontRender;
 } JXPARMMETA, * PJXPARMMETA;
-
-
 
 
 #endif

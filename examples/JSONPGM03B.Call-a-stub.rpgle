@@ -50,7 +50,7 @@ dcl-proc main;
     pMeta = json_ProcedureMeta (lib : pgm: '*ALL');
 
     // Just dump the result to IFS stream file since it is XML by nature:
-    json_WriteXMLStmf(pMeta:'/prj/noxdb/testout/nox-meta.pcml':1208:*OFF);
+    // json_WriteXMLStmf(pMeta:'/prj/noxdb/testout/nox-meta.pcml':1208:*OFF);
 
     pIn = json_parseFile ( '/prj/noxdb/testout/nox-in.json');
 
