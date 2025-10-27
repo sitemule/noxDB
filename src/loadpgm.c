@@ -425,8 +425,9 @@ static PJXNODE newReturnNode (PJXPARMMETA pMethodParm, PUCHAR pParmBuffer )
 // then take this values as the current length - otherwise it is the "dim" value that counts
 /* ------------------------------------------------------------- */
 
-static LONG getCurrentLength(PJXPARMMETA pMethodParm, PUCHAR pStartBuffer)
+static LONG getCurrentLength(PJXPARMMETA pMethodParm, PJXNODE pParmObj, PUCHAR pStartBuffer)
 {
+/* If the LENGTH is in the PCML - we can use this: 
    PJXPARMMETA pLenMeta = pMethodParm->pLengthMeta;
    if (pLenMeta) {
       // TODO !! Remove this guess of size when we know the real size
@@ -441,6 +442,31 @@ static LONG getCurrentLength(PJXPARMMETA pMethodParm, PUCHAR pStartBuffer)
    } else {
       return pMethodParm->dim;
    }
+*/
+   UCHAR nodeName [256];
+   strcpy (nodeName , pMethodParm->name);
+   strcat (nodeName, "_LENGTH");
+
+   PJXNODE pNode = pParmObj->pNodeParent->pNodeChildHead;
+   while (pNode ) {
+      PJXPARMMETA pLookUpParm = getParmDefinition (pNode);
+      if (0==strcmp(pLookUpParm->name , nodeName)) {
+         pLookUpParm->dontRender = TRUE;
+         // TODO !! Remove this guess of size when we know the real size
+         ULONG len = *(PULONG) (pStartBuffer + pLookUpParm->offset);
+         if (len < 1000) {
+            jx_joblog ( "Long length %d for %s" , len , nodeName);
+            return len;
+         }
+         len = *(PUSHORT) (pStartBuffer + pLookUpParm->offset);
+         jx_joblog ( "Short length %d for %s" , len , nodeName);
+         return len;
+         break;
+      }
+      pNode = pNode->pNodeSibling;
+   }
+   return pMethodParm->dim;
+
 }
 /* ------------------------------------------------------------- */
 static void  setReturnObject (PJXNODE pReturnObject, PJXNODE pParmObj , PUCHAR pParmBuffer, PUCHAR pParentBuffer, BOOL isArray )
@@ -448,7 +474,7 @@ static void  setReturnObject (PJXNODE pReturnObject, PJXNODE pParmObj , PUCHAR p
    PJXPARMMETA pMethodParm = getParmDefinition (pParmObj);
 
    if (pMethodParm->dim > 0 && isArray == FALSE) {
-      int  currentLength = getCurrentLength(pMethodParm, pParentBuffer);
+      int  currentLength = getCurrentLength(pMethodParm, pParmObj, pParentBuffer);
       if (isAnonymousArray(pMethodParm->name)) {
          if (pMethodParm->pStructure) {
             PJXNODE pStructObj = jx_GetNodeChild(pMethodParm->pStructure);
