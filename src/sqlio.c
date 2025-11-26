@@ -730,6 +730,8 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    PJXSQL pSQL;
    SQLINTEGER  dummyInt , isTrue,descLen;
    SQLSMALLINT len , dummyShort;
+   UCHAR dummy[1024];
+   SQLPOINTER CharacterAttributePtr = dummy;
    BOOL scroll = pParms->OpDescList->NbrOfParms <= 2; // Typicall from CALL from RPG
 
    int rc;
@@ -909,7 +911,16 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
 
       // get display length for column
       SQLColAttribute (pSQL->pstmt->hstmt, i+1, SQL_DESC_PRECISION, NULL, 0,NULL, &pCol->displaysize);
-
+      // When the table-data is in UTF-8 we need to escape to unicode data
+      SQLColAttribute  (
+         pSQL->pstmt->hstmt,
+         i+1,                  // The meta "cursor" contaians all columns
+         SQL_DESC_COLUMN_CCSID,
+         CharacterAttributePtr , // SQLPOINTER     CharacterAttributePtr,
+         0 ,                     // SQLSMALLINT    BufferLength,
+         NULL ,                  // SQLSMALLINT    *StringLengthPtr,
+         &pCol->ccsid            // SQLPOINTER     NumericAttributePtr);
+      );
       // Pollyfill for pre 7.5
       tprc = SQLColAttribute (pSQL->pstmt->hstmt,i+1,SQL_DESC_TYPE_NAME, typeName , sizeof(typeName),&len,&dummyInt);
       if (tprc == SQL_SUCCESS) {
@@ -1020,6 +1031,15 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
 
          PJXCOL pCol = &pSQL->cols[i];
 
+         // No matter how we do it - normal sbcs in UTF-8 is converted by the OS
+         // so this will unfutunatley not work
+         // a cast int the SQL statmet has to be done like to get a unicode version of the data:
+         //    cast(myutf8 as vargraphic(256))
+         //
+         //if (pCol->ccsid == 1208) {
+         //   dataType = SQL_C_WCHAR; // SQL_C_WCHAR ?
+         //}
+
          // TODO - Work arround !!! first get the length - if null, the dont try the get data
          // If it has a pointer value, the API will fail..
          // For now BLOB and CLOB does not support "not null with default"
@@ -1066,7 +1086,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
                case SQL_WVARCHAR:
                case SQL_GRAPHIC:
                case SQL_VARGRAPHIC: {
-                  UCHAR temp [32768];
+                  UCHAR temp [1 + pCol->collen * 6];
                   PUCHAR pInBuf = buf;
                   size_t OutLen;
                   size_t inbytesleft;
@@ -1082,6 +1102,21 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
                   }
                   OutLen = XlateBuffer  (pConnection->pCd, temp , pInBuf, inbytesleft);
                   temp[OutLen] = '\0';
+
+                  XlateUnicodeToSbcs  (temp, pInBuf, inbytesleft , 0);
+
+                  // trigger new parsing of JSON-objects in columns:
+                  // Predicts json data i columns
+                  if (pConnection->options.autoParseContent == ON) {
+                     if (*temp == jobBraBeg || *temp == jobCurBeg) {
+                        PJXNODE pNode = jx_parseStringCcsid(temp, 0);
+                        if (pNode) {
+                           jx_NodeRename(pNode, pCol->colname);
+                           jx_NodeInsertChildTail (pRow, pNode);
+                           break;
+                        }
+                     }
+                  }
 
                   jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , temp,  pCol->nodeType );
 

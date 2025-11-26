@@ -19,12 +19,15 @@ label on column noxdbdemo.unicode (
 	text_unicode 	is 'text unicode'
 );
 
+delete from noxdbdemo.unicode;
+
 
 insert into noxdbdemo.unicode
 	(text_ucs2,text_utf8,text_unicode)
 values
 
 ('abcÆØÅÆØÅ','abcÆØÅÆØÅ', 'abcÆØÅÆØÅ'),
-('Αθήνα','Αθήνα','Αθήνα');
+('Αθήνα','Αθήνα','Αθήνα'),
+('{"a":1}','{"b":2}','{"c":3}');
 
 select * from noxdbdemo.unicode;
