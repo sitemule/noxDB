@@ -17,6 +17,7 @@
 
 #include "ostypes.h"
 #include "xlate.h"
+extern int errno;
 
 /* ------------------------------------------------------------- */
 iconv_t XlateOpenDescriptor (int FromCcsid, int ToCcsid, int reportError)
@@ -35,7 +36,7 @@ iconv_t XlateOpenDescriptor (int FromCcsid, int ToCcsid, int reportError)
    toccsid.subs_alternative = 0 ;
    toccsid.shift_alternative = 0;
    toccsid.length_option = 0;
-   toccsid.mx_error_option = reportError;
+   toccsid.mx_error_option = 0;
 
    memset(&fromccsid , 0, sizeof(fromccsid));
    fromccsid.CCSID = FromCcsid;
@@ -96,17 +97,17 @@ PUCHAR XlateStringQ (PUCHAR out, PUCHAR in, int FromCCSID, int ToCCSID)
    return out;
 }
 /* ------------------------------------------------------------- */
-LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen ) 
+LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen )
 {
    size_t inbytesleft = inLen;
    size_t outbytesleft =  LONG_MAX;
    PUCHAR pIn = in;
    PUCHAR pOut = out;
    size_t rc = iconv (cd, &pIn, &inbytesleft, &pOut, &outbytesleft);
-   
+
    return (rc < 0) ? -1: LONG_MAX - outbytesleft;
- 
-} 
+
+}
 /* ------------------------------------------------------------- *\
    Single byte charset (SBCS) can not carrie all unicode. And in
    that case we escape with the \uXXXX unicode notation used in JSON.
@@ -114,7 +115,7 @@ LONG XlateBuffer (iconv_t cd, PUCHAR out , PUCHAR in , LONG inLen )
    If invalid char sequence is encounted in the UTF-8 data stream
    it will default to latin-1 (windows 1252)
 
-   note: output is assumed to be som kind of EBCDIC for the unicode escape. 
+   note: output is assumed to be som kind of EBCDIC for the unicode escape.
 
    note the bitshifting below. It is based on (omiting the bit test after the first byte)
 
@@ -258,6 +259,54 @@ LONG XlateUtf8ToSbcs (PUCHAR outBuf , PUCHAR inBuf , LONG inBufLen , int toCcsid
    return pOutBuf - outBuf;
 
 }
+/* ------------------------------------------------------------- *\
+   Single byte charset (SBCS) can not carrie all unicode. And in
+   that case we escape with the \uXXXX unicode notation used in JSON.
+
+   If invalid char sequence is encounted in the unicode  data stream
+   it will default to latin-1 (windows 1252)
+
+   note: output is assumed to be som kind of EBCDIC for the unicode escape.
+
+
+\* ------------------------------------------------------------- */
+LONG XlateUnicodeToSbcs (PUCHAR outBuf , PUCHAR inBuf , LONG inBufLen , int toCcsid)
+{
+   size_t  rc;
+   int i;
+   PUCHAR  pOutBuf = outBuf;
+   UCHAR   hex [] = "0123456789ABCDEF";
+
+   iconv_t defaultSbcs   = XlateOpenDescriptor (1252, toCcsid, 1);
+
+
+   for (i=0; i<inBufLen; i+=2 ) {
+
+      // Check if it's representable in Windows-1252
+      if (inBuf[i] == 0x00 ) {
+         // Output as Windows-1252 character
+         PUCHAR  pInByte  = &inBuf[i+1];
+         size_t  inBytesLeft  = 1;
+         size_t  outBytesLeft = 1;
+         rc = iconv (defaultSbcs, &pInByte, &inBytesLeft, &pOutBuf, &outBytesLeft);
+      } else {
+         // Output as \uXXXX escape sequence
+         *(pOutBuf++) = '\\';
+         *(pOutBuf++) = 'u';
+         *(pOutBuf++) = hex[(inBuf[i]   & 0xf0) >> 4];
+         *(pOutBuf++) = hex[(inBuf[i]   & 0x0f)];
+         *(pOutBuf++) = hex[(inBuf[i+1] & 0xf0) >> 4];
+         *(pOutBuf++) = hex[(inBuf[i+1] & 0x0f)];
+      }
+   }
+
+   iconv_close (defaultSbcs);
+
+   // terminate so it can be used as a C-string
+   *(pOutBuf) = '\0';
+   return pOutBuf - outBuf;
+
+}
 /* ------------------------------------------------------------- */
 BOOL XlateGetStaticConversionTables  (PUCHAR e2a , PUCHAR a2e , int AsciiCcsid , int EbcdicCcsid)
 {
@@ -274,7 +323,7 @@ BOOL XlateGetStaticConversionTables  (PUCHAR e2a , PUCHAR a2e , int AsciiCcsid ,
 
    cd = XlateOpenDescriptor ( AsciiCcsid, EbcdicCcsid, FALSE);
    if (cd.return_value == -1) {
-      EbcdicCcsid = 277; // Fallback if jobccsid = 65535 and for backwards compatibility, noxDb was originally build in ccsid 277 
+      EbcdicCcsid = 277; // Fallback if jobccsid = 65535 and for backwards compatibility, noxDb was originally build in ccsid 277
       cd = XlateOpenDescriptor ( AsciiCcsid, EbcdicCcsid, FALSE);
    }
    if (cd.return_value == -1) {
@@ -286,11 +335,11 @@ BOOL XlateGetStaticConversionTables  (PUCHAR e2a , PUCHAR a2e , int AsciiCcsid ,
 
    if (len == -1) {
       return true;
-   } 
+   }
 
    cd = XlateOpenDescriptor ( EbcdicCcsid , AsciiCcsid, FALSE);
    if (cd.return_value == -1) {
-      EbcdicCcsid = 277; // Fallback if jobccsid = 65535 and for backwards compatibility, noxDb was originally build in ccsid 277 
+      EbcdicCcsid = 277; // Fallback if jobccsid = 65535 and for backwards compatibility, noxDb was originally build in ccsid 277
       cd = XlateOpenDescriptor ( EbcdicCcsid , AsciiCcsid, FALSE);
    }
    if (cd.return_value == -1) {
@@ -300,10 +349,9 @@ BOOL XlateGetStaticConversionTables  (PUCHAR e2a , PUCHAR a2e , int AsciiCcsid ,
 
    if (len == -1) {
       return true;
-   } 
+   }
 
    iconv_close (cd);
 
    return (error);
 }
-

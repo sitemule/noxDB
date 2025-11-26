@@ -630,51 +630,52 @@ void ensureOpenXlate(void);
 #endif
 
 typedef _Packed struct  {
-	 SQLHSTMT      hstmt;
-	 BOOL          allocated;
-	 BOOL          exec;
+	SQLHSTMT      hstmt;
+	BOOL          allocated;
+	BOOL          exec;
 } JXSQLSTMT, * PJXSQLSTMT;
 
 typedef struct  {
-	 SQLCHAR       colname  [64]; // !!!! TODO !!! set len to 32!!
-	 SQLCHAR       sysname  [64];
-	 SQLCHAR       realname [64];
-	 SQLSMALLINT   coltype;
-	 SQLSMALLINT   colnamelen;
-	 SQLSMALLINT   nullable;
-	 ULONG    	   collen;
-	 SQLSMALLINT   scale;
-	 SQLCHAR *     data;
-	 ULONG    	   displaysize;
-	 NODETYPE      nodeType;
-	 SQLCHAR       header[128];
-	 SQLCHAR       text[128];
-	 BOOL          isId;
+	SQLCHAR       colname  [64]; // !!!! TODO !!! set len to 32!!
+	SQLCHAR       sysname  [64];
+	SQLCHAR       realname [64];
+	SQLSMALLINT   coltype;
+	SQLSMALLINT   colnamelen;
+	SQLSMALLINT   nullable;
+	ULONG    	   collen;
+	SQLSMALLINT   scale;
+	SQLCHAR *     data;
+	ULONG    	   displaysize;
+	NODETYPE      nodeType;
+	SQLCHAR       header[128];
+	SQLCHAR       text[128];
+	BOOL          isId;
+	ULONG         ccsid;
 } JXCOL, * PJXCOL;
 
 
 typedef _Packed struct  {
-	 LGL         hexSort;
-	 LGL         sqlNaming;
-	 UCHAR       DateSep;
-	 LONG        DateFmt;
-	 UCHAR       TimeSep;
-	 LONG        TimeFmt;
-	 UCHAR       DecimalPoint;
-	 LGL         upperCaseColName;
-	 LGL         autoParseContent;
+	LGL         hexSort;
+	LGL         sqlNaming;
+	UCHAR       DateSep;
+	LONG        DateFmt;
+	UCHAR       TimeSep;
+	LONG        TimeFmt;
+	UCHAR       DecimalPoint;
+	LGL         upperCaseColName;
+	LGL         autoParseContent;
 }  SQLOPTIONS, * PSQLOPTIONS;
 
 typedef _Packed struct  {
-	 LGL         doTrace;
-	 UCHAR       lib[11];
-	 SQLHSTMT    handle;
-	 UCHAR       tsStart [27];
-	 UCHAR       tsEnd   [27];
-	 LONG        sqlCode;
-	 UCHAR       text  [256];
-	 UCHAR       job [29];
-	 INT64       trid;
+	LGL         doTrace;
+	UCHAR       lib[11];
+	SQLHSTMT    handle;
+	UCHAR       tsStart [27];
+	UCHAR       tsEnd   [27];
+	LONG        sqlCode;
+	UCHAR       text  [256];
+	UCHAR       job [29];
+	INT64       trid;
 }  JXTRACE  , * PJXTRACE;
 
 #define  COMMENT_SIZE 4096

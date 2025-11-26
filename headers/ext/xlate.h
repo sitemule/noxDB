@@ -11,6 +11,7 @@ VARCHAR    XlateVarCharQ (PVARCHAR In ,  int FromCCSID, int ToCCSID);
 VARCHAR    XlateVarChar (iconv_t iconvCd, PVARCHAR In );
 iconv_t    XlateOpenDescriptor (int FromCcsid, int ToCcsid, int reportError);
 LONG       XlateUtf8ToSbcs (PUCHAR outBuf , PUCHAR inBuf , LONG inBufLen , int toCcsid);
+LONG       XlateUnicodeToSbcs (PUCHAR outBuf , PUCHAR inBuf , LONG inBufLen , int toCcsid);
 BOOL       XlateGetStaticConversionTables  (PUCHAR e2a , PUCHAR a2e , int AsciiCcsid , int EbcdicCcsid);
 
 
