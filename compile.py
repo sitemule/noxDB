@@ -179,7 +179,7 @@ def runscript(stmf, shell):
 #ERROR      0 001 1 000020 000020 000 000020 000 CPD0791 I 00 116 No labels used in program.
 
 def showEventFile (lib , obj):
-	shell = oscmd ("cat /QSYS.LIB/" + lib + ".LIB/EVFEVENT.FILE/" + obj + ".MBR") 
+	shell = oscmd ("cat /QSYS.LIB/" + lib + ".LIB/EVFEVENT.FILE/" + obj + ".MBR")
 	shell = "/QOpenSys/usr/bin/qsh -c '" + shell + "'"
 	proc = subprocess.Popen(shell,
 		shell=True,
@@ -192,7 +192,7 @@ def showEventFile (lib , obj):
 	while rec > ' ':
 		ln = rec.decode('cp500').encode('latin1').rstrip()
 		lntype = ln[0:5]
-		if  lntype == 'ERROR': 
+		if  lntype == 'ERROR':
 			msgid = ln[48:55]
 			severity = ln[56:57]
 			if  msgid not in ['RNF7031', 'RNF7534' , 'RNF5409']:

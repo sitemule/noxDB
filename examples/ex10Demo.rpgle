@@ -64,6 +64,7 @@ dcl-proc main;
     dcl-s pCustObject  pointer;
     dcl-s pCon         pointer;
     dcl-s pCustomer    pointer;
+    dcl-s pCustomer1   pointer;
     dcl-s pCustomer2   pointer;
     dcl-s pCustList    pointer;
     dcl-s pMoreCust    pointer;
@@ -82,30 +83,9 @@ dcl-proc main;
     pCon = nox_sqlConnect();
 
 
-    // Step 1: Lets build a JSON object from scratch
-    // and let set some attirbutes on the object.
-    // we use integer, string, fixed decimal, date, time, timestamp and boolen (indicator)
-    // float numbers and date
-    pCustomer = nox_newObject();
-    nox_setInt (pCustomer:'id'         : 12345);
-    nox_setStr (pCustomer:'name'       : 'System & Metod A/S');
-    nox_setStr (pCustomer:'street'     : 'Håndværkersvinget 8');
-    nox_setStr (pCustomer:'city'       : 'Hørsholm');
-    nox_setStr (pCustomer:'greeting'   : u'4f605978'); // "Ni hau" in unicode
-    nox_setDec (pCustomer:'creditLimit': 76543.21);
-    nox_setDate(pCustomer:'createdDate': %date());
-    nox_setTime(pCustomer:'createdTime': %time());
-    nox_setTS  (pCustomer:'dateTime'   : %timestamp());
-    nox_setBool(pCustomer:'isNice'     : (10 > 1)); // Logical expression
-
-    // Just to see the progress:
-    nox_WriteJsonStmf(pCustomer : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer.json' : NOX_UTF8_BOM : *OFF);
-    debug = nox_asJsonText(pCustomer);
-    nox_joblog ( debug );
-
-    // Step 1.a: alternativ - you can also make it with the object builder:
+    // Step 1.a: The prefered way to build an object:
     // Here you make atomic value nodes in the graph, and create a new object on the fly
-    pCustomer2 = nox_Object(
+    pCustomer1 = nox_Object(
         'id'         : nox_Int  (12345):
         'name'       : nox_Str  ('System & Metod A/S'):
         'street'     : nox_Str  ('Håndværkersvinget 8'):
@@ -115,18 +95,41 @@ dcl-proc main;
         'createdDate': nox_Date (%date()):
         'createdTime': nox_Time (%time()):
         'dateTime'   : nox_TS   (%timestamp()):
-        'isNice'     : nox_Bool (10 > 1)
+        'isNice'     : nox_Bool (10 > 1):
+        'isUS'       : nox_Bool ('DK' = 'USA')
     );
 
     // Just to see the progress:
+    nox_WriteJsonStmf(pCustomer1 : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer1.json' : NOX_UTF8_BOM : *OFF);
+    debug = nox_asJsonText(pCustomer1);
+    nox_joblog ( debug );
+
+
+    // Step 1.b: The "classic" way to build object, by creating an empty object and set values afterwards
+    // we use integer, string, fixed decimal, date, time, timestamp and boolen (indicator)
+    // float numbers and date
+    pCustomer2 = nox_newObject();
+    nox_setInt (pCustomer2:'id'         : 12345);
+    nox_setStr (pCustomer2:'name'       : 'System & Metod A/S');
+    nox_setStr (pCustomer2:'street'     : 'Håndværkersvinget 8');
+    nox_setStr (pCustomer2:'city'       : 'Hørsholm');
+    nox_setStr (pCustomer2:'greeting'   : u'4f605978'); // "Ni hau" in unicode
+    nox_setDec (pCustomer2:'creditLimit': 76543.21);
+    nox_setDate(pCustomer2:'createdDate': %date());
+    nox_setTime(pCustomer2:'createdTime': %time());
+    nox_setTS  (pCustomer2:'dateTime'   : %timestamp());
+    nox_setBool(pCustomer2:'isNice'     : (10 > 1)); // Logical expression
+    nox_setBool(pCustomer2:'isUS'       : ('DK' = 'USA')); // Logical expression
+
+    // Just to see the progress:
     nox_WriteJsonStmf(pCustomer2 : '/prj/noxDbUtf8/testout/ex01Tutorial-Customer2.json' : NOX_UTF8_BOM : *OFF);
-    debug = nox_asJsonText(pCustomer);
+    debug = nox_asJsonText(pCustomer2);
     nox_joblog ( debug );
 
     // Step 2: Build an array with customers
-    // note the arrayPush can push it to either head or tail
+    // note the arrayPush can push it to either head or tail - default is tail.
     pCustList = nox_newArray();
-    nox_arrayPush ( pCustList : pCustomer);
+    nox_arrayPush ( pCustList : pCustomer1);
 
     // Just to see the progress:
     debug = nox_asJsonText(pCustList);
@@ -217,8 +220,9 @@ dcl-proc main;
     endif;
 
     // now create a object with that array and call it "topFive":
-    pCustObject = nox_newObject();
-    nox_moveObjectInto (pCustObject: 'topFive': pTopFive );
+    pCustObject = nox_Object(
+         'topFive': pTopFive
+    );
 
     // Just to see the progress:
     debug = nox_asJsonText(pCustObject);
@@ -270,6 +274,7 @@ dcl-proc main;
 on-exit;
     nox_sqlDisconnect(pCon);
     nox_delete(pCustomer);
+    nox_delete(pCustomer1);
     nox_delete(pCustomer2);
     nox_delete(pMoreCust);
     nox_delete(pCustList);

@@ -17,6 +17,11 @@ LONG   ae_sprintf (PUCHAR res, PUCHAR ctrlstr , ... );
 LONG   strjoin  (PUCHAR out, ...);
 #pragma descriptor ( void strjoin  (void))
 
+PUCHAR  str2integerMem ( PUCHAR out , PUCHAR in , SHORT len , BOOL isSigned );
+PUCHAR  str2packedMem ( PUCHAR out , PUCHAR in , SHORT len , SHORT prec);
+PUCHAR  str2zonedMem ( PUCHAR out , PUCHAR in , SHORT len , SHORT prec);
+
+
 
 
 LONG   a2i (PUCHAR str);

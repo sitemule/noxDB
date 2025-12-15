@@ -3,21 +3,20 @@
 #include <stdio.h>
 #include <iconv.h>
 #include <sqlcli.h>
+#include <pointer.h>
 #include "ostypes.h"     //
 #include "streamer.h"
 #include "apierr.h"
 #include "xlate.h"
-#ifndef XMLPARSE_H
-#define XMLPARSE_H
 
-#ifndef OCCURENS_TYPE
-#define OCCURENS_TYPE
-typedef enum {
-   OC_NONE = 0,
-   OC_NEXT_FOLLOWS = 1,
-   OC_EITHER_OR = 2
-} OCCURENS , *POCCURENS;
-#endif
+// #ifndef OCCURENS_TYPE
+// #define OCCURENS_TYPE
+// typedef enum {
+//    OC_NONE = 0,
+//    OC_NEXT_FOLLOWS = 1,
+//    OC_EITHER_OR = 2
+// } OCCURENS , *POCCURENS;
+// #endif
 
 typedef decimal(30,15) FIXEDDEC, * PFIXEDDEC;
 
@@ -282,7 +281,60 @@ typedef _Packed struct  _NOXITERATOR {
 
 
 
-#endif
+#pragma enum (1)
+typedef enum {
+	NOX_DTYPE_CHAR       = 'C',
+	NOX_DTYPE_VARCHAR    = 'V',
+	NOX_DTYPE_INT        = 'I',
+	NOX_DTYPE_BYTE       = 'B',
+	NOX_DTYPE_BOOL       = 'b',
+	NOX_DTYPE_PACKED     = 'P',
+	NOX_DTYPE_ZONED      = 'Z',
+	NOX_DTYPE_DATE       = 'D',
+	NOX_DTYPE_TIME       = 'T',
+	NOX_DTYPE_TIME_STAMP = 'S',
+	NOX_DTYPE_STRUCTURE  = 's',
+	NOX_DTYPE_UNKNOWN    = '?',
+} NOX_DTYPE, *PNOX_DTYPE;
+#pragma enum (pop)
+
+#define PROC_NAME_MAX 64
+typedef struct _NOXMETHOD  {
+   PNOXNODE pMetaNode;
+   _SYSPTR userProgram; // program or service program
+   _SYSPTR userMethod;
+   BOOL    userMethodIsProgram;
+   ULONG   ccsid;
+   UCHAR   library   [10];
+	UCHAR   null1;
+   UCHAR   program   [10];
+	UCHAR   null2;
+   UCHAR   procedure [PROC_NAME_MAX];
+	UCHAR   null3;
+	PNOXNODE pLib;
+	PNOXNODE pPgm;
+	PNOXNODE pProc;
+} JXMETHOD, * PJXMETHOD;
+
+typedef struct _NOXPARMMETA  {
+	UCHAR    signature; // always hex 00
+	UCHAR    name[PROC_NAME_MAX];
+	NOX_DTYPE dType;
+	UCHAR    use;
+	ULONG    offset;
+	ULONG    size;
+	ULONG    precision;
+	ULONG    length;
+	ULONG    dim;
+	UCHAR    format[10];
+	UCHAR    separatorChar;
+	NODETYPE graphDataType;
+	PNOXNODE  pStructure;
+	struct _NOXPARMMETA* pLengthMeta;
+	BOOL     dontRender;
+} JXPARMMETA, * PJXPARMMETA;
+
+
 
 // Prototypes  - utilities
 LONG xlateMem  (iconv_t xid , PUCHAR out , PUCHAR in, LONG len);
@@ -528,16 +580,28 @@ ULONG    nox_NodeCheckSum (PNOXNODE pNode);
 
 PNOXNODE  nox_SetAsciiByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Value);
 PNOXNODE  nox_SetStrByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Value);
-PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR Name, BOOL Value);
 PNOXNODE  nox_SetDecByName (PNOXNODE pNode, PUCHAR Name, FIXEDDEC Value);
 PNOXNODE  nox_SetIntByName (PNOXNODE pNode, PUCHAR Name, INT64  Value);
 PNOXNODE  nox_NodeMoveInto (PNOXNODE  pDest, PUCHAR Name , PNOXNODE pSource);
+PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR Name, LGL Value);
+PNOXNODE  nox_SetBoolByNameVC (PNOXNODE pNode, PLVARCHAR pName, LGL Value , LGL nullIf);
+PNOXNODE  nox_Bool (LGL Value);
+
 void nox_NodeCloneAndReplace (PNOXNODE pDest , PNOXNODE pSource);
 void nox_Debug(PUCHAR text, PNOXNODE pNode);
 void nox_SwapNodes (PNOXNODE * pNode1, PNOXNODE *  pNode2);
 
 PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fieldsP, BOOL useLocale);
 #pragma descriptor ( void nox_ArraySort     (void))
+
+
+_SYSPTR nox_loadServiceProgram (PUCHAR lib , PUCHAR srvPgm);
+_SYSPTR nox_loadProc (_SYSPTR srvPgm ,  PUCHAR procName);
+_SYSPTR nox_loadServiceProgramProc (PUCHAR lib , PUCHAR srvPgm, PUCHAR procName);
+_SYSPTR nox_loadProgram (PUCHAR lib , PUCHAR pgm);
+void nox_callProc ( _SYSPTR proc , void * args [64] , SHORT parms);
+void nox_callPgm  ( _SYSPTR proc , void * args  [] , SHORT parms);
+void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib);
 
 
 // SQL functions
@@ -744,6 +808,7 @@ void CheckBufSize(PNOXCOM pJxCom);
 
 PUCHAR getSystemColumnName ( PUCHAR sysColumnName, PUCHAR columnText, PUCHAR schema , PUCHAR table , PUCHAR column );
 
+INT64 nox_GetValueInt (PNOXNODE pNode , PUCHAR NameP  , INT64 dftParm);
 
 
 #endif

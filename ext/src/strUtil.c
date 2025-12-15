@@ -889,6 +889,103 @@ PUCHAR stripLeadingZeros(PUCHAR out, PUCHAR s)
    strcpy(out , p);
    return (out);
 }
+/* ------------------------------------------------------------- */
+// String to packed decimal buffer
+/* ------------------------------------------------------------- */
+PUCHAR  str2packedMem ( PUCHAR out , PUCHAR in , SHORT len , SHORT prec)
+{
+   PUCHAR outEnd;
+   UCHAR digitsBuf  [256];
+   PUCHAR digits =  digitsBuf + 64;
+   SHORT  digitsLen = 0;
+   PUCHAR digitsEnd;
+   SHORT  decimals = 0;
+   UCHAR sign = 0x0F; // Positive
+   BOOL  countDecimals= FALSE;
+
+   memset ( digitsBuf , 0 , sizeof(digitsBuf));
+
+   for (;*in;in++) {
+      if (*in >= '0' && *in <= '9') {
+        digits  [digitsLen++] = *in - '0';
+        if (countDecimals) {
+           decimals ++;
+        }
+      } else if (*in == '-' ) {
+        sign =  0x0D;
+      } else if (*in == '.') {
+        countDecimals= TRUE;
+      }
+   }
+   // Find last usable digit, and patch sign int last position
+   digitsEnd = digits + digitsLen - (decimals - prec);
+   *digitsEnd = sign;
+   outEnd = out + (len/2) ;
+
+   // Pack two nibbles into a byte
+   while ( outEnd >= out) {
+      *outEnd = ((*(digitsEnd-1)) << 4) + ((*(digitsEnd)));
+      digitsEnd -=2;
+      outEnd -= 1;
+   }
+   // Mask out top nibble for even length to avoid overflow
+   if (len % 2  == 0) *out =  0x0f & *out;
+   return out;
+}
+/* ------------------------------------------------------------- */
+// String to zoned decimal buffer
+/* ------------------------------------------------------------- */
+PUCHAR  str2zonedMem ( PUCHAR out , PUCHAR in , SHORT len , SHORT prec)
+{
+   UCHAR  digitsBuf  [256];
+   PUCHAR digitsEnd =  digitsBuf + 64;
+   SHORT  decimals = 0;
+   UCHAR  sign = 0xFF; // Positive
+   BOOL   countDecimals= FALSE;
+
+   memset ( digitsBuf , '0' , sizeof(digitsBuf));
+
+   for (;*in;in++) {
+      if (*in >= '0' && *in <= '9') {
+        * ( digitsEnd ++ )  = *in ;
+        if (countDecimals) {
+           decimals ++;
+        }
+      } else if (*in == '-' ) {
+        sign =  0xDF;
+      } else if (*in == '.') {
+        countDecimals= TRUE;
+      }
+   }
+   // Find last usable digit, and patch sign int last position
+   digitsEnd -= (decimals - prec);
+   memcpy (out , digitsEnd - len , len);
+   *(out + len - 1) &= sign;
+   return out;
+}
+
+// ---------------------------------------------------------------------------
+PUCHAR str2integerMem ( PUCHAR out , PUCHAR in , SHORT len , BOOL isSigned )
+{
+   if (isSigned) {
+      switch (len) {
+         case 8: *(long long *) out = atoll (in); break;
+         case 4: *(long *)      out = atol  (in); break;
+         case 2: *(short int *)       out = atoi  (in); break;
+         case 1: *(char *)      out = atoi  (in); break;
+      }
+   } else {
+      // for now - just use a bigger work int
+      switch (len) {
+         case 8: *(unsigned long long *) out = atoll (in); break;
+         case 4: *(unsigned long *)      out = atoll (in); break;
+         case 2: *(unsigned short int *)       out = atol  (in); break;
+         case 1: *(unsigned char *)      out = atoi  (in); break;
+      }
+   }
+   return out;
+}
+
 // ---------------------------------------------------------------------------
 PUCHAR fmtPacked(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint)
 {

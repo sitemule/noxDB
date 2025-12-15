@@ -3339,9 +3339,9 @@ PNOXNODE  nox_Dec (FIXEDDEC Value )
     Set BOOL by name
     ------------------------------------------------------------- */
 #pragma convert(1252)
-PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR pName, BOOL Value)
+PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR pName, LGL Value)
 {
-   return nox_SetValueByName(pNode , pName , Value ? FALSESTR:TRUESTR, LITERAL );
+   return nox_SetValueByName(pNode , pName , Value == OFF ? FALSESTR:TRUESTR, LITERAL );
 }
 PNOXNODE  nox_SetBoolByNameVC (PNOXNODE pNode, PLVARCHAR pName, LGL Value , LGL nullIf)
 {
@@ -3351,9 +3351,9 @@ PNOXNODE  nox_SetBoolByNameVC (PNOXNODE pNode, PLVARCHAR pName, LGL Value , LGL 
    }
    return nox_SetValueByName(pNode , plvc2str(pName) , Value == OFF ? FALSESTR:TRUESTR, LITERAL );
 }
-PNOXNODE  nox_Bool (BOOL  Value )
+PNOXNODE  nox_Bool (LGL Value)
 {
-   return NewNode (NULL, Value == OFF ? FALSESTR:TRUESTR, LITERAL );
+   return NewNode (NULL, Value == OFF  ? FALSESTR:TRUESTR, LITERAL );
 }
 #pragma convert(0)
 /* -------------------------------------------------------------
@@ -3451,6 +3451,21 @@ INT64 nox_GetValueIntVC (PNOXNODE pNode , PLVARCHAR NameP  , INT64 dftParm)
    PUCHAR   value;
 
    value = nox_GetValuePtr    (pNode , plvc2str(path) , NULL ) ;
+   if (value == NULL) {
+      return  dft;
+   }
+   return nox_aNum(value);
+}
+// -------------------------------------------------------------
+// name in UTF-8
+INT64 nox_GetValueInt (PNOXNODE pNode , PUCHAR NameP  , INT64 dftParm)
+{
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   PUCHAR     path  =  (pParms->OpDescList->NbrOfParms >= 2) ? NameP  : NULL ;
+   INT64      dft   =  (pParms->OpDescList->NbrOfParms >= 3) ? dftParm : 0;
+   PUCHAR   value;
+
+   value = nox_GetValuePtr    (pNode , path , NULL ) ;
    if (value == NULL) {
       return  dft;
    }

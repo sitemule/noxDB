@@ -8,8 +8,8 @@
 /* Logical boleans states */
 #pragma enum     (1)
 typedef enum {
-   OFF = '0',
-   ON  = '1'
+   OFF = 0xf0,
+   ON  = 0xf1
 } LGL , *  PLGL;
 #pragma enum     (pop)
 
