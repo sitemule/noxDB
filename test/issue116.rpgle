@@ -12,21 +12,24 @@ dcl-proc main;
     // causing the error:
     json_setDelimitersByCcsid(500);
 
-    issue114();
+    issue116();
 
 end-proc;
 // -------------------------------------------------------------
-dcl-proc issue114;
+dcl-proc issue116;
 
     Dcl-S  pRows      Pointer;
 
     // return an simple array with rows
     pRows = json_sqlResultSet(
-        'Select * from noxdbdemo.unicode'
+        'Select * from noxdbdemo.unicode':
+        1:
+        JSON_ALLROWS:
+        JSON_AUTOPARSE
     );
 
-    
-    json_WriteJsonStmf(pRows:'/prj/noxdb/testout/issue114.json':1208:*OFF);
+
+    json_WriteJsonStmf(pRows:'/prj/noxdb/testout/issue116.json':1208:*OFF);
 
 
 on-exit;

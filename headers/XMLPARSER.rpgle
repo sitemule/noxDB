@@ -2257,6 +2257,7 @@ End-PR;
 // <h4>autoParseContent</h4>
 // <em>true</em> means that any JSON or XML data in columns will be parsed
 // into subobjects in the resulting object. Default: true.
+// Autoparse from VARGRAPHIC need you the JSON_AUTOPARSE_ALL flag on the query
 //
 // <h4>DecimalPoint</h4>
 // The value of this option is used as a decimal point.
@@ -2403,6 +2404,14 @@ Dcl-C xml_GRACEFUL_ERROR   const(128);
 // Result set format option to return extra column text label
 ///
 Dcl-C xml_COLUMN_TEXT   const(256);
+
+///
+// Setting the flag xml_AUTOPARSE means that any JSON or XML data in columns will be parsed
+// into subobjects in the resulting object.
+// All variable length char types ( CLOB's, DBCLOB's VARGRAPHIC etc.) will be parsed.
+//
+///
+Dcl-C xml_AUTOPARSE   const(512);
 
 
 ///

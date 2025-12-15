@@ -682,6 +682,7 @@ typedef _Packed struct  {
 #define  DATA_SIZE 65535
 #define  INVALIDCHAR 0x3f
 #define  LOOK_AHEAD_SIZE (65535-512)
+
 typedef _Packed struct  {
 // SQLHENV       henv;
 // SQLHDBC       hdbc;
@@ -697,6 +698,7 @@ typedef _Packed struct  {
 // BOOL          deleteOptions;
 	 PJXCOL        cols;
 	 ULONG         maxColSize;
+	 ULONG         format;
 } JXSQL, * PJXSQL;
 
 typedef _Packed struct  {
@@ -724,7 +726,8 @@ typedef enum _JX_RESULTSET {
 	 JX_SYSTEM_NAMES 		= 32,
 	 JX_CAMEL_CASE 			= 64,
 	 JX_GRACEFUL_ERROR 		= 128,
-	 JX_COLUMN_TEXT   		= 256
+	 JX_COLUMN_TEXT   		= 256,
+	 JX_AUTOPARSE 			= 512,
 } JX_RESULTSET, *PJX_RESULTSET;
 
 typedef enum _JX_ROUTINE_TYPE {

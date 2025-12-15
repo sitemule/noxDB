@@ -744,6 +744,8 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    pSQL = jx_sqlNewStatement (NULL, false, scroll);
    if  ( pSQL == NULL) return NULL;
 
+   pSQL->format = format;
+
    if ( pConnection->options.hexSort == ON ) {
       LONG attrParm = SQL_FALSE ;
       LONG attr = SQL_ATTR_JOB_SORT_SEQUENCE;
@@ -1107,7 +1109,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
 
                   // trigger new parsing of JSON-objects in columns:
                   // Predicts json data i columns
-                  if (pConnection->options.autoParseContent == ON) {
+                  if (pSQL->format & JX_AUTOPARSE) {
                      if (*temp == jobBraBeg || *temp == jobCurBeg) {
                         PJXNODE pNode = jx_parseStringCcsid(temp, 0);
                         if (pNode) {
@@ -1163,7 +1165,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
 
                   // trigger new parsing of JSON-objects in columns:
                   // Predicts json data i columns
-                  if (pConnection->options.autoParseContent == ON) {
+                  if (pConnection->options.autoParseContent == ON || (pSQL->format & JX_AUTOPARSE)) {
                      if (*p == jobBraBeg || *p == jobCurBeg) {
                         PJXNODE pNode = jx_parseStringCcsid(p, 0);
                         if (pNode) {
