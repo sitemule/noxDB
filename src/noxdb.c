@@ -930,6 +930,12 @@ void  jx_MergeObjects (PJXNODE pDest, PJXNODE pSource , MERGEOPTION mergeP)
 
    if (pDest == NULL || pSource == NULL) return;
 
+   // Baclwards compatible with old json_Merge() if user is confused
+   // #issue117
+   if (merge == 0) {
+      cloneNodes = TRUE; // TODO !! Was it moving nodes ??
+      merge = MO_MERGE_NEW;
+   }
    pFrom = cloneNodes ? jx_NodeClone (pSource): pSource ;
 
    pSourceNode =  pFrom->pNodeChildHead;
