@@ -935,6 +935,9 @@ void  jx_MergeObjects (PJXNODE pDest, PJXNODE pSource , MERGEOPTION mergeP)
    if (merge == 0) {
       cloneNodes = TRUE; // TODO !! Was it moving nodes ??
       merge = MO_MERGE_NEW;
+   } else if (merge == 1) {
+      cloneNodes = TRUE; // TODO !! Was it moving nodes ??
+      merge = MO_MERGE_REPLACE;
    }
    pFrom = cloneNodes ? jx_NodeClone (pSource): pSource ;
 
