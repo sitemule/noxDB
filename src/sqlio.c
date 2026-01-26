@@ -1021,7 +1021,7 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
    int i;
    PJXNODE pRow;
    SQLINTEGER buflen, datatype;
-   PUCHAR buf = memAlloc (pSQL->maxColSize);
+   PUCHAR buf = memAlloc (max(1024,pSQL->maxColSize));
 
    if ( pSQL->rc == SQL_SUCCESS
    ||   pSQL->rc == SQL_SUCCESS_WITH_INFO ) {
