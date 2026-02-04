@@ -2554,6 +2554,7 @@ End-PR;
 // @param (input) SQL WHERE clause (may include template variables like WHERE id = $id)
 // @param (input) Input parameter object tree for SQL WHERE clause template variables
 //        (f. e. { "id" : 123 } )
+// @param (input) formatoption - camelCase (default) or system_case
 // @return <code>*on</code> if an error occured else <code>*off</code>
 ///
 Dcl-PR nox_sqlUpdate Ind extproc(*CWIDEN:'nox_sqlUpdateVC');
@@ -2562,6 +2563,7 @@ Dcl-PR nox_sqlUpdate Ind extproc(*CWIDEN:'nox_sqlUpdateVC');
   row            pointer value;
   where          Like(UTF8) const options(*nopass:*varsize);
   whereParms     pointer value options(*nopass);
+  formatOptions  int(10) value options(*nopass);
 End-PR;
 
 ///
@@ -2595,6 +2597,7 @@ End-PR;
 // @param (input) SQL table name
 // @param (input) Row data as either object tree or JSON or XML string
 // @param (input) Input parameter (don't have to pass anything as it is not needed on INSERT)
+// @param (input) formatoption - camelCase (default) or system_case
 // @return <code>*on</code> if an error occured else <code>*off</code>
 //
 // @info Depending on the WHERE clause more than one row may be updated by
@@ -2606,6 +2609,7 @@ Dcl-PR nox_sqlUpsert Ind extproc(*CWIDEN:'nox_sqlUpsertVC');
   row            pointer value;
   where          Like(UTF8) const options(*varsize);
   whereParms     pointer value options(*nopass);
+  formatOptions  int(10) value options(*nopass);
 End-PR;
 
 ///
