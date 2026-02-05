@@ -32,7 +32,7 @@ dcl-s err	      ind;
       'create schema noxdbdemo'
    );
 
-   // Run a "normal SQL" to create the test case 
+   // Run a "normal SQL" to create the test case
    err = json_sqlExec(
       'create or replace table noxdbdemo.table_using_systemnames  for system name sysnames  ( -
          id  bigint not null generated always as identity primary key, -
@@ -51,10 +51,10 @@ dcl-s err	      ind;
    // returns the default output - SQL names
    pRows2 = json_sqlResultSet(
       'select * -
-       from noxdbdemo.table_using_systemnames' 
-       :1               // From from 
-       :JSON_ALLROWS    // Number of rows 
-       :JSON_ROWARRAY   // format of output
+       from noxdbdemo.table_using_systemnames'
+       :1               // From from
+       :JSON_ALLROWS    // Number of rows
+       :JSON_ROWNOX_ARRAY   // format of output
    );
 
    // Produce a JSON stream file in the IFS
@@ -65,10 +65,10 @@ dcl-s err	      ind;
    // returns the output - system (short) names
    pRows3 = json_sqlResultSet(
       'select * -
-       from noxdbdemo.table_using_systemnames' 
-       :1            // From from 
-       :JSON_ALLROWS // Number of rows 
-       :JSON_ROWARRAY + JSON_SYSTEM_NAMES  // format of output - Using system (short) names
+       from noxdbdemo.table_using_systemnames'
+       :1            // From from
+       :JSON_ALLROWS // Number of rows
+       :JSON_ROWNOX_ARRAY + JSON_SYSTEM_NAMES  // format of output - Using system (short) names
    );
 
    // Produce a JSON stream file in the IFS

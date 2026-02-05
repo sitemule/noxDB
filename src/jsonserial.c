@@ -23,6 +23,7 @@
 #include "parms.h"
 #include "memUtil.h"
 #include "streamer.h"
+#define NOX_BUILD
 #include "noxDbUtf8.h"
 
 
@@ -114,7 +115,7 @@ void checkParentRelation(PNOXNODE pNode , PNOXNODE pParent)
 }
 /* --------------------------------------------------------------------------- */
 #pragma convert(1252)
-static void  jsonStreamPrintObject  (PNOXNODE pParent, PSTREAM pStream, SHORT level)
+static void  nox_jsonStreamPrintObject  (PNOXNODE pParent, PSTREAM pStream, SHORT level)
 {
    PNOXNODE pNode;
    SHORT nextLevel = level +1;
@@ -128,7 +129,7 @@ static void  jsonStreamPrintObject  (PNOXNODE pParent, PSTREAM pStream, SHORT le
       stream_putc(pStream, QUOT);
       stream_putc(pStream, COLON);
       checkParentRelation(pNode , pParent);
-      jsonStreamPrintNode (pNode , pStream, nextLevel);
+      nox_jsonStreamPrintNode (pNode , pStream, nextLevel);
       if (pNode->pNodeSiblingNext) stream_putc  (pStream, COMMA );
    }
    indent (pStream , level);
@@ -137,7 +138,7 @@ static void  jsonStreamPrintObject  (PNOXNODE pParent, PSTREAM pStream, SHORT le
 #pragma convert(0)
 /* --------------------------------------------------------------------------- */
 #pragma convert(1252)
-static void  jsonStreamPrintArray (PNOXNODE pParent, PSTREAM pStream, SHORT level)
+static void  nox_jsonStreamPrintArray (PNOXNODE pParent, PSTREAM pStream, SHORT level)
 {
     PNOXNODE pNode;
     SHORT nextLevel = level +1;
@@ -148,7 +149,7 @@ static void  jsonStreamPrintArray (PNOXNODE pParent, PSTREAM pStream, SHORT leve
     for (pNode = pParent->pNodeChildHead ; pNode ; pNode=pNode->pNodeSiblingNext) {
       // indent (pStream ,nextLevel);
       checkParentRelation(pNode , pParent);
-      jsonStreamPrintNode (pNode , pStream, nextLevel);
+      nox_jsonStreamPrintNode (pNode , pStream, nextLevel);
       if (pNode->pNodeSiblingNext) stream_putc  (pStream, COMMA );
     }
     indent (pStream , level);
@@ -157,7 +158,7 @@ static void  jsonStreamPrintArray (PNOXNODE pParent, PSTREAM pStream, SHORT leve
 #pragma convert(0)
 /* --------------------------------------------------------------------------- */
 #pragma convert(1252)
-static void jsonStreamPrintValue   (PNOXNODE pNode, PSTREAM pStream)
+static void nox_jsonStreamPrintValue   (PNOXNODE pNode, PSTREAM pStream)
 {
    // Has value?
    if (pNode->Value && pNode->Value[0] > '\0') {
@@ -186,31 +187,31 @@ static void jsonStreamPrintValue   (PNOXNODE pNode, PSTREAM pStream)
 static void jsonStreamPrintTranscode (PNOXNODE pNode, PSTREAM pStream, SHORT level)
 {
    if (pNode->pNodeChildHead) {
-      jsonStreamPrintObject  (pNode, pStream, level);
+      nox_jsonStreamPrintObject  (pNode, pStream, level);
    } else {
-      jsonStreamPrintValue   (pNode, pStream);
+      nox_jsonStreamPrintValue   (pNode, pStream);
    }
 }
 /* --------------------------------------------------------------------------- */
 /* Invalid node types a just jeft out                                          */
 /* --------------------------------------------------------------------------- */
-static void  jsonStreamPrintNode (PNOXNODE pNode, PSTREAM pStream, SHORT level)
+static void  nox_jsonStreamPrintNode (PNOXNODE pNode, PSTREAM pStream, SHORT level)
 {
    switch (pNode->type) {
-      case OBJECT:
-         jsonStreamPrintObject  (pNode, pStream, level);
+      case NOX_OBJECT:
+         nox_jsonStreamPrintObject  (pNode, pStream, level);
          break;
 
-      case ARRAY:
-         jsonStreamPrintArray   (pNode, pStream, level);
+      case NOX_ARRAY:
+         nox_jsonStreamPrintArray   (pNode, pStream, level);
          break;
 
-      case VALUE:
-      case POINTER_VALUE:
-         jsonStreamPrintValue   (pNode, pStream);
+      case NOX_VALUE:
+      case NOX_POINTER_NOX_VALUE:
+         nox_jsonStreamPrintValue   (pNode, pStream);
          break;
       case NOX_SUBGRAPH:
-         jsonStreamPrintNode   ((PNOXNODE) pNode->Value, pStream, level);
+         nox_jsonStreamPrintNode   ((PNOXNODE) pNode->Value, pStream, level);
          break;
       default:
          jsonStreamPrintTranscode (pNode, pStream, level);
@@ -223,7 +224,7 @@ void  jsonStream (PNOXNODE pNode, PSTREAM pStream)
    if (pNode == NULL) {
       stream_puts (pStream, NULLSTR);
    } else {
-      jsonStreamPrintNode (pNode, pStream, 0);
+      nox_jsonStreamPrintNode (pNode, pStream, 0);
    }
 }
 #pragma convert(0)
@@ -239,7 +240,7 @@ LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
    memset(pNoxWriter , 0 , sizeof(noxWriter));
 
    if (pNode == NULL) return 0;
-   if (pNode->signature != NODESIG) {
+   if (pNode->signature != NOX_NODESIG) {
       strcpy (buf, (PUCHAR) pNode);
       return strlen(buf);
    }

@@ -7,7 +7,7 @@
  * By     Date       Task    Description
  * NL     09.03.2021 0000000 New program
  * trace:
- * ADDENVVAR QIBM_RPG_DATA_GEN_TRACE VALUE('*STDOUT')
+ * ADDENVVAR QIBM_RPG_DATA_GEN_TRACE NOX_VALUE('*STDOUT')
  * --------------------------------------------------------------- */
 #include <stdio.h>
 #include <string.h>
@@ -28,6 +28,7 @@
 #include "strUtil.h"
 #include "memUtil.h"
 #include "varchar.h"
+#define NOX_BUILD
 #include "noxDbUtf8.h"
 #include "xlate.h"
 
@@ -149,7 +150,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
             PUCHAR pValue = value;
             UCHAR name [256];
             ULONG namelen;
-            NODETYPE  type;
+           NOX_NODETYPE  type;
 
             namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
             name[namelen] = '\0';
@@ -164,7 +165,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
             switch (pParms->u.scalar.dataType) {
                 case QrnDatatype_Indicator :
                     pValue = (*value == '1') ? "true" : "false";
-                    type = LITERAL;
+                    type = NOX_LITERAL;
                     break;
 
                 // Numeric
@@ -173,14 +174,14 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
                 case QrnDatatype_Unsigned :
                 case QrnDatatype_Float    :
                     if (*pValue  == '+') pValue ++; // Skip the + sign
-                    type = LITERAL;
+                    type = NOX_LITERAL;
                     break;
                 default:
-                    type = VALUE;
+                    type = NOX_VALUE;
                     break;
             }
 
-            pValueNode = nox_NodeInsertNew (pNode , RL_LAST_CHILD , name , pValue, type);
+            pValueNode = nox_NodeInsertNew (pNode , NOX_RL_LAST_CHILD , name , pValue, type);
             if (first) {
                 first = false;
                 *ppRoot = pValueNode;

@@ -30,6 +30,7 @@
 #include "strUtil.h"
 #include "memUtil.h"
 #include "streamer.h"
+#define NOX_BUILD
 #include "noxDbUtf8.h"
 
 

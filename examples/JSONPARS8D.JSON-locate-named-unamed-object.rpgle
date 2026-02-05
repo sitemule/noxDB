@@ -17,7 +17,7 @@
 //  B: Include the noxDB prototypes from QRPGLEREF member NOXDB
 
 // Parse Strings.
-// Using the sqarebrackets [] notation to position 
+// Using the sqarebrackets [] notation to position
 // into the object graph
 
 // ------------------------------------------------------------- *
@@ -128,7 +128,7 @@ dcl-proc example3;
     EndIf;
 
     // does the array contains any objects;
-    if json_nodeType(json_getChild(pJson)) = JSON_OBJECT;
+    if json_nodeType(json_getChild(pJson)) = JSON_NOX_OBJECT;
         json_joblog('First child node is an object');
     endif;
 

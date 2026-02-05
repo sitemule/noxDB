@@ -27,6 +27,7 @@
 #include "xlate.h"
 #include "parms.h"
 #include "memUtil.h"
+#define NOX_BUILD
 #include "noxDbUtf8.h"
 
 

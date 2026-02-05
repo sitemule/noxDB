@@ -27,6 +27,7 @@
 #include "strUtil.h"
 #include "memUtil.h"
 #include "streamer.h"
+#define NOX_BUILD
 #include "noxDbUtf8.h"
 #include "e2aa2e.h"
 
@@ -228,7 +229,7 @@ LONG nox_AsXmlTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
 
 
    if (pNode == NULL) return 0;
-   if (pNode->signature != NODESIG) {
+   if (pNode->signature != NOX_NODESIG) {
       strcpy (buf, (PUCHAR) pNode);
       return strlen(buf);
    }

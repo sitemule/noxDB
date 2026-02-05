@@ -25,6 +25,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #include "e2aa2e.h"
 #include "xlate.h"
 #include "strutil.h"
+#define NOX_BUILD
 #include "noxDbUtf8.h"
 #include "sndpgmmsg.h"
 // ------------------------------------------------------------------

@@ -26,12 +26,12 @@ NOXDB_LIB=NOXDB
 #-------------------------------------------------------------------------------
 
 
-OBJECTS = noxdbut1 noxdbut2 noxdbut3
+NOX_OBJECTS = noxdbut1 noxdbut2 noxdbut3
 SRVPGMS = $(RU_LIB)/RUTESTCASE $(NOXDB_LIB)/JSONXML
 
 all: clean compile
 
-compile: $(OBJECTS)
+compile: $(NOX_OBJECTS)
 
 noxdbut1:
 	system -i "CHGATR OBJ('noxdbut1.rpgle') ATR(*CCSID) VALUE(1252)"

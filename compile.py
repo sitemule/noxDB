@@ -11,7 +11,7 @@ import argparse, sys, os, subprocess, re
 # ------------------------------------------------------------------------
 def build_cmod(stmf , cmd ,lib , liblist , obj , flags , include):
 #	flags = flags + " OPTION(*EVENTF *EXPMAC *SHOWINC) OUTPUT(*PRINT)"
-	flags = flags + " OPTION(*EVENTF) OUTPUT(*PRINT)"
+#	flags = flags + " OPTION(*EVENTF) OUTPUT(*PRINT)"
 	shell =  oscmd("liblist -a " + liblist )
 	shell += oscmd("setccsid 1252 " + stmf)
 	cmd =  (cmd if cmd > ""  else "CRTBNDC")

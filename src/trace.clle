@@ -1,4 +1,4 @@
-/* CMD:CRTCLMOD */ 
+/* CMD:CRTCLMOD */
 /* ------------------------------------------------------------- */
 /* Company . . . : System & Method A/S                           */
 /* Design  . . . : Niels Liisberg                                */
@@ -17,16 +17,16 @@ pgm (&libC &trace &job)
    dcl &n           type(*CHAR) len(6)
    dcl &null        type(*CHAR) len(1)  value(x'00')
 
-   rtvobjd    OBJ(NOXDBUTF8) OBJTYPE(*SRVPGM) RTNLIB(&LIB)
-   rtvDtaAra  DTAARA(&LIB/SQLTRACE) RTNVAR(&TRACE)
+   rtvobjd    obj(noxdbutf8) objtype(*srvpgm) rtnlib(&lib)
+   rtvdtaara  dtaara(&lib/sqltrace) rtnvar(&trace)
    monmsg  cpf0000 exec(do)
-      CRTDTAARA  DTAARA(&LIB/SQLTRACE) TYPE(*LGL) VALUE('0') +
-                          TEXT('SQL trace enabled')
+      crtdtaara  dtaara(&lib/sqltrace) type(*lgl) value('0') +
+                          text('SQL trace enabled')
       chgvar &trace '0'
    enddo
 
    /* job in format:  767070/NLI/JOHN22A1 and in c-string format*/
-   RTVJOBA    JOB(&J) USER(&U) NBR(&N)
+   rtvjoba    job(&j) user(&u) nbr(&n)
    chgvar &job (&n *CAT '/' *CAT &u *TCAT '/' *CAT &j *TCAT &null)
    chgvar &libC (&lib *TCAT &null)
 endpgm

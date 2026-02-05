@@ -25,6 +25,7 @@
 #include "ostypes.h"
 #include "varchar.h"
 #include "xlate.h"
+#define NOX_BUILD
 #include "noxDbUtf8.h"
 #include "parms.h"
 // #include "rtvsysval.h"
@@ -115,7 +116,7 @@ PUCHAR nox_GetChar(PNOXCOM pJxCom)
    }
    */
 
-   if (pJxCom->State == nox_EXIT_ERROR) {
+   if (pJxCom->State == NOX_EXIT_ERROR) {
       return (pJxCom->pFileBuf == NULL ? "" : pJxCom->pFileBuf );
    }
 
@@ -126,7 +127,7 @@ PUCHAR nox_GetChar(PNOXCOM pJxCom)
    }
 
    if (*pJxCom->pFileBuf == '\0') {
-      pJxCom->State = nox_EXIT;
+      pJxCom->State = NOX_EXIT;
    }
    if (*pJxCom->pFileBuf == CR) {
       pJxCom->LineCount ++;
@@ -144,8 +145,8 @@ UCHAR SkipBlanks (PNOXCOM pJxCom)
 
    for(;;) {
       c  = *nox_GetChar(pJxCom);
-      if ( pJxCom->State == nox_EXIT
-      ||   pJxCom->State == nox_EXIT_ERROR ) {
+      if ( pJxCom->State == NOX_EXIT
+      ||   pJxCom->State == NOX_EXIT_ERROR ) {
          return '\0';
       }
       if (c > BLANK) {
@@ -168,7 +169,7 @@ void CheckBufSize(PNOXCOM pJxCom)
 void nox_CheckEnd(PNOXCOM pJxCom)
 {
    if (*pJxCom->pFileBuf == GT) {
-      pJxCom->State = nox_COLLECT_DATA;
+      pJxCom->State = NOX_COLLECT_DATA;
       if (skipBlanks) {
          SkipBlanks(pJxCom);
       }
@@ -179,7 +180,7 @@ void nox_CheckEnd(PNOXCOM pJxCom)
    if (memBeginsWith (pJxCom->pFileBuf ,SLASHGT))  {  // Check for short form   />
       pJxCom->pNodeWorkRoot = pJxCom->pNodeWorkRoot->pNodeParent;
       pJxCom->Level --;
-      pJxCom->State = nox_FIND_START_TOKEN;
+      pJxCom->State = NOX_FIND_START_TOKEN;
    }
 }
 
@@ -209,7 +210,7 @@ int readBlock(PNOXCOM pJxCom , PUCHAR buf, int size)
          pJxCom->Iconv = OpenXlate(InputCcsid  , OutputCcsid);
          len = xlate(pJxCom, buf, temp , rlen);
          if (len == -1) { // Still invalid char .. don't what to do !!!
-           pJxCom->State == nox_EXIT_ERROR;
+           pJxCom->State == NOX_EXIT_ERROR;
            memFree (&temp);
            return 0;
          }

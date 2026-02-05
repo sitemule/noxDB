@@ -1,3 +1,5 @@
+// TODO: make NOX_BUILD in one section
+
 #ifndef NOXDB
 #define NOXDB
 #include <stdio.h>
@@ -5,10 +7,12 @@
 #include <sqlcli.h>
 #include <pointer.h>
 #include "ostypes.h"     //
-#include "streamer.h"
-#include "apierr.h"
-#include "xlate.h"
 
+#include "apierr.h"
+#ifdef NOX_BUILD
+#include "streamer.h"
+#include "xlate.h"
+#endif
 // #ifndef OCCURENS_TYPE
 // #define OCCURENS_TYPE
 // typedef enum {
@@ -27,6 +31,7 @@ a \
 #pragma convert(0)\
 )
 */
+#ifdef NOX_BUILD
 
 #pragma convert(1252)
 #define  UBOUND      "UBOUND"
@@ -69,40 +74,40 @@ a \
 
 
 typedef enum {
-   EXPR_DONE,
-   EXPR_ROOT,
-   EXPR_CHILD,
-   EXPR_PARENT,
-   EXPR_COUNT,
-   EXPR_FIND_SIBLING,
-   EXPR_FIND_CHILD,
-   EXPR_SUBSTRIPTION_PATH,
-   EXPR_SUBSTRIPTION_INDEX,
-   EXPR_SUBSTRIPTION_UBOUND
-} EXPR_STATE, *PEXPR_STATE;
+   NOX_EXPR_DONE,
+   NOX_EXPR_ROOT,
+   NOX_EXPR_CHILD,
+   NOX_EXPR_PARENT,
+   NOX_EXPR_COUNT,
+   NOX_EXPR_FIND_SIBLING,
+   NOX_EXPR_FIND_CHILD,
+   NOX_EXPR_SUBSTRIPTION_PATH,
+   NOX_EXPR_SUBSTRIPTION_INDEX,
+   NOX_EXPR_SUBSTRIPTION_UBOUND
+} NOX_EXPR_STATE, *PNOX_EXPR_STATE;
 
-typedef struct _EXPR_PATH {
+typedef struct _NOX_EXPR_PATH {
    UCHAR  current[256];
    PUCHAR pStart;
    PUCHAR pNext;
    LONG   index;
    BOOL   skipNameSpace;
-   EXPR_STATE state;
+   NOX_EXPR_STATE state;
    int (*cmp)(const char *s1, const char *s2);  // function pointer for strcmp
-} EXPR_PATH, *PEXPR_PATH;
-
+} NOX_EXPR_PATH, *PNOX_EXPR_PATH;
+#endif
 
 
 typedef enum {
    NOX_FORMAT_DEFAULT     = 0,
    NOX_FORMAT_CDATA       = 1
-} FORMAT_OPTION, *PFORMAT_OPTION;
+} NOX_FORMAT_OPTION, *PNOX_FORMAT_OPTION;
 
 typedef enum {
-	FMT_JSON,
-	FMT_XML,
-	FMT_TEXT
-} DATAFORMAT, *PDATAFORMAT;
+	NOX_FMT_JSON,
+	NOX_FMT_XML,
+	NOX_FMT_TEXT
+} NOX_DATAFORMAT, *PNOX_DATAFORMAT;
 
 
 typedef enum {
@@ -112,7 +117,7 @@ typedef enum {
 } STREAM_OPTION, *PSTREAM_OPTION;
 
 
-#define ATTRSIG 0x05
+#define NOX_ATTRSIG 0x05
 typedef struct _NOXATTR {
    UCHAR  signature; // always hex 05
    PUCHAR Name;
@@ -122,41 +127,38 @@ typedef struct _NOXATTR {
 } NOXATTR, *PNOXATTR;
 
 typedef enum {
-   UNKNOWN             = 0,
-   OBJECT              = 1,
-   ARRAY               = 2,
-   PARSE_STRING        = 3,
-   POINTER_VALUE       = 4,
-   VALUE               = 5,
-   NOX_VALUE           = 5,
-   ROOT                = 6,
-   LITERAL             = 16,
-   NOX_LITERAL         = 16,
-   CLONE_OLD           = 17,  // Was OBJLNK - Obsolete yes but maps to CLONE in appplication
-   CLONE               = 18,  // Obsolete ... NO
-   EVALUATE            = 19,  // Obsolete ??
+   NOX_UNKNOWN             = 0,
+   NOX_OBJECT              = 1,
+   NOX_ARRAY               = 2,
+   NOX_PARSE_STRING        = 3,
+   NOX_POINTER_NOX_VALUE       = 4,
+   NOX_VALUE               = 5,
+   NOX_ROOT                = 6,
+   NOX_LITERAL             = 16,
+   NOX_CLONE_OLD           = 17,  // Was OBJLNK - Obsolete yes but maps to NOX_CLONE in appplication
+   NOX_CLONE               = 18,  // Obsolete ... NO
+   NOX_EVALUATE            = 19,  // Obsolete ??
    NOX_POINTER         = 20,  // Internal objects
    NOX_SUBGRAPH        = 21,  // Sub-graph, will be serialized but maintained elsewhere
-   OBJMOVE             = 2048,
-   // Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
+   NOX_OBJMOVE             = 2048,
+   // Values to be or'ed ( + ) with NOX_EVALUATE and NOX_PARSE_STRING
    // Note: "Merge options" are fit in here... from belowe
-   NT_MOVE             =2048,  // Unlink the source and move it to destination
-   NT_ALLOW_PRIMITIVES =4096   // Allow strings ints and other valyes to evaluate with PARSE_STRING
+   NOX_NT_MOVE             =2048,  // Unlink the source and move it to destination
+   NOX_NT_ALLOW_PRIMITIVES =4096   // Allow strings ints and other valyes to evaluate with NOX_PARSE_STRING
 
-} NODETYPE, *PNODETYPE;
-typedef NODETYPE  JSTATE, *PJSTATE;
+} NOX_NODETYPE, *PNOX_NODETYPE;
 
 #pragma enum (2)
 typedef enum {
-   // Values to be or'ed ( + ) with EVALUATE and PARSE_STRING
-   MO_MERGE_NEW      =   256,  // Only new elements are merged - existing are left untouched
-   MO_MERGE_MATCH    =   512,  // Merge and replace only existing nodes
-   MO_MERGE_REPLACE  =  1024,   // Merge all: replace if it exists and append new nodes if not exists
-   MO_MERGE_MOVE     =  2048   // Extra parm to be OR'ed for movine and not clone / copy
-} MERGEOPTION, *PMERGEOPTION;
+   // Values to be or'ed ( + ) with NOX_EVALUATE and NOX_PARSE_STRING
+  NOX_MO_MERGE_NEW      =   256,  // Only new elements are merged - existing are left untouched
+  NOX_MO_MERGE_MATCH    =   512,  // Merge and replace only existing nodes
+  NOX_MO_MERGE_REPLACE  =  1024,   // Merge all: replace if it exists and append new nodes if not exists
+  NOX_MO_MERGE_MOVE     =  2048   // Extra parm to be OR'ed for movine and not clone / copy
+} NOX_MERGEOPTION, *PNOX_MERGEOPTION;
 #pragma enum (pop)
 
-#define NODESIG  0x04
+#define NOX_NODESIG  0x04
 typedef struct _NOXNODE {
    UCHAR  signature; // always hex 04
    PUCHAR Name;
@@ -170,34 +172,35 @@ typedef struct _NOXNODE {
    LONG     Count;
    BOOL     newlineInAttrList;
    PUCHAR   Comment;
-   NODETYPE type;
+   NOX_NODETYPE type;
    BOOL     doCount;
    LONG     lineNo;
    BOOL     isLiteral;
    SHORT    ccsid;
-   FORMAT_OPTION options;
+   NOX_FORMAT_OPTION options;
 } NOXNODE, *PNOXNODE;
 
+#ifdef NOX_BUILD
 
 typedef enum {
-   nox_FIND_START_TOKEN,
-   nox_DETERMIN_TAG_TYPE,
-   nox_FIND_END_TOKEN,
-   nox_BUILD_NAME,
-   nox_COLLECT_DATA,
-   nox_ATTR_NAME,
-   nox_ATTR_VALUE,
-   nox_DELIMITER,
-   nox_EXIT,
-   nox_EXIT_ERROR
-} XMLSTATE, *PXMLSTATE;
+   NOX_FIND_START_TOKEN,
+   NOX_DETERMIN_TAG_TYPE,
+   NOX_FIND_END_TOKEN,
+   NOX_BUILD_NAME,
+   NOX_COLLECT_DATA,
+   NOX_ATTR_NAME,
+   NOX_ATTR_VALUE,
+   NOX_DELIMITER,
+   NOX_EXIT,
+   NOX_EXIT_ERROR
+} NOX_XMLSTATE, *PNOX_XMLSTATE;
 
 
 typedef struct {
    PNOXNODE pNodeRoot;
    FILE *  File;
    PUCHAR  FileName;
-   XMLSTATE State;
+   NOX_XMLSTATE State;
    //UCHAR   FileBuf[65535];
    UCHAR   dummy[32]; // Extra space after buffer for swapping
    PUCHAR  pFileBuf;
@@ -229,23 +232,26 @@ typedef struct {
    BOOL    hasRoot;
    LONG    tokenNo;
 } NOXCOM, * PNOXCOM;
+#endif
 
 typedef enum {
-   RL_FIRST_CHILD = 1,
-   RL_LAST_CHILD = 2,
-   RL_BEFORE_SIBLING = 3,
-   RL_AFTER_SIBLING = 4,
-   RL_REPLACE = 5
-} REFLOC, *PREFLOC;
+   NOX_RL_FIRST_CHILD = 1,
+   NOX_RL_LAST_CHILD = 2,
+   NOX_RL_BEFORE_SIBLING = 3,
+   NOX_RL_AFTER_SIBLING = 4,
+   NOX_RL_REPLACE = 5
+} NOX_REFLOC, *PNOX_REFLOC;
 
-typedef struct _TOK{
+#ifdef NOX_BUILD
+
+typedef struct _NOX_TOK{
    BOOL    isEof;
    UCHAR   token ;
    BOOL    isLiteral;
    LONG    len;
    PUCHAR  data;
    LONG    count;
-} TOK, *PTOK;
+} NOX_TOK, *PNOX_TOK;
 
 typedef _Packed struct  _NOXWRITER      {
    FILE *  outFile;
@@ -262,6 +268,7 @@ typedef _Packed struct  _NOXWRITER      {
    BOOL    wasHere;
    PVOID   scratchPad; // Pointer to any user data
 } NOXWRITER, * PNOXWRITER;
+#endif
 
 typedef _Packed struct  _NOXITERATOR {
    PNOXNODE   root;
@@ -280,6 +287,7 @@ typedef _Packed struct  _NOXITERATOR {
 } NOXITERATOR, * PNOXITERATOR ;
 
 
+#ifdef NOX_BUILD
 
 #pragma enum (1)
 typedef enum {
@@ -294,7 +302,7 @@ typedef enum {
 	NOX_DTYPE_TIME       = 'T',
 	NOX_DTYPE_TIME_STAMP = 'S',
 	NOX_DTYPE_STRUCTURE  = 's',
-	NOX_DTYPE_UNKNOWN    = '?',
+	NOX_DTYPE_NOX_UNKNOWN    = '?',
 } NOX_DTYPE, *PNOX_DTYPE;
 #pragma enum (pop)
 
@@ -314,7 +322,7 @@ typedef struct _NOXMETHOD  {
 	PNOXNODE pLib;
 	PNOXNODE pPgm;
 	PNOXNODE pProc;
-} JXMETHOD, * PJXMETHOD;
+} NOX_METHOD, * PNOX_METHOD;
 
 typedef struct _NOXPARMMETA  {
 	UCHAR    signature; // always hex 00
@@ -328,48 +336,52 @@ typedef struct _NOXPARMMETA  {
 	ULONG    dim;
 	UCHAR    format[10];
 	UCHAR    separatorChar;
-	NODETYPE graphDataType;
+	NOX_NODETYPE graphDataType;
 	PNOXNODE  pStructure;
 	struct _NOXPARMMETA* pLengthMeta;
 	BOOL     dontRender;
-} JXPARMMETA, * PJXPARMMETA;
-
+} NOX_PARMMETA, * PNOX_PARMMETA;
+#endif
 
 
 // Prototypes  - utilities
-LONG xlateMem  (iconv_t xid, PUCHAR out, PUCHAR in, LONG len);
 void nox_AsJsonText (PLVARCHAR retVal, PNOXNODE pNode);
+
+#ifdef NOX_BUILD
 void nox_AsJsonTextList (PNOXNODE pNode, PNOXWRITER pNOXWRITER);
+#endif
+
 void nox_AsJsonStream (PNOXNODE pNode, PSTREAM pStream);
 
 LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf, ULONG maxLenP);
 #pragma descriptor ( void nox_AsJsonTextMem       (void))
 
 
-LONG nox_fileWriter  (PSTREAM p, PUCHAR buf, ULONG len);
-LONG nox_memWriter   (PSTREAM p, PUCHAR buf, ULONG len);
-
-
+#ifdef NOX_BUILD
 void  csvStreamRunner   (PSTREAM pStream);
 void  xmlStreamRunner   (PSTREAM pStream);
-void  jsonStreamRunner   (PSTREAM pStream);
-
+void  jsonStreamRunner  (PSTREAM pStream);
+#endif
 
 
 LONG nox_fileWriter  (PSTREAM pStream, PUCHAR buf, ULONG len);
 LONG nox_memWriter  (PSTREAM pStream, PUCHAR buf, ULONG len);
-void  jsonStreamPrintNode (PNOXNODE pNode, PSTREAM pStream, SHORT level);
-void  jsonStreamPrintValue   (PNOXNODE pNode, PSTREAM pStream);
-void  jsonStreamPrintArray (PNOXNODE pParent, PSTREAM pStream, SHORT level);
-void  jsonStreamPrintObject  (PNOXNODE pParent, PSTREAM pStream, SHORT level);
+void  nox_jsonStreamPrintNode (PNOXNODE pNode, PSTREAM pStream, SHORT level);
+void  nox_jsonStreamPrintValue   (PNOXNODE pNode, PSTREAM pStream);
+void  nox_jsonStreamPrintArray (PNOXNODE pParent, PSTREAM pStream, SHORT level);
+void  nox_jsonStreamPrintObject  (PNOXNODE pParent, PSTREAM pStream, SHORT level);
 void  indent (PSTREAM pStream, int indent);
 PUCHAR nox_EncodeJson (PUCHAR out, PUCHAR in);
 void  nox_EncodeJsonStream (PSTREAM p, PUCHAR in);
+
+/* Internals */
+#ifdef NOX_BUILD
 PUCHAR c2s(UCHAR c);
 PUCHAR strTrim(PUCHAR s);
 UCHAR hex (UCHAR c)     ;
 PUCHAR findchr (PUCHAR base, PUCHAR chars, SHORT charslen) ;
-void xlatecpy( PNOXCOM pJxCom ,PUCHAR out, PUCHAR in , LONG len);
+LONG nox_xlateMem  (iconv_t xid, PUCHAR out, PUCHAR in, LONG len);
+void nox_xlatecpy( PNOXCOM pJxCom ,PUCHAR out, PUCHAR in , LONG len);
 int cpy (PUCHAR out, PUCHAR in)                                  ;
 void iconvWrite( FILE * f, iconv_t * pIconv, PUCHAR Value, BOOL Esc);
 void iconvPutc( FILE * f, iconv_t * pIconv, UCHAR c);
@@ -383,6 +395,16 @@ int unicode2utf8 (PUCHAR out, USHORT c);
 
 int parsehex(UCHAR c)                                                ;
 BOOL isTerm(UCHAR c, PUCHAR term);
+
+void nox_Initialize(void);
+void     nox_SkipBlanks(BOOL skip);
+BOOL    JSON_Parse(PNOXCOM pJxCom);
+BOOL    jsonParseNode(PNOXCOM pJxCom, NOX_NODETYPE state,  PUCHAR name, PNOXNODE pCurNode) ;
+
+PNOXNODE DupNode(PNOXNODE pSource);
+PNOXNODE NewNode (PUCHAR Name, PUCHAR Value,NOX_NODETYPE type);
+PNOXNODE CloneNode  (PNOXNODE pSource);
+PNOXNODE NewRoot(void);
 
 
 // Prototypes  - file reader
@@ -399,13 +421,19 @@ PUCHAR nox_GetChar(PNOXCOM pJxCom);
 void nox_SetMessage (PUCHAR Ctlstr, ... );
 void nox_NodeFreeNodeOnly(PNOXNODE pNode);
 
+VOID TRACE ( UCHAR lib[11], PLGL doTrace, UCHAR job [32]);
+void CheckBufSize(PNOXCOM pJxCom);
+BOOL nox_Parse (PNOXCOM pJxCom);
+
+#endif
+
 
 
 // Prototypes  - main  - exports
 LGL nox_isNode  (PNOXNODE pNode);
 void nox_NodeRename(PNOXNODE pNode, PUCHAR name);
 PNOXNODE nox_NodeUnlink  (PNOXNODE  pNode);
-void nox_NodeInsert (PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc);
+void nox_NodeInsert (PNOXNODE pDest, PNOXNODE pSource, NOX_REFLOC refloc);
 void nox_NodeInsertChildHead( PNOXNODE pRoot, PNOXNODE pChild);
 void nox_NodeInsertChildTail( PNOXNODE pRoot, PNOXNODE pChild);
 void nox_NodeInsertSiblingBefore( PNOXNODE pRef, PNOXNODE pSibling);
@@ -414,9 +442,13 @@ void nox_NodeInsertSiblingAfter( PNOXNODE pRef, PNOXNODE pSibling);
 LGL nox_ParseStmfFile (PNOXNODE  * ppRoot, PUCHAR FileName, PUCHAR Mode);
 #pragma descriptor ( void nox_ParseStmfFile       (void))
 
+#ifdef NOX_BUILD
 BOOL nox_ParseJson(PNOXCOM pJxCom);
 BOOL nox_ParseXml (PNOXCOM pJxCom);
-BOOL nox_ParseJsonNode(PNOXCOM pJxCom, JSTATE state, PUCHAR name, PNOXNODE pCurNode);
+BOOL nox_ParseJsonNode(PNOXCOM pJxCom, NOX_NODETYPE state, PUCHAR name, PNOXNODE pCurNode);
+#endif
+
+
 PNOXNODE nox_NodeClone  (PNOXNODE pSource);
 void nox_NodeMoveAndReplace (PNOXNODE  pDest, PNOXNODE pSource);
 /* ------ */
@@ -478,14 +510,15 @@ PUCHAR   nox_GetValueByName (
 #pragma descriptor ( void nox_GetValueByName (void))
 
 PNOXNODE  nox_SetValueByName (
-   PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETYPE type);
+   PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Value,NOX_NODETYPE type);
 #pragma descriptor ( void nox_SetValueByName (void))
 
 void     nox_AsXmlText (PLVARCHAR retVal, PNOXNODE pNode);
 PUCHAR   nox_NodeAsXmlTextList (PNOXNODE pNode, PUCHAR temp);
-BOOL     nox_Parse (PNOXCOM pJxCom);
-LGL      nox_Error (PNOXNODE pJxNode);
+
 VOID     nox_SetApiErr  (PNOXNODE pJxNode, PAPIERR pApiErr );
+
+LGL      nox_Error (PNOXNODE pJxNode);
 PUCHAR   nox_ErrStr(PNOXNODE pJxNode);
 VARCHAR1024  nox_MessageVC  (PNOXNODE pJxNode);
 void     nox_Dump  (PNOXNODE pJxNode);
@@ -518,11 +551,11 @@ PUCHAR   nox_GetNodeNamePtr  (PNOXNODE pNode);
 void    nox_GetNodeNameVC   (PLVARCHAR name, PNOXNODE pNode);
 
 PNOXNODE  nox_NodeInsertNew (
-   PNOXNODE pDest, REFLOC refloc, PUCHAR Name, PUCHAR Value, NODETYPE type) ;
+   PNOXNODE pDest, NOX_REFLOC refloc, PUCHAR Name, PUCHAR Value,NOX_NODETYPE type) ;
 void     nox_NodeSet (PNOXNODE pNode, PUCHAR Value);
 void     nox_NodeDelete(PNOXNODE pRoot);
 void     nox_NodeReplace (PNOXNODE  pDest, PNOXNODE pSource);
-PNOXNODE  nox_NodeCopy (PNOXNODE pDest, PNOXNODE pSource, REFLOC refloc);
+PNOXNODE  nox_NodeCopy (PNOXNODE pDest, PNOXNODE pSource, NOX_REFLOC refloc);
 void     nox_NodeMerge(PNOXNODE pDest, PNOXNODE pSource, SHORT replace);
 PNOXNODE  nox_GetOrCreateNode (PNOXNODE pNodeRoot, PUCHAR Name);
 
@@ -576,16 +609,7 @@ void nox_Close(PNOXNODE * pNode);
 LGL     nox_IsJson (PNOXNODE pNode);
 BOOL    nox_HasMore(PNOXNODE pNode);
 
-/* Internals */
-void nox_Initialize(void);
-void     nox_SkipBlanks(BOOL skip);
-BOOL    JSON_Parse(PNOXCOM pJxCom);
-BOOL    jsonParseNode(PNOXCOM pJxCom, JSTATE state,  PUCHAR name, PNOXNODE pCurNode) ;
 
-PNOXNODE DupNode(PNOXNODE pSource);
-PNOXNODE NewNode (PUCHAR Name, PUCHAR Value, NODETYPE type);
-PNOXNODE CloneNode  (PNOXNODE pSource);
-PNOXNODE NewRoot(void);
 
 PNOXNODE  nox_ArrayPush (PNOXNODE pDest, PNOXNODE pSource, BOOL16 copy);
 #pragma descriptor ( void nox_ArrayPush      (void))
@@ -624,13 +648,13 @@ void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib);
 
 // SQL functions
 // -------------
-#ifndef NOXSQLSTMT_MAX
-#define NOXSQLSTMT_MAX  32
+#ifndef NOX_SQLSTMT_MAX
+#define NOX_SQLSTMT_MAX  32
 #endif
 
 #define NOXDB_FIRST_ROW 1
 #define NOXDB_ALL_ROWS -1
-#define NOXDB_UNKNOWN_SQL_DATATYPE -99
+#define NOXDB_NOX_UNKNOWN_SQL_DATATYPE -99
 #define NOXDB_MAX_PARMS  4096
 
 
@@ -638,7 +662,7 @@ typedef _Packed struct  {
    SQLHSTMT      hstmt;
    BOOL          allocated;
    BOOL          exec;
-} NOXSQLSTMT, * PNOXSQLSTMT;
+} NOX_SQLSTMT, * PNOX_SQLSTMT;
 
 typedef _Packed struct  {
    SQLCHAR       colname[256]; // !!!! TODO !!! set len to 32!!
@@ -652,7 +676,7 @@ typedef _Packed struct  {
    SQLINTEGER    outlen;
    SQLCHAR *     data;
    SQLINTEGER    displaysize;
-   NODETYPE      nodeType;
+   NOX_NODETYPE  nodeType;
    SQLCHAR       header[256];
    SQLCHAR       text[128];
    BOOL          isId;
@@ -669,7 +693,7 @@ typedef _Packed struct  {
    UCHAR       DecimalPoint;
    LGL         upperCaseColName;
    LGL         autoParseContent;
-}  SQLOPTIONS, * PSQLOPTIONS;
+}  NOX_SQLOPTIONS, * PNOX_SQLOPTIONS;
 
 typedef struct {
    SQLINTEGER  inLen ;
@@ -682,7 +706,7 @@ typedef struct {
    PNOXNODE    pNode        ;
    PUCHAR      pData       ;
    BOOL        isBool;
-} PROCPARM ,* PPROCPARM;
+} NOX_PROCPARM ,* PNOX_PROCPARM;
 
 typedef _Packed struct  {
    LGL         doTrace;
@@ -694,7 +718,7 @@ typedef _Packed struct  {
    UCHAR       text  [256];
    UCHAR       job [29];
    INT64       trid;
-}  NOXTRACE , * PNOXTRACE;
+}  NOX_TRACE , * PNOX_TRACE;
 
 #define  COMMENT_SIZE 4096
 #define  DATA_SIZE 65535
@@ -706,35 +730,35 @@ typedef _Packed struct  {
    SQLHDBC       hdbc;
    PNOXNODE      pOptions;
    BOOL          pOptionsCleanup;
-   SQLOPTIONS    options;
+   NOX_SQLOPTIONS    options;
    iconv_t       iconv;
    UCHAR         sqlState[5];
    LONG          sqlCode;
    UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
-   NOXSQLSTMT    stmts[NOXSQLSTMT_MAX];
+   NOX_SQLSTMT    stmts[NOX_SQLSTMT_MAX];
    SHORT         stmtIx;
-   NOXTRACE      sqlTrace;
+   NOX_TRACE      sqlTrace;
    BOOL          transaction;
-} NOXSQLCONNECT, * PNOXSQLCONNECT;
+} NOX_SQLCONNECT, * PNOX_SQLCONNECT;
 
 typedef _Packed struct  {
 // SQLHENV       henv;
 // SQLHDBC       hdbc;
 // SQLHSTMT      hstmt;
-   PNOXSQLSTMT   pstmt;
+   PNOX_SQLSTMT   pstmt;
    PUCHAR        sqlstmt;
    SQLSMALLINT   nresultcols;
    SQLINTEGER    rowcount;
    SQLRETURN     rc;
 // PNOXNODE       pRowNode;
-// SQLOPTIONS    options;
+// NOX_SQLOPTIONS    options;
 // PNOXNODE       pOptions;
 // BOOL          deleteOptions;
    PNOXCOL        cols;
-   PNOXSQLCONNECT pCon;
+   PNOX_SQLCONNECT pCon;
    LONG           maxColSize;
 
-} NOXSQL, * PNOXSQL;
+} NOX_SQL, * PNOX_SQL;
 
 
 typedef enum _NOX_RESULTSET {
@@ -749,100 +773,98 @@ typedef enum _NOX_RESULTSET {
    NOX_COLUMN_TEXT         = 256
 } NOX_RESULTSET, *PNOX_RESULTSET;
 
-typedef _Packed struct _SQLCHUNK {
+typedef _Packed struct _NOX_SQLCHUNK {
    SQLINTEGER actLen;
    SQLINTEGER chunkLen;
    SQLINTEGER offset;
    PUCHAR value;
-} SQLCHUNK, *PSQLCHUNK;
+} NOX_SQLCHUNK, *PNOX_SQLCHUNK;
 
 
-VOID TRACE ( UCHAR lib[11], PLGL doTrace, UCHAR job [32]);
 PNOXNODE nox_sqlResultRow (
-   PNOXSQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms, LONG format, LONG start );
+   PNOX_SQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms, LONG format, LONG start );
 #pragma descriptor ( void nox_sqlResultRow   (void))
 
 PNOXNODE nox_sqlResultRowVC (
-   PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP, LONG format ,LONG start );
+   PNOX_SQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP, LONG format ,LONG start );
 #pragma descriptor ( void nox_sqlResultRowVC   (void))
 
 PNOXNODE nox_sqlResultSet(
-   PNOXSQLCONNECT pCon ,PUCHAR sqlstmt, PNOXNODE pSqlParms, LONG format, LONG start, LONG limit);
+   PNOX_SQLCONNECT pCon ,PUCHAR sqlstmt, PNOXNODE pSqlParms, LONG format, LONG start, LONG limit);
 #pragma descriptor ( void nox_sqlResultSet   (void))
 
 PNOXNODE nox_sqlResultSetVC(
-   PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParms, LONG format, LONG start, LONG limit );
+   PNOX_SQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParms, LONG format, LONG start, LONG limit );
 #pragma descriptor ( void nox_sqlResultSetVC   (void))
 
-PNOXSQL nox_sqlOpen(
-   PNOXSQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms, LONG format, LONG start, LONG limit);
+PNOX_SQL nox_sqlOpen(
+   PNOX_SQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms, LONG format, LONG start, LONG limit);
 #pragma descriptor ( void nox_sqlOpen        (void))
 
-PNOXSQL nox_sqlOpenVC(
-   PNOXSQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP, LONG format, LONG start, LONG limit);
+PNOX_SQL nox_sqlOpenVC(
+   PNOX_SQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP, LONG format, LONG start, LONG limit);
 #pragma descriptor ( void nox_sqlOpenVC       (void))
 
 LGL nox_sqlUpdate (
-   PNOXSQLCONNECT pCon, PUCHAR table, PNOXNODE pRow, PUCHAR whereP, PNOXNODE pSqlParmsP);
+   PNOX_SQLCONNECT pCon, PUCHAR table, PNOXNODE pRow, PUCHAR whereP, PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlUpdate      (void))
 
 LGL nox_sqlUpdateVC (
-   PNOXSQLCONNECT pCon, PLVARCHAR table, PNOXNODE pRow, PLVARCHAR whereP, PNOXNODE pSqlParmsP);
+   PNOX_SQLCONNECT pCon, PLVARCHAR table, PNOXNODE pRow, PLVARCHAR whereP, PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlUpdateVC      (void))
 
 LGL nox_sqlInsert (
-   PNOXSQLCONNECT pCon,PUCHAR table, PNOXNODE pRow, PUCHAR whereP, PNOXNODE pSqlParmsP);
+   PNOX_SQLCONNECT pCon,PUCHAR table, PNOXNODE pRow, PUCHAR whereP, PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlInsert      (void))
 
 LGL nox_sqlInsertVC (
-   PNOXSQLCONNECT pCon,PLVARCHAR table, PNOXNODE pRow, PLVARCHAR whereP, PNOXNODE pSqlParmsP);
+   PNOX_SQLCONNECT pCon,PLVARCHAR table, PNOXNODE pRow, PLVARCHAR whereP, PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlInsertVC      (void))
 
 LGL nox_sqlUpsert (
-   PNOXSQLCONNECT pCon, PUCHAR table, PNOXNODE pRow, PUCHAR whereP, PNOXNODE pSqlParmsP);
+   PNOX_SQLCONNECT pCon, PUCHAR table, PNOXNODE pRow, PUCHAR whereP, PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlUpsert      (void))
 
 LGL nox_sqlUpsertVC (
-   PNOXSQLCONNECT pCon, PLVARCHAR table, PNOXNODE pRow, PLVARCHAR whereP, PNOXNODE pSqlParmsP);
+   PNOX_SQLCONNECT pCon, PLVARCHAR table, PNOXNODE pRow, PLVARCHAR whereP, PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlUpsertVC    (void))
 
 LONG nox_sqlNumberOfRows(
-   PNOXSQLCONNECT pCon, PUCHAR sqlstmt);
+   PNOX_SQLCONNECT pCon, PUCHAR sqlstmt);
 #pragma descriptor ( void nox_sqlNumberOfRows    (void))
 
 LONG nox_sqlNumberOfRowsVC(
-   PNOXSQLCONNECT pCon ,PLVARCHAR sqlstmt);
+   PNOX_SQLCONNECT pCon ,PLVARCHAR sqlstmt);
 #pragma descriptor ( void nox_sqlNumberOfRowsVC  (void))
 
-PNOXNODE nox_sqlFetchRelative (PNOXSQL pSQL, LONG fromRow);
-PNOXNODE nox_sqlFetchNext (PNOXSQL pSQL);
-void nox_sqlClose (PNOXSQL * ppSQL);
+PNOXNODE nox_sqlFetchRelative (PNOX_SQL pSQL, LONG fromRow);
+PNOXNODE nox_sqlFetchNext (PNOX_SQL pSQL);
+void nox_sqlClose (PNOX_SQL * ppSQL);
 
 PNOXNODE nox_sqlGetMeta (
-   PNOXSQLCONNECT pCon, PUCHAR sqlstmt);
+   PNOX_SQLCONNECT pCon, PUCHAR sqlstmt);
 
 LGL  nox_sqlExec (
-   PNOXSQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms);
+   PNOX_SQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms);
 #pragma descriptor ( void nox_sqlExec        (void))
 
 LGL nox_sqlExecVC(
-   PNOXSQLCONNECT pCon,PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP);
+   PNOX_SQLCONNECT pCon,PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlExecVC      (void))
 
-PNOXSQLCONNECT  nox_sqlConnect(PNOXNODE pSqlParms  );
+PNOX_SQLCONNECT  nox_sqlConnect(PNOXNODE pSqlParms  );
 #pragma descriptor ( void nox_sqlConnect    (void))
 
 void nox_sqlDisconnect (
-   PNOXSQLCONNECT * ppCon);
+   PNOX_SQLCONNECT * ppCon);
 void nox_traceOpen (
-   PNOXSQLCONNECT pCon);
-void nox_traceInsert (PNOXSQL pSQL, PUCHAR stmt, PUCHAR sqlState);
+   PNOX_SQLCONNECT pCon);
+void nox_traceInsert (PNOX_SQL pSQL, PUCHAR stmt, PUCHAR sqlState);
 
 typedef void (*NOX_TRACE_PROC) ( PUCHAR text, PNOXNODE pNode);
 typedef void (*NOX_DATAINTO)();
 
 
-void CheckBufSize(PNOXCOM pJxCom);
 
 PUCHAR getSystemColumnName (
    PUCHAR sysColumnName, PUCHAR columnText, PUCHAR schema, PUCHAR table, PUCHAR column );

@@ -24,6 +24,7 @@
 #include "strUtil.h"
 #include "memUtil.h"
 #include "varchar.h"
+#define NOX_BUILD
 #include "noxDbUtf8.h"
 
 
@@ -47,7 +48,7 @@ static void  nox_DataIntoMapObject  (PNOXNODE pParent, QrnDiParm_T * pParms, SHO
         if  ( pNode->Name && *pNode->Name > 0) {
             // TODO !! Only report names for nodes  - not null
             // TODO !! Implement real null support when IBM has the API ready
-            if (pNode->Value || pNode->type == OBJECT || pNode->type == ARRAY) {
+            if (pNode->Value || pNode->type == NOX_OBJECT || pNode->type == NOX_ARRAY) {
                 UCHAR name [256];
                 LONG namelen = XlateBuffer (xlate_1208_to_1200, name , pNode->Name , strlen(pNode->Name));
                 * ((PUSHORT) (name + namelen)) = 0; // Unicode termination
@@ -98,16 +99,16 @@ static void  nox_DataIntoMapNode  (PNOXNODE pNode, QrnDiParm_T * pParms, SHORT l
 {
     if (pNode) {
         switch (pNode->type) {
-            case OBJECT:
+            case NOX_OBJECT:
                 nox_DataIntoMapObject  (pNode, pParms, level);
                 break;
 
-            case ARRAY:
+            case NOX_ARRAY:
                 nox_DataIntoMapArray   (pNode, pParms, level);
                 break;
 
-            case VALUE:
-            case POINTER_VALUE:
+            case NOX_VALUE:
+            case NOX_POINTER_NOX_VALUE:
                 nox_DataIntoMapValue   (pNode, pParms);
                 break;
         }

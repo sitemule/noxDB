@@ -28,6 +28,7 @@
 #include "parms.h"
 // #include "rtvsysval.h"
 #include "memUtil.h"
+#define NOX_BUILD
 #include "noxDbUtf8.h"
 
 /* --------------------------------------------------------------------------- */

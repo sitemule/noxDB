@@ -34,11 +34,11 @@ Dcl-C NOX_UTF8_BOM const(-1208);
 ///
 // Type of a node:
 ///
-Dcl-C NOX_TYPE_UNKNOWN const(0);
-Dcl-C NOX_TYPE_OBJECT  const(1);
-Dcl-C NOX_TYPE_ARRAY   const(2);
+Dcl-C NOX_TYPE_NOX_UNKNOWN const(0);
+Dcl-C NOX_TYPE_NOX_OBJECT  const(1);
+Dcl-C NOX_TYPE_NOX_ARRAY   const(2);
 Dcl-C NOX_TYPE_EVAL    const(3);
-Dcl-C NOX_TYPE_POINTER_VALUE const(4);
+Dcl-C NOX_TYPE_NOX_POINTER_VALUE const(4);
 Dcl-C NOX_TYPE_VALUE   const(5);
 Dcl-C NOX_TYPE_ROOT    const(6);
 Dcl-C NOX_TYPE_LITERAL const(16);
@@ -129,7 +129,7 @@ Dcl-C NOX_ALLROWS const(-1);
 // row contained in a seperate object inside the returned array.
 // This is default behaviour.
 ///
-Dcl-C NOX_ROWARRAY const(0);
+Dcl-C NOX_ROWNOX_ARRAY const(0);
 ///
 // Result set format option for additionally returning meta data with the
 // result set in the property "metaData". This option triggers returning the
@@ -1052,7 +1052,7 @@ End-PR;
 //
 // Copies the value of a node to an new or existing node.
 // <br><br>
-// If the source node is an object or array (type nox_ARRAY or nox_OBJECT) the
+// If the source node is an object or array (type nox_NOX_ARRAY or nox_NOX_OBJECT) the
 // object or array will be cloned to the destination value.
 // <br><br>
 // If the source node does not exist nothing will be copied and <code>*null</code>
@@ -1079,7 +1079,7 @@ End-PR;
 //
 // Moves the value of a node to an new or existing node.
 // <br><br>
-// If the source node is an object or array (type nox_ARRAY or nox_OBJECT) the
+// If the source node is an object or array (type nox_NOX_ARRAY or nox_NOX_OBJECT) the
 // object or array will be moved ( with children) to the destination value.
 // <br><br>
 // If the source node does not exist nothing will be moved and <code>*null</code>

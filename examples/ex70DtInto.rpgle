@@ -235,7 +235,7 @@ dcl-proc example5;
     pJson = nox_sqlResultSet (pCon:
         'select * from qiws.qcustcdt where cusnum = 389572':
         *null:
-        NOX_ROWARRAY + NOX_SYSTEM_CASE:
+        NOX_ROWNOX_ARRAY + NOX_SYSTEM_CASE:
         1:
         1
     );
@@ -274,7 +274,7 @@ dcl-proc example6;
     pJson = nox_sqlResultSet (pCon:
         'Select * from noxdbdemo.stock':
         *null:
-        NOX_ROWARRAY + NOX_SYSTEM_CASE
+        NOX_ROWNOX_ARRAY + NOX_SYSTEM_CASE
     );
 
     myTrace ('UTF-8' : pJson);

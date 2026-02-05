@@ -23,6 +23,7 @@
 #include "parms.h"
 #include "memUtil.h"
 #include "strUtil.h"
+#define NOX_BUILD
 #include "noxDbUtf8.h"
 
 extern  iconv_t xlate_1208_to_job;
@@ -106,14 +107,14 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PUCHAR  options, PUCHA
    UCHAR   url  [8000];
    PNOXNODE  pRes;
 
-   DATAFORMAT dataFormat = FMT_JSON;
+   NOX_DATAFORMAT dataFormat = NOX_FMT_JSON;
 
    if (pParms->OpDescList->NbrOfParms >= 4) {
       if  (stricmp (format , "XML") == 0) {
-         dataFormat = FMT_XML;
+         dataFormat = NOX_FMT_XML;
       }
       else if  (stricmp (format , "TEXT") == 0) {
-         dataFormat = FMT_TEXT;
+         dataFormat = NOX_FMT_TEXT;
       }
    }
 
@@ -139,11 +140,11 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PUCHAR  options, PUCHA
 
    if (pNode) {
 
-      if (pNode->signature != NODESIG) {
+      if (pNode->signature != NOX_NODESIG) {
          saveVC  (temp1 , (PLVARCHAR) pNode);
-      } else if (dataFormat == FMT_JSON) {
+      } else if (dataFormat == NOX_FMT_JSON) {
          nox_WriteJsonStmf (pNode , temp1 , -1208, ON ,NULL);
-      } else if ( dataFormat == FMT_XML) {
+      } else if ( dataFormat == NOX_FMT_XML) {
          nox_WriteXmlStmf (pNode , temp1 , -1208, ON ,NULL);
       }
       // Default to post in not given in options
@@ -155,19 +156,19 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PUCHAR  options, PUCHA
 
    // "Content-type" and "Accept" defaults can be overwritten by the "options" if given,
    switch (dataFormat) {
-      case FMT_JSON:
+      case NOX_FMT_JSON:
          p += sprintf( p ,  " %s %s ",
             (strIstr(options, "-H 'Content-Type:") == NULL) ? "-H 'Content-Type: application/json' " :"",
             (strIstr(options, "-H 'Accept:") == NULL) ? "-H 'Accept: application/json' ":""
          );
          break;
-      case FMT_XML:
+      case NOX_FMT_XML:
          p += sprintf( p ,  " %s %s ",
             (strIstr(options, "-H 'Content-Type:") == NULL) ? "-H 'Content-Type: application/soap+xml' " :"",
             (strIstr(options, "-H 'Accept:") == NULL) ? "-H 'Accept: application/soap+xml,application/xml' ":""
          );
          break;
-      case FMT_TEXT:
+      case NOX_FMT_TEXT:
          // NOP!!
          break;
    }
@@ -186,13 +187,13 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PUCHAR  options, PUCHA
    if (p != NULL) {
       pRes = nox_NewObject();
       #pragma convert(1252)
-      nox_SetValueByName(pRes , "success"  , "false" , LITERAL);
-      nox_SetValueByName(pRes , "reason" , p , VALUE );
+      nox_SetValueByName(pRes , "success"  , "false" , NOX_LITERAL);
+      nox_SetValueByName(pRes , "reason" , p , NOX_VALUE );
       #pragma convert(0)
       memFree(&p);
    } else {
-      if (dataFormat == FMT_JSON
-      ||  dataFormat == FMT_XML) {
+      if (dataFormat == NOX_FMT_JSON
+      ||  dataFormat == NOX_FMT_XML) {
          pRes = nox_ParseFile (temp2 );
       } else {
          pRes = (PNOXNODE) loadVC(temp2);

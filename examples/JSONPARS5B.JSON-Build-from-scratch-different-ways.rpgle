@@ -252,7 +252,7 @@ dcl-proc example3;
                  from noxdb.sizes -
                  where main_category = ${Category.MainCategory} -
                  and number is not null':     // Sizer with numbers first
-                1:JSON_ALLROWS:JSON_ROWARRAY: // All rows as an simple array
+                1:JSON_ALLROWS:JSON_ROWNOX_ARRAY: // All rows as an simple array
                 stockList.this                // from where to pick the key-values
             )
         );
@@ -263,7 +263,7 @@ dcl-proc example3;
                 from noxdb.sizes -
                 where main_category = ${Category.MainCategory} -
                 and text is not null':        // Sizer with text next
-                1:JSON_ALLROWS:JSON_ROWARRAY: // All rows as an simple array
+                1:JSON_ALLROWS:JSON_ROWNOX_ARRAY: // All rows as an simple array
                 stockList.this                // from where to pick the key-values
             )
         );
@@ -296,7 +296,7 @@ dcl-proc example3;
                     'select colur_name -
                      from noxdb.Colurs -
                      where main_category = ${Category.MainCategory} ':
-                    1:JSON_ALLROWS:JSON_ROWARRAY: // All rows as an simple array
+                    1:JSON_ALLROWS:JSON_ROWNOX_ARRAY: // All rows as an simple array
                     stockList.this                // from where to pick the key-values
                 )
             )
