@@ -592,6 +592,8 @@ Dcl-PR nox_SetBool Pointer extproc(*CWIDEN: 'nox_SetBoolByNameVC');
   nullIf         ind value options(*nopass);
 End-PR;
 
+
+
 /// TODO - not migrated !!
 // create an atomic boolean value
 //
@@ -731,6 +733,18 @@ Dcl-PR nox_SetProcPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByNameVC');
   pNode          Pointer    value;
   Expresion      Like(UTF8_1K) const options(*varsize);
   Proc           Pointer(*Proc);
+End-PR;
+
+///
+// create an atomic pointer element
+//
+// NOTE !! you need to mage the memry by your onw code !!
+//
+// @param (input) Value
+// @return new node
+///
+Dcl-PR nox_Pointer Pointer extproc(*CWIDEN: 'nox_Bool');
+  Value          Pointer      value;
 End-PR;
 
 

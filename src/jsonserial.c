@@ -207,7 +207,7 @@ static void  nox_jsonStreamPrintNode (PNOXNODE pNode, PSTREAM pStream, SHORT lev
          break;
 
       case NOX_VALUE:
-      case NOX_POINTER_NOX_VALUE:
+      case NOX_POINTER:
          nox_jsonStreamPrintValue   (pNode, pStream);
          break;
       case NOX_SUBGRAPH:

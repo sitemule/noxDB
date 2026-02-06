@@ -92,7 +92,7 @@ void nox_SetMessage (PUCHAR Ctlstr , ... )
 // ---------------------------------------------------------------------------
 void  freeNodeValue(PNOXNODE pNode)
 {
-   if (pNode->type != NOX_POINTER_NOX_VALUE) {
+   if (pNode->type != NOX_POINTER) {
       memFree(&pNode->Value );
    }
 }
@@ -1602,7 +1602,7 @@ void nox_NodeSetAsPointer (PNOXNODE pNode , PUCHAR Value)
    freeNodeValue(pNode);     // If i was a value - - drop it
    nox_FreeChildren (pNode);  // Ensure we are only a value
    pNode->Value     = Value;
-   pNode->type      = NOX_POINTER_NOX_VALUE;
+   pNode->type      = NOX_POINTER;
    pNode->isLiteral = true; // no escaping and no conversion
 }
 // ---------------------------------------------------------------------------
@@ -3185,7 +3185,7 @@ PNOXNODE  nox_SetValueByName (PNOXNODE pNodeRoot, PUCHAR Name, PUCHAR Value,NOX_
          nox_SetByParseString (pParentNode , Value, merge , move);
          return nox_traceNode("Parse String", pParentNode);
       }
-      if ( type == NOX_POINTER_NOX_VALUE) {
+      if ( type == NOX_POINTER) {
          nox_NodeSetAsPointer (pParentNode , Value);
          return nox_traceNode("Pointer", pParentNode);
       }
@@ -3357,6 +3357,13 @@ PNOXNODE  nox_Bool (LGL Value)
    return NewNode (NULL, Value == OFF  ? FALSESTR:TRUESTR, NOX_LITERAL );
 }
 #pragma convert(0)
+// -------------------------------------------------------------
+// Special raw pointer
+// -------------------------------------------------------------
+PNOXNODE  nox_Pointer (PVOID Value)
+{
+   return NewNode (NULL, Value , NOX_POINTER);
+}
 /* -------------------------------------------------------------
     Set string value by name
     ------------------------------------------------------------- */
@@ -3408,7 +3415,7 @@ PNOXNODE  nox_SetPtrByNameVC (PNOXNODE pNode, PLVARCHAR pName, PUCHAR Value, LGL
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    BOOL isString  = (pParms->OpDescList->NbrOfParms >= 4 && isStringP == ON);
-   PNOXNODE pRes = nox_SetValueByName(pNode , plvc2str(pName) , Value , NOX_POINTER_NOX_VALUE );
+   PNOXNODE pRes = nox_SetValueByName(pNode , plvc2str(pName) , Value , NOX_POINTER );
    pRes->isLiteral = ! isString;
    return pRes;
 }

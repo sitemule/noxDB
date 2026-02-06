@@ -108,7 +108,7 @@ static void  nox_DataIntoMapNode  (PNOXNODE pNode, QrnDiParm_T * pParms, SHORT l
                 break;
 
             case NOX_VALUE:
-            case NOX_POINTER_NOX_VALUE:
+            case NOX_POINTER:
                 nox_DataIntoMapValue   (pNode, pParms);
                 break;
         }
