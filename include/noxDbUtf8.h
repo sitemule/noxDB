@@ -131,7 +131,7 @@ typedef enum {
    NOX_OBJECT              = 1,
    NOX_ARRAY               = 2,
    NOX_PARSE_STRING        = 3,
-   NOX_POINTER_NOX_VALUE       = 4,
+   NOX_POINTER_VALUE       = 4,
    NOX_VALUE               = 5,
    NOX_ROOT                = 6,
    NOX_LITERAL             = 16,
@@ -619,15 +619,22 @@ PNOXNODE  nox_LookupValue (PNOXNODE pDest, PUCHAR expr, BOOL16 ignorecase);
 
 LONG     nox_getLength (PNOXNODE pNode);
 ULONG    nox_NodeCheckSum (PNOXNODE pNode);
+PNOXNODE  nox_NodeMoveInto (PNOXNODE  pDest, PUCHAR Name, PNOXNODE pSource);
 
 PNOXNODE  nox_SetAsciiByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Value);
 PNOXNODE  nox_SetStrByName (PNOXNODE pNode, PUCHAR Name, PUCHAR Value);
 PNOXNODE  nox_SetDecByName (PNOXNODE pNode, PUCHAR Name, FIXEDDEC Value);
 PNOXNODE  nox_SetIntByName (PNOXNODE pNode, PUCHAR Name, INT64  Value);
-PNOXNODE  nox_NodeMoveInto (PNOXNODE  pDest, PUCHAR Name, PNOXNODE pSource);
 PNOXNODE  nox_SetBoolByName (PNOXNODE pNode, PUCHAR Name, LGL Value);
 PNOXNODE  nox_SetBoolByNameVC (PNOXNODE pNode, PLVARCHAR pName, LGL Value, LGL nullIf);
+
+// Atomic TODO: more to come
 PNOXNODE  nox_Bool (LGL Value);
+PNOXNODE  nox_Pointer (PVOID Value);
+PNOXNODE  nox_Int (INT64 Value);
+PNOXNODE  nox_Dec (FIXEDDEC Value);
+PNOXNODE  nox_Str(PUCHAR Value);
+
 
 void nox_NodeCloneAndReplace (PNOXNODE pDest, PNOXNODE pSource);
 void nox_Debug(PUCHAR text, PNOXNODE pNode);
