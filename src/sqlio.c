@@ -2602,7 +2602,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    while (pNode) {
       PUCHAR val;
       name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BEL�B
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
       val = jx_GetValuePtr(pNode , "" ,null);
       if (val == null) {
          stmt += sprintf (stmt , "%s%s=>null"  , comma , temp);
@@ -3026,7 +3026,7 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
    for ( colno=1; pNode; colno++) {
       if (! isIdColumn(hMetastmt, colno)) {
          name  = jx_GetNodeNamePtr   (pNode);
-         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BEL�B
+         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
          if  (nodeisnull(pNode)) {
             stmt += sprintf (stmt , "%s%s=NULL" , comma , temp);
          } else if  (nodeisblank(pNode)) {
@@ -3062,7 +3062,7 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
       if (! isIdColumn(hMetaStmt, colno)) {
          if (!nodeisnull(pNode)) {
             name     = jx_GetNodeNamePtr   (pNode);
-            str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BEL�B
+            str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
             stmt    += sprintf (stmt , "%s%s" , comma , temp);
             if  (nodeisblank(pNode)) {
                pMarker+= sprintf (pMarker , "%sdefault" , comma);    // because timesstamp / date can be set as ''
@@ -3586,7 +3586,7 @@ static PJXSQL buildMetaStmt (PUCHAR table, PJXNODE pRow)
    pNode    =  jx_GetNodeChild (pRow);
    while (pNode) {
       name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BEL�B
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
       stmt += sprintf (stmt , "%s%s" , comma , temp);
       comma = ",";
       pNode = jx_GetNodeNext(pNode);
