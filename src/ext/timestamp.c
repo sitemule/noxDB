@@ -105,6 +105,17 @@ time_t ts_iso2unix (PTS pTs )
     ts_iso2tm (&timeinfo, pTs);
     return mktime(&timeinfo);
 }
+/* -----------------------------------------------------------------
+   Convert IBM i timestamp "YYYY-MM-DD-HH.MM.SS.UUUUUU"
+   to ISO 8601             "YYYY-MM-DDTHH:MM:SS.UUUUUU"
+   ----------------------------------------------------------------- */
+PUCHAR ts_ibm2iso8601 (PUCHAR ts)
+{
+    if (ts[10] == '-') ts[10] = 'T';
+    if (ts[13] == '.') ts[13] = ':';
+    if (ts[16] == '.') ts[16] = ':';
+    return ts;
+}
 /* ----------------------------------------------------------------- */
 PUCHAR ts_unix2isostr (PUCHAR iso ,  time_t unix)
 {

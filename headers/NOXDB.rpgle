@@ -108,6 +108,21 @@ End-PR;
 Dcl-C json_DELIMITERS const('/\@[] .{}''"$');
 
 ///
+// Set ISO 8601 timestamp formatting
+//
+// When enabled, timestamps are serialized to JSON as ISO 8601 format
+// <code>YYYY-MM-DDTHH:MM:SS.uuuuuu</code> instead of the IBM i native
+// format <code>YYYY-MM-DD-HH.MM.SS.uuuuuu</code>.
+//
+// The default is *OFF, preserving backward compatibility.
+//
+// @param (input) *ON to use ISO 8601 format, *OFF to use IBM i native format
+///
+Dcl-PR json_setIsoTimestamp extproc(*CWIDEN : 'jx_setIsoTimestamp');
+  flag ind value;
+End-PR;
+
+///
 // Node type UNKNOWN
 ///
 Dcl-C json_UNKNOWN const(0);
@@ -3089,6 +3104,21 @@ End-PR;
 // Default delimiters for JSON and XML data strings.
 ///
 Dcl-C xml_DELIMITERS const('/\@[] .{}''"$');
+
+///
+// Set ISO 8601 timestamp formatting
+//
+// When enabled, timestamps are serialized to JSON as ISO 8601 format
+// <code>YYYY-MM-DDTHH:MM:SS.uuuuuu</code> instead of the IBM i native
+// format <code>YYYY-MM-DD-HH.MM.SS.uuuuuu</code>.
+//
+// The default is *OFF, preserving backward compatibility.
+//
+// @param (input) *ON to use ISO 8601 format, *OFF to use IBM i native format
+///
+Dcl-PR xml_setIsoTimestamp extproc(*CWIDEN : 'jx_setIsoTimestamp');
+  flag ind value;
+End-PR;
 
 ///
 // Node type UNKNOWN
