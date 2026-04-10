@@ -32,6 +32,7 @@
 #include "varchar.h"
 #include "streamer.h"
 #include "jsonxml.h"
+#include "timestamp.h"
 
 // Prototypes --
 //PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions);
@@ -88,6 +89,11 @@ UCHAR jobDollar  ;
 
 
 int   InputCcsid = 0, OutputCcsid = 0;
+#ifdef ISO_TIMESTAMP_DEFAULT
+LGL   isoTimestamp = ON;
+#else
+LGL   isoTimestamp = OFF;
+#endif
 //  BOOL  skipBlanks = TRUE;
 UCHAR delimiters [12] = {'/', '\\', '@', '[', ']', ' ', '.' , '{' , '}', '\'', '\"' , '$' };
 
@@ -1800,6 +1806,15 @@ PJXDELIM jx_GetDelimiters(void)
   return   (PJXDELIM)   &delimiters;
 }
 // ---------------------------------------------------------------------------
+// Control whether timestamps are serialized as ISO 8601 (YYYY-MM-DDTHH:MM:SS.uuuuuu)
+// instead of the IBM i native format (YYYY-MM-DD-HH.MM.SS.uuuuuu).
+// Default is OFF (no change from prior behaviour).
+// ---------------------------------------------------------------------------
+void jx_setIsoTimestamp (LGL flag)
+{
+   isoTimestamp = flag;
+}
+// ---------------------------------------------------------------------------
 // Note: Options is depricated
 // ---------------------------------------------------------------------------
 PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
@@ -3470,6 +3485,9 @@ PJXNODE  jx_SetTimeStampByName (PJXNODE pNode, PUCHAR Name, PUCHAR Value, LGL nu
    } else {
       UCHAR temp [27];
       substr (temp, Value , 26);
+      if (isoTimestamp == ON) {
+         ts_ibm2iso8601(temp);
+      }
       return jx_SetValueByName(pNode , Name , temp , VALUE );
    }
 }

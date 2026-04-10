@@ -33,10 +33,12 @@
 #include "mem001.h"
 
 #include "jsonxml.h"
+#include "timestamp.h"
 
 extern UCHAR BraBeg;
 extern UCHAR BraEnd;
 extern UCHAR Masterspace;
+extern LGL   isoTimestamp;
 
 //  local prototype:
 static void  copyNodeIntoBuffer (PUCHAR pParmBuffer ,PJXPARMMETA pParentMeta , PJXPARMMETA pMeta, PJXNODE pParmValueNode );
@@ -440,6 +442,9 @@ static PJXNODE newReturnNode (PJXPARMMETA pMethodParm, PUCHAR pParmBuffer )
       }
       case JX_DTYPE_TIME_STAMP: {
          substr  ( data  ,  pParmBuffer , pMethodParm->length);
+         if (isoTimestamp == ON) {
+            ts_ibm2iso8601(data);
+         }
          break;
       }
       case JX_DTYPE_BOOL: {
