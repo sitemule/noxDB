@@ -3157,7 +3157,7 @@ static BOOL isNumeric (SQLSMALLINT colType)
 // -------------------------------------------------------------
 // Note this is done in ascii
 #pragma convert(1252)
-PUCHAR convertAndUnescapeUTF8 ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
+PUCHAR convertAndUnescapeUTF8 ( PULONG plbytes , PUCHAR value )
 {
    PUCHAR pIn , pOut;
    PUCHAR valout;
@@ -3169,10 +3169,6 @@ PUCHAR convertAndUnescapeUTF8 ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
    valout = memAlloc ( (*plbytes) * 4);
    newLen =  XlateBufferQ(valout, value , *plbytes, FromCCSID, ToCCSID);
    valout[newLen] = '\0'; // Use it as as zero term string later in this logic
-
-   if (*pfreeme) {
-      memFree(&value);
-   }
 
    // now replace unicode escapes utf8 values
    // pickup the next four hex chars and convert it
@@ -3191,7 +3187,6 @@ PUCHAR convertAndUnescapeUTF8 ( PULONG plbytes , PUCHAR value , PBOOL pfreeme)
    }
 
    *(pOut) = '\0';
-   *pfreeme = true;
    *plbytes = pOut - valout;
    return valout;
 
@@ -3386,7 +3381,7 @@ SHORT  doInsertOrUpdate(
       // Check to see if NEED_DATA; if yes, use SQLPutData.
       rc  = SQLParamData(pSQL->pstmt->hstmt, &pColData);
       while (rc == SQL_NEED_DATA) {
-         BOOL freeme;
+         PUCHAR pTempBuf = NULL;
          LONG    cbChunk = 32000; // Dont use real 32K it will be to large a buffer
          PUCHAR  value;
          ULONG   lbytes;
@@ -3397,18 +3392,20 @@ SHORT  doInsertOrUpdate(
 
 
          if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
-            freeme = true;
-            value = memAlloc(pColData->collen);
+            value = pTempBuf = memAlloc(pColData->collen);
             lbytes  = jx_AsJsonTextMem (pNode , value ,  pColData->collen );
             value [lbytes] = '\0';
          } else {
-            freeme = false;
             value = jx_GetNodeValuePtr  (pNode , NULL);
             lbytes = pColData->collen;
          }
 
          if (pColData->isUTF8) {
-            value = convertAndUnescapeUTF8 (&lbytes , value , &freeme);
+            value = convertAndUnescapeUTF8 (&lbytes , value);
+            if (pTempBuf) {
+               memFree(&pTempBuf);
+            }
+            pTempBuf = value; // so we can free it later
          }
          // value = escapeBackSlash (&lbytes , value , &freeme);
 
@@ -3427,8 +3424,8 @@ SHORT  doInsertOrUpdate(
          }
 
          // Local serialized work string
-         if (freeme) {
-            memFree(&value);
+         if (pTempBuf) {
+            memFree(&pTempBuf);
          }
          // Setup next column
          rc = SQLParamData(pSQL->pstmt->hstmt, &pColData );
