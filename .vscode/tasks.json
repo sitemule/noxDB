@@ -172,7 +172,7 @@
             "dependsOn": [
                 "Synchronize local to remote"
             ],
-            "command": "${workspaceFolder}/.sitemule/remote_run.sh ${workspaceFolder}/.sitemule/build_noxdb.sh",
+            "command": "${workspaceFolder}/.sitemule/remote_run.sh ${workspaceRoot}/.sitemule/build_noxdb.sh",
             "options": {
                 "env": {
                     "FILE_BASE_NAME": "${fileBasename}",

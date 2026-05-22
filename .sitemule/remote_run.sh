@@ -11,6 +11,7 @@ while IFS='=' read -u9 -r key value; do
     fi
 done 9< <(printenv | sort)
 
+echo "ENVVARS... $ENV_VARS"
 if [ -d "$FOLDER_ROOT/.git" ]; then
 	GIT_SHORT=$(git rev-parse --short HEAD)
 	GIT_HASH=$(git rev-parse --verify HEAD)
