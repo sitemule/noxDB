@@ -42,4 +42,5 @@ PUCHAR  ts_tm2isostr (PUCHAR iso  , struct tm *timeinfo, ULONG usec) ;
 struct tm * ts_iso2tm (struct tm * timeinfo , PTS pTs);
 time_t ts_iso2unix (PTS pTs ) ;
 PUCHAR ts_unix2isostr (PUCHAR iso ,  time_t unix);
+PUCHAR ts_ibm2iso8601 (PUCHAR ts);
 #endif

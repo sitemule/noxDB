@@ -16,7 +16,7 @@ Also ensure that the open source tools are available in your path, according to 
 [set open source path](https://ibmi-oss-docs.readthedocs.io/en/latest/troubleshooting/SETTING_PATH.html)
 
 
-noxDB is a two step process. noxDB requires you to build from source, but this step has been totally automated for you. To install noxDB, you need to use the pase environment (with `ssh` for example) and with a couple of seconds you can have the project built. No need to download save files, upload them or restore them.
+This "master" branch is widely used, but the core graph is stored in EBCDIC. We are keeping this "master" as is and supporting it. However, for any new projects, rather use the "main" branch where everything is stored in UTF-8 and the prototypes have been cleaned up and have great new features.
 
 ```
 ssh my_ibm_i
@@ -45,6 +45,10 @@ ssh my_ibm_i
 cd /prj/noxDB
 gmake clean release
 ```
+
+### Note
+This "master" branch is widely used, but the core graph is stored in EBCDIC. we are keeping this "master" as is and support it. However, for any new projects rather use the "main" branch where anything is stored in UTF-8 and the prototypes has been cleaned up and have great new features.
+
 
 ### Further Reading
 

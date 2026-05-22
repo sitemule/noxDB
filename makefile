@@ -16,6 +16,12 @@ TARGET_RLS=*PRV
 # Need this with release 7.3 / 7.4  since /QIBM/include
 #DEFINE=QOAR_INCLUDE_IFS
 
+# Set ISO_TIMESTAMP=1 to make ISO 8601 timestamp formatting the default:
+#   gmake ISO_TIMESTAMP=1
+ifdef ISO_TIMESTAMP
+DEFINE := $(DEFINE) ISO_TIMESTAMP_DEFAULT
+endif
+
 
 # Do not touch below
 INCLUDE='/QIBM/include' 'headers/' 'headers/ext/'

@@ -390,6 +390,7 @@ void jx_NodeMoveAndReplace (PJXNODE  pDest, PJXNODE pSource);
 void jx_SetDecPoint(PUCHAR p);
 void jx_SetDelimiters(PJXDELIM pDelim);
 void jx_SetDelimiters2(PJXDELIM pDelim);
+void jx_setIsoTimestamp(LGL flag);
 void jx_CloneFormat(PJXNODE pNode, PJXNODE pSource);
 LGL jx_Has  (PJXNODE pNode, PUCHAR Name);
 #pragma descriptor ( void jx_Has                               (void))
