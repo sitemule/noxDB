@@ -53,6 +53,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 // Globlas: TODO !!! remove to make code reintrant
 extern UCHAR jxMessage[512];
 extern BOOL  jxError;
+extern LGL   isoTimestamp;
 
 extern UCHAR jobSlash       ;
 extern UCHAR jobBackSlash   ;
@@ -760,7 +761,8 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    // and IBM i does not support statement attribute to set the pr statement. :/
    // so we simply append the "with ur" uncommited read options
    if ((0 != memicmp ( sqlTempStmt , "call"  , 4))
-   &&  (0 != memicmp ( sqlTempStmt , "values", 6))) {
+   &&  (0 != memicmp ( sqlTempStmt , "values", 6))
+   &&  (NULL == stristr ( sqlTempStmt , " final table"))) {
       PUCHAR lookFrom = finalSQLPart (sqlTempStmt);
       static BOOL compilereg = true;
       static regex_t hasLimitReg;
@@ -1151,6 +1153,17 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
 
                   jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
                   break ;
+               }
+
+               case SQL_TIMESTAMP: {
+                  PUCHAR p = buf;
+                  int len = strTrimLen(p);
+                  p[len] = '\0';
+                  if (isoTimestamp == ON) {
+                     ts_ibm2iso8601(p);
+                  }
+                  jx_NodeAdd (pRow , RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
+                  break;
                }
 
                default: {
@@ -2066,6 +2079,9 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
                   if (p->isBool) {
                      jx_SetValueByName(pResult , p->name,  (*p->buffer == '1' || *p->buffer == 't') ? "true":"false", LITERAL);
                   } else {
+                     if (p->sqlType == SQL_TIMESTAMP && isoTimestamp == ON) {
+                        ts_ibm2iso8601(p->buffer);
+                     }
                      jx_SetValueByName(pResult , p->name,  p->buffer , p->type);
                   }
                   break;
@@ -2410,6 +2426,9 @@ PJXNODE jx_sqlExecuteRoutine( PUCHAR routineName , PJXNODE pInParmsP , LONG form
                case SQL_DECIMAL:
                case SQL_NUMERIC:
                   *(p->buffer + p->bufLen) = '\0'; // Always keep an final zertermination at the end of buffer
+                  if (p->sqlType == SQL_TIMESTAMP && isoTimestamp == ON) {
+                     ts_ibm2iso8601(p->buffer);
+                  }
                   jx_SetValueByName(pResult , p->name,  p->buffer , p->type);
                   break;
                case SQL_SMALLINT:
@@ -2583,7 +2602,7 @@ PJXNODE jx_sqlCall ( PUCHAR procedureName , PJXNODE pInParms)
    while (pNode) {
       PUCHAR val;
       name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELB
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÃ˜B
       val = jx_GetValuePtr(pNode , "" ,null);
       if (val == null) {
          stmt += sprintf (stmt , "%s%s=>null"  , comma , temp);
@@ -3007,7 +3026,7 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
    for ( colno=1; pNode; colno++) {
       if (! isIdColumn(hMetastmt, colno)) {
          name  = jx_GetNodeNamePtr   (pNode);
-         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELB
+         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÃ˜B
          if  (nodeisnull(pNode)) {
             stmt += sprintf (stmt , "%s%s=NULL" , comma , temp);
          } else if  (nodeisblank(pNode)) {
@@ -3043,7 +3062,7 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
       if (! isIdColumn(hMetaStmt, colno)) {
          if (!nodeisnull(pNode)) {
             name     = jx_GetNodeNamePtr   (pNode);
-            str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELB
+            str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÃ˜B
             stmt    += sprintf (stmt , "%s%s" , comma , temp);
             if  (nodeisblank(pNode)) {
                pMarker+= sprintf (pMarker , "%sdefault" , comma);    // because timesstamp / date can be set as ''
@@ -3567,7 +3586,7 @@ static PJXSQL buildMetaStmt (PUCHAR table, PJXNODE pRow)
    pNode    =  jx_GetNodeChild (pRow);
    while (pNode) {
       name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELB
+      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELÃ˜B
       stmt += sprintf (stmt , "%s%s" , comma , temp);
       comma = ",";
       pNode = jx_GetNodeNext(pNode);
