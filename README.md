@@ -2,6 +2,8 @@
 # noxDB - Not Only XML...
 
 **This branch is in currently considered as being Work-In-Progress**
+Read more in end of this README.md
+
 **Once this work has been completed, this main branch will become the new default, and the current master branch will be deprecated, and renamed to legacy**
 
 noxDB is an opensource framework that makes it easy to work with XML, JSON and SQL with one single approach - from within RPG.
@@ -54,16 +56,15 @@ gmake
 
 This will create:
 
-* The `NOXDB` library
-* `NOXDB/JSONXML` service program.
-* `NOXDB/QRPGLEREF.XMLPARSER` for the XML noxDB API prototypes.
-* `NOXDB/QRPGLEREF.JSONPARSER` for the JSON noxDB API prototypes.
-* `NOXDB/NOXDB` binding directory, with the `JSONXML` object on it.
+* The `NOXDBUTF8` library
+* `NOXDBUTF8/NOXDBUTF8` service program.
+* `NOXDBUTF8/QRPGLEREF.NOXDBUTF8` for the API prototypes.
+* `NOXDBUTF8/NOXDBUTF8` binding directory, with the `NOXDBUTF8` object on it.
 
 
 ### Build the distribution.
 
-When you have made the project in library NOXDB, you can create the release as a savefile
+When you have made the project in library NOXDBUTF8, you can create the release as a savefile
 
 ```
 ssh my_ibm_i
@@ -75,6 +76,43 @@ gmake clean release
 This branch merges the "EBCDIC" legacy branch (previously called master),
 with the code in UTF-8-Consolidated branch, aimed at making noxDB fully compatible with UTF-8 while also cleaning up the codebase.
 
-### Further Reading
+### Work in progress?
+I know it sounds confusing, so let me try to explain it:
 
-Want some further reading on noxDB?  See Andy Youens PowerWire article on [noxDB here.](https://powerwire.uk/noxdb-easily-use-json-in-rpg/)
+The **master** branch, was carved out from the IceBreak core where everything was EBCDIC.
+This code has been battle-tested for at least two decades and we
+know that the "classic" noxDb is very stable.
+
+Today - we have UTF-8 in RPG and the world has changed.
+We had attempts to put UTF-8 into the "classic" noxDb,
+but it was not clean - this brach still exists as **utf-8** but only for reference.
+
+So we created the **main** branch, where the graph itself is in UTF-8 and everything in that branch works, however it is not battle-tested for more that two decades.
+
+Also notice that the **main** branch (the UTF-8 stuff) has all the new features for easy construction of objects and array - ex:
+
+```RPGLE
+   pCustomer1 = nox_Object(
+      'id'         : nox_Int  (12345):
+      'name'       : nox_Str  ('System & Metod A/S'):
+      'street'     : nox_Str  ('Håndværkersvinget 8'):
+      'city'       : nox_Str  ('Hørsholm'):
+      'greeting'   : nox_Str  (u'4f605978'): // "Ni hau" in unicode
+      'creditLimit': nox_Dec  (76543.21):
+      'createdDate': nox_Date (%date()):
+      'createdTime': nox_Time (%time()):
+      'dateTime'   : nox_TS   (%timestamp()):
+      'isNice'     : nox_Bool (10 > 1):
+      'isUS'       : nox_Bool ('DK' = 'USA')
+   );
+```
+
+Let me point to, where the "work in progress" coms in:
+
+- Examples - are not all re-written, the original branch was bloated with examples. There is a kitch-sink where old-stuff can stay as inspiration.
+- JSON-IN/JSON-OUT dynamic calls of programs with inline PCM. This is a super advanced feature that is not ported yet. It fails during compilation and was therefore left out of the service program.
+
+
+### My advice:
+if you are starting a new project, please go for the **main**. It is production ready, and we use it for our own projects at clients.
+

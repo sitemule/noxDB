@@ -4,8 +4,7 @@
 
 2) nox_sql... function a now 100% reintrant, which means:
 2.1) all sql function requires a connection parameter ( exept for the connect)
-2.2) parameters a reorderes to be more strinct: Connection:sqlstatement:parametes:[options]
+2.2) parameters are reorderes to be more strinct: Connection:sqlstatement:parametes:[options]
 
-3) renamed
 
 
