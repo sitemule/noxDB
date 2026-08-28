@@ -645,8 +645,8 @@ void jx_WriteCsvStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJ
    UCHAR  sigUtf8[]  =  {0xef , 0xbb , 0xbf , 0x00};
    UCHAR  sigUtf16[] =  {0xff , 0xfe , 0x00};
    UCHAR  CrLf []= {0x0d, 0x0a , 0x00};
-   UCHAR  wTemp[100000];
-   UCHAR  temp [32766];
+   UCHAR  wTemp[1000000];
+   UCHAR  temp [1000000];
    UCHAR  comma    = ';';
    UCHAR  decpoint = '.';
    BOOL   headers  = false;
