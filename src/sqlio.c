@@ -1111,7 +1111,8 @@ PJXNODE jx_sqlFormatRow  (PJXSQL pSQL)
 
                   // trigger new parsing of JSON-objects in columns:
                   // Predicts json data i columns
-                  if (pSQL->format & JX_AUTOPARSE) {
+                  if (pConnection->options.autoParseContent == ON || (pSQL->format & JX_AUTOPARSE)) {
+                  // if (pSQL->format & JX_AUTOPARSE) { WAS!!
                      if (*temp == jobBraBeg || *temp == jobCurBeg) {
                         PJXNODE pNode = jx_parseStringCcsid(temp, 0);
                         if (pNode) {
