@@ -33,6 +33,7 @@ BOOL  doTrim;
 extern int   InputCcsid , OutputCcsid;
 extern UCHAR BraBraGT [4];  // ]]>
 extern UCHAR Cdata    [10]; // <![CDATA[
+extern UCHAR Hash;
 
 
 #pragma convert(1252)
@@ -48,7 +49,7 @@ static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode, 
    PUCHAR  defaultNode = "row";
    #pragma convert(1252)
 
-   //' Make indention
+   // Make indention
    tab [0] = 0x0d;
    tab [1] = 0x0a;
    memset(tab+2, 0x20 ,(level-1)*2);
@@ -136,8 +137,33 @@ static void jx_WriteXmlStmfNodeList (FILE * f, iconv_t * pIconv ,PJXNODE pNode, 
    level --;
 }
 #pragma convert(0)
-/* ---------------------------------------------------------------------------
-   --------------------------------------------------------------------------- */
+// ---------------------------------------------------------------------------
+// Unicode is placed in the graph as json escapes \u so replace that with &#
+// ---------------------------------------------------------------------------
+static LONG escape(PUCHAR out, PUCHAR in )
+{
+
+   LONG len = 0;
+   while (*in) {
+      if (in[0] == '\\' && in[1] == 'u') {
+         *out++ = '&';
+         *out++ = Hash;
+         *out++ = 'x';
+         in += 2;
+         *out++ = *in++;
+         *out++ = *in++;
+         *out++ = *in++;
+         *out++ = *in++;
+         *out++ = ';';
+         len += 8;
+      } else {
+         *out++ = *in ++;
+         len ++;
+      }
+   }
+   return len;
+}
+// ---------------------------------------------------------------------------
 void jx_WriteXmlStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut , PJXNODE options)
 {
    FILE * f;
@@ -220,7 +246,6 @@ static LONG xmlTextMemList (PJXNODE pNode, PUCHAR buf, SHORT cdatamode , SHORT l
    PUCHAR     CdataEnd   = "";
    PUCHAR     defaultNode = "row";
 
-
    while (pNode) {
 
       // For current node and children
@@ -275,7 +300,11 @@ static LONG xmlTextMemList (PJXNODE pNode, PUCHAR buf, SHORT cdatamode , SHORT l
 // ---------------------------------------------------------------------------
 LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf)
 {
-   PUCHAR     temp = buf;
+   PUCHAR  tempBuf ;
+   PUCHAR  temp;
+   LONG len;
+
+   temp = tempBuf = memAlloc( 1000000000);
 
    if (pNode== NULL) return (0);
 
@@ -291,7 +320,11 @@ LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf)
       temp += xmlTextMemList (pNode, temp, 0, 1);
    }
 
-   return temp - buf;
+
+   len = escape(buf, tempBuf);
+   memFree(&tempBuf);
+   return len;
+
 
 }
 // ---------------------------------------------------------------------------

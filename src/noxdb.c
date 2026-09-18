@@ -1827,11 +1827,14 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
    PJXNODE pRoot;
    PJXCOM pJxCom;
 
+   JXDELIM storeDelimiters;
 
    #ifdef MEMDEBUG
    UCHAR  tempStr[100];
    substr(tempStr , Buf , 100);
    #endif
+
+   storeDelimiters = * jx_GetDelimiters();
 
 
    // Asume OK
@@ -1861,6 +1864,8 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
          inlen = strlen(Buf);
          temp = memAlloc(inlen * 4); // Need room for unicode
          templen = XlateUtf8ToSbcs (temp , Buf , inlen , 0);
+         jx_setDelimitersByCcsid (0); // Then parser runs in EBCDIC
+
       } else if (InputCcsid == 1200) {
          if (pJxCom->LittleEndian) {
             inlen = swapEndianString(Buf);
@@ -1893,6 +1898,8 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
       printf("\n\nParse String: %p - %-90.90s\n " , pRoot  , tempStr);
       memStat();
    #endif
+
+   jx_SetDelimiters2(&storeDelimiters);
 
    return (pRoot);
 }
