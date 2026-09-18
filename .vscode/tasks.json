@@ -33,10 +33,7 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            },
-            "problemMatcher": [
-                "$gcc"
-            ]
+            }
         },
         {
             "label": "Compile Test modules for noxDB",
@@ -45,14 +42,11 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            },
-            "problemMatcher": [
-                "$gcc"
-            ]
+            }
         },
         {
-            "label": "Compile current example file",
-            "command": "ssh -t MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/examples/;gmake compile SRC=${fileBasename}'",
+            "label": "Compile current example/issue/test file",
+            "command": "${workspaceFolder}/.sitemule/compile_current.sh \"${workspaceRoot}\" \"${workspaceFolderBasename}\" \"${relativeFile}\" \"${fileBasename}\"",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -60,7 +54,7 @@
             },
             "problemMatcher": {
                 "owner": "c",
-                "fileLocation": ["relative", "${workspaceRoot}/examples"],
+                "fileLocation": ["relative", "${fileDirname}"],
                 "pattern": {
                     // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
                     "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
@@ -71,16 +65,6 @@
                     "message": 4
                 }
             }
-        },
-        {
-            "label": "Compile current test file",
-            "command": "ssh -t MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxDB/test/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
-            "type": "shell",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": []
         },
         {
             "label": "Compile current unit test file",
@@ -111,10 +95,7 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            },
-            "problemMatcher": [
-                "$gcc"
-            ]
+            }
         },
         {
             "label": "Synchronize local to remote",

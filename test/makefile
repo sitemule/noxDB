@@ -11,22 +11,11 @@
 # 
 BIN_LIB=NOXDB
 RPG_OPT=DBGVIEW(*LIST) INCDIR('./..' '/prj/noxdb')  OPTION(*NOSHOWCPY *NODEBUGIO *NOUNREF *EVENTF *NOEXT *NOEXPDDS)
-OBJNAME=$(word 1, $(subst ., ,$(OBJ)))  
-CCSID=277  
+CCSID=277
 
 all: compile
 .ONESHELL:
-compile: 
-	qsh <<EOF 
-	echo "Running"
-	liblist -a $(BIN_LIB)
-	touch error.txt
-	setccsid 1208 error.txt
-	setccsid 1208 $(SRC)
-	system -iq "CRTSRCPF $(BIN_LIB)/srctemp RCDLEN(240) CCSID($(CCSID))"
-	system -iq "CPYFRMSTMF FROMSTMF('$(SRC)') TOMBR('/QSYS.LIB/$(BIN_LIB).LIB/srctemp.file/srctemp.mbr')  MBROPT(*REPLACE)"
-	system -i "CRTBNDRPG  PGM($(BIN_LIB)/$(OBJNAME)) SRCFILE($(BIN_LIB)/srctemp) SRCMBR(SRCTEMP) $(RPG_OPT)" > error.txt
-	system -iq "DLTF $(BIN_LIB)/srctemp"
-	EOF
-       
+compile:
+	../examples/compile.sh -f "$(SRC)"  -l $(BIN_LIB) -c $(CCSID) -o "$(RPG_OPT)"
+
 .PHONY: compile
