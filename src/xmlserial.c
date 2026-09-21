@@ -298,15 +298,30 @@ static LONG xmlTextMemList (PJXNODE pNode, PUCHAR buf, SHORT cdatamode , SHORT l
 }
 
 // ---------------------------------------------------------------------------
-LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf)
+// targetCcsid (optional, 0/omitted = current job ccsid, unchanged from
+// before): most of the XML syntax (<, >, /, =, ", space) comes from fixed
+// C string literals in xmlTextMemList() and doesn't vary by ccsid in
+// practice - but the "#" in &#xHHHH; numeric character references (see
+// escape(), via the Hash global) does, on EBCDIC national code pages. This
+// lets a caller pin that to a specific ccsid instead of whatever the job
+// happens to be running under right now. Node VALUE content is not
+// re-encoded - copied as-is, same as always.
+// ---------------------------------------------------------------------------
+LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf, int targetCcsid)
 {
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    PUCHAR  tempBuf ;
    PUCHAR  temp;
    LONG len;
-
-   temp = tempBuf = memAlloc( 1000000000);
+   JXDELIM storeDelimiters;
+   int resolvedCcsid = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3) ? targetCcsid : 0;
 
    if (pNode== NULL) return (0);
+
+   storeDelimiters = * jx_GetDelimiters();
+   jx_setDelimitersByCcsid (resolvedCcsid);
+
+   temp = tempBuf = memAlloc( 1000000000);
 
    // Root node (the document) is an anonymus list of elements
    if (pNode->pNodeParent == NULL
@@ -323,14 +338,19 @@ LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf)
 
    len = escape(buf, tempBuf);
    memFree(&tempBuf);
+
+   jx_SetDelimiters2 (&storeDelimiters);
+
    return len;
 
 
 }
 // ---------------------------------------------------------------------------
-VARCHAR jx_AsXmlText (PJXNODE pNode)
+VARCHAR jx_AsXmlText (PJXNODE pNode, int targetCcsid)
 {
+   PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+   int resolvedCcsid = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 2) ? targetCcsid : 0;
    VARCHAR  res;
-   res.Length = jx_AsXmlTextMem (pNode , res.String);
+   res.Length = jx_AsXmlTextMem (pNode , res.String, resolvedCcsid);
    return res;
 }

@@ -122,7 +122,7 @@ void jx_joblog (PUCHAR msg , ...)
    if (msg == null){
       return;
    } else if ( *msg == NODESIG) {
-      len = jx_AsJsonTextMem (((PJXNODE) msg) , mem , 512);
+      len = jx_AsJsonTextMem (((PJXNODE) msg) , mem , 512, 0);
       QMHSNDPM ("CPF9898", "QCPFMSG   *LIBL     ",  mem  , len  , "*INFO     ", "jx_joblog                "  ,
                stackcount, msgkey , &zeroval);
    } else {
@@ -204,7 +204,7 @@ PJXNODE jx_traceNode (PUCHAR text, PJXNODE pNode)
       jx_WriteJsonStmf (pNode, filename , 1208, OFF, NULL);
    } else if (debugger == 2) {
       UCHAR temp [65536];
-      int l = jx_AsJsonTextMem (pNode , temp , sizeof(temp));
+      int l = jx_AsJsonTextMem (pNode , temp , sizeof(temp), 0);
       temp [l] = 0;
       puts (text);
       puts (temp);
@@ -1046,6 +1046,12 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
   BOOL isAscii = FALSE;
   BOOL isUnicode  = FALSE;
 
+  // Did the caller already tell us the real ccsid (jx_ParseStringCcsid)? If
+  // so, content-sniffing below must recognise the input without stomping on
+  // that explicit choice - BOM detection is the one exception, since a BOM
+  // is unambiguous ground truth and should still win.
+  BOOL callerCcsid = (InputCcsid != 0);
+
   // need temp version since it is modified
   substr ( buf, pIn , 128);
 
@@ -1078,25 +1084,26 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
   }
 
   for (i=0; ! done; i++, p++) {
+    // Whatever ccsid BraBeg/CurBeg/Quot/Apos/LT currently reflect - the real
+    // job ccsid by default, or an explicit ccsid the caller set via
+    // jx_ParseStringCcsid. Checked ccsid-agnostically first (was hardcoded
+    // to ccsid 277 here - only ever matched a Danish/Norwegian EBCDIC job).
+    // InputCcsid is deliberately left untouched on a match: if the caller
+    // set it explicitly it's already right, and if not it's already the
+    // "current job ccsid" sentinel (0), which is also already right.
+    if (*p == BraBeg || *p == CurBeg || *p == Quot || *p == Apos) {
+      pJxCom->isJson = TRUE;
+      done = TRUE;
+      continue;
+    }
+    if (*p == LT) {
+      pJxCom->isJson = FALSE;
+      isXml = TRUE;
+      done = TRUE;
+      continue;
+    }
+
     switch(*p) {
-      #pragma convert(277)
-      case  '['  :
-      case  '{'  :
-      case  '\"' :
-      case  '\'' :
-        pJxCom->isJson = TRUE;
-        InputCcsid = 277;
-        done = TRUE;
-
-        break;
-
-      case  '<' :
-      #pragma convert(0)
-        pJxCom->isJson = FALSE;
-        isXml = TRUE;
-        done = TRUE;
-        break;
-
       #pragma convert(1252)
       case  '['  :
       case  '{'  :
@@ -1116,8 +1123,15 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
 
       #pragma convert(0)
       case  '\0' :
+        // Could be a real end-of-buffer, or the high byte of a big-endian
+        // Unicode character sitting mid-scan (both nulls of a genuine
+        // terminator are adjacent - a lone null with real content right
+        // after it is not one). Keep scanning in the latter case.
+        if (*(p+1) != '\0') {
+          break;
+        }
         InputCcsid = 0; // Empty string; build from scratch XML
-        return;
+        return NULL;
 
       default:
         // Userdefined charset ( defined by setDelimiter() )
@@ -1127,7 +1141,7 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
         ||  BeginsWith(p , "false")
         ||  BeginsWith(p , "null" )) {
            // This is not good - some places it is converted to job other not !!
-           // DODO!! For now patch the actual into the job
+           // TODO!! For now patch the actual into the job
            jobBraBeg = BraBeg;
            jobCurBeg = CurBeg;
            jobBraEnd = BraEnd;
@@ -1163,11 +1177,12 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
        InputCcsid = 1208;
     } .... */
     // Assume 1208 for any ascii JSON and set with EBCDIC ccsid on the file
-    if (isAscii && InputCcsid < 900) {
+    // - unless the caller already told us the real ccsid, which trumps a guess.
+    if (isAscii && InputCcsid < 900 && ! callerCcsid) {
        InputCcsid = 1208;
     }
   } else if (p && isXml && ! isAscii) {
-      InputCcsid = 0;  // Is EBCDIC
+      if (! callerCcsid) InputCcsid = 0;  // Is EBCDIC (unless the caller already told us the real ccsid)
   } else if (p && isXml && isAscii) {
     if ( InputCcsid == 0) {
       // InputCcsid = 1252;  // Default to basic windows ascii
@@ -1840,7 +1855,11 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
    // Asume OK
    jxError = false;
 
-   if (Buf == NULL || *Buf == '\0' ) {
+   // Buf[0]=='\0' alone is not "empty" - it's also the high byte of a
+   // BOM-less big-endian Unicode character (e.g. '<' in UTF-16BE is
+   // [0x00]['<']). Real empty input is null-terminated twice, matching how
+   // every caller (jx_ParseFile's pStreamBuf, RPG's +x'00') pads buffers.
+   if (Buf == NULL || (*Buf == '\0' && *(Buf+1) == '\0') ) {
        return NULL;
    }
    // Is it already a object graph, then return it
@@ -2936,11 +2955,11 @@ void jx_CopyValueByNameVC (PVARCHAR pRes, PJXNODE pNodeRoot, PUCHAR Name, PUCHAR
    } else if (joinString &&  pNode->type == ARRAY) {
       jx_joinArray2vc (pRes , pNode , delimiter);
       if (pRes->Length == 0) { // No data found when joining arrays as string - Now serialize it as usual
-         pRes->Length  = jx_AsJsonTextMem (pNode , pRes->String , 32760);
+         pRes->Length  = jx_AsJsonTextMem (pNode , pRes->String , 32760, 0);
       }
 
    } else if (pNode->type == OBJECT ||  pNode->type == ARRAY ) {
-      pRes->Length  = jx_AsJsonTextMem (pNode , pRes->String, 32760);
+      pRes->Length  = jx_AsJsonTextMem (pNode , pRes->String, 32760, 0);
 
    } else if (pNode->Value) {
       str2vcXlate(pNode, pRes , pNode->Value);

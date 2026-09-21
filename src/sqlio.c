@@ -3394,7 +3394,7 @@ SHORT  doInsertOrUpdate(
 
          if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
             value = pTempBuf = memAlloc(pColData->collen);
-            lbytes  = jx_AsJsonTextMem (pNode , value ,  pColData->collen );
+            lbytes  = jx_AsJsonTextMem (pNode , value ,  pColData->collen , 0);
             value [lbytes] = '\0';
          } else {
             value = jx_GetNodeValuePtr  (pNode , NULL);
@@ -3519,7 +3519,7 @@ SHORT  doInsertOrUpdate(
 
          if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
             value = valArr[valArrIx++] = memAlloc(Col.collen);
-            realLength = jx_AsJsonTextMem (pNode , value,  Col.collen );
+            realLength = jx_AsJsonTextMem (pNode , value,  Col.collen , 0);
             value [realLength] = '\0';
          } else {
             value = jx_GetNodeValuePtr  (pNode , NULL);
@@ -3804,7 +3804,7 @@ VARCHAR jx_sqlGetOptions ()
    jx_SetCharByName (pOptions , "timeSep"          , po->TimeSep         ,OFF);
    jx_SetCharByName (pOptions , "timeFmt"          , po->TimeFmt         ,OFF);
 
-   ret = jx_AsJsonText (pOptions);
+   ret = jx_AsJsonText (pOptions, 0);
    jx_NodeDelete (pOptions);
    return ret;
 

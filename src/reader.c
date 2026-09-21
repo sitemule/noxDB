@@ -149,16 +149,16 @@ void jx_setDelimitersByCcsid (int ccsid)
 }
 
 /* ---------------------------------------------------------------------------
+   ccsid==0 means "current job ccsid", which can change at any time via
+   CHGJOB - so this can NOT be cached against the raw ccsid parameter (that
+   caches the sentinel, not what it resolves to, and a later CHGJOB is then
+   never discovered). jx_setDelimitersByCcsid() only rebuilds a couple of
+   small, fixed-size SBCS lookup tables, and this only runs once per parse
+   (not once per character), so always rebuilding is cheap enough.
    --------------------------------------------------------------------------- */
 void initconst(int ccsid)
 {
-   static int prevccsid = -1;  // can not be negative => force rebuild const
-
-   // already done?
-   if ( prevccsid == ccsid) return;
-   prevccsid = ccsid;
    jx_setDelimitersByCcsid (ccsid);
-
 }
 
 // ---------------------------------------------------------------------------

@@ -1594,10 +1594,14 @@ End-PR;
 // Returns the passed object tree as a JSON string.
 //
 // @param (input) Node
+// @param (input) CCSID to write the structural JSON characters ({}[]\") in -
+//        default (omitted or 0) is the current job CCSID. Node value content
+//        is not re-encoded regardless of this setting.
 // @return Object tree representation as a JSON string
 ///
 Dcl-PR json_asJsonText varchar(32767) extproc(*CWIDEN : 'jx_AsJsonText');
   node pointer value;
+  targetCcsid int(10) value options(*nopass);
 End-PR;
 
 ///
@@ -1606,11 +1610,15 @@ End-PR;
 // Returns the passed object tree as a JSON string.
 //
 // @param (input) Node
+// @param (input) CCSID to write the structural JSON characters ({}[]\") in -
+//        default (omitted or 0) is the current job CCSID. Node value content
+//        is not re-encoded regardless of this setting.
 // @return Object tree representation as a JSON string
 ///
 Dcl-PR json_AsJsonText16M Like(VARCHAR16M)  rtnparm
         extproc(*CWIDEN : 'jx_AsJsonText16M');
   node pointer value;
+  targetCcsid int(10) value options(*nopass);
 End-PR;
 
 ///
@@ -1638,6 +1646,10 @@ End-PR;
 // @param (input) Buffer length (in bytes)
 // @return Length of the serialized JSON string
 //
+// @param (input) CCSID to write the structural JSON characters ({}[]\") in -
+//        default (omitted or 0) is the current job CCSID. Node value content
+//        is not re-encoded regardless of this setting.
+//
 // @info If no buffer length is passed the procedure will assume the default
 //       buffer size which is about 2GB, see MEMMAX defined in memUtil.h.
 ///
@@ -1645,6 +1657,7 @@ Dcl-PR json_asJsonTextMem uns(10) extproc(*CWIDEN : 'jx_AsJsonTextMem');
   node pointer value;
   buffer pointer value;
   bufferSize uns(10) value options(*nopass);
+  targetCcsid int(10) value options(*nopass);
 End-PR;
 
 ///
@@ -1683,10 +1696,15 @@ End-PR;
 // Returns the passed object tree as a XML string.
 //
 // @param (input) Node
+// @param (input) CCSID to write the "#" in &#xHHHH; numeric character
+//        references in - default (omitted or 0) is the current job CCSID.
+//        The rest of the XML syntax doesn't vary by CCSID. Node value
+//        content is not re-encoded regardless of this setting.
 // @return Object tree representation as a XML string
 ///
 Dcl-PR json_asXmlText varchar(32767) extproc(*CWIDEN : 'jx_AsXmlText');
   node pointer value;
+  targetCcsid int(10) value options(*nopass);
 End-PR;
 
 ///
@@ -1696,6 +1714,10 @@ End-PR;
 //
 // @param (input) Node
 // @param (output) Buffer
+// @param (input) CCSID to write the "#" in &#xHHHH; numeric character
+//        references in - default (omitted or 0) is the current job CCSID.
+//        The rest of the XML syntax doesn't vary by CCSID. Node value
+//        content is not re-encoded regardless of this setting.
 // @return Length of the serialized XML string
 //
 // @warning Buffer length is not checked.
@@ -1703,6 +1725,7 @@ End-PR;
 Dcl-PR json_asXmlTextMem uns(10) extproc(*CWIDEN : 'jx_AsXmlTextMem');
   node pointer value;
   buffer pointer value;
+  targetCcsid int(10) value options(*nopass);
 End-PR;
 
 ///

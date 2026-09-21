@@ -29,6 +29,7 @@
 
 
 extern int   OutputCcsid;
+extern UCHAR BraBeg, BraEnd, CurBeg, CurEnd, BackSlash, Quot;
 
 
 
@@ -276,13 +277,20 @@ static LONG jx_fileWriter  (PSTREAM p , PUCHAR buf , ULONG len)
 }
 
 /* ---------------------------------------------------------------------------
+	 targetCcsid (optional, 0/omitted = current job ccsid, unchanged from
+	 before): the ccsid the caller wants the serialised structural characters
+	 ([]{}\" for JSON) written in, regardless of the job's own ccsid. Node
+	 VALUE content is not re-encoded - it is copied as-is, same as always;
+	 this only controls the punctuation noxDB itself generates.
 	 --------------------------------------------------------------------------- */
-LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
+LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP, int targetCcsid)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PSTREAM  pStream;
 	LONG     len;
 	PJWRITE  pjWrite;
+	JXDELIM  storeDelimiters;
+	int      resolvedCcsid = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 4) ? targetCcsid : 0;
 
 
 	if (pNode == NULL) return 0;
@@ -290,6 +298,9 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 		strcpy (buf, (PUCHAR) pNode);
 		return strlen(buf);
 	}
+
+	storeDelimiters = * jx_GetDelimiters();
+	jx_setDelimitersByCcsid (resolvedCcsid);
 
 	pStream = stream_new (4096);
 	pStream->writer  = jx_memWriter;
@@ -304,14 +315,20 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP)
 	stream_putc   (pStream,'\0');
 	stream_delete (pStream);
 	jx_deleteWriter(pjWrite);
+
+	jx_SetDelimiters2 (&storeDelimiters);
+
 	return  len;
 
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
-void jx_AsJsonText16M ( PVARCHAR_16M result , PJXNODE pNode)
+void jx_AsJsonText16M ( PVARCHAR_16M result , PJXNODE pNode, int targetCcsid)
 {
-	result->Length = jx_AsJsonTextMem (pNode, result->String , sizeof(VARCHAR_16M)-4);
+	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	int resolvedCcsid = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 2) ? targetCcsid : 0;
+
+	result->Length = jx_AsJsonTextMem (pNode, result->String , sizeof(VARCHAR_16M)-4, resolvedCcsid);
 }
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
@@ -339,10 +356,12 @@ PSTREAM jx_Stream  (PJXNODE pNode)
 
 /* ---------------------------------------------------------------------------
 	 --------------------------------------------------------------------------- */
-VARCHAR jx_AsJsonText (PJXNODE pNode)
+VARCHAR jx_AsJsonText (PJXNODE pNode, int targetCcsid)
 {
+	 PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
+	 int resolvedCcsid = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 2) ? targetCcsid : 0;
 	 VARCHAR  res;
-	 res.Length = jx_AsJsonTextMem ( pNode ,  res.String, sizeof(res.String));
+	 res.Length = jx_AsJsonTextMem ( pNode ,  res.String, sizeof(res.String), resolvedCcsid);
 	 return res;
 }
 /* ---------------------------------------------------------------------------
@@ -352,9 +371,17 @@ PJWRITE jx_newWriter ()
 {
 	PJWRITE pjWrite = malloc (sizeof(JWRITE));
 	memset(pjWrite , 0 , sizeof(JWRITE) - sizeof(pjWrite->filler));
-	#pragma convert(1252)
-	XlateBufferQ(&pjWrite->braBeg , "[]{}\\\"" , 6, 1252 ,0 ); ;
-	#pragma convert(0)
+	// Was its own independent XlateBufferQ(...,1252,0) - always targeting
+	// "current job ccsid" (the 0 sentinel) regardless of what ccsid the
+	// caller actually wants. Now reads whatever jx_setDelimitersByCcsid()
+	// last configured, so an explicit targetCcsid (see jx_AsJsonTextMem)
+	// applies here too instead of being silently overridden.
+	pjWrite->braBeg    = BraBeg;
+	pjWrite->braEnd    = BraEnd;
+	pjWrite->curBeg    = CurBeg;
+	pjWrite->curEnd    = CurEnd;
+	pjWrite->backSlash = BackSlash;
+	pjWrite->quote     = Quot;
 	return pjWrite;
 }
 /* ---------------------------------------------------------------------------

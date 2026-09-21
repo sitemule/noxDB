@@ -28,7 +28,7 @@
         },
         {
             "label": "Compile Service program noxDB",
-            "command": "ssh MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd ~/projects/noxDB/;gmake all'",
+            "command": "${workspaceFolder}/.sitemule/gmake_remote.sh \"${workspaceRoot}\" \"noxDB\" \"all\"",
             "type": "shell",
             "group": {
                 "kind": "build",

@@ -50,12 +50,16 @@ current:
 	system "UPDSRVPGM SRVPGM($(BIN_LIB)/JSONXML) MODULE($(BIN_LIB)/$(MODULE))"
 endif
 
+# Lazy (=) on purpose: only the githash target below actually needs these,
+# and the remote checkout has no .git/ (excluded from rsync), so evaluating
+# them eagerly for every gmake invocation prints spurious
+# "fatal: not a git repository" errors for unrelated targets.
 ifeq ($(GIT_SHORT),)
-GIT_SHORT := $(shell git rev-parse --short HEAD)
+GIT_SHORT = $(shell git rev-parse --short HEAD)
 endif
 
 ifeq ($(GIT_HASH),)
-GIT_HASH := $(shell git rev-parse --verify HEAD)
+GIT_HASH = $(shell git rev-parse --verify HEAD)
 endif
 
 TS := $(shell date +'%F-%H.%M.%S' )

@@ -313,11 +313,11 @@ typedef struct _JXPARMMETA  {
 // Prototypes  - utilities
 LONG xlateMem  (iconv_t xid , PUCHAR out , PUCHAR in, LONG len);
 void jx_WriteJsonStmf (PJXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PJXNODE options);
-VARCHAR jx_AsJsonText (PJXNODE pNode);
-LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP);
+VARCHAR jx_AsJsonText (PJXNODE pNode, int targetCcsid);
+LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP, int targetCcsid);
 #pragma descriptor ( void jx_AsJsonTextMem                     (void))
 
-LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf);
+LONG jx_AsXmlTextMem (PJXNODE pNode, PUCHAR buf, int targetCcsid);
 
 
 LONG jx_fileWriter  (PSTREAM pStream , PUCHAR buf , ULONG len);
@@ -451,7 +451,7 @@ PUCHAR   jx_GetValueByName (PJXNODE pNode, PUCHAR Name, PUCHAR Default);
 PJXNODE  jx_SetValueByName (PJXNODE pNodeRoot, PUCHAR Name, PUCHAR Value, NODETYPE type);
 #pragma descriptor ( void jx_SetValueByName (void))
 
-VARCHAR  jx_AsXmlText (PJXNODE pNode);
+VARCHAR  jx_AsXmlText (PJXNODE pNode, int targetCcsid);
 PUCHAR   jx_NodeAsXmlTextList (PJXNODE pNode, PUCHAR temp);
 BOOL     jx_Parse (PJXCOM pJxCom);
 LGL      jx_Error (PJXNODE pJxNode);
@@ -581,8 +581,8 @@ BOOL jx_Lgl2Bool  (LGL  in);
 void jx_Close(PJXNODE * pNode);
 
 void    jx_AsJsonTextList (PJXNODE pNode, PJWRITE pJwrite);
-LONG    jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf, ULONG maxSize);
-VARCHAR jx_AsJsonText(PJXNODE pNode);
+LONG    jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf, ULONG maxSize, int targetCcsid);
+VARCHAR jx_AsJsonText(PJXNODE pNode, int targetCcsid);
 LGL     jx_IsJson (PJXNODE pNode);
 BOOL    jx_HasMore(PJXNODE pNode);
 
