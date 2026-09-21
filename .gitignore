@@ -13,3 +13,5 @@ postlist.txt
 release/*
 test/out/*
 testout/*
+.claude/rules/blueprint-mcp.instructions.md
+.github/instructions/blueprint-mcp.instructions.md

@@ -84,6 +84,9 @@ static void indentXml (   PSTREAM pStream , SHORT cdatamode, SHORT level)
 void putEscape (PSTREAM pStream , PUCHAR str , BOOL doEscape)
 {
 
+   // Nothing to put
+   if (str == NULL || *str == '\0') return;
+
    if (doEscape) {
       for (;*str;str++) {
          switch(*str) {
