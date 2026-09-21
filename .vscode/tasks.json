@@ -1,49 +1,16 @@
 {
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
+    //
+    // Build system: local edits are rsync'd to MY_IBM_I:~/projects/noxDbUtf8
+    // (see .sitemule/rsync.sh) and built there via ssh + gmake. The remote
+    // folder is fixed to "noxDbUtf8" (not the local, lower-case checkout
+    // name) to match /home/NLI/projects/noxDbUtf8 on the IBM i.
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Make all",
-            "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/;gmake all'",
-            "type": "shell",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": [
-                "$gcc"
-            ]
-        },
-        {
-            "label": "Create service program ",
-            "command": "ssh -t my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/;gmake noxDbUtf8.srvpgm'",
-            "type": "shell",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": {
-                "owner": "c",
-                "fileLocation": [
-                    "relative",
-                    "${workspaceRoot}"
-                ],
-
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):(\\d+):(error|warning|info):(.{7}):(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "severity": 4,
-                    "code" : 5,
-                    "message": 6
-                }
-            }
-        },
-        {
-            "label": "Compile current service program module file",
-            "command": "ssh -t my_ibm_i  'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/;gmake ${relativeFile} --always-make;gmake update OBJ=${fileBasenameNoExtension}'",
+            "label": "Compile current file",
+            "command": "${workspaceFolder}/.sitemule/compile_module.sh \"${workspaceRoot}\" \"noxDbUtf8\" \"${relativeFile}\" \"${fileBasenameNoExtension}\"",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -61,21 +28,20 @@
                     "relative",
                     "${workspaceRoot}"
                 ],
-
                 "pattern": {
                     "regexp": "^(.*):(\\d+):(\\d+):(error|warning|info):(.{7}):(.*)$",
                     "file": 1,
                     "line": 2,
                     "column": 3,
                     "severity": 4,
-                    "code" : 5,
+                    "code": 5,
                     "message": 6
                 }
             }
         },
         {
-            "label": "Compile Test modules for noxDB",
-            "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/test/;gmake'",
+            "label": "Make all",
+            "command": "ssh MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd ~/projects/noxDbUtf8/;gmake all'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -86,16 +52,56 @@
             ]
         },
         {
-            "label": "Compile current example file",
-            "command": "ssh -t my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/examples/;gmake compile SRC=${fileBasename}'",
+            "label": "Create service program",
+            "command": "ssh -t MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd ~/projects/noxDbUtf8/;gmake noxDbUtf8.srvpgm'",
             "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
             "problemMatcher": {
-                "owner": "rpgle",
-                "fileLocation": ["relative", "${workspaceRoot}/examples"],
+                "owner": "c",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):(error|warning|info):(.{7}):(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "code": 5,
+                    "message": 6
+                }
+            }
+        },
+        {
+            "label": "Compile Test modules for noxDB",
+            "command": "ssh MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd ~/projects/noxDbUtf8/test/;gmake'",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Compile current example/issue/test file",
+            "command": "${workspaceFolder}/.sitemule/compile_current.sh \"${workspaceRoot}\" \"noxDbUtf8\" \"${relativeFile}\" \"${fileBasename}\"",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "c",
+                "fileLocation": [
+                    "relative",
+                    "${fileDirname}"
+                ],
                 "pattern": {
                     // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
                     "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
@@ -108,18 +114,33 @@
             }
         },
         {
-            "label": "Compile current test file",
-            "command": "ssh -t my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/test/;gmake compile SRC=${fileBasename} OBJ=${fileBasenameNoExtension}'",
+            "label": "Compile current unit test file",
+            "command": "${workspaceFolder}/.sitemule/unittests.sh \"${workspaceRoot}\" \"noxDbUtf8\" \"${relativeFile}\" \"${fileBasename}\"",
             "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": []
+            "problemMatcher": {
+                "owner": "c",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}/unittests"
+                ],
+                "pattern": {
+                    // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
+                    "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    // "severity": 4,
+                    "message": 4
+                }
+            }
         },
         {
-            "label": "Build release",
-            "command": "ssh my_ibm_i 'PATH=/QOpenSys/pkgs/bin:$PATH;cd /prj/noxdbUtf8/;gmake release'",
+            "label": "Make release savefile",
+            "command": "ssh MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd ~/projects/noxDbUtf8/;gmake release'",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -128,6 +149,52 @@
             "problemMatcher": [
                 "$gcc"
             ]
+        },
+        {
+            "label": "Synchronize local to remote",
+            "type": "shell",
+            "command": "${workspaceFolder}/.sitemule/rsync.sh",
+            "options": {
+                "env": {
+                    "FOLDER_BASE_NAME": "noxDbUtf8",
+                    "FOLDER_ROOT": "${workspaceRoot}"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build all from local",
+            "type": "shell",
+            "command": "${workspaceFolder}/.sitemule/remote_run.sh ${workspaceFolder}/.sitemule/build_noxdb.sh",
+            "options": {
+                "env": {
+                    "FOLDER_BASE_NAME": "noxDbUtf8",
+                    "FOLDER_ROOT": "${workspaceRoot}"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "RPG",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+                "pattern": {
+                    // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
+                    "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    // "severity": 4,
+                    "message": 4
+                }
+            }
         }
     ]
 }

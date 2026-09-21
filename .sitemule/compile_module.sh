@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-fileBasename="$4"
-relativeFile="$3"
-workspaceFolderBasename="$2"
 workspaceRoot="$1"
+workspaceFolderBasename="$2"
+relativeFile="$3"
+moduleName="$4"
 
 SSH="ssh -Ss -k -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,4 +16,4 @@ else
 fi
 
 echo "Compile..."
-$SSH -t MY_IBM_I "PATH=/QOpenSys/pkgs/bin:\$PATH; cd ~/projects/'${workspaceFolderBasename}'/unittests/; gmake -f Makefile.unittests compile SRC='${fileBasename}'"
+$SSH -t MY_IBM_I "PATH=/QOpenSys/pkgs/bin:\$PATH; cd ~/projects/'${workspaceFolderBasename}'/; gmake '${relativeFile}' --always-make; gmake update OBJ='${moduleName}'"

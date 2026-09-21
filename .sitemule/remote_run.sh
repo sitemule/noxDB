@@ -4,6 +4,9 @@ set -e
 CMD_FILE="$1"
 shift 1
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/rsync.sh"
+
 ENV_VARS=""
 while IFS='=' read -u9 -r key value; do
     if [[ "$key" == FILE_* ]] || [[ "$key" == FOLDER_* ]]; then

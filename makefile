@@ -65,7 +65,7 @@ UC = $(shell echo '$1' | tr '[:lower:]' '[:upper:]')
 CC = $(eval FILEEXT = $(call UC,$(subst .,,$(suffix $@)))) \
 	$(eval FLAGS   = $(FILEEXT)_FLAGS) \
 	$(eval INCLUDE = $(FILEEXT)_INCLUDE) \
-	@.sitemule/compile.py --stmf="$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" --flags="$($(FLAGS))" --include="$($(INCLUDE))"
+	@.sitemule/compile.sh --stmf="$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" --flags="$($(FLAGS))" --include="$($(INCLUDE))"
 
 ifeq ($(GIT_SHORT),)
 GIT_SHORT := $(shell git rev-parse --short HEAD)
@@ -124,7 +124,7 @@ noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/syscoln
 						ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c
 	@# You may be wondering what this ugly string is. It's a list of objects created from the dep list that end with .c or .clle.
 	$(eval MODULES = $(notdir $(basename $(filter %.c %.clle %.cpp, $^))))
-	compile.py --stmf="src/$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" \
+	.sitemule/compile.sh --stmf="src/$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" \
 		--flags="MODULE($(MODULES)) ALWLIBUPD(*YES) TGTRLS($(TARGET_RELEASE)) DETAIL(*BASIC)"
 
 noxDbUtf8.bnddir:
