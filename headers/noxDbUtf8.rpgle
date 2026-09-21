@@ -15,19 +15,19 @@
 /define  NOX_DEF
 
 
-Dcl-S UTF8_1K  varchar(1024:4)     CCSID(*UTF8) Template;
-Dcl-S UTF8_1M  varchar(1048572:4)  CCSID(*UTF8) Template;
-Dcl-S UTF8_16M varchar(16773100:4)  CCSID(*UTF8) Template;
-//Dcl-S UTF8_1G  varchar(1073741820:4) CCSID(*UTF8) Template;
-//Dcl-S UTF8_2G  varchar(2147483644:4) CCSID(*UTF8) Template;
+Dcl-S NOX_UTF8_1K  varchar(1024:4)     CCSID(*UTF8) Template;
+Dcl-S NOX_UTF8_1M  varchar(1048572:4)  CCSID(*UTF8) Template;
+Dcl-S NOX_UTF8_16M varchar(16773100:4)  CCSID(*UTF8) Template;
+//Dcl-S NOX_UTF8_1G  varchar(1073741820:4) CCSID(*UTF8) Template;
+//Dcl-S NOX_UTF8_2G  varchar(2147483644:4) CCSID(*UTF8) Template;
 
 // The UTF8_MAX can be set from 16M to 2G dependent of your OS
-Dcl-S UTF8_MAX like(UTF8_16M) CCSID(*UTF8) Template;
+Dcl-S NOX_UTF8_MAX like(NOX_UTF8_16M) CCSID(*UTF8) Template;
 // 1M minus length of 4 bytes
-Dcl-S UTF8     varchar(1048572:4)  CCSID(*UTF8) Template;
+Dcl-S NOX_UTF8     varchar(1048572:4)  CCSID(*UTF8) Template;
 
 
-Dcl-S FIXEDDEC Packed(30:15) Template;
+Dcl-S NOX_FIXEDDEC Packed(30:15) Template;
 
 Dcl-C NOX_UTF8_BOM const(-1208);
 
@@ -223,7 +223,7 @@ End-PR;
 ///
 Dcl-PR nox_ParseString Pointer extproc(*CWIDEN:'nox_ParseStringVC');
   // String to parse
-  String         Like(UTF8_MAX) const options(*varsize);
+  String         Like(NOX_UTF8_MAX) const options(*varsize);
 End-PR;
 
 ///
@@ -235,7 +235,7 @@ End-PR;
 ///
 Dcl-PR nox_setDecPoint  extproc(*CWIDEN : 'nox_SetDecPoint');
   // decimal point char
-  decPoint       char(1) const ccsid(*utf8);
+  decPoint       char(1) const ccsid(*UTF8);
 End-PR;
 
 ///
@@ -281,8 +281,8 @@ End-PR;
 ///
 Dcl-PR nox_GetMessageObject Pointer // Return error description
                             extproc(*CWIDEN:'nox_GetMessageObject');
-  MessageId      Like(UTF8) const options(*nopass:*varsize);
-  MessageData    Like(UTF8) const options(*nopass:*varsize);
+  MessageId      Like(NOX_UTF8) const options(*nopass:*varsize);
+  MessageData    Like(NOX_UTF8) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -298,8 +298,8 @@ End-PR;
 //       of the returned noxDB object graph by calling <em>nox_close(rootNode)</em>.
 ///
 Dcl-PR nox_SuccessTrue Pointer extproc(*CWIDEN:'nox_SuccessTrue');
-  MessageId      Like(UTF8) const options(*nopass:*varsize);
-  MessageData    Like(UTF8) const options(*nopass:*varsize);
+  MessageId      Like(NOX_UTF8) const options(*nopass:*varsize);
+  MessageData    Like(NOX_UTF8) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -314,7 +314,7 @@ End-PR;
 ///
 Dcl-PR nox_Locate Pointer extproc(*CWIDEN : 'nox_GetNodeVC');
   pNode          Pointer    value;
-  Expression     Like(UTF8_1K) const options(*varsize);
+  Expression     Like(NOX_UTF8_1K) const options(*varsize);
 End-PR;
 
 ///
@@ -330,7 +330,7 @@ End-PR;
 ///
 Dcl-PR nox_LocateOrCreate Pointer extproc(*CWIDEN : 'nox_GetOrCreateNodeVC');
   pNode          Pointer    value;
-  Expression     Like(UTF8_1K) const options(*varsize);
+  Expression     Like(NOX_UTF8_1K) const options(*varsize);
 End-PR;
 
 ///
@@ -346,7 +346,7 @@ Dcl-PR nox_Has Ind extproc(*CWIDEN : 'nox_HasVC');
   // Pointer to graph or node
   pNode          Pointer    value;
   // Path to node
-  NodeName       Like(UTF8_1K) const options(*varsize);
+  NodeName       Like(NOX_UTF8_1K) const options(*varsize);
 End-PR;
 
 ///
@@ -370,7 +370,7 @@ Dcl-PR nox_isTrue Ind extproc(*CWIDEN : 'nox_IsTrueVC');
   // Pointer to graph or node
   pNode          Pointer    value;
   // Path to node
-  NodeName       Like(UTF8_1K) const options(*varsize);
+  NodeName       Like(NOX_UTF8_1K) const options(*varsize);
 End-PR;
 
 ///
@@ -386,7 +386,7 @@ End-PR;
 ///
 Dcl-PR nox_isNull Ind extproc(*CWIDEN : 'nox_IsNullVC');
   pNode          Pointer    value;
-  NodeName       Like(UTF8_1K) const options(*varsize);
+  NodeName       Like(NOX_UTF8_1K) const options(*varsize);
 End-PR;
 
 ///
@@ -412,7 +412,7 @@ End-PR;
 ///
 Dcl-PR nox_Rename Ind extproc(*CWIDEN : 'nox_NodeRenameVC');
   pNode          Pointer    value;
-  NodeName       Like(UTF8_1K) const options(*varsize);
+  NodeName       Like(NOX_UTF8_1K) const options(*varsize);
 End-PR;
 
 ///
@@ -466,7 +466,7 @@ End-PR;
 ///
 Dcl-PR nox_SetNull pointer extproc(*CWIDEN : 'nox_SetNullByNameVC');
   node pointer value;
-  Expresion      Like(UTF8_1K) const options(*varsize);
+  Expresion      Like(NOX_UTF8_1K) const options(*varsize);
 End-PR;
 
 ///
@@ -483,8 +483,8 @@ End-PR;
 ///
 Dcl-PR nox_SetEval pointer extproc(*CWIDEN:'nox_SetEvalByNameVC');
   pNode          Pointer    value;
-  Expresion      Like(UTF8_1K) const options(*varsize);
-  Value          Like(UTF8) const options(*varsize);
+  Expresion      Like(NOX_UTF8_1K) const options(*varsize);
+  Value          Like(NOX_UTF8) const options(*varsize);
 End-PR;
 
 ///
@@ -500,8 +500,8 @@ End-PR;
 ///
 Dcl-PR nox_SetStr Pointer extproc(*CWIDEN: 'nox_SetStrByNameVC');
   pNode          Pointer    value;
-  Expresion      Like(UTF8_1K) const options(*varsize);
-  Value          Like(UTF8) const options(*varsize);
+  Expresion      Like(NOX_UTF8_1K) const options(*varsize);
+  Value          Like(NOX_UTF8) const options(*varsize);
   nullIf         ind value options(*nopass);
 End-PR;
 
@@ -512,7 +512,7 @@ End-PR;
 // @return new node
 ///
 Dcl-PR nox_Str Pointer extproc(*CWIDEN: 'nox_StrVC');
-  Value          Like(UTF8) const options(*varsize);
+  Value          Like(NOX_UTF8) const options(*varsize);
 End-PR;
 
 ///
@@ -528,7 +528,7 @@ End-PR;
 ///
 Dcl-PR nox_SetInt Pointer extproc(*CWIDEN: 'nox_SetIntByNameVC');
   pNode          Pointer    value;
-  Expresion      Like(UTF8_1K) const options(*varsize);
+  Expresion      Like(NOX_UTF8_1K) const options(*varsize);
   Value          Int(20)    value;
   nullIf         ind value options(*nopass);
 End-PR;
@@ -557,8 +557,8 @@ End-PR;
 ///
 Dcl-PR nox_SetDec Pointer extproc(*CWIDEN: 'nox_SetDecByNameVC');
   pNode           Pointer    value;
-  Expresion       Like(UTF8_1K) const options(*varsize);
-  Value           like(FIXEDDEC) value;
+  Expresion       Like(NOX_UTF8_1K) const options(*varsize);
+  Value           like(NOX_FIXEDDEC) value;
   nullIf          ind value options(*nopass);
 End-PR;
 
@@ -571,7 +571,7 @@ End-PR;
 // @return Changed node
 ///
 Dcl-PR nox_Dec   Pointer OPDESC extproc(*CWIDEN: 'nox_Dec');
-  Value          like(FIXEDDEC) value;
+  Value          like(NOX_FIXEDDEC) value;
 End-PR;
 
 ///
@@ -587,7 +587,7 @@ End-PR;
 ///
 Dcl-PR nox_SetBool Pointer extproc(*CWIDEN: 'nox_SetBoolByNameVC');
   pNode          Pointer    value;
-  Expresion      Like(UTF8_1K) const options(*varsize);
+  Expresion      Like(NOX_UTF8_1K) const options(*varsize);
   Value          Ind        value;
   nullIf         ind value options(*nopass);
 End-PR;
@@ -619,7 +619,7 @@ End-PR;
 ///
 Dcl-PR nox_SetDate Pointer extproc(*CWIDEN: 'nox_SetDateByNameVC');
   pNode          Pointer    value;
-  Expresion      Like(UTF8_1K) const options(*varsize);
+  Expresion      Like(NOX_UTF8_1K) const options(*varsize);
   Value          date(*ISO)    value  ;
   nullIf         ind value options(*nopass);
 End-PR;
@@ -648,7 +648,7 @@ End-PR;
 ///
 Dcl-PR nox_SetTime pointer extproc(*CWIDEN : 'nox_SetTimeByNameVC');
   pNode          pointer value;
-  Expresion      Like(UTF8_1K) const options(*varsize);
+  Expresion      Like(NOX_UTF8_1K) const options(*varsize);
   Value          time(*ISO) value;
   nullIf         ind value options(*nopass);
 End-PR;
@@ -676,7 +676,7 @@ End-PR;
 ///
 Dcl-PR nox_SetTS  pointer extproc(*CWIDEN : 'nox_SetTimeStampByNameVC');
   pNode          pointer value;
-  Expresion      Like(UTF8_1K) const options(*varsize);
+  Expresion      Like(NOX_UTF8_1K) const options(*varsize);
   Value          timestamp  value;
   nullIf         ind value options(*nopass);
 End-PR;
@@ -711,7 +711,7 @@ End-PR;
 ///
 Dcl-PR nox_SetPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByNameVC');
   pNode          Pointer    value;
-  Expresion      Like(UTF8_1K) const options(*varsize);
+  Expresion      Like(NOX_UTF8_1K) const options(*varsize);
   Value          Pointer    value;
   isString       Ind        value options(*nopass);
 End-PR;
@@ -731,7 +731,7 @@ End-PR;
 ///
 Dcl-PR nox_SetProcPtr Pointer extproc(*CWIDEN: 'nox_SetPtrByNameVC');
   pNode          Pointer    value;
-  Expresion      Like(UTF8_1K) const options(*varsize);
+  Expresion      Like(NOX_UTF8_1K) const options(*varsize);
   Proc           Pointer(*Proc);
 End-PR;
 
@@ -793,9 +793,9 @@ End-PR;
 // @return String value or the default value (or an empty string) if the node
 //         does not exist
 ///
-Dcl-PR nox_GetValueStr Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_GetNodeValueStrVC');
+Dcl-PR nox_GetValueStr Like(NOX_UTF8) rtnparm extproc(*CWIDEN : 'nox_GetNodeValueStrVC');
   pNode          Pointer    value;
-  Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
+  Defaultvalue   Like(NOX_UTF8) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -807,9 +807,9 @@ End-PR;
 // @param (input) Default value
 // @return Decimal value or the default value (or 0) if the node does not exist
 ///
-Dcl-PR nox_GetValueNum like(FIXEDDEC) extproc(*CWIDEN : 'nox_GetNodeValueDec');
+Dcl-PR nox_GetValueNum like(NOX_FIXEDDEC) extproc(*CWIDEN : 'nox_GetNodeValueDec');
   pNode          Pointer    value;
-  Defaultvalue   like(FIXEDDEC) value options(*NOPASS);
+  Defaultvalue   like(NOX_FIXEDDEC) value options(*NOPASS);
 End-PR;
 
 ///
@@ -838,7 +838,7 @@ End-PR;
 ///
 Dcl-PR nox_GetValuePtr Pointer extproc(*CWIDEN : 'nox_GetNodeValuePtr');
   pNode          Pointer    value;
-  Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
+  Defaultvalue   Like(NOX_UTF8) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -849,7 +849,7 @@ End-PR;
 // @param (input) Node
 // @return Node name
 ///
-Dcl-PR nox_GetName Like(UTF8)  rtnparm  extproc(*CWIDEN : 'nox_GetNodeNameVC');
+Dcl-PR nox_GetName Like(NOX_UTF8)  rtnparm  extproc(*CWIDEN : 'nox_GetNodeNameVC');
   pNode          Pointer    value;
 End-PR;
 
@@ -862,7 +862,7 @@ End-PR;
 // @param (input) Node path element delimiter (for example . or /)
 // @return Node path expression
 ///
-Dcl-PR nox_GetNameAsPath Like(UTF8) rtnparm  extproc(*CWIDEN : 'nox_GetNodeNameAsPath');
+Dcl-PR nox_GetNameAsPath Like(NOX_UTF8) rtnparm  extproc(*CWIDEN : 'nox_GetNodeNameAsPath');
   pNode          Pointer    value;
   Delimiter      Char(1)    value CCSID(*UTF8);
 End-PR;
@@ -911,10 +911,10 @@ End-PR;
 // @param (input) Default value
 // @return String value or the default value if the node does not exist
 ///
-Dcl-PR nox_GetStr Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_GetValueStrVC');
+Dcl-PR nox_GetStr Like(NOX_UTF8) rtnparm extproc(*CWIDEN : 'nox_GetValueStrVC');
   pNode          Pointer    value;
-  Expression     Like(UTF8_1K) const options(*nopass:*varsize);
-  Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
+  Expression     Like(NOX_UTF8_1K) const options(*nopass:*varsize);
+  Defaultvalue   Like(NOX_UTF8) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -932,10 +932,10 @@ End-PR;
 // @param (input) Delimiter variable length string
 // @return String with all values from the array nodes
 ///
-Dcl-PR nox_GetStrJoin Like(UTF8) extproc(*CWIDEN : 'nox_GetStrJoinVC');
+Dcl-PR nox_GetStrJoin Like(NOX_UTF8) extproc(*CWIDEN : 'nox_GetStrJoinVC');
   pNode          Pointer    value;
-  Expression     Like(UTF8_1K) const options(*nopass:*varsize);
-  Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
+  Expression     Like(NOX_UTF8_1K) const options(*nopass:*varsize);
+  Defaultvalue   Like(NOX_UTF8) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -951,10 +951,10 @@ End-PR;
 // @param (input) Default value
 // @return Decimal value or the default value if the node does not exist
 ///
-Dcl-PR nox_GetDec like(FIXEDDEC) extproc(*CWIDEN : 'nox_GetValueDecVC');
+Dcl-PR nox_GetDec like(NOX_FIXEDDEC) extproc(*CWIDEN : 'nox_GetValueDecVC');
   pNode          Pointer    value;
-  Expression     Like(UTF8_1K) const  options(*nopass:*varsize);
-  Defaultvalue   like(FIXEDDEC) value options(*nopass);
+  Expression     Like(NOX_UTF8_1K) const  options(*nopass:*varsize);
+  Defaultvalue   like(NOX_FIXEDDEC) value options(*nopass);
 End-PR;
 
 ///
@@ -969,7 +969,7 @@ End-PR;
 ///
 Dcl-PR nox_GetInt Int(20) extproc(*CWIDEN : 'nox_GetValueIntVC');
   pNode          Pointer    value;
-  Expression     Like(UTF8_1K) const options(*nopass:*varsize);
+  Expression     Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   Defaultvalue   Int(20)    value options(*nopass);
 End-PR;
 
@@ -993,7 +993,7 @@ End-PR;
 ///
 Dcl-PR nox_getBool  Ind extproc(*CWIDEN : 'nox_IsTrueVC');
   pNode          Pointer    value;
-  NodeName       Like(UTF8) const options(*varsize);
+  NodeName       Like(NOX_UTF8) const options(*varsize);
 End-PR;
 
 
@@ -1009,7 +1009,7 @@ End-PR;
 ///
 Dcl-PR nox_GetDate date  extproc(*CWIDEN : 'nox_GetValueDateVC');
   pNode          Pointer    value;
-  Expression     Like(UTF8_1K) const options(*nopass:*varsize);
+  Expression     Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   Defaultvalue   date   value options(*nopass);
 End-PR;
 
@@ -1025,7 +1025,7 @@ End-PR;
 ///
 Dcl-PR nox_GetTime time(*ISO)  extproc(*CWIDEN : 'nox_GetValueTimeVC');
   pNode          Pointer    value;
-  Expression     Like(UTF8_1K) const options(*nopass:*varsize);
+  Expression     Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   Defaultvalue   time(*ISO) value options(*nopass);
 End-PR;
 
@@ -1041,7 +1041,7 @@ End-PR;
 ///
 Dcl-PR nox_GetTimeStamp TimeStamp  extproc(*CWIDEN : 'nox_GetValueTimeStampVC');
   pNode          Pointer    value;
-  Expression     Like(UTF8_1K) const options(*nopass:*varsize);
+  Expression     Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   Defaultvalue   TimeStamp   value options(*nopass);
 End-PR;
 
@@ -1057,7 +1057,7 @@ End-PR;
 ///
 Dcl-PR nox_GetTS  TimeStamp  extproc(*CWIDEN : 'nox_GetValueTimeStampVC');
   pNode          Pointer    value;
-  Expression     Like(UTF8_1K) const options(*nopass:*varsize);
+  Expression     Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   Defaultvalue   TimeStamp   value options(*nopass);
 End-PR;
 
@@ -1083,9 +1083,9 @@ End-PR;
 ///
 Dcl-PR nox_CopyValue Pointer extproc(*CWIDEN : 'nox_CopyValueVC');
   pDest          Pointer    value;
-  destName       Like(UTF8) const options(*varsize);
+  destName       Like(NOX_UTF8) const options(*varsize);
   pSource        Pointer    value;
-  sourceName     Like(UTF8) const options(*varsize:*nopass);
+  sourceName     Like(NOX_UTF8) const options(*varsize:*nopass);
 End-PR;
 
 /// TODO - migrated !!
@@ -1110,9 +1110,9 @@ End-PR;
 ///
 Dcl-PR nox_MoveValue Pointer extproc(*CWIDEN : 'nox_MoveValueVC');
   pDest          Pointer    value;
-  destName       Like(UTF8) const options(*varsize);
+  destName       Like(NOX_UTF8) const options(*varsize);
   pSource        Pointer    value;
-  sourceName     Like(UTF8) const options(*varsize:*nopass);
+  sourceName     Like(NOX_UTF8) const options(*varsize:*nopass);
 End-PR;
 
 ///
@@ -1190,9 +1190,9 @@ Dcl-PR nox_NodeInsertNew Pointer extproc(*CWIDEN : 'nox_NodeInsertNewVC');
   //Reference location to where it arrive
   RefLocation    Int(10)    value;
   //Name of node
-  Name           Like(UTF8) const options(*varsize);
+  Name           Like(NOX_UTF8) const options(*varsize);
   //Value or expression
-  Value          Like(UTF8) const options(*varsize);
+  Value          Like(NOX_UTF8) const options(*varsize);
   //New type (Refer "node type"
   Type           Uns(5)     value options(*nopass);
 End-PR;
@@ -1387,7 +1387,7 @@ End-PR;
 ///
 Dcl-PR nox_ArraySort Pointer extproc(*CWIDEN : 'nox_ArraySortVC');
   pArray         Pointer    value;
-  pkeyNames      Like(UTF8) const ;
+  pkeyNames      Like(NOX_UTF8) const ;
   options        uns(5)     value options(*nopass);
 End-PR;
 
@@ -1423,7 +1423,7 @@ End-PR;
 ///
 Dcl-PR nox_LookupValue Pointer extproc(*CWIDEN : 'nox_LookupValueVC');
   pArray         Pointer    value;
-  expr           Like(UTF8) const options(*varsize);
+  expr           Like(NOX_UTF8) const options(*varsize);
   ignoreCase     Uns(5)     value options(*nopass);
 End-PR;
 ///
@@ -1498,7 +1498,7 @@ End-PR;
 ///
 Dcl-PR nox_MoveObjectInto Pointer extproc(*CWIDEN : 'nox_NodeMoveIntoVC');
   pDestObj       Pointer    value;
-  Name           Like(UTF8) const options(*varsize);
+  Name           Like(NOX_UTF8) const options(*varsize);
   pSourceObj     Pointer    value;
 End-PR;
 
@@ -1569,7 +1569,7 @@ End-PR;
 // @param (input) Node
 // @return Object tree representation as a JSON string
 ///
-Dcl-PR nox_AsJsonText Like(UTF8_MAX) rtnparm OPDESC extproc(*CWIDEN : 'nox_AsJsonText');
+Dcl-PR nox_AsJsonText Like(NOX_UTF8_MAX) rtnparm OPDESC extproc(*CWIDEN : 'nox_AsJsonText');
   pNode          Pointer    value;
 End-PR;
 
@@ -1632,7 +1632,7 @@ End-PR;
 // @param (input) Node
 // @return Object tree representation as a XML string
 ///
-Dcl-PR nox_AsXmlText Like(UTF8_MAX) rtnparm OPDESC extproc(*CWIDEN : 'nox_AsXmlText');
+Dcl-PR nox_AsXmlText Like(NOX_UTF8_MAX) rtnparm OPDESC extproc(*CWIDEN : 'nox_AsXmlText');
   pNode          Pointer    value;
 End-PR;
 
@@ -1666,8 +1666,8 @@ End-PR;
 // @param (input) String to be quoted
 // @return Quoted string
 ///
-Dcl-PR nox_StrQuote  Like(UTF8) rtnparm  extproc(*CWIDEN : 'nox_StrQuote');
-  stringToQuote Like(UTF8) const  options(*varsize);
+Dcl-PR nox_StrQuote  Like(NOX_UTF8) rtnparm  extproc(*CWIDEN : 'nox_StrQuote');
+  stringToQuote Like(NOX_UTF8) const  options(*varsize);
 End-PR;
 
 ///
@@ -1772,7 +1772,7 @@ End-DS;
 ///
 Dcl-PR nox_setIterator  likeds(nox_Iterator) extproc(*CWIDEN : 'nox_SetIteratorVC');
   pNode          Pointer    value;
-  path           Like(UTF8_1K) const options(*nopass:*varsize);
+  path           Like(NOX_UTF8_1K) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -1789,7 +1789,7 @@ End-PR;
 Dcl-PR nox_setRecursiveIterator  likeds( nox_Iterator)
         extproc(*CWIDEN : 'nox_SetRecursiveIteratorVC');
   pNode          Pointer    value;
-  path           Like(UTF8_1K) const options(*nopass:*varsize);
+  path           Like(NOX_UTF8_1K) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -1813,7 +1813,7 @@ End-PR;
 ///
 Dcl-PR nox_forEach Ind extproc(*CWIDEN : 'nox_ForEach');
   iterator  likeds( nox_Iterator);
-  filter    Like(UTF8_1K) const options(*nopass:*varsize);
+  filter    Like(NOX_UTF8_1K) const options(*nopass:*varsize);
 End-PR;
 
 
@@ -1832,11 +1832,11 @@ End-PR;
 // @param (input) Default value
 // @return Attribute value or default value if no attriute exists
 ///
-Dcl-PR nox_GetNodeAttrValue Like(UTF8)
+Dcl-PR nox_GetNodeAttrValue Like(NOX_UTF8)
           rtnparm extproc(*CWIDEN : 'nox_GetNodeAttrValueVC');
   pNode          Pointer    value;
-  AttrName       Like(UTF8_1K) const options(*varsize);
-  Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
+  AttrName       Like(NOX_UTF8_1K) const options(*varsize);
+  Defaultvalue   Like(NOX_UTF8) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -1854,8 +1854,8 @@ End-PR;
 Dcl-PR nox_SetNodeAttrValue
           extproc(*CWIDEN : 'nox_SetNodeAttrValueVC');
   pNode          Pointer    value;
-  AttrName       Like(UTF8_1K) const options(*varsize);
-  Value          Like(UTF8) const options(*varsize);
+  AttrName       Like(NOX_UTF8_1K) const options(*varsize);
+  Value          Like(NOX_UTF8) const options(*varsize);
 End-PR;
 
 ///
@@ -1868,9 +1868,9 @@ End-PR;
 // @return Attribute value or default value if the attribute has no value
 ///
 Dcl-PR nox_GetAttrValue
-                 Like(UTF8) rtnparm extproc(*CWIDEN : 'nox_GetAttrValueVC');
+                 Like(NOX_UTF8) rtnparm extproc(*CWIDEN : 'nox_GetAttrValueVC');
   pAttr          Pointer    value;
-  Defaultvalue   Like(UTF8) const options(*nopass:*varsize);
+  Defaultvalue   Like(NOX_UTF8) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -1886,8 +1886,8 @@ End-PR;
 ///
 Dcl-PR nox_SetAttrValue extproc(*CWIDEN : 'nox_SetAttrValue');
   pAttr          Pointer    value;
-  AttrName       Like(UTF8_1K) const options(*varsize);
-  Value          Like(UTF8) const options(*varsize);
+  AttrName       Like(NOX_UTF8_1K) const options(*varsize);
+  Value          Like(NOX_UTF8) const options(*varsize);
 End-PR;
 
 
@@ -1927,7 +1927,7 @@ End-PR;
 // @return Attribute name
 ///
 Dcl-PR nox_GetAttrName
-               Like(UTF8_1K) rtnparm extproc(*CWIDEN : 'nox_GetAttrNameVC');
+               Like(NOX_UTF8_1K) rtnparm extproc(*CWIDEN : 'nox_GetAttrNameVC');
   pAttribute   Pointer    value;
 End-PR;
 
@@ -2183,7 +2183,7 @@ End-PR;
 ///
 
 Dcl-PR nox_joblog extproc(*CWIDEN : 'nox_JoblogVC');
-  text  Like(UTF8_1K) const options(*varsize);
+  text  Like(NOX_UTF8_1K) const options(*varsize);
 End-PR;
 
 ///
@@ -2221,7 +2221,7 @@ End-PR;
 // @info This function uses the curl command.
 ///
 Dcl-PR nox_httpRequest Pointer extproc(*CWIDEN:'nox_httpRequest');
-  url            Like(UTF8) const options(*varsize);
+  url            Like(NOX_UTF8) const options(*varsize);
   pReqNode       pointer value;
   options        pointer value options(*string : *nopass);
   format         pointer value options(*string : *nopass);
@@ -2287,12 +2287,12 @@ End-PR;
 ///
 Dcl-PR nox_sqlSetOptions  extproc(*CWIDEN: 'nox_sqlSetOptions');
   pConnection    pointer value;
-  parms          Like(UTF8) const options(*nopass:*varsize);
+  parms          Like(NOX_UTF8) const options(*nopass:*varsize);
 End-PR;
 
 /// TODO - Depricate this !!!!!!!
 // retrive currens SQL setting
-Dcl-PR nox_sqlGetOptions Like(UTF8) extproc(*CWIDEN : 'nox_sqlGetOptions');
+Dcl-PR nox_sqlGetOptions Like(NOX_UTF8) extproc(*CWIDEN : 'nox_sqlGetOptions');
   pConnection    pointer value;
 End-PR;
 
@@ -2310,7 +2310,7 @@ End-PR;
 ///
 Dcl-PR nox_sqlValues pointer extproc(*CWIDEN: 'nox_sqlValuesVC');
   pConnection    pointer value;
-  statement      Like(UTF8) const options(*varsize);
+  statement      Like(NOX_UTF8) const options(*varsize);
   templateValues pointer value options(*string : *nopass);
   formatOptions  int(10) value options(*nopass);
 End-PR;
@@ -2331,7 +2331,7 @@ End-PR;
 ///
 Dcl-PR nox_sqlResultRow Pointer extproc(*CWIDEN: 'nox_sqlResultRowVC');
   pConnection    pointer value;
-  statement      Like(UTF8) const options(*varsize);
+  statement      Like(NOX_UTF8) const options(*varsize);
   templateValues pointer value options(*string : *nopass);
   formatOptions  int(10) value options(*nopass);
   start          Int(10)    value options(*nopass);
@@ -2354,7 +2354,7 @@ End-PR;
 ///
 Dcl-PR nox_sqlResultSet Pointer extproc(*CWIDEN: 'nox_sqlResultSetVC');
   pConnection    pointer value;
-  statement      Like(UTF8) const options(*varsize);
+  statement      Like(NOX_UTF8) const options(*varsize);
   templateValues pointer value options(*string : *nopass);
   formatOptions  Int(10)    value options(*nopass);
   start          Int(10)    value options(*nopass);
@@ -2381,7 +2381,7 @@ End-PR;
 ///
 Dcl-PR nox_sqlOpen Pointer extproc(*CWIDEN:'nox_sqlOpenVC'  );
   pConnection    pointer value;
-  sqlStmt        Like(UTF8) const options(*varsize);
+  sqlStmt        Like(NOX_UTF8) const options(*varsize);
   templateValues pointer value options(*string : *nopass);
   format         int(10) value options(*nopass);
   startRow       int(10) value options(*nopass);
@@ -2469,7 +2469,7 @@ End-PR;
 ///
 Dcl-PR nox_sqlExec Ind extproc(*CWIDEN:'nox_sqlExecVC'  );
   pConnection    pointer value;
-  sqlStmt        Like(UTF8) const options(*varsize);
+  sqlStmt        Like(NOX_UTF8) const options(*varsize);
   templateValues pointer value options(*string : *nopass); // TODO - not migrated !!
 End-PR;
 
@@ -2489,7 +2489,7 @@ End-PR;
 ///
 Dcl-PR nox_sqlCall pointer extproc(*CWIDEN : 'nox_sqlCall');
   pConnection    pointer value;
-  procedureName  Like(UTF8_1K) const options(*varsize);
+  procedureName  Like(NOX_UTF8_1K) const options(*varsize);
   inputParms pointer value;
 End-PR;
 
@@ -2509,7 +2509,7 @@ End-PR;
 ///
 Dcl-PR nox_sqlExecuteRoutine pointer extproc(*CWIDEN : 'nox_sqlExecuteRoutine');
   pConnection     pointer value;
-  routineName     Like(UTF8_1K) const options(*varsize);
+  routineName     Like(NOX_UTF8_1K) const options(*varsize);
   parameterObject pointer value options(*nopass);
   formatOptions   int(10) value options(*nopass);
   specific        ind     value options(*nopass);
@@ -2544,7 +2544,7 @@ End-PR;
 ///
 Dcl-PR nox_sqlCallNode ind extproc(*CWIDEN : 'nox_sqlCallNode');
   pConnection     pointer value;
-  procedureName   Like(UTF8_1K) const options(*varsize);
+  procedureName   Like(NOX_UTF8_1K) const options(*varsize);
   parm01 pointer value options(*string : *nopass);
   parm02 pointer value options(*string : *nopass);
   parm03 pointer value options(*string : *nopass);
@@ -2573,9 +2573,9 @@ End-PR;
 ///
 Dcl-PR nox_sqlUpdate Ind extproc(*CWIDEN:'nox_sqlUpdateVC');
   pConnection    pointer value;
-  table          Like(UTF8_1K) const options(*varsize);
+  table          Like(NOX_UTF8_1K) const options(*varsize);
   row            pointer value;
-  where          Like(UTF8) const options(*nopass:*varsize);
+  where          Like(NOX_UTF8) const options(*nopass:*varsize);
   whereParms     pointer value options(*nopass);
   formatOptions  int(10) value options(*nopass);
 End-PR;
@@ -2594,7 +2594,7 @@ End-PR;
 
 Dcl-PR nox_sqlInsert ind extproc(*CWIDEN:'nox_sqlInsertVC');
   pConnection    pointer value;
-  table          Like(UTF8_1K) const options(*varsize);
+  table          Like(NOX_UTF8_1K) const options(*varsize);
   row            pointer value;
   formatOptions  int(10) value options(*nopass);
 End-PR;
@@ -2619,9 +2619,9 @@ End-PR;
 ///
 Dcl-PR nox_sqlUpsert Ind extproc(*CWIDEN:'nox_sqlUpsertVC');
   pConnection    pointer value;
-  table          Like(UTF8_1K) const options(*varsize);
+  table          Like(NOX_UTF8_1K) const options(*varsize);
   row            pointer value;
-  where          Like(UTF8) const options(*varsize);
+  where          Like(NOX_UTF8) const options(*varsize);
   whereParms     pointer value options(*nopass);
   formatOptions  int(10) value options(*nopass);
 End-PR;
@@ -2664,7 +2664,7 @@ End-PR;
 
 Dcl-PR nox_sqlGetMeta Pointer extproc(*CWIDEN:'nox_sqlGetMetaVC');
   pConnection    pointer value;
-  sqlstmt        Like(UTF8) const options(*varsize);
+  sqlstmt        Like(NOX_UTF8) const options(*varsize);
 End-PR;
 
 ///
@@ -2676,7 +2676,7 @@ End-PR;
 // @return Connection to local database
 ///
 Dcl-PR nox_sqlConnect Pointer extproc(*CWIDEN: 'nox_sqlConnect');
-  parms          Like(UTF8) const options(*nopass:*varsize);
+  parms          Like(NOX_UTF8) const options(*nopass:*varsize);
 End-PR;
 
 ///
@@ -2726,7 +2726,7 @@ End-PR;
 //
 ///
 Dcl-PR nox_WriteStrStmf  Pointer extproc(*CWIDEN:'nox_WriteStrStmf');
-  payload        Like(UTF8) const options(*varsize);
+  payload        Like(NOX_UTF8) const options(*varsize);
   path           pointer value options(*string );
   append         ind value options(*nopass);
 End-PR;
@@ -2785,65 +2785,65 @@ End-PR;
 //       of the returned noxDB object graph by calling <em>nox_delete(node)</em>.
 ///
 Dcl-PR nox_Object pointer extproc(*CWIDEN : 'nox_Object');
-  name00 Like(UTF8_1K) const options(*nopass:*varsize);
+  name00 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu00 pointer value options(*nopass:*string);
-  name01 Like(UTF8_1K) const options(*nopass:*varsize);
+  name01 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu01 pointer value options(*nopass:*string);
-  name02 Like(UTF8_1K) const options(*nopass:*varsize);
+  name02 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu02 pointer value options(*nopass:*string);
-  name03 Like(UTF8_1K) const options(*nopass:*varsize);
+  name03 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu03 pointer value options(*nopass:*string);
-  name04 Like(UTF8_1K) const options(*nopass:*varsize);
+  name04 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu04 pointer value options(*nopass:*string);
-  name05 Like(UTF8_1K) const options(*nopass:*varsize);
+  name05 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu05 pointer value options(*nopass:*string);
-  name06 Like(UTF8_1K) const options(*nopass:*varsize);
+  name06 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu06 pointer value options(*nopass:*string);
-  name07 Like(UTF8_1K) const options(*nopass:*varsize);
+  name07 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu07 pointer value options(*nopass:*string);
-  name08 Like(UTF8_1K) const options(*nopass:*varsize);
+  name08 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu08 pointer value options(*nopass:*string);
-  name09 Like(UTF8_1K) const options(*nopass:*varsize);
+  name09 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu09 pointer value options(*nopass:*string);
-  name10 Like(UTF8_1K) const options(*nopass:*varsize);
+  name10 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu10 pointer value options(*nopass:*string);
-  name11 Like(UTF8_1K) const options(*nopass:*varsize);
+  name11 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu11 pointer value options(*nopass:*string);
-  name12 Like(UTF8_1K) const options(*nopass:*varsize);
+  name12 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu12 pointer value options(*nopass:*string);
-  name13 Like(UTF8_1K) const options(*nopass:*varsize);
+  name13 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu13 pointer value options(*nopass:*string);
-  name14 Like(UTF8_1K) const options(*nopass:*varsize);
+  name14 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu14 pointer value options(*nopass:*string);
-  name15 Like(UTF8_1K) const options(*nopass:*varsize);
+  name15 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu15 pointer value options(*nopass:*string);
-  name16 Like(UTF8_1K) const options(*nopass:*varsize);
+  name16 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu16 pointer value options(*nopass:*string);
-  name17 Like(UTF8_1K) const options(*nopass:*varsize);
+  name17 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu17 pointer value options(*nopass:*string);
-  name18 Like(UTF8_1K) const options(*nopass:*varsize);
+  name18 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu18 pointer value options(*nopass:*string);
-  name19 Like(UTF8_1K) const options(*nopass:*varsize);
+  name19 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu19 pointer value options(*nopass:*string);
-  name20 Like(UTF8_1K) const options(*nopass:*varsize);
+  name20 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu20 pointer value options(*nopass:*string);
-  name21 Like(UTF8_1K) const options(*nopass:*varsize);
+  name21 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu21 pointer value options(*nopass:*string);
-  name22 Like(UTF8_1K) const options(*nopass:*varsize);
+  name22 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu22 pointer value options(*nopass:*string);
-  name23 Like(UTF8_1K) const options(*nopass:*varsize);
+  name23 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu23 pointer value options(*nopass:*string);
-  name24 Like(UTF8_1K) const options(*nopass:*varsize);
+  name24 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu24 pointer value options(*nopass:*string);
-  name25 Like(UTF8_1K) const options(*nopass:*varsize);
+  name25 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu25 pointer value options(*nopass:*string);
-  name26 Like(UTF8_1K) const options(*nopass:*varsize);
+  name26 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu26 pointer value options(*nopass:*string);
-  name27 Like(UTF8_1K) const options(*nopass:*varsize);
+  name27 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu27 pointer value options(*nopass:*string);
-  name28 Like(UTF8_1K) const options(*nopass:*varsize);
+  name28 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu28 pointer value options(*nopass:*string);
-  name29 Like(UTF8_1K) const options(*nopass:*varsize);
+  name29 Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   valu29 pointer value options(*nopass:*string);
 
 End-PR;
@@ -2929,7 +2929,6 @@ Dcl-PR nox_set pointer overload (
     nox_setStr
 );
 /endif
-
 
 
 
