@@ -67,12 +67,16 @@ CC = $(eval FILEEXT = $(call UC,$(subst .,,$(suffix $@)))) \
 	$(eval INCLUDE = $(FILEEXT)_INCLUDE) \
 	@.sitemule/compile.sh --stmf="$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" --flags="$($(FLAGS))" --include="$($(INCLUDE))"
 
+# Lazy (=) on purpose: only the githash target below actually needs these,
+# and the remote checkout has no .git/ (excluded from rsync), so evaluating
+# them eagerly for every gmake invocation prints spurious
+# "fatal: not a git repository" errors for unrelated targets.
 ifeq ($(GIT_SHORT),)
-GIT_SHORT := $(shell git rev-parse --short HEAD)
+GIT_SHORT = $(shell git rev-parse --short HEAD)
 endif
 
 ifeq ($(GIT_HASH),)
-GIT_HASH := $(shell git rev-parse --verify HEAD)
+GIT_HASH = $(shell git rev-parse --verify HEAD)
 endif
 
 #-----------------------------------------------------------
@@ -108,6 +112,17 @@ linkcopy:
 
 
 $(EXTERNALS) $(SOURCE): FORCE
+	$(CC)
+
+# Compile a single, standalone source file directly by path, e.g.:
+#   gmake issues/issue0128.rpgle --always-make
+#   gmake test/issue0037.rpgle --always-make
+#   gmake examples/ex10Demo.rpgle --always-make
+# Used by the "Compile current ..." VS Code tasks for files under test/,
+# issues/ and examples/ that aren't part of the service program build
+# (they aren't in $(SOURCE), so they fall through to this pattern rule
+# instead of the explicit rule above). Builds a standalone *PGM.
+%.rpgle:
 	$(CC)
 
 githash:

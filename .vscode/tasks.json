@@ -41,7 +41,7 @@
         },
         {
             "label": "Make all",
-            "command": "ssh MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd ~/projects/noxDbUtf8/;gmake all'",
+            "command": "${workspaceFolder}/.sitemule/gmake_remote.sh \"${workspaceRoot}\" \"noxDbUtf8\" \"all\"",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -53,7 +53,7 @@
         },
         {
             "label": "Create service program",
-            "command": "ssh -t MY_IBM_I 'PATH=/QOpenSys/pkgs/bin:$PATH;cd ~/projects/noxDbUtf8/;gmake noxDbUtf8.srvpgm'",
+            "command": "${workspaceFolder}/.sitemule/gmake_remote.sh \"${workspaceRoot}\" \"noxDbUtf8\" \"noxDbUtf8.srvpgm\"",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -90,7 +90,7 @@
         },
         {
             "label": "Compile current example/issue/test file",
-            "command": "${workspaceFolder}/.sitemule/compile_current.sh \"${workspaceRoot}\" \"noxDbUtf8\" \"${relativeFile}\" \"${fileBasename}\"",
+            "command": "${workspaceFolder}/.sitemule/compile_current.sh \"${workspaceRoot}\" \"noxDbUtf8\" \"${relativeFile}\"",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -100,16 +100,16 @@
                 "owner": "c",
                 "fileLocation": [
                     "relative",
-                    "${fileDirname}"
+                    "${workspaceRoot}"
                 ],
                 "pattern": {
-                    // FileName: *RNF7030 30    399 000022  The name or indicator A is not defined.
-                    "regexp": "^\\./(.*):(\\d+),(\\d+),(.*)$",
+                    "regexp": "^(.*):(\\d+):(\\d+):(error|warning|info):(.{7}):(.*)$",
                     "file": 1,
                     "line": 2,
                     "column": 3,
-                    // "severity": 4,
-                    "message": 4
+                    "severity": 4,
+                    "code": 5,
+                    "message": 6
                 }
             }
         },

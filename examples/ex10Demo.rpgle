@@ -74,7 +74,7 @@ dcl-proc main;
 
     dcl-ds itList      likeds(nox_iterator);
 
-// ------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------
 
     // Take a snapshot of the memory usage before we start
     memuse = nox_memUse();

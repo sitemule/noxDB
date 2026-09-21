@@ -3,8 +3,6 @@
 workspaceRoot="$1"
 workspaceFolderBasename="$2"
 relativeFile="$3"
-fileBasename="$4"
-relativeFileDirname="$(dirname "$relativeFile")"
 
 SSH="ssh -Ss -k -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,5 +14,8 @@ else
     echo "Running on IBM i (OS400) directly - skipping sync."
 fi
 
+# Standalone files under test/, issues/ and examples/ build via the root
+# makefile's generic %.rpgle pattern rule (see makefile), which dispatches
+# through .sitemule/compile.sh like every other source file in the repo.
 echo "Compile..."
-$SSH -t MY_IBM_I "PATH=/QOpenSys/pkgs/bin:\$PATH; cd ~/projects/'${workspaceFolderBasename}'/'${relativeFileDirname}'/; gmake compile SRC='${fileBasename}'"
+$SSH -t MY_IBM_I "PATH=/QOpenSys/pkgs/bin:\$PATH; cd ~/projects/'${workspaceFolderBasename}'/; gmake '${relativeFile}' --always-make"
