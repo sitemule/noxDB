@@ -65,7 +65,7 @@ UC = $(shell echo '$1' | tr '[:lower:]' '[:upper:]')
 CC = $(eval FILEEXT = $(call UC,$(subst .,,$(suffix $@)))) \
 	$(eval FLAGS   = $(FILEEXT)_FLAGS) \
 	$(eval INCLUDE = $(FILEEXT)_INCLUDE) \
-	@compile.py --stmf="$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" --flags="$($(FLAGS))" --include="$($(INCLUDE))"
+	@.sitemule/compile.py --stmf="$@" --lib="$(BIN_LIB)" --liblist="$(LIBLIST)" --flags="$($(FLAGS))" --include="$($(INCLUDE))"
 
 ifeq ($(GIT_SHORT),)
 GIT_SHORT := $(shell git rev-parse --short HEAD)
