@@ -5,6 +5,16 @@
 /endif
 /define JX_DEF
 
+// JX_CCSID_FINGERPRINT is declared in headers/qccsid.rpgle, built into
+// NOXDB/QCCSID(QCCSID) always stored as CCSID 500 (see makefile's hdr:
+// target). Guarded because NOXDB.rpgle concatenates JSONPARSER.rpgle and
+// XMLPARSER.rpgle, both derived from this file, which would otherwise pull
+// this /include in twice.
+/if not defined(JX_CCSID_FINGERPRINT_DEF)
+/define JX_CCSID_FINGERPRINT_DEF
+/include qccsid,qccsid
+/endif
+
 ///
 // noxDB : JSON and XML processing
 //
@@ -275,6 +285,24 @@ End-PR;
 ///
 Dcl-PR jx_setDelimitersByCcsid extproc(*CWIDEN : 'jx_setDelimitersByCcsid');
   ccsid int(10) value;
+End-PR;
+
+///
+// Get calling module's CCSID
+//
+// Determines the CCSID of the RPG module calling this function - without
+// requiring the caller to specify CCSID(*EXACT) or noxDB to assume any
+// particular CCSID. This works because the passed fingerprint constant,
+// JX_CCSID_FINGERPRINT, is declared in a source member stored as CCSID 500;
+// the RPG compiler translates its bytes into the CCSID of the calling
+// module at compile time, and the resulting raw bytes are looked up against
+// a table of known CCSID fingerprints.
+//
+// @param (input) Always pass JX_CCSID_FINGERPRINT
+// @return CCSID of the calling module, or 0 if not recognized
+///
+Dcl-PR jx_moduleCcsid int(10) extproc(*CWIDEN : 'jx_ModuleCcsid');
+  fingerprint char(4) const;
 End-PR;
 
 

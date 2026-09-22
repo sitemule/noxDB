@@ -66,7 +66,7 @@ TS := $(shell date +'%F-%H.%M.%S' )
 
 all:  $(BIN_LIB).lib link hdr githash jsonxml.srvpgm jsonxml.bnddir
 
-jsonxml.srvpgm: initialize.cpp noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlserial.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c loadpgm.c callproc.c trace.clle githash.c ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
+jsonxml.srvpgm: initialize.cpp noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlserial.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c loadpgm.c callproc.c finger.c trace.clle githash.c ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
 
 #-----------------------------------------------------------
 
@@ -96,6 +96,13 @@ hdr:
 	system "CPYFRMSTMF FROMSTMF('headers/NOXDB.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/NOXDB.mbr') MBROPT(*REPLACE)"
 	system "CPYFRMSTMF FROMSTMF('headers/JSONXML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONXML.mbr') MBROPT(*REPLACE)"
 	system "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/JSONXML.mbr') MBROPT(*REPLACE)"
+
+	# QCCSID must stay CCSID(500): the RPG compiler translates the literal in
+	# headers/qccsid.rpgle (authored in Windows-1252, converted here on copy-in)
+	# from CCSID 500 into whatever CCSID the *including* module is compiled
+	# under - that's what lets jx_ModuleCcsid() fingerprint the caller's CCSID.
+	-system -q "CRTSRCPF FILE($(BIN_LIB)/QCCSID) RCDLEN(200) MBR(QCCSID) TEXT('Ccsid fingerprint') CCSID(500)"
+	system "CPYFRMSTMF FROMSTMF('headers/qccsid.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCCSID.file/QCCSID.mbr') MBROPT(*REPLACE) STMFCCSID(1252)"
 
 
 # get the git hash and put it into the version file so it becomes part of the copyright notice in the service program

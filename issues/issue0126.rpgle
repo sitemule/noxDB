@@ -47,6 +47,8 @@ dcl-proc main;
     chgJobCcsid(277);
     doTest('ccsid277');
 
+    simple();
+
 end-proc;
 
 // ------------------------------------------------------------------------------------
@@ -356,6 +358,35 @@ dcl-proc checkTestFile;
 
     json_delete(pDoc2);
     json_delete(pDoc);
+end-proc;
+
+
+
+// ------------------------------------------------------------------------------------
+// Simple test - parse string write it to disk
+// ------------------------------------------------------------------------------------
+dcl-proc simple;
+
+    dcl-s pInput  pointer;
+    dcl-s pCheck  pointer;
+    dcl-s Danish  varchar(256);
+
+
+    // Test the XML - UTF-8 input - Athens in greek letters
+    Danish = '<test>Smørrebrødspålæg</test>';
+    pInput = json_parseString (Danish);
+
+    json_WriteXmlStmf (pInput:'/prj/noxdb/testout/issue0126-simple.xml':1252:*OFF);
+
+    // Read both back and confirm the stream files round-trip the same values
+    pCheck = json_parseFile('/prj/noxdb/testout/issue0126-simple.xml');
+    assert ( 'xml - simple' : json_getstr(pInput : 'test') = json_getstr(pCheck : 'test'));
+    json_delete(pCheck);
+
+on-exit;
+    json_delete(pInput);
+    json_delete(pCheck);
+
 end-proc;
 
 // ------------------------------------------------------------------------------------

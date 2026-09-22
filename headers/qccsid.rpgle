@@ -1,0 +1,2 @@
+**FREE
+Dcl-C JX_CCSID_FINGERPRINT '¤¦ð[';
