@@ -3579,7 +3579,13 @@ void nox_GetNodeAttrValueVC (PLVARCHAR pRes, PNOXNODE pNode ,PLVARCHAR pAttrName
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    PLVARCHAR dft = (pParms->OpDescList->NbrOfParms >= 4) ? pDefaultValue : PLVARCHARNULL;
    PUCHAR value =  nox_GetNodeAttrValuePtr  ( pNode , plvc2str(pAttrName),  plvc2str(dft)) ;
-   pRes->Length = memSize(value) -1; // with out the zero term
+
+   if (value == dft->String) {
+      pRes->Length =dft->Length;
+   } else {
+      pRes->Length = memSize(value) -1; // with out the zero term
+   }
+
    memcpy(pRes->String , value , pRes->Length);
 }
 // -------------------------------------------------------------
