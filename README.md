@@ -109,8 +109,8 @@ Also notice that the **main** branch (the UTF-8 stuff) has all the new features 
    pCustomer1 = nox_Object(
       'id'         : nox_Int  (12345):
       'name'       : nox_Str  ('System & Metod A/S'):
-      'street'     : nox_Str  ('Hï¿½ndvï¿½rkersvinget 8'):
-      'city'       : nox_Str  ('Hï¿½rsholm'):
+      'street'     : nox_Str  ('Håndværkersvinget 8'):
+      'city'       : nox_Str  ('Hørsholm'):
       'greeting'   : nox_Str  (u'4f605978'): // "Ni hau" in unicode
       'creditLimit': nox_Dec  (76543.21):
       'createdDate': nox_Date (%date()):
