@@ -239,6 +239,21 @@ Dcl-PR nox_setDecPoint  extproc(*CWIDEN : 'nox_SetDecPoint');
 End-PR;
 
 ///
+// Set ISO 8601 timestamp formatting
+//
+// When enabled, timestamps are serialized to JSON as ISO 8601 format
+// YYYY-MM-DDTHH:MM:SS.uuuuuu instead of the IBM i native
+// format YYYY-MM-DD-HH.MM.SS.uuuuuu.
+//
+// The default is *OFF, preserving backward compatibility.
+//
+// @param (input) *ON to use ISO 8601 format, *OFF to use IBM i native format
+///
+Dcl-PR nox_setIsoTimestamp extproc(*CWIDEN : 'nox_setIsoTimestamp');
+  flag ind value;
+End-PR;
+
+///
 // Check error
 //
 // Checks if the last operation resulted in an error.

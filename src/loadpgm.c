@@ -36,6 +36,9 @@
 #include "memUtil.h"
 #define NOX_BUILD
 #include "noxDbUtf8.h"
+#include "timestamp.h"
+
+__thread extern LGL isoTimestamp;
 
 //  local prototype:
 static void  copyNodeIntoBuffer (PUCHAR pParmBuffer ,PNOX_PARMMETA pParentMeta , PNOX_PARMMETA pMeta, PNOXNODE pParmValueNode );
@@ -425,6 +428,9 @@ static PNOXNODE newReturnNode (PNOX_PARMMETA pMethodParm, PUCHAR pParmBuffer )
       }
       case NOX_DTYPE_TIME_STAMP: {
          substr  ( data  ,  pParmBuffer , pMethodParm->length);
+         if (isoTimestamp == ON) {
+            ts_ibm2iso8601(data);
+         }
          break;
       }
       case NOX_DTYPE_BOOL: {

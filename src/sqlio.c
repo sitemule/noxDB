@@ -48,6 +48,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 // Globals: TODO !!! remove to make code reintrant
 __thread extern UCHAR jxMessage[512];
 __thread extern BOOL  jxError;
+__thread extern LGL   isoTimestamp;
 PNOX_SQLCONNECT pLastConnnection = NULL;
 
 extern iconv_t xlate_1200_to_1208;
@@ -907,6 +908,17 @@ PNOXNODE nox_sqlFormatRow  (PNOX_SQL pSQL)
 
                   nox_NodeInsertNew (pRow , NOX_RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
                   break ;
+               }
+
+               case SQL_TIMESTAMP: {
+                  PUCHAR p = buf;
+                  int len = a_str_trim_len(p);
+                  p[len] = '\0';
+                  if (isoTimestamp == ON) {
+                     ts_ibm2iso8601(p);
+                  }
+                  nox_NodeInsertNew (pRow , NOX_RL_LAST_CHILD, pCol->colname , p,  pCol->nodeType );
+                  break;
                }
 
                default: {

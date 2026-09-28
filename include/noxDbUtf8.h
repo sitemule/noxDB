@@ -453,6 +453,7 @@ PNOXNODE nox_NodeClone  (PNOXNODE pSource);
 void nox_NodeMoveAndReplace (PNOXNODE  pDest, PNOXNODE pSource);
 /* ------ */
 void nox_SetDecPoint(PUCHAR p);
+void nox_setIsoTimestamp(LGL flag);
 //void nox_SetDelimiters(PNOXDELIM pDelim);
 //void nox_SetDelimiters2(PNOXDELIM pDelim);
 //void nox_CloneFormat(PNOXNODE pNode, PNOXNODE pSource);

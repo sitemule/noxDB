@@ -72,6 +72,20 @@ cd /prj/noxDB
 gmake clean release
 ```
 
+### Build options
+
+| Option | Default | Description |
+|---|---|---|
+| `BIN_LIB` | `NOXDBUTF8` | Target library for the service program and objects |
+| `TARGET_RELEASE` | `V7R3M0` | Minimum IBM i release to target |
+| `ISO_TIMESTAMP` | *(off)* | Set to `1` to default timestamps to ISO 8601 format (`YYYY-MM-DDTHH:MM:SS.uuuuuu`) instead of the IBM i native format (`YYYY-MM-DD-HH.MM.SS.uuuuuu`) |
+
+Options can be combined:
+
+```
+gmake BIN_LIB=MYLIB TARGET_RELEASE=V7R4M0 ISO_TIMESTAMP=1
+```
+
 ### Notes
 This branch merges the "EBCDIC" legacy branch (previously called master),
 with the code in UTF-8-Consolidated branch, aimed at making noxDB fully compatible with UTF-8 while also cleaning up the codebase.

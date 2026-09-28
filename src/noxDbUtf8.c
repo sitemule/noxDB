@@ -41,6 +41,7 @@
 #define NOX_BUILD
 #include "noxDbUtf8.h"
 #include "e2aa2e.h"
+#include "timestamp.h"
 
 // Global thread vars
 __thread UCHAR jxMessage[512]; // EBCDIC !!
@@ -51,6 +52,11 @@ __thread BOOL  doTrim;
 __thread PNOXCOM pJxCom;
 __thread BOOL   debugger = false;
 __thread UCHAR  nox_DecPoint = '.';
+#ifdef ISO_TIMESTAMP_DEFAULT
+__thread LGL   isoTimestamp = ON;
+#else
+__thread LGL   isoTimestamp = OFF;
+#endif
 
 // iconv_t xlateEto1208;
 // iconv_t xlate1208toE;
@@ -3301,12 +3307,14 @@ PNOXNODE  nox_SetTimeStampByNameVC (PNOXNODE pNode, PLVARCHAR  Name, TIMESTAMP V
    }
 
    substr(s , (PUCHAR) &Value  , sizeof(TIMESTAMP));
+   if (isoTimestamp == ON) ts_ibm2iso8601(s);
    return nox_SetValueByName(pNode , plvc2str(Name) , stre2a(s,s), NOX_VALUE );
 }
 PNOXNODE  nox_TimeStamp (TIMESTAMP Value )
 {
    UCHAR  s [32];
    substr(s , (PUCHAR) &Value  , sizeof(TIMESTAMP));
+   if (isoTimestamp == ON) ts_ibm2iso8601(s);
    return NewNode (NULL, stre2a(s,s), NOX_VALUE );
 }
 /* -------------------------------------------------------------
@@ -3862,6 +3870,15 @@ VOID nox_MemStat(VOID)
 INT64 nox_MemUse(VOID)
 {
    return memUse();
+}
+// ---------------------------------------------------------------------------
+// Control whether timestamps are serialized as ISO 8601 (YYYY-MM-DDTHH:MM:SS.uuuuuu)
+// instead of the IBM i native format (YYYY-MM-DD-HH.MM.SS.uuuuuu).
+// Default is OFF (no change from prior behaviour).
+// ---------------------------------------------------------------------------
+void nox_setIsoTimestamp (LGL flag)
+{
+   isoTimestamp = flag;
 }
 // ---------------------------------------------------------------------------
 // Empty placeholder for the export vector in the binder source;

@@ -54,6 +54,12 @@ DSPF_INCLUDE=
 SQL_FLAGS=COMMIT(*NONE)
 SQL_INCLUDE=
 
+# Set ISO_TIMESTAMP=1 to make ISO 8601 timestamp formatting the default:
+#   gmake ISO_TIMESTAMP=1
+ifdef ISO_TIMESTAMP
+C_FLAGS := $(C_FLAGS) DEFINE('ISO_TIMESTAMP_DEFAULT')
+endif
+
 #
 # User-defined part end
 #-----------------------------------------------------------
