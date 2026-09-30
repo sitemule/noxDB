@@ -3552,7 +3552,13 @@ void nox_GetNodeValueStrVC (PLVARCHAR pRes, PNOXNODE pNode , PLVARCHAR pDefaultV
    PUCHAR value;
 
    value =  nox_GetNodeValuePtr  (pNode , plvc2str(dft));
-   pRes->Length = memSize(value) -1 ; // without the zero term char
+   if (value == pDefaultValue->String) {
+      pRes->Length =pDefaultValue->Length;
+   } else {
+      pRes->Length = memSize(value) -1 ; // without the zero term char
+   }
+
+
    memcpy(pRes->String , value , pRes->Length);
 }
 // -------------------------------------------------------------

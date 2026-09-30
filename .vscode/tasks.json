@@ -5,7 +5,7 @@
     // Build system: local edits are rsync'd to MY_IBM_I:~/projects/noxDbUtf8
     // (see .sitemule/rsync.sh) and built there via ssh + gmake. The remote
     // folder is fixed to "noxDbUtf8" (not the local, lower-case checkout
-    // name) to match /home/NLI/projects/noxDbUtf8 on the IBM i.
+    // name) to match /home/xxx/projects/noxDbUtf8 on the IBM i.
     "version": "2.0.0",
     "tasks": [
         {
@@ -84,9 +84,6 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": [
-                "$gcc"
-            ]
         },
         {
             "label": "Compile current example/issue/test file",
