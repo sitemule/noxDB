@@ -152,12 +152,30 @@ void jx_setDelimitersByCcsid (int ccsid)
    ccsid==0 means "current job ccsid", which can change at any time via
    CHGJOB - so this can NOT be cached against the raw ccsid parameter (that
    caches the sentinel, not what it resolves to, and a later CHGJOB is then
-   never discovered). jx_setDelimitersByCcsid() only rebuilds a couple of
-   small, fixed-size SBCS lookup tables, and this only runs once per parse
-   (not once per character), so always rebuilding is cheap enough.
+   never discovered, #126). So for ccsid 0 the job's 1252 -> EBCDIC table is
+   built every time (cheap: once per parse, not once per character) and
+   compared with the last one.
+
+   The delimiters are only rebuilt when that CCSID really changed: a rebuild
+   also overwrites the delimiters a caller set with jx_SetDelimiters() /
+   jx_SetDelimiters2() - e.g. IceBreak, whose data is in CCSID 277 in a job
+   of any CCSID - and every parse and jx_NewObject(NULL) call initconst(0)
+   (#133).
    --------------------------------------------------------------------------- */
 void initconst(int ccsid)
 {
+   static int   prevCcsid = -1;  // can not be negative => force rebuild const
+   static UCHAR prevJobA2e[256];
+   UCHAR e2a[256], a2e[256];
+
+   if (ccsid == 0) {
+      XlateGetStaticConversionTables (e2a , a2e , 1252 , 0);
+      if (prevCcsid == 0 && memcmp(prevJobA2e, a2e, sizeof(a2e)) == 0) return;
+      memcpy(prevJobA2e, a2e, sizeof(a2e));
+   } else if (prevCcsid == ccsid) {
+      return;
+   }
+   prevCcsid = ccsid;
    jx_setDelimitersByCcsid (ccsid);
 }
 

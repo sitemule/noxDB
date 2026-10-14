@@ -1052,6 +1052,10 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
   // is unambiguous ground truth and should still win.
   BOOL callerCcsid = (InputCcsid != 0);
 
+  // the job* constants below must be the current job ccsid's (only rebuilt
+  // when it changed, so delimiters a caller set are kept)
+  if (! callerCcsid) initconst(0);
+
   // need temp version since it is modified
   substr ( buf, pIn , 128);
 
@@ -1091,7 +1095,11 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
     // InputCcsid is deliberately left untouched on a match: if the caller
     // set it explicitly it's already right, and if not it's already the
     // "current job ccsid" sentinel (0), which is also already right.
-    if (*p == BraBeg || *p == CurBeg || *p == Quot || *p == Apos) {
+    // Without an explicit ccsid it is the job's own [ { " ' (job*): BraBeg and
+    // friends can be delimiters a caller set with jx_SetDelimiters (#133).
+    if (callerCcsid
+    ?   (*p == BraBeg    || *p == CurBeg    || *p == Quot    || *p == Apos)
+    :   (*p == jobBraBeg || *p == jobCurBeg || *p == jobQuot || *p == jobApos)) {
       pJxCom->isJson = TRUE;
       done = TRUE;
       continue;
@@ -1099,6 +1107,19 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
     if (*p == LT) {
       pJxCom->isJson = FALSE;
       isXml = TRUE;
+      done = TRUE;
+      continue;
+    }
+    // EBCDIC JSON in CCSID 277 in a job of another CCSID: the classic noxDb took
+    // EBCDIC JSON as 277 up to ddce225, and callers rely on it - IceBreak converts
+    // all its data with a static 1252 -> 277 table. 277's [ and { are not the
+    // job's (checked above), so convert 277 -> job ccsid like before (#133).
+    // Quotes are the same in every EBCDIC and need no check.
+    #pragma convert(277)
+    if (! callerCcsid && (*p == '[' || *p == '{')) {
+    #pragma convert(0)
+      pJxCom->isJson = TRUE;
+      InputCcsid = 277;
       done = TRUE;
       continue;
     }
