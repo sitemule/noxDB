@@ -10,8 +10,8 @@
 // target). Guarded because NOXDB.rpgle concatenates JSONPARSER.rpgle and
 // XMLPARSER.rpgle, both derived from this file, which would otherwise pull
 // this /include in twice.
-/if not defined(JX_CCSID_FINGERPRINT_DEF)
-/define JX_CCSID_FINGERPRINT_DEF
+/if not defined(NOXDB_CCSID_FINGERPRINT_DEF)
+/define NOXDB_CCSID_FINGERPRINT_DEF
 /include qccsid,qccsid
 /endif
 

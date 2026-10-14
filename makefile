@@ -97,11 +97,13 @@ hdr:
 	system "CPYFRMSTMF FROMSTMF('headers/JSONXML.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QRPGLEREF.file/JSONXML.mbr') MBROPT(*REPLACE)"
 	system "CPYFRMSTMF FROMSTMF('headers/jsonxml.h') TOMBR('/QSYS.lib/$(BIN_LIB).lib/H.file/JSONXML.mbr') MBROPT(*REPLACE)"
 
+
 	# QCCSID must stay CCSID(500): the RPG compiler translates the literal in
 	# headers/qccsid.rpgle (authored in Windows-1252, converted here on copy-in)
 	# from CCSID 500 into whatever CCSID the *including* module is compiled
 	# under - that's what lets jx_ModuleCcsid() fingerprint the caller's CCSID.
 	-system -q "CRTSRCPF FILE($(BIN_LIB)/QCCSID) RCDLEN(200) MBR(QCCSID) TEXT('Ccsid fingerprint') CCSID(500)"
+	-system -q "CHGATR OBJ('headers/qccsid.rpgle') ATR(*CCSID) VALUE(1252)"
 	system "CPYFRMSTMF FROMSTMF('headers/qccsid.rpgle') TOMBR('/QSYS.lib/$(BIN_LIB).lib/QCCSID.file/QCCSID.mbr') MBROPT(*REPLACE) STMFCCSID(1252)"
 
 
