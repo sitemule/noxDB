@@ -28,6 +28,7 @@
 #include <decimal.h>
 #include <wchar.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include <sys/stat.h>
 #include "ostypes.h"
@@ -1734,6 +1735,36 @@ PNOXNODE nox_ParseString(PUCHAR Buf)
    #endif
 
    return (pRoot);
+}
+// ---------------------------------------------------------------------------
+PNOXNODE nox_ParseFd(int fd)
+{
+   size_t   capacity = 65536;
+   size_t   len = 0;
+   PUCHAR   buf;
+   ssize_t  n;
+   PNOXNODE pRoot;
+
+   jxMessage[0] = '\0';
+   buf = memAlloc(capacity + 1);
+
+   while ((n = read(fd, buf + len, capacity - len)) > 0) {
+      len += (size_t) n;
+      if (len >= capacity) {
+         capacity *= 2;
+         memRealloc(&buf, capacity + 1);
+      }
+   }
+   buf[len] = '\0';
+
+   if (len == 0) {
+      memFree(&buf);
+      return NULL;
+   }
+
+   pRoot = nox_ParseString(buf);
+   memFree(&buf);
+   return pRoot;
 }
 // ---------------------------------------------------------------------------
 PNOXNODE nox_ParseStringVC(PLVARCHAR buf)

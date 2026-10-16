@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <iconv.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
 #include  "qoar/h/qrntypes"
@@ -36,13 +37,15 @@
 // NOTE !!! ALL constants are UTF-8
 #pragma convert(1252)
 
-// TODO !!! - Check reintrant
-
-static BOOL upperCaseNames = false;
-static PNOXNODE * ppRoot;
 extern iconv_t xlate_1200_to_1208;
 
-typedef void (*NOX_DATAGEN)();
+// ---------------------------------------------------------------------------
+// nox_DataGen state  (thread-local so concurrent threads don't interfere)
+// ---------------------------------------------------------------------------
+static __thread BOOL       upperCaseNames = false;
+static __thread PNOXNODE * ppRoot         = NULL;
+static __thread PNOXNODE   mapper_pNode   = NULL;
+static __thread BOOL       mapper_first   = false;
 
 /*    ---------------------------------------------------------------------------
     Implement;
@@ -51,10 +54,6 @@ typedef void (*NOX_DATAGEN)();
     --------------------------------------------------------------------------- */
 void  nox_dataGenMapper (QrnDgParm_T * pParms)
 {
-    static PNOXNODE pNode;
-    static BOOL first = false;
-
-
     switch ( pParms->event) {
         case QrnDgEvent_01_StartMultiple    : {
             break;
@@ -63,8 +62,8 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
             break;
         }
         case QrnDgEvent_03_Start            : {
-            pNode = NULL;
-            first = true;
+            mapper_pNode = NULL;
+            mapper_first = true;
             break;
         }
         case QrnDgEvent_04_End              : {
@@ -82,16 +81,16 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
 
             pObj  = nox_NewObject();
             nox_NodeRename(pObj ,  name);
-            nox_NodeInsertChildTail (pNode , pObj);
-            pNode = pObj;
-            if (first) {
-                first = false;
-                *ppRoot = pNode;
+            nox_NodeInsertChildTail (mapper_pNode , pObj);
+            mapper_pNode = pObj;
+            if (mapper_first) {
+                mapper_first = false;
+                *ppRoot = mapper_pNode;
             };
             break;
         }
         case QrnDgEvent_06_EndStruct        : {
-            pNode = nox_GetNodeParent (pNode);
+            mapper_pNode = nox_GetNodeParent (mapper_pNode);
             break;
         }
         case QrnDgEvent_07_StartScalarArray : {
@@ -106,16 +105,16 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
 
             pArr = nox_NewArray();
             nox_NodeRename(pArr ,  name);
-            nox_NodeInsertChildTail (pNode , pArr);
-            pNode = pArr;
-            if (first) {
-                first = false;
-                *ppRoot = pNode;
+            nox_NodeInsertChildTail (mapper_pNode , pArr);
+            mapper_pNode = pArr;
+            if (mapper_first) {
+                mapper_first = false;
+                *ppRoot = mapper_pNode;
             };
             break;
         }
         case QrnDgEvent_08_EndScalarArray   : {
-            pNode = nox_GetNodeParent (pNode);
+            mapper_pNode = nox_GetNodeParent (mapper_pNode);
             break;
         }
         case QrnDgEvent_09_StartStructArray : {
@@ -131,16 +130,16 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
 
             pArr = nox_NewArray();
             nox_NodeRename(pArr ,  name);
-            nox_NodeInsertChildTail (pNode , pArr);
-            pNode = pArr;
-            if (first) {
-                first = false;
-                *ppRoot = pNode;
+            nox_NodeInsertChildTail (mapper_pNode , pArr);
+            mapper_pNode = pArr;
+            if (mapper_first) {
+                mapper_first = false;
+                *ppRoot = mapper_pNode;
             };
             break;
         }
         case QrnDgEvent_10_EndStructArray   : {
-            pNode = nox_GetNodeParent (pNode);
+            mapper_pNode = nox_GetNodeParent (mapper_pNode);
             break;
         }
         case QrnDgEvent_11_ScalarValue      : {
@@ -181,9 +180,9 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
                     break;
             }
 
-            pValueNode = nox_NodeInsertNew (pNode , NOX_RL_LAST_CHILD , name , pValue, type);
-            if (first) {
-                first = false;
+            pValueNode = nox_NodeInsertNew (mapper_pNode , NOX_RL_LAST_CHILD , name , pValue, type);
+            if (mapper_first) {
+                mapper_first = false;
                 *ppRoot = pValueNode;
             };
             break;
@@ -200,9 +199,170 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
 NOX_DATAGEN  nox_DataGen (PNOXNODE * ppNode, PUCHAR optionsP)
 {
     PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-    ppRoot = ppNode; // not reentrant
+    ppRoot = ppNode;
 
     // TODO - Sysname !!
 
     return &nox_dataGenMapper;
+}
+
+// ---------------------------------------------------------------------------
+// nox_DataGenFd state  (thread-local)
+// ---------------------------------------------------------------------------
+#define DATAGEN_FD_MAX_DEPTH 64
+
+static __thread NOXWRITER  fdNoxWriter;
+static __thread PSTREAM    fdStream            = NULL;
+static __thread int        fdLevel             = -1;
+static __thread BOOL       fdIsFirst[DATAGEN_FD_MAX_DEPTH];
+static __thread BOOL       fdIsArray[DATAGEN_FD_MAX_DEPTH];
+
+// Emit comma before the next sibling and key if inside an object.
+static void fd_before_child(PUCHAR name)
+{
+    if (fdLevel >= 0 && !fdIsFirst[fdLevel]) stream_putc(fdStream, ',');
+    if (fdLevel >= 0) fdIsFirst[fdLevel] = false;
+
+    if (fdLevel >= 0 && !fdIsArray[fdLevel]) {
+        stream_putc(fdStream, '"');
+        stream_puts(fdStream, name);
+        stream_puts(fdStream, "\":");
+    }
+}
+
+static void fd_push(BOOL isArray)
+{
+    fdLevel++;
+    fdIsFirst[fdLevel] = true;
+    fdIsArray[fdLevel] = isArray;
+}
+
+static void fd_get_name(UCHAR name[256], QrnDgParm_T * pParms)
+{
+    ULONG namelen = XlateBuffer(xlate_1200_to_1208, name, (PUCHAR)&pParms->name.name, pParms->name.len * 2);
+    name[namelen] = '\0';
+    a_camel_case(name, name);
+}
+
+// ---------------------------------------------------------------------------
+void nox_dataGenFdMapper (QrnDgParm_T * pParms)
+{
+    UCHAR name[256];
+
+    switch (pParms->event) {
+
+        case QrnDgEvent_01_StartMultiple: {
+            stream_putc(fdStream, '[');
+            fd_push(true);
+            break;
+        }
+        case QrnDgEvent_02_EndMultiple: {
+            stream_putc(fdStream, ']');
+            fdLevel--;
+            break;
+        }
+        case QrnDgEvent_03_Start: {
+            fdLevel = -1;
+            break;
+        }
+        case QrnDgEvent_04_End: {
+            stream_delete(fdStream);
+            fclose(fdNoxWriter.outFile);
+            fdStream = NULL;
+            break;
+        }
+        case QrnDgEvent_05_StartStruct: {
+            fd_get_name(name, pParms);
+            fd_before_child(name);
+            stream_putc(fdStream, '{');
+            fd_push(false);
+            break;
+        }
+        case QrnDgEvent_06_EndStruct: {
+            stream_putc(fdStream, '}');
+            fdLevel--;
+            break;
+        }
+        case QrnDgEvent_07_StartScalarArray:
+        case QrnDgEvent_09_StartStructArray: {
+            fd_get_name(name, pParms);
+            fd_before_child(name);
+            stream_putc(fdStream, '[');
+            fd_push(true);
+            break;
+        }
+        case QrnDgEvent_08_EndScalarArray:
+        case QrnDgEvent_10_EndStructArray: {
+            stream_putc(fdStream, ']');
+            fdLevel--;
+            break;
+        }
+        case QrnDgEvent_11_ScalarValue: {
+            ULONG vlen = pParms->u.scalar.valueLenBytes;
+            UCHAR value[vlen + 1];
+            ULONG valuelen;
+            PUCHAR pValue = value;
+            BOOL isLiteral = false;
+
+            fd_get_name(name, pParms);
+
+            valuelen = XlateBuffer(xlate_1200_to_1208, value, (PUCHAR)pParms->u.scalar.value, vlen);
+            value[valuelen] = '\0';
+
+            switch (pParms->u.scalar.dataType) {
+                case QrnDatatype_Indicator:
+                    pValue = (*value == '1') ? "true" : "false";
+                    isLiteral = true;
+                    break;
+                case QrnDatatype_Decimal:
+                case QrnDatatype_Integer:
+                case QrnDatatype_Unsigned:
+                case QrnDatatype_Float:
+                    if (*pValue == '+') pValue++;
+                    isLiteral = true;
+                    break;
+                default:
+                    break;
+            }
+
+            fd_before_child(name);
+
+            if (isLiteral) {
+                stream_puts(fdStream, pValue);
+            } else {
+                stream_putc(fdStream, '"');
+                nox_EncodeJsonStream(fdStream, pValue);
+                stream_putc(fdStream, '"');
+            }
+            break;
+        }
+        case QrnDgEvent_12_Terminate: {
+            break;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Entry point: sets up the stream and returns the streaming callback.
+// The caller owns fd — nox_DataGenFd dups it internally and will close
+// the dup when DATA-GEN fires the End event.
+// ---------------------------------------------------------------------------
+NOX_DATAGEN nox_DataGenFd (int fd)
+{
+    if (fdStream != NULL) {
+        stream_delete(fdStream);
+        fclose(fdNoxWriter.outFile);
+        fdStream = NULL;
+    }
+
+    memset(&fdNoxWriter, 0, sizeof(fdNoxWriter));
+    fdNoxWriter.doTrim  = true;
+    fdNoxWriter.outFile = fdopen(dup(fd), "w");
+
+    fdStream = stream_new(4096);
+    fdStream->handle = &fdNoxWriter;
+    fdStream->writer = nox_fileWriter;
+    fdLevel = -1;
+
+    return &nox_dataGenFdMapper;
 }

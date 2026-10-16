@@ -213,6 +213,21 @@ Dcl-PR nox_ParseFile Pointer extproc(*CWIDEN:'nox_ParseFile');
 End-PR;
 
 ///
+// Parse file descriptor
+//
+// Reads JSON or XML from a file descriptor (socket, stdin, pipe) and
+// parses it. The entire content is buffered internally; the caller
+// retains ownership of the fd.
+//
+// @param (input) File descriptor to read from
+// @return Pointer to the root node of the noxDB object graph or
+//         *null if nothing was read.
+///
+Dcl-PR nox_ParseFd Pointer extproc(*CWIDEN:'nox_ParseFd');
+  fd             Int(10) value;
+End-PR;
+
+///
 // Parse string
 //
 // Parses a JSON or XML string.
@@ -794,6 +809,21 @@ End-PR;
 Dcl-PR nox_DataGen pointer(*proc) extproc(*CWIDEN : 'nox_DataGen');
   pNode    pointer;
   Options  pointer value options(*string : *nopass);
+End-PR;
+
+///
+// DATA-GEN callback that streams JSON directly to a file descriptor
+//
+// Returns a callback procedure pointer for use with the DATA-GEN opcode.
+// JSON is serialized and written in 4 KB chunks as DATA-GEN fires events
+// no intermediate node tree is built. The stream is flushed and closed
+// automatically when DATA-GEN completes. The caller retains ownership of fd.
+//
+// @param (input) File descriptor (e.g. 1 for stdout, or a connected socket)
+// @return Procedure pointer for use with %DATA()
+///
+Dcl-PR nox_DataGenFd pointer(*proc) extproc(*CWIDEN : 'nox_DataGenFd');
+  fd       Int(10) value;
 End-PR;
 
 
@@ -1574,6 +1604,21 @@ Dcl-PR nox_WriteJsonStmf  extproc(*CWIDEN : 'nox_WriteJsonStmf');
   Ccsid          Int(10)    value  options(*nopass);
   Trim           Ind        value  options(*nopass);
   Options        Pointer    value  options(*nopass:*string);
+End-PR;
+
+///
+// Write JSON to file descriptor
+//
+// Streams the object tree as JSON directly to an open file descriptor
+// (e.g. a socket returned by accept()) without buffering the full output.
+// Data is written in 4 KB chunks as the serializer produces it.
+//
+// @param (input) Node
+// @param (input) File descriptor (e.g. from accept() or open())
+///
+Dcl-PR nox_WriteJsonFd extproc(*CWIDEN : 'nox_WriteJsonFd');
+  pNode          Pointer    value;
+  fd             Int(10)    value;
 End-PR;
 
 ///
