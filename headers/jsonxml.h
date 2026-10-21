@@ -545,6 +545,8 @@ FIXEDDEC jx_GetValueNum (PJXNODE pNode , PUCHAR Name  , FIXEDDEC dftParm);
 
 PUCHAR jx_GetValueStr (PUCHAR value , PJXNODE pNode , PUCHAR nameP, PUCHAR  defaultP);
 #pragma descriptor ( void jx_GetValueStr    (void))
+PVARCHAR jx_GetValuePVC (PVARCHAR value , PJXNODE pNode , PUCHAR nameP, PUCHAR  defaultP);
+#pragma descriptor ( void jx_GetValuePVC    (void))
 
 INT64 jx_GetValueInt (PJXNODE pNode , PUCHAR Name  , INT64 dftParm);
 #pragma descriptor ( void jx_GetValueInt    (void))
