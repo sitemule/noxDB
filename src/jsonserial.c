@@ -29,7 +29,7 @@
 
 // -----------------------------------------------------------------
 #pragma convert(1252)
-static void   nox_EncodeJsonStream (PSTREAM p , PUCHAR in)
+void   nox_EncodeJsonStream (PSTREAM p , PUCHAR in)
 {
 
    while (*in) {
@@ -259,6 +259,27 @@ LONG nox_AsJsonTextMem (PNOXNODE pNode, PUCHAR buf , ULONG maxLenP)
    stream_delete (pStream);
    return  len;
 
+}
+// ----------------------------------------------------------------------------
+void nox_WriteJsonFd (PNOXNODE pNode, int fd)
+{
+   NOXWRITER  noxWriter;
+   PNOXWRITER pNoxWriter = &noxWriter;
+   memset(pNoxWriter, 0, sizeof(noxWriter));
+
+   if (pNode == NULL) return;
+
+   pNoxWriter->doTrim   = true;
+   pNoxWriter->outFile  = fdopen(dup(fd), "w");
+   if (pNoxWriter->outFile == NULL) return;
+
+   PSTREAM pStream = stream_new(4096);
+   pStream->handle = pNoxWriter;
+   pStream->writer = nox_fileWriter;
+
+   jsonStream(pNode, pStream);
+   stream_delete(pStream);
+   fclose(pNoxWriter->outFile);
 }
 // ----------------------------------------------------------------------------
 void  jsonStreamRunner   (PSTREAM pStream)

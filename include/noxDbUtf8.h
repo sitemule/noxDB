@@ -497,11 +497,17 @@ void nox_WriteJsonStmf (
    PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options);
 #pragma descriptor ( void nox_WriteJsonStmf      (void))
 
+void nox_WriteJsonFd (PNOXNODE pNode, int fd);
+
+typedef void (*NOX_DATAGEN)();
+NOX_DATAGEN nox_DataGenFd (int fd);
+
 void nox_WriteCsvStmf (
    PNOXNODE pNode, PUCHAR FileName, int Ccsid, LGL trimOut, PNOXNODE options);
 #pragma descriptor ( void nox_WriteCsvStmf      (void))
 
 PNOXNODE  nox_ParseFile  (PUCHAR FileName);
+PNOXNODE  nox_ParseFd  (int fd);
 PNOXNODE  nox_ParseString  (PUCHAR Buf);
 PNOXNODE  nox_NewObject (void);
 PNOXNODE  nox_NewArray (void);
