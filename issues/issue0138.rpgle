@@ -16,9 +16,12 @@
 // Since #126 a lone null was taken as the high byte of a BOM-less big-endian
 // Unicode character, the scan went on into the bytes after it, and an IceCap
 // job looped in jx_ParseXml.
+// A string with nothing to parse - only blanks, or plain text - is empty too:
+// it gave the parser a NULL buffer, and jx_ParseXml looped.
 // BOM-less big-endian Unicode files (#126) are tested by issue0126.
 //
-// Run it and look for "ASSERT FAILED" in the joblog - none means OK.
+// Run it in a CCSID(500) job (see issues/Makefile) and look for
+// "ASSERT FAILED" in the joblog - none means OK.
 // -------------------------------------------------------------
 Ctl-Opt BndDir('NOXDB') dftactgrp(*NO) ACTGRP('QILE') main(main);
 /include qrpgleRef,noxdb
@@ -53,6 +56,25 @@ dcl-proc main;
     junk.buf = x'007B226122' + x'00';
     pDoc = json_parseString(%addr(junk.buf));
     assert ('null + ASCII json junk' : pDoc = *NULL);
+    json_delete(pDoc);
+
+    // Only blanks - looped in jx_ParseXml before the fix
+    pDoc = json_parseString('   ');
+    assert ('blanks only' : pDoc = *NULL);
+    json_delete(pDoc);
+
+    // Plain text, nothing to parse - looped in jx_ParseXml before the fix
+    pDoc = json_parseString('abc');
+    assert ('plain text' : pDoc = *NULL);
+    json_delete(pDoc);
+
+    // Still parsed: leading blanks before the document
+    pDoc = json_parseString('  {"a":"b"}');
+    assert ('blanks + json' : json_getStr(pDoc : 'a') = 'b');
+    json_delete(pDoc);
+
+    pDoc = json_parseString('  <a>b</a>');
+    assert ('blanks + xml' : json_getStr(pDoc : '/a') = 'b');
     json_delete(pDoc);
 
 end-proc;

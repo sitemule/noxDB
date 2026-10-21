@@ -250,6 +250,7 @@ PUCHAR jx_GetChar(PJXCOM pJxCom)
 {
 
    if (pJxCom->pWorkBuf == NULL) {
+      pJxCom->State = XML_EXIT; // nothing to read - else the parser loops (#138)
       return "";
    } else if (*pJxCom->pWorkBuf == '\0') {
       pJxCom->State = XML_EXIT;

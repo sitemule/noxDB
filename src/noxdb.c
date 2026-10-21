@@ -1917,6 +1917,18 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
 
    // Peek the first, t0 detect the encoding
    Buf = detectEncoding(pJxCom, Buf);
+
+   // Nothing to parse - only blanks, or no { [ " ' < before the end of the
+   // string: empty, like an empty string. The parser must never get a NULL
+   // buffer (it looped in jx_ParseXml, #138)
+   if (Buf == NULL) {
+      memFree (&pJxCom);
+      InputCcsid = 0;
+      OutputCcsid = 0;
+      jx_SetDelimiters2(&storeDelimiters);
+      return NULL;
+   }
+
    if (pJxCom->UseIconv) {
       int inlen;
       int templen;
