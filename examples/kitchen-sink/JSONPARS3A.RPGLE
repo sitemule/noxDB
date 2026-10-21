@@ -5,7 +5,7 @@
 
         //------------------------------------------------------------- *
 
-        /include 'headers/JSONPARSER.rpgle'
+        /include 'headers/noxDbUtf8.rpgle'
         Dcl-S pJson        Pointer;
         Dcl-S pNode        Pointer;
         Dcl-S pArr         Pointer;

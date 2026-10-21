@@ -6,7 +6,7 @@
         
         //------------------------------------------------------------- *
 
-        /include 'headers/XMLPARSER.rpgle'
+        /include 'headers/noxDbUtf8.rpgle'
         /include qAspHdr,ICEUTILITY
         Dcl-S pXml         Pointer;
         Dcl-S msg          Varchar(50);

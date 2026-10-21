@@ -13,7 +13,7 @@
         Dcl-S numbers      Packed(11:2);
         Dcl-S dates        Date;
         Dcl-S msg          Varchar(512);
-      /include 'headers/JSONPARSER.rpgle'
+      /include 'headers/noxDbUtf8.rpgle'
 
         // Open our SQL cursor. Use a simple select
         sqlhnd  = nox_sqlOpen(

@@ -5,7 +5,7 @@
 
         //------------------------------------------------------------- *
 
-        /include xmlParser
+        /include 'headers/noxDbUtf8.rpgle'
         Dcl-S pXml         Pointer;
         Dcl-S pA           Pointer;
         Dcl-S lCount       Int(10);

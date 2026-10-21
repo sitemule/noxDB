@@ -5,7 +5,7 @@
 
         //------------------------------------------------------------- *
 
-        /include 'headers/JSONPARSER.rpgle'
+        /include 'headers/noxDbUtf8.rpgle'
         Dcl-S pRow         Pointer;
         Dcl-S sqlHnd       Pointer;
         Dcl-S text         Varchar(512);

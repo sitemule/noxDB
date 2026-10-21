@@ -5,7 +5,7 @@
 
         //------------------------------------------------------------- *
 
-        /include 'headers/JSONPARSER.rpgle'
+        /include 'headers/noxDbUtf8.rpgle'
         Dcl-S pJson        Pointer;
         Dcl-S msg          Varchar(50);
         Dcl-S s            Varchar(50);
