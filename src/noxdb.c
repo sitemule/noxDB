@@ -3591,8 +3591,10 @@ VARCHAR jx_GetStrJoinVC(PJXNODE pNodeRoot, PUCHAR NameP, PUCHAR DefaultP , PUCHA
 PUCHAR jx_GetValueStr (PUCHAR value , PJXNODE pNode , PUCHAR nameP, PUCHAR  defaultP)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PUCHAR   dftval   =  (pParms->OpDescList->NbrOfParms >= 4) ? defaultP : "";
-   PUCHAR   name     =  (pParms->OpDescList->NbrOfParms >= 3) ? nameP    : "";
+   // from "C" without descriptors: all parameters are given
+   BOOL     allParms =  pParms->OpDescList == NULL;
+   PUCHAR   dftval   =  (allParms || pParms->OpDescList->NbrOfParms >= 4) ? defaultP : "";
+   PUCHAR   name     =  (allParms || pParms->OpDescList->NbrOfParms >= 3) ? nameP    : "";
 
    PUCHAR  pValue;
 
@@ -3608,16 +3610,18 @@ PUCHAR jx_GetValueStr (PUCHAR value , PJXNODE pNode , PUCHAR nameP, PUCHAR  defa
 PVARCHAR jx_GetValuePVC (PVARCHAR value , PJXNODE pNode , PUCHAR nameP, PUCHAR  defaultP)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PUCHAR   dftval   =  (pParms->OpDescList->NbrOfParms >= 4) ? defaultP : "";
-   PUCHAR   name     =  (pParms->OpDescList->NbrOfParms >= 3) ? nameP    : "";
+   // from "C" without descriptors: all parameters are given
+   BOOL     allParms =  pParms->OpDescList == NULL;
+   PUCHAR   dftval   =  (allParms || pParms->OpDescList->NbrOfParms >= 4) ? defaultP : "";
+   PUCHAR   name     =  (allParms || pParms->OpDescList->NbrOfParms >= 3) ? nameP    : "";
 
    PUCHAR  pValue;
 
    pValue = jx_GetValuePtr    (pNode , name , NULL ) ;
    if (pValue == NULL) {
-      str2vc ( &value , dftval);
+      str2vc ( value , dftval);
    } else {
-      str2vc(  &value , pValue);
+      str2vc(  value , pValue);
 
    }
    return value;
