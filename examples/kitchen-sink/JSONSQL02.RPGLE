@@ -37,12 +37,12 @@
         // NOTE!! Start from row 10 and read ahead
         pRow  = nox_sqlFetchRelative(sqlhnd: 10);
         dow (pRow <> *NULL) ;
-           ints    = nox_getNum (pRow : 'PRODKEY');
+           ints    = nox_GetInt (pRow : 'PRODKEY');
            text    = nox_getStr (pRow : 'PRODID');
            text    = nox_getStr (pRow : 'DESC');
            text    = nox_getStr (pRow : 'MANUID');
-           numbers = nox_getNum (pRow : 'PRICE');
-           ints    = nox_getNum (pRow : 'STOCKCNT');
+           numbers = nox_GetDec (pRow : 'PRICE');
+           ints    = nox_GetInt (pRow : 'STOCKCNT');
            dates   = %date(nox_getStr (pRow : 'STOCKDATE'));
 
            // When done with the row then always dispose it. Otherwise you will have a memory leak

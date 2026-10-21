@@ -21,8 +21,8 @@
            return;
         endif;
         // Get number of entries in arrays
-        i     = nox_getNum  (pJson : '/a[UBOUND]': -1 );
-        i     = nox_getNum  (pJson : 'a[UBOUND]' : -1 );
+        i     = nox_GetInt  (pJson : '/a[UBOUND]': -1 );
+        i     = nox_GetInt  (pJson : 'a[UBOUND]' : -1 );
         s     = nox_getStr  (pJson : '/a[0]'     : 'N/A' );
 
         // 0 in the root is the "a" object. Bothe works

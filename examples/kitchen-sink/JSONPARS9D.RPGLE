@@ -32,7 +32,7 @@
         list = nox_setRecursiveIterator(pJson);
         dow nox_ForEach(list);
            if ('id' = nox_getName (list.this));
-              id = nox_getNum     (list.this);
+              id = nox_GetInt     (list.this);
               index(id) = nox_getParent(list.this);
               if maxid < id;
                  maxid = id;

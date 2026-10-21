@@ -16,7 +16,7 @@
         pJson = nox_ParseString ('[1,2,3]');
 
         // Get number of entries in arrays
-        i     = nox_getNum       (pJson : '/[UBOUND]': -1 );
+        i     = nox_GetInt       (pJson : '/[UBOUND]': -1 );
         s     = nox_getStr       (pJson : '/[0]'     : 'N/A' );
         s     = nox_getStr       (pJson : '[1]'      : 'N/A' );
 

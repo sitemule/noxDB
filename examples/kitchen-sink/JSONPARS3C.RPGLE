@@ -30,18 +30,18 @@
         aCount = nox_getLength(pA);
 
         // Direct with expression
-        aCount = nox_getNum(pJson : 'a[UBOUND]');
+        aCount = nox_GetInt(pJson : 'a[UBOUND]');
 
         // Relative
         pA = nox_locate(pJson : 'a');
-        aCount = nox_getNum(pA : '[UBOUND]');
+        aCount = nox_GetInt(pA : '[UBOUND]');
 
         // Direct
-        bCount = nox_getNum(pJson : 'b[UBOUND]');
+        bCount = nox_GetInt(pJson : 'b[UBOUND]');
 
         // Relative
         pB = nox_locate(pJson : 'b');
-        bCount = nox_getNum(pB : '[UBOUND]');
+        bCount = nox_GetInt(pB : '[UBOUND]');
 
         nox_Close(pJson);
         *inlr = *on;

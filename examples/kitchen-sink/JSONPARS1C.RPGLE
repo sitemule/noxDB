@@ -29,10 +29,10 @@
         endif;
 
         pNode = Nox_locate(pJson: '/o/n');
-        n     = Nox_getNum(pNode);
+        n     = nox_GetDec(pNode);
 
         pNode = Nox_locate(pJson: '/a[1]');
-        n     = Nox_GetNum (pNode);
+        n     = nox_GetDec (pNode);
 
         pNode = Nox_locate(pJson: '/s');
         value = Nox_getStr(pNode);
@@ -41,12 +41,12 @@
         value = Nox_getStr(pNode);
 
         pNode = Nox_locate(pJson: '/o/a[2]');
-        n     = Nox_GetNum(pNode);
+        n     = nox_GetDec(pNode);
 
         // Loop on the array
         pArr  = Nox_locate(pJson: '/o/a[0]'); // First array element
         dow (pArr <> *NULL) ;
-          n     = Nox_GetNum (pArr);
+          n     = nox_GetDec (pArr);
           pArr  = Nox_GetNext(pArr);
         endDo;
 
@@ -65,7 +65,7 @@
         value = Nox_GetStr (pNode : 'n');   // This is "n" in "o"
 
         // Get number of entries in arrays
-        n  = Nox_GetNum(pJson : '/o/a[UBOUND]': -1 );
+        n  = nox_GetInt(pJson : '/o/a[UBOUND]': -1 );
 
         Nox_dump(pJson);
         Nox_Close(pJson);

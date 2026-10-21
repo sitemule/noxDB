@@ -27,7 +27,7 @@
            return;
         endif;
 
-        n  = nox_getNum(pXml : 'invoices/invoice[UBOUND]');
+        n  = nox_GetInt(pXml : 'invoices/invoice[UBOUND]');
         for i=0  to n -1;
             dc = nox_getStr(pXml :
                'invoices/invoice[' + %char(i)  +']/Header/DistChannel'

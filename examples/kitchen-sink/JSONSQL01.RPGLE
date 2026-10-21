@@ -32,12 +32,12 @@
         // Now iterate on each row in the resultset
         pRow = nox_sqlFetchNext(sqlhnd);
         dow (pRow <> *NULL );
-           ints    = nox_getNum (pRow : 'PRODKEY');
+           ints    = nox_GetInt (pRow : 'PRODKEY');
            text    = nox_getStr (pRow : 'PRODID');
            text    = nox_getStr (pRow : 'DESC');
            text    = nox_getStr (pRow : 'MANUID');
-           numbers = nox_getNum (pRow : 'PRICE');
-           ints    = nox_getNum (pRow : 'STOCKCNT');
+           numbers = nox_GetDec (pRow : 'PRICE');
+           ints    = nox_GetInt (pRow : 'STOCKCNT');
            dates   = %date(nox_getStr (pRow : 'STOCKDATE'));
            nox_Delete(pRow); // Always dispose it before get the next
            pRow = nox_sqlFetchNext(sqlhnd);

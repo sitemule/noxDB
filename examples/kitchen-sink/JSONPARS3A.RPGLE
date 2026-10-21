@@ -29,7 +29,7 @@
 
 
         // Get number of entries in arrays
-        i     = nox_getNum       (pJson : '/[UBOUND]': -1 );
+        i     = nox_GetInt       (pJson : '/[UBOUND]': -1 );
         s     = nox_getStr       (pJson : '/[0]/s1'  : 'N/A' );
         s     = nox_getStr       (pJson : '/[1]/s2'  : 'N/A' );
 

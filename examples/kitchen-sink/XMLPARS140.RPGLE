@@ -24,17 +24,17 @@
         ');
 
         // Count number of l and k tags
-        lCount = nox_getNum(pXml : '/a/l[UBOUND]');
-        kCount = nox_getNum(pXml : '/a/k[UBOUND]');
+        lCount = nox_GetInt(pXml : '/a/l[UBOUND]');
+        kCount = nox_GetInt(pXml : '/a/k[UBOUND]');
 
         // relative Count number of l and k tags
         pA = nox_locate(pXml : '/a');
-        lCount = nox_getNum(pA   : 'l[UBOUND]');
-        kCount = nox_getNum(pA   : 'k[UBOUND]');
+        lCount = nox_GetInt(pA   : 'l[UBOUND]');
+        kCount = nox_GetInt(pA   : 'k[UBOUND]');
 
         // relative Count number childrens of a
         pA = nox_locate(pXml : '/a');
-        countChildren  =   nox_getNum(pA  : '[UBOUND]');
+        countChildren  =   nox_GetInt(pA  : '[UBOUND]');
 
         nox_Close(pXml);
         *inlr = *on;

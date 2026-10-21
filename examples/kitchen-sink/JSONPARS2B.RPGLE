@@ -33,15 +33,15 @@
         endif;
         
         pNode = NOX_locate(pJson: '/PRICE');
-        price = NOX_getNum(pNode);
+        price = nox_GetDec(pNode);
 
         // Or in one line
-        price = nox_getNum(pJson: '/price' : 0);
+        price = nox_GetDec(pJson: '/price' : 0);
 
         // Online showin with / without  default will return 0 or blank
-        price = nox_getNum       (pJson: '/priceJohn': -1);
+        price = nox_GetDec       (pJson: '/priceJohn': -1);
         value = nox_getStr       (pJson: '/priceJohn': 'N/A');
-        price = nox_getNum       (pJson: '/priceJohn');
+        price = nox_GetDec       (pJson: '/priceJohn');
         value = nox_getStr       (pJson: '/priceJohn');
 
 

@@ -32,14 +32,14 @@
 
         // Locate and return the value:
         pNode = Nox_Locate(pJson: '/price');
-        price = Nox_GetNum(pNode);
+        price = nox_GetDec(pNode);
 
         // Or in one go:
-        price = Nox_GetNum(pJson: '/price');
+        price = nox_GetDec(pJson: '/price');
         text  = Nox_GetStr(pJson: '/text');
 
         // Or in one go - with deafults if not found
-        id    = Nox_GetNum(pJson: '/id'  : -1 );
+        id    = nox_GetInt(pJson: '/id'  : -1 );
         text  = Nox_GetStr(pJson: '/desc': 'N/A');
 
         // Use ither / or . as you like. It is the same..
