@@ -1035,10 +1035,32 @@ void jx_Dump(PJXNODE  pNode)
    printf("\n") ;
 }
 // ---------------------------------------------------------------------------
+// p points at a null: is it the high byte of a BOM-less big-endian Unicode
+// character that starts (or continues) a document - [0x00][< { [ " or blank]
+// followed by the next character's high byte 0x00? Otherwise the null ends
+// the string: an RPG varchar passed with options(*string) gets only ONE
+// null, and whatever follows it is not ours to read as data.
+// ---------------------------------------------------------------------------
+static BOOL isUnicodeBeNull (PUCHAR p)
+{
+  switch (*(p+1)) {
+    case 0x3c: // <
+    case 0x7b: // {
+    case 0x5b: // [
+    case 0x22: // "
+    case 0x20: // blank
+    case 0x09: // tab
+    case 0x0a: // lf
+    case 0x0d: // cr
+      return *(p+2) == 0x00;
+  }
+  return FALSE;
+}
+// ---------------------------------------------------------------------------
 PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
 {
   UCHAR  e2aTbl [256];
-  UCHAR  buf [128];
+  UCHAR  buf [131]; // 128 peeked + null, and two nulls isUnicodeBeNull may look at
   PUCHAR p, outbuf;
   int i;
   BOOL done = FALSE;
@@ -1058,6 +1080,7 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
 
   // need temp version since it is modified
   substr ( buf, pIn , 128);
+  buf[129] = buf[130] = '\0'; // so the scan below always ends within buf
 
   if (buf [0] == 0xef && buf[1] == 0xbb && buf [2] == 0xbf) { // utf8
      InputCcsid = 1208;
@@ -1145,10 +1168,9 @@ PUCHAR detectEncoding(PJXCOM pJxCom, PUCHAR pIn)
       #pragma convert(0)
       case  '\0' :
         // Could be a real end-of-buffer, or the high byte of a big-endian
-        // Unicode character sitting mid-scan (both nulls of a genuine
-        // terminator are adjacent - a lone null with real content right
-        // after it is not one). Keep scanning in the latter case.
-        if (*(p+1) != '\0') {
+        // Unicode character sitting mid-scan. Keep scanning only in the
+        // latter case - see isUnicodeBeNull
+        if (isUnicodeBeNull(p)) {
           break;
         }
         InputCcsid = 0; // Empty string; build from scratch XML
@@ -1876,11 +1898,11 @@ PJXNODE jx_ParseString(PUCHAR Buf, PUCHAR pOptions)
    // Asume OK
    jxError = false;
 
-   // Buf[0]=='\0' alone is not "empty" - it's also the high byte of a
-   // BOM-less big-endian Unicode character (e.g. '<' in UTF-16BE is
-   // [0x00]['<']). Real empty input is null-terminated twice, matching how
-   // every caller (jx_ParseFile's pStreamBuf, RPG's +x'00') pads buffers.
-   if (Buf == NULL || (*Buf == '\0' && *(Buf+1) == '\0') ) {
+   // Buf[0]=='\0' is empty - unless it is the high byte of a BOM-less
+   // big-endian Unicode character (e.g. '<' in UTF-16BE is [0x00]['<']).
+   // Not "null-terminated twice": an RPG varchar passed with options(*string)
+   // ends with ONE null, and the bytes after it are anything
+   if (Buf == NULL || (*Buf == '\0' && ! isUnicodeBeNull(Buf)) ) {
        return NULL;
    }
    // Is it already a object graph, then return it
