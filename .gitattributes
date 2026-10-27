@@ -2,7 +2,7 @@
 # git config core.eol lf
 # git config core.autocrlf input
 # Set the default behavior, in case people don't have core.autocrlf set.
-* text=auto
+* text=auto eol=lf
 
 # Definitively text files
 *.txt text
