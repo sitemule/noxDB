@@ -305,6 +305,14 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP, int targetCcsi
 	pStream = stream_new (4096);
 	pStream->writer  = jx_memWriter;
 	pStream->handle = pjWrite = jx_newWriter();
+	if (resolvedCcsid != 0) { // the [ ] { } \ " of the target ccsid, set above
+		pjWrite->braBeg    = BraBeg;
+		pjWrite->braEnd    = BraEnd;
+		pjWrite->curBeg    = CurBeg;
+		pjWrite->curEnd    = CurEnd;
+		pjWrite->backSlash = BackSlash;
+		pjWrite->quote     = Quot;
+	}
 	pjWrite->buf = buf;
 	pjWrite->doTrim = true;
 	pjWrite->maxSize =   pParms->OpDescList == NULL
@@ -371,17 +379,14 @@ PJWRITE jx_newWriter ()
 {
 	PJWRITE pjWrite = malloc (sizeof(JWRITE));
 	memset(pjWrite , 0 , sizeof(JWRITE) - sizeof(pjWrite->filler));
-	// Was its own independent XlateBufferQ(...,1252,0) - always targeting
-	// "current job ccsid" (the 0 sentinel) regardless of what ccsid the
-	// caller actually wants. Now reads whatever jx_setDelimitersByCcsid()
-	// last configured, so an explicit targetCcsid (see jx_AsJsonTextMem)
-	// applies here too instead of being silently overridden.
-	pjWrite->braBeg    = BraBeg;
-	pjWrite->braEnd    = BraEnd;
-	pjWrite->curBeg    = CurBeg;
-	pjWrite->curEnd    = CurEnd;
-	pjWrite->backSlash = BackSlash;
-	pjWrite->quote     = Quot;
+	// The JSON is written in the current job ccsid - not with the delimiters
+	// of the moment: those are for parsing paths, and a caller may have set
+	// them to another ccsid with jx_SetDelimiters() (IceBreak and programs
+	// compiled in 277 in a job of 285 or 1148 wrote [ ] { } in 277 since ddce225, #140).
+	// An explicit targetCcsid is applied by jx_AsJsonTextMem after this.
+	#pragma convert(1252)
+	XlateBufferQ(&pjWrite->braBeg , "[]{}\\\"" , 6, 1252 ,0 );
+	#pragma convert(0)
 	return pjWrite;
 }
 /* ---------------------------------------------------------------------------
