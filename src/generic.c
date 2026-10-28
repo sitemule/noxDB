@@ -43,6 +43,7 @@ PUCHAR c2s(UCHAR c)
    return s;
 }
 /* ------------------------------------------------------------- */
+#pragma convert(1252)
 UCHAR hex (UCHAR c)
 {
    if (c >= '0' && c <= '9') {
@@ -55,6 +56,7 @@ UCHAR hex (UCHAR c)
       return (c - 'a' + 10);
    }
 }
+#pragma convert(0)
 /* --------------------------------------------------------------------------- */
 PUCHAR findchr (PUCHAR base , PUCHAR chars, SHORT charslen)
 {
@@ -252,6 +254,7 @@ int unicode2utf8 (PUCHAR out, USHORT c)
    return tmp - out;
 }
 /* -------------------------------------------------------------*/
+#pragma convert(1252)
 int parsehex(UCHAR c)
 {
     if (c >= '0' && c <= '9') return ( c - '0');
@@ -259,4 +262,5 @@ int parsehex(UCHAR c)
     if (c >= 'a' && c <= 'f') return ( c - 'a' + 10);
     return 0;
 }
+#pragma convert(0)
 
