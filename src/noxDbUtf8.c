@@ -52,7 +52,9 @@ __thread BOOL  jxError = false;
 __thread BOOL  doTrim;
 __thread PNOXCOM pJxCom;
 __thread BOOL   debugger = false;
+#pragma convert(1252)
 __thread UCHAR  nox_DecPoint = '.';
+#pragma convert(0)
 #ifdef ISO_TIMESTAMP_DEFAULT
 __thread LGL   isoTimestamp = ON;
 #else
@@ -2512,6 +2514,7 @@ PNOXNODE nox_GetNodeVC  (PNOXNODE pNode, PLVARCHAR pName)
 }
 // ---------------------------------------------------------------------------
 
+#pragma convert(1252)
 LGL nox_Has  (PNOXNODE pNode, PUCHAR Name)
 {
    PNOXNODE p = nox_GetNode  (pNode, Name);
@@ -2522,12 +2525,14 @@ LGL nox_Has  (PNOXNODE pNode, PUCHAR Name)
    }
    return (ON );
 }
+#pragma convert(0)
 LGL nox_HasVC  (PNOXNODE pNode, PLVARCHAR  pName)
 {
    return nox_Has  (pNode, plvc2str(pName));
 }
 // ---------------------------------------------------------------------------
 
+#pragma convert(1252)
 LGL nox_IsTrue  (PNOXNODE pNode, PUCHAR Name)
 {
    PNOXNODE p = nox_GetNode  (pNode, Name);
@@ -2540,6 +2545,7 @@ LGL nox_IsTrue  (PNOXNODE pNode, PUCHAR Name)
    }
    return (ON );
 }
+#pragma convert(0)
 LGL nox_IsTrueVC  (PNOXNODE pNode, PLVARCHAR  pName)
 {
    return nox_IsTrue  (pNode, plvc2str(pName));
