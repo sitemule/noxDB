@@ -600,6 +600,10 @@ void nox_GetValueStrVC(
    PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR NameP, PLVARCHAR DefaultP);
 #pragma descriptor ( void nox_GetValueStrVC     (void))
 
+void nox_GetStrJoinVC(
+   PLVARCHAR pRes, PNOXNODE pNodeRoot, PLVARCHAR NameP, PLVARCHAR DefaultP);
+#pragma descriptor ( void nox_GetStrJoinVC      (void))
+
 FIXEDDEC nox_GetValueNum (
    PNOXNODE pNode, PUCHAR Name , FIXEDDEC dftParm);
 #pragma descriptor ( void nox_GetValueNum    (void))

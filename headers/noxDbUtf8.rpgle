@@ -944,10 +944,9 @@ End-PR;
 // @param (input) Node
 // @param (input) Node path expression to the array node (default: current node)
 // @param (input) Default value
-// @param (input) Delimiter variable length string
 // @return String with all values from the array nodes
 ///
-Dcl-PR nox_GetStrJoin Like(NOX_UTF8) extproc(*CWIDEN : 'nox_GetStrJoinVC');
+Dcl-PR nox_GetStrJoin Like(NOX_UTF8) rtnparm extproc(*CWIDEN : 'nox_GetStrJoinVC');
   pNode          Pointer    value;
   Expression     Like(NOX_UTF8_1K) const options(*nopass:*varsize);
   Defaultvalue   Like(NOX_UTF8) const options(*nopass:*varsize);
