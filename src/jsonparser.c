@@ -239,7 +239,9 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, NOX_NODETYPE state,  PUCHAR name , PNOXNO
          } else if (state == NOX_ROOT) {
             nox_setRootNode( pCurNode, t);
             return FALSE;
+         #pragma convert(1252)
          } else if (memBeginsWith(t.data, NULLSTR) && t.isLiteral) {
+         #pragma convert(0)
             pNewNode = nox_NodeInsertNew (pCurNode, NOX_RL_LAST_CHILD, name , NULL , NOX_VALUE);
          } else {
             pNewNode = nox_NodeInsertNew (pCurNode, NOX_RL_LAST_CHILD, name , t.data , NOX_VALUE);
