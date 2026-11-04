@@ -64,7 +64,7 @@ endif
 
 TS := $(shell date +'%F-%H.%M.%S' )
 
-all:  $(BIN_LIB).lib link hdr githash jsonxml.srvpgm jsonxml.bnddir
+all:  $(BIN_LIB).lib link hdr githash jsonxml.srvpgm jsonxml.bnddir jsonparser.bnddir xmlparser.bnddir
 
 jsonxml.srvpgm: initialize.cpp noxdb.c sqlio.c sqlwrapper.c xmlparser.c xmlserial.c jsonparser.c serializer.c reader.c segments.c iterator.c datagen.c datainto.c http.c generic.c loadpgm.c callproc.c finger.c trace.clle githash.c ext/mem001.c ext/parms.c ext/sndpgmmsg.c ext/stream.c ext/timestamp.c ext/trycatch.c ext/utl100.c ext/varchar.c ext/xlate.c ext/rtvsysval.c jsonxml.bnddir noxdb.bnddir
 
