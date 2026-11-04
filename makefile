@@ -149,9 +149,9 @@ noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/syscoln
 		--flags="MODULE($(MODULES)) ALWLIBUPD(*YES) TGTRLS($(TARGET_RELEASE)) DETAIL(*BASIC)"
 
 noxDbUtf8.bnddir:
-	-system "DLTBNDDIR  BNDDIR($(BIN_LIB)/$(BIN_LIB))"
-	-system "CRTBNDDIR  BNDDIR($(BIN_LIB)/$(BIN_LIB))"
-	-system "ADDBNDDIRE BNDDIR($(BIN_LIB)/$(BIN_LIB)) OBJ(($(BIN_LIB)/$(BIN_LIB) *SRVPGM))"
+	-system "DLTBNDDIR  BNDDIR($(BIN_LIB)/NOXDBUTF8)"
+	-system "CRTBNDDIR  BNDDIR($(BIN_LIB)/NOXDBUTF8)"
+	-system "ADDBNDDIRE BNDDIR($(BIN_LIB)/NOXDBUTF8) OBJ((*LIBL/NOXDBUTF8 *SRVPGM))"
 
 
 hdr:
