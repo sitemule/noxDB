@@ -82,9 +82,9 @@ noxdb2.srvpgm: hdr src/noxDB2.c src/sqlio.c src/csv.c src/xmlparser.c src/jsonpa
 		--flags="MODULE($(MODULES)) ALWLIBUPD(*YES) TGTRLS($(TARGET_RELEASE)) DETAIL(*BASIC)"
 
 noxdb2.bnddir: 
-	-system "DLTBNDDIR  BNDDIR($(BIN_LIB)/$(BIN_LIB))"
-	-system "CRTBNDDIR  BNDDIR($(BIN_LIB)/$(BIN_LIB))"
-	-system "ADDBNDDIRE BNDDIR($(BIN_LIB)/$(BIN_LIB)) OBJ(($(BIN_LIB)/$(BIN_LIB) *SRVPGM))"
+	-system "DLTBNDDIR  BNDDIR($(BIN_LIB)/NOXDB2)"
+	-system "CRTBNDDIR  BNDDIR($(BIN_LIB)/NOXDB2)"
+	-system "ADDBNDDIRE BNDDIR($(BIN_LIB)/NOXDB2) OBJ((*LIBL/NOXDB2 *SRVPGM))"
 
 
 hdr:
