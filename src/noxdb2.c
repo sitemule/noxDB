@@ -40,6 +40,7 @@
 #include "streamer.h"
 #include "noxdb2.h"
 #include "e2aa2e.h"
+#include "sndpgmmsg.h"
 
 // Global thread vars
 __thread UCHAR jxMessage[512];
@@ -1683,7 +1684,9 @@ PNOXNODE nox_ParseFile(PUCHAR FileName)
 
 	f  = fopen(strTrim(FileName), "rb");
 	if (f  == NULL) {
-		nox_SetMessage( "File %s not open: %s", FileName, strerror(errno));
+		int err = errno;
+		nox_SetMessage( "File %s not open: %s", FileName, strerror(err));
+		joblog ( "%s" , jxMessage);
 		jxError = true;
 		return NULL;
 	}
