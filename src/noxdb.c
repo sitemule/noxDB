@@ -20,7 +20,7 @@
 #include <decimal.h>
 #include <wchar.h>
 #include <QMHSNDPM.h>
-// #include <errno.h>
+#include <errno.h>
 
 #include <sys/stat.h>
 #include "ostypes.h"
@@ -2097,7 +2097,9 @@ PJXNODE jx_ParseFile(PUCHAR FileName, PUCHAR pOptions)
 
    f  = fopen(strTrim(FileName), "rb");
    if (f  == NULL) {
-      jx_SetMessage( "File %s not open", FileName);
+      int err = errno;
+      jx_SetMessage( "File %s not open: %s", FileName, strerror(err));
+      jx_joblog ( "%s" , jxMessage);
       jxError = true;
       return NULL;
    }
