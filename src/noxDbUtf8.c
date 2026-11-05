@@ -42,6 +42,7 @@
 #define NOX_BUILD
 #include "noxDbUtf8.h"
 #include "e2aa2e.h"
+#include "sndpgmmsg.h"
 #include "timestamp.h"
 
 // Global thread vars
@@ -1789,7 +1790,9 @@ PNOXNODE nox_ParseFile(PUCHAR FileName)
 
    f  = fopen(strTrim(FileName), "rb");
    if (f  == NULL) {
-      nox_SetMessage( "File %s not open: %s", FileName, strerror(errno));
+      int err = errno;
+      nox_SetMessage( "File %s not open: %s", FileName, strerror(err));
+      joblog ( "%s" , jxMessage);
       jxError = true;
       return NULL;
    }
