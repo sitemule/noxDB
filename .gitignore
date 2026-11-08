@@ -15,3 +15,6 @@ test/out/*
 testout/*
 .claude/rules/blueprint-mcp.instructions.md
 .github/instructions/blueprint-mcp.instructions.md
+# written by the blueprint-mcp server on every start - not part of this repo
+.claude/rules/blueprint-mcp.instructions.md
+.github/instructions/blueprint-mcp.instructions.md
