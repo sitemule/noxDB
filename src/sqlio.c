@@ -1512,6 +1512,374 @@ LGL nox_sqlExecVC(PNOX_SQLCONNECT pCon,PLVARCHAR sqlstmt , PNOXNODE pSqlParmsP)
    return nox_sqlExec(pCon, plvc2str(sqlstmt) , pSqlParms);
 }
 /* ------------------------------------------------------------- */
+/* nox_sqlCall - call a stored procedure (ported from the classic */
+/* noxDB jx_sqlCall)                                              */
+/* ------------------------------------------------------------- */
+// Parameter metadata of a qualified procedure (schema.procedure), one row
+// per parameter, names in system case (PARAMETER_NAME ...)
+static PNOXNODE procedureMeta (PNOX_SQLCONNECT pCon, PUCHAR procedureName)
+{
+   UCHAR  sqlStmt [2048];
+   UCHAR  schema [129];
+   UCHAR  procedure [257];
+   PUCHAR split = strchr(procedureName , '.');
+
+   if (split == NULL
+   ||  split - procedureName >= sizeof(schema)
+   ||  strlen(split + 1)     >= sizeof(procedure)) return NULL;
+
+   substr (schema    , procedureName , split - procedureName);
+   strcpy (procedure , split + 1);
+
+   // Note: no CTE / subquery on the catalog views - on 7.3 that takes minutes;
+   // the implementations are counted by the caller from SPECIFIC_NAME
+   strjoin (sqlStmt,
+      "select "
+         "a.specific_name specific_name,"
+         "parameter_mode,"
+         "parameter_name,"
+         "data_type,"
+         "numeric_scale,"
+         "numeric_precision,"
+         "character_maximum_length,"
+         "data_type_name,"
+         "max(ifnull(numeric_precision , 0) + 2, ifnull(character_maximum_length,0)) buffer_length "
+      "from qsys2.sysprocs a "          // qualified: any job, any library list
+      "left join qsys2.sysparms b "
+      "on a.specific_schema = b.specific_schema and a.specific_name = b.specific_name "
+      "where a.routine_schema = upper('", schema, "') "
+      "and   a.routine_name   = upper('", procedure, "') "
+      "order by a.specific_name, b.ordinal_position"
+   );
+   return nox_sqlResultSet(pCon, sqlStmt, NULL, NOX_SYSTEM_CASE, 1, NOXDB_MAX_PARMS);
+}
+// ------------------------------------------------------------- */
+static SQLSMALLINT text2parmtype (PUCHAR mode)  {
+   if  (0 == strcmp (mode , "IN"))  return SQL_PARAM_INPUT;
+   if  (0 == strcmp (mode , "OUT")) return SQL_PARAM_OUTPUT;
+   return SQL_PARAM_INPUT_OUTPUT;
+}
+// ------------------------------------------------------------- */
+static SQLSMALLINT textType2SQLtype (PUCHAR parmType)  {
+   if  (0 == strcmp (parmType , "CHARACTER"))             return(SQL_CHAR);
+   if  (0 == strcmp (parmType , "CHARACTER VARYING"))     return(SQL_VARCHAR);
+   if  (0 == strcmp (parmType , "INTEGER"))               return(SQL_INTEGER);
+   if  (0 == strcmp (parmType , "TIMESTAMP"))             return(SQL_TIMESTAMP);
+   if  (0 == strcmp (parmType , "BIGINT"))                return(SQL_BIGINT);
+   if  (0 == strcmp (parmType , "DECIMAL"))               return(SQL_DECIMAL);
+   if  (0 == strcmp (parmType , "SMALLINT"))              return(SQL_SMALLINT);
+   if  (0 == strcmp (parmType , "DATE"))                  return(SQL_DATE);
+   if  (0 == strcmp (parmType , "TIME"))                  return(SQL_TIME);
+   if  (0 == strcmp (parmType , "REAL"))                  return(SQL_REAL);
+   if  (0 == strcmp (parmType , "NUMERIC"))               return(SQL_NUMERIC);
+   if  (0 == strcmp (parmType , "DOUBLE PRECISION"))      return(SQL_DOUBLE);
+   if  (0 == strcmp (parmType , "BOOLEAN"))               return(SQL_BOOLEAN);
+   return(SQL_VARCHAR); // Unsupported type: let the database convert from text
+}
+// ------------------------------------------------------------- */
+static LONG currentLength (PNOX_PROCPARM p, LONG length)
+{
+   if (p->mode == SQL_PARAM_INPUT
+   ||  p->mode == SQL_PARAM_INPUT_OUTPUT) {
+      return (p->pData == NULL) ? SQL_NULL_DATA : length;
+   }
+   return length;
+}
+// ------------------------------------------------------------- */
+// The input parameter by name - not case sensitive (node_Id = NODE_ID)
+static PNOXNODE findParm (PNOXNODE pInParms, PUCHAR name)
+{
+   PNOXNODE pNode;
+   if (pInParms == NULL) return NULL;
+   for (pNode = pInParms->pNodeChildHead; pNode; pNode = pNode->pNodeSiblingNext) {
+      PUCHAR a = pNode->Name, b = name;
+      if (a == NULL) continue;
+      for (; *a && *b && a_to_lower(*a) == a_to_lower(*b); a++, b++);
+      if (*a == '\0' && *b == '\0') return pNode;
+   }
+   return NULL;
+}
+// ------------------------------------------------------------- */
+static INT64 a2ll (PUCHAR s)
+{
+   INT64 res = 0;
+   BOOL  sign = TRUE;
+   for (;*s;s++) {
+      if (*s == '-') sign = FALSE;
+      if (*s >= '0' && *s <= '9') res = 10 * res + (*s - '0');
+   }
+   return (sign? res : -res);
+}
+// ------------------------------------------------------------- */
+static double a2f (PUCHAR s)
+{
+   UCHAR temp [64];
+   substr (temp , s , min(strlen(s), sizeof(temp) - 1));
+   stra2e (temp , temp);
+   return atof (temp);
+}
+// ------------------------------------------------------------- */
+// Call a qualified stored procedure (schema.procedure). Input parameters are
+// taken by name from the object pInParms (not case sensitive); input parameters
+// not given are left out of the call, so their defaults apply. Returns an object
+// with the OUT and INOUT parameters (names in lower case), or NULL on error
+// (the message is in nox_Message / nox_GetMessageObject).
+// ------------------------------------------------------------- */
+PNOXNODE nox_sqlCallStr (PNOX_SQLCONNECT pCon, PUCHAR procedureName , PNOXNODE pInParms)
+{
+   PNOXNODE      pResult = NULL;
+   PUCHAR        stmtBuf;
+   PUCHAR        stmt;
+   PNOXNODE      pNode;
+   UCHAR         temp [256];
+   PUCHAR        comma = "";
+   PNOX_SQL      pSQL;
+   int           rc;
+   SQLSMALLINT   i;
+   int           impl;
+   SQLSMALLINT   fCtype;
+   int           numberOfParms = 0;
+   PNOXNODE      pProcMeta = procedureMeta (pCon, procedureName);
+   PNOX_PROCPARM procParms;
+   PNOX_PROCPARM p;
+
+   jxError = false;
+
+   if (pProcMeta == NULL || pProcMeta->pNodeChildHead == NULL) {
+      // jxMessage is in the job CCSID (nox_Message)
+      strjoin (jxMessage , "Procedure " , procedureName , " is not found or not called qualified (schema.procedure)");
+      stra2e  (jxMessage , jxMessage);
+      jxError = true;
+      nox_NodeDelete (pProcMeta);
+      return NULL;
+   }
+
+   // More than one implementation (overloaded): can not decide which to use
+   pNode = pProcMeta->pNodeChildHead;
+   impl  = 1;
+   {
+      PNOXNODE pRow;
+      PUCHAR   first = nox_GetValuePtr (pNode , "SPECIFIC_NAME" , "");
+      for (pRow = pNode->pNodeSiblingNext; pRow; pRow = pRow->pNodeSiblingNext) {
+         if (0 != strcmp (first , nox_GetValuePtr (pRow , "SPECIFIC_NAME" , ""))) impl++;
+      }
+   }
+   if (impl > 1) {
+      strjoin (jxMessage , "Procedure " , procedureName , " has more than one implementation. Can not decide which to use");
+      stra2e  (jxMessage , jxMessage);
+      jxError = true;
+      nox_NodeDelete (pProcMeta);
+      return NULL;
+   }
+
+   procParms = memAllocClear (NOXDB_MAX_PARMS * sizeof(NOX_PROCPARM));
+   stmtBuf   = memAlloc (strlen(procedureName) + 64 + nox_getLength(pProcMeta) * 132);
+   stmt      = stmtBuf;
+   stmt += strjoin (stmt , "call " , procedureName , " (");
+
+   for (i=0; pNode && i < NOXDB_MAX_PARMS; pNode = pNode->pNodeSiblingNext) {
+      PNOXNODE pIn;
+      p = &procParms[i];
+      p->name = nox_GetValuePtr (pNode , "PARAMETER_NAME" , "");
+      if (*p->name == '\0') continue;  // no parameters at all
+      p->mode    = text2parmtype    (nox_GetValuePtr (pNode , "PARAMETER_MODE" , ""));
+      p->sqlType = textType2SQLtype (nox_GetValuePtr (pNode , "DATA_TYPE" , ""));
+      pIn = findParm (pInParms , p->name);
+
+      // Input parameters not given are left out - their default applies
+      if (p->mode == SQL_PARAM_INPUT && pIn == NULL) continue;
+
+      stmt += strjoin (stmt , comma , p->name , "=>?");
+      comma = ",";
+      p->pNode = pNode;
+      p->pData = (pIn && pIn->Value) ? pIn->Value : NULL;
+      i++;
+   }
+   numberOfParms = i;
+   stmt += strjoin (stmt , ")");
+
+   pSQL = nox_sqlNewStatement (pCon, NULL, true, false);
+   rc   = SQLPrepare( pSQL->pstmt->hstmt, stmtBuf, SQL_NTS );
+   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+      check_error (pCon, pSQL); // closes pSQL
+      jxError = true;
+      goto cleanup;
+   }
+
+   for (i=0; i < numberOfParms ; i++) {
+      int    nullterm = 0;
+      LONG   inLen;
+      PUCHAR userType;
+      p = &procParms[i];
+      userType = nox_GetValuePtr (p->pNode , "DATA_TYPE_NAME" , "");
+      p->type   = 0 == a2i (nox_GetValuePtr (p->pNode , "NUMERIC_PRECISION" , "0")) ? NOX_VALUE : NOX_LITERAL;
+      // Pollyfill for BOOLEAN pre 7.5
+      p->isBool = memBeginsWith (userType , "BOOL");
+
+      switch (p->sqlType ) {
+         case SQL_CHAR:
+         case SQL_VARCHAR:
+         case SQL_TIMESTAMP:
+         case SQL_DATE:
+         case SQL_TIME:
+         case SQL_DECIMAL:
+         case SQL_NUMERIC:
+         case SQL_BOOLEAN:
+            fCtype   = SQL_C_CHAR;
+            inLen    = p->pData ? strlen(p->pData) : 0;
+            p->bufLen = a2i (nox_GetValuePtr (p->pNode , "BUFFER_LENGTH" , "0"));
+            // UTF-8: up to 4 bytes per character, and room for what was given
+            p->buffer = memAllocClear (max(p->bufLen * 4 , inLen) + 2);
+            p->inLen  = currentLength (p, inLen);
+            if (p->inLen != SQL_NULL_DATA) {
+               // Pollyfill for BOOLEAN pre 7.5
+               if (p->isBool) {
+                  strcpy (p->buffer , (0 == strcmp (p->pData, "true") ? "1":"0"));
+                  p->inLen = 1;
+               } else {
+                  memcpy (p->buffer , p->pData , inLen);
+               }
+            }
+            p->bufLen = max(p->bufLen * 4 , inLen);
+            nullterm = 1;
+            break;
+         case SQL_SMALLINT:
+            fCtype = SQL_C_SHORT;
+            p->buffer = memAllocClear (sizeof(SHORT));
+            p->inLen  = currentLength (p, p->pData ? sizeof(SHORT):0);
+            p->bufLen = sizeof(SHORT);
+            if (p->pData) * (SHORT *) p->buffer = a2i(p->pData);
+            break;
+         case SQL_INTEGER:
+            fCtype = SQL_C_LONG;
+            p->buffer = memAllocClear (sizeof(LONG));
+            p->inLen  = currentLength (p, p->pData ? sizeof(LONG):0);
+            p->bufLen = sizeof(LONG);
+            if (p->pData) * (LONG *) p->buffer = a2i(p->pData);
+            break;
+         case SQL_BIGINT:
+            fCtype = SQL_C_BIGINT;
+            p->buffer = memAllocClear (sizeof(INT64));
+            p->inLen  = currentLength (p, p->pData ? sizeof(INT64):0);
+            p->bufLen = sizeof(INT64);
+            if (p->pData) * (INT64 *) p->buffer = a2ll(p->pData);
+            break;
+         case SQL_REAL:
+            fCtype = SQL_C_FLOAT;
+            p->buffer = memAllocClear (sizeof(float));
+            p->inLen  = currentLength (p, p->pData ? sizeof(float):0);
+            p->bufLen = sizeof(float);
+            if (p->pData) * (float *) p->buffer = a2f(p->pData);
+            break;
+         case SQL_DOUBLE:
+         default:
+            fCtype = SQL_C_DOUBLE;
+            p->buffer = memAllocClear (sizeof(double));
+            p->inLen  = currentLength (p, p->pData ? sizeof(double):0);
+            p->bufLen = sizeof(double);
+            if (p->pData) * (double *) p->buffer = a2f(p->pData);
+            break;
+      }
+
+      rc = SQLBindParameter (
+         pSQL->pstmt->hstmt,  // hstmt
+         i + 1,               // Parm number
+         p->mode,             // fParamType
+         fCtype ,             // data type here in C
+         p->sqlType == SQL_BOOLEAN ? SQL_CHAR : p->sqlType, // data type in SQL
+         p->bufLen,           // precision / length of the C string
+         0,
+         p->buffer,           // buffer
+         p->bufLen + nullterm,// cbValueMax
+         &p->inLen            // length or null indicator
+      );
+   }
+
+   rc = SQLExecute(pSQL->pstmt->hstmt);
+   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+      check_error (pCon, pSQL); // closes pSQL
+      jxError = true;
+      goto cleanup;
+   }
+
+   pResult = nox_NewObject();
+
+   for (i = 0 ; i < numberOfParms ; i ++) {
+      p = &procParms[i];
+      if (p->mode != SQL_PARAM_OUTPUT && p->mode != SQL_PARAM_INPUT_OUTPUT) continue;
+
+      // json is always in lower ( in this implementation)
+      a_str_to_lower (p->name , p->name);
+
+      if (p->inLen == SQL_NULL_DATA ) {
+         nox_NodeInsertNew (pResult , NOX_RL_LAST_CHILD, p->name , NULL , NOX_LITERAL);
+         continue;
+      }
+
+      switch (p->sqlType) {
+         case SQL_CHAR:
+         case SQL_VARCHAR:
+         case SQL_TIMESTAMP:
+         case SQL_DATE:
+         case SQL_TIME:
+         case SQL_DECIMAL:
+         case SQL_NUMERIC:
+         case SQL_BOOLEAN:
+            if (p->inLen >= 0 && p->inLen <= p->bufLen) p->buffer[p->inLen] = '\0';
+            p->buffer[p->bufLen] = '\0';
+            {  // The CLI pads character output to the buffer size: trim trailing blanks
+               PUCHAR end = p->buffer + strlen(p->buffer);
+               while (end > p->buffer && *(end-1) == ' ') end--;
+               *end = '\0';
+            }
+            if (p->isBool) { // Pollyfill for BOOLEAN pre 7.5
+               nox_SetValueByName(pResult , p->name, (*p->buffer == '1' || *p->buffer == 't') ? "true":"false", NOX_LITERAL);
+            } else {
+               if (p->sqlType == SQL_TIMESTAMP && isoTimestamp == ON) {
+                  ts_ibm2iso8601(p->buffer);
+               }
+               nox_SetValueByName(pResult , p->name, p->buffer , p->type);
+            }
+            break;
+         case SQL_SMALLINT:
+            a_sprintf(temp, "%hd" , * (SHORT *) p->buffer);
+            nox_SetValueByName(pResult , p->name, temp , NOX_LITERAL);
+            break;
+         case SQL_INTEGER:
+            a_sprintf(temp, "%ld" , * (LONG *) p->buffer);
+            nox_SetValueByName(pResult , p->name, temp , NOX_LITERAL);
+            break;
+         case SQL_BIGINT:
+            a_sprintf(temp, "%lld" , * (INT64*) p->buffer);
+            nox_SetValueByName(pResult , p->name, temp , NOX_LITERAL);
+            break;
+         case SQL_REAL:
+         case SQL_DOUBLE:
+         default: {
+            PUCHAR c;
+            double d = p->sqlType == SQL_REAL ? * (float *) p->buffer : * (double *) p->buffer;
+            a_sprintf(temp, "%.10f" , d);
+            for (c = temp; *c; c++) if (*c == ',') *c = '.'; // locale safety
+            nox_SetValueByName(pResult , p->name, temp , NOX_LITERAL);
+            break;
+         }
+      }
+   }
+   nox_sqlClose (&pSQL);
+
+cleanup:
+   for (i = 0 ; i < numberOfParms ; i ++) memFree ((PVOID *) &procParms[i].buffer);
+   memFree ((PVOID *) &procParms);
+   memFree ((PVOID *) &stmtBuf);
+   nox_NodeDelete (pProcMeta);
+   return pResult;
+}
+// RPG: nox_sqlCall (pConnection : procedureName : inputParms)
+PNOXNODE nox_sqlCall (PNOX_SQLCONNECT pCon, PLVARCHAR procedureName , PNOXNODE pInParms)
+{
+   return nox_sqlCallStr (pCon, plvc2str(procedureName) , pInParms);
+}
+/* ------------------------------------------------------------- */
 /* .........
 int getColType(SQLHSTMT hstmt , SHORT col )
 {

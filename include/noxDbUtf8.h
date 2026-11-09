@@ -869,6 +869,8 @@ LGL  nox_sqlExec (
 LGL nox_sqlExecVC(
    PNOX_SQLCONNECT pCon,PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP);
 #pragma descriptor ( void nox_sqlExecVC      (void))
+PNOXNODE nox_sqlCallStr (PNOX_SQLCONNECT pCon, PUCHAR procedureName , PNOXNODE pInParms);
+PNOXNODE nox_sqlCall    (PNOX_SQLCONNECT pCon, PLVARCHAR procedureName , PNOXNODE pInParms);
 
 PNOX_SQLCONNECT  nox_sqlConnect(PNOXNODE pSqlParms  );
 #pragma descriptor ( void nox_sqlConnect    (void))
