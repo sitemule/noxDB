@@ -117,7 +117,7 @@ static int check_error (PNOX_SQLCONNECT pCon, PNOX_SQL pSQL)
    SQLHENV       henv  = SQL_NULL_HENV;
    SQLHDBC       hdbc  = SQL_NULL_HDBC;
    SQLHSTMT      hstmt = pSQL && pSQL->pstmt? pSQL->pstmt->hstmt : SQL_NULL_HSTMT;
-   UCHAR         sqlState[5];
+   UCHAR         sqlState[SQL_SQLSTATE_SIZE + 1]; // 5 + zero terminator (#148)
    UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
    PUCHAR        psqlState  = sqlState;
    SQLINTEGER*   psqlCode   = &pCon->sqlCode;

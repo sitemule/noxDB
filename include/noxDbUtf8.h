@@ -750,7 +750,7 @@ typedef _Packed struct  {
    BOOL          pOptionsCleanup;
    NOX_SQLOPTIONS    options;
    iconv_t       iconv;
-   UCHAR         sqlState[5];
+   UCHAR         sqlState[SQL_SQLSTATE_SIZE + 1]; // SQLGetDiagRec writes 5 + zero terminator (#148)
    LONG          sqlCode;
    UCHAR         sqlMsgDta[SQL_MAX_MESSAGE_LENGTH + 1];
    NOX_SQLSTMT    stmts[NOX_SQLSTMT_MAX];
