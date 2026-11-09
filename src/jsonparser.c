@@ -242,7 +242,8 @@ BOOL nox_ParseJsonNode(PNOXCOM pJxCom, NOX_NODETYPE state,  PUCHAR name , PNOXNO
          #pragma convert(1252)
          } else if (memBeginsWith(t.data, NULLSTR) && t.isLiteral) {
          #pragma convert(0)
-            pNewNode = nox_NodeInsertNew (pCurNode, NOX_RL_LAST_CHILD, name , NULL , NOX_VALUE);
+            // null is a literal without value - serialized as null, not "" (#149)
+            pNewNode = nox_NodeInsertNew (pCurNode, NOX_RL_LAST_CHILD, name , NULL , NOX_LITERAL);
          } else {
             pNewNode = nox_NodeInsertNew (pCurNode, NOX_RL_LAST_CHILD, name , t.data , NOX_VALUE);
             pNewNode->isLiteral = t.isLiteral;
