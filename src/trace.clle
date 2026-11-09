@@ -6,6 +6,14 @@
 /*                                                               */
 /* By     Date     Task    Description                           */
 /* NL     02.01.17 0000000 New program                           */
+/* NL     09.11.26         Library of the service program comes  */
+/*                         from the caller (_MATPGMNM), no more  */
+/*                         rtvobjd by name in *LIBL - issue #146 */
+/* ------------------------------------------------------------- */
+/* &libC   (in)  library of the service program, blank padded,   */
+/*               zero terminated                                 */
+/* &trace  (out) the SQLTRACE data area in that library          */
+/* &job    (out) the job as a zero terminated string             */
 /* ------------------------------------------------------------- */
 pgm (&libC &trace &job)
    dcl &lib         type(*CHAR) len(10)
@@ -17,12 +25,14 @@ pgm (&libC &trace &job)
    dcl &n           type(*CHAR) len(6)
    dcl &null        type(*CHAR) len(1)  value(x'00')
 
-   rtvobjd    obj(noxdbutf8) objtype(*srvpgm) rtnlib(&lib)
+   chgvar     &lib (%sst(&libC 1 10))
+   chgvar     &trace '0'
    rtvdtaara  dtaara(&lib/sqltrace) rtnvar(&trace)
    monmsg  cpf0000 exec(do)
+      chgvar &trace '0'
       crtdtaara  dtaara(&lib/sqltrace) type(*lgl) value('0') +
                           text('SQL trace enabled')
-      chgvar &trace '0'
+      monmsg  cpf0000 /* cannot create it here: no trace */
    enddo
 
    /* job in format:  767070/NLI/JOHN22A1 and in c-string format*/

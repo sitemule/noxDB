@@ -38,6 +38,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #include "memUtil.h"
 #include "timestamp.h"
 #include "sndpgmmsg.h"
+#include <mih/matpgmnm.h>
 
 
 // Until 7.5
@@ -1691,6 +1692,22 @@ void createTracetable(PNOX_SQLCONNECT pCon)
    pTrc->doTrace =  ON;
 }
 /* ------------------------------------------------------------- */
+/* The library this service program is in - wherever it is and   */
+/* whatever it is called (renamed copies, library-qualified      */
+/* binding, not in the library list). No SQL, no library list.   */
+/* Returns the name blank padded (EBCDIC) to 10 and zero         */
+/* terminated, as TRACE expects it.                              */
+/* ------------------------------------------------------------- */
+static void ownLibrary (UCHAR lib[11])
+{
+   _MATPGMNM_Template_T pgmName;
+   memset(&pgmName, 0, sizeof(pgmName));
+   pgmName.Template_Size = sizeof(pgmName);
+   _MATPGMNM(&pgmName);
+   memcpy(lib, pgmName.Format_0.Context.Name, 10);
+   lib[10] = '\0';
+}
+/* ------------------------------------------------------------- */
 void nox_traceOpen (PNOX_SQLCONNECT pCon)
 {
    PNOX_TRACE pTrc = &pCon->sqlTrace;
@@ -1698,6 +1715,7 @@ void nox_traceOpen (PNOX_SQLCONNECT pCon)
    PUCHAR insertStmt = "insert into sqltrace (STSTART,STEND,STSQLSTATE,STTEXT,STJOB,STTRID,STSQLSTMT) "
                   "values (?,?,?,?,?,?,?)";
 
+   ownLibrary (pTrc->lib);
    TRACE ( pTrc->lib , &pTrc->doTrace , pTrc->job);
    if (pTrc->doTrace == OFF) return;
    createTracetable(pCon);
