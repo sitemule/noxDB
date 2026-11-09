@@ -334,7 +334,8 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP, int targetCcsi
 void jx_AsJsonText16M ( PVARCHAR_16M result , PJXNODE pNode, int targetCcsid)
 {
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-	int resolvedCcsid = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 2) ? targetCcsid : 0;
+	// RTNPARM: the result is a hidden first parameter and counts - targetCcsid is the 3rd (#150)
+	int resolvedCcsid = (pParms->OpDescList && pParms->OpDescList->NbrOfParms >= 3) ? targetCcsid : 0;
 
 	result->Length = jx_AsJsonTextMem (pNode, result->String , sizeof(VARCHAR_16M)-4, resolvedCcsid);
 }
