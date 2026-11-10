@@ -2552,6 +2552,31 @@ Dcl-PR nox_sqlCall pointer extproc(*CWIDEN : 'nox_sqlCall');
   inputParms pointer value;
 End-PR;
 
+///
+// SQL : Error object of the last statement
+//
+// Returns the error object of the last statement on this connection - the same
+// object the result set functions give with NOX_GRACEFUL_ERROR - for the functions
+// that only return an indicator (nox_sqlExec, nox_sqlUpdate, nox_sqlInsert ...):
+//   success  false
+//   msg      the SQL message
+//   stmt     the statement
+//   joblog   the diagnostic, escape and notify messages the job log got while the
+//            statement ran, oldest first - e.g. CPF5027 with the job that holds a
+//            record lock, sent before SQL0913 "... in use". Read with an API, not
+//            with SQL, so it also works after errors such as SQL0901.
+//   messages the MESSAGES_LIST environment variable, when set (noxDbApi)
+// When the last statement did not fail: {"success": true}.
+//
+// @param (input) Pointer to database connection provided by nox_sqlConnect()
+// @return noxDB object
+//
+// @info The caller needs to free the returned object with <em>nox_delete(node)</em>.
+///
+Dcl-PR nox_sqlErrorObject pointer extproc(*CWIDEN : 'nox_sqlErrorObject');
+  pConnection    pointer value;
+End-PR;
+
 /// TODO - not migrated !!
 // SQL : Call stored procedure, select from UDTF table functions, return values from scalar function
 //

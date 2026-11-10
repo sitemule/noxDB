@@ -94,18 +94,46 @@ static void messageList (PNOXNODE pError)
    }
 }
 /* ------------------------------------------------------------- */
-PNOXNODE static sqlErrorObject(PUCHAR sqlstmt)
+// The error object: msg in the job CCSID, stmt as sent (UTF-8)
+static PNOXNODE errorObject(PNOX_SQLCONNECT pCon, PUCHAR msg, PUCHAR sqlstmt)
 {
    PNOXNODE pError = nox_NewObject();
    nox_SetBoolByName (pError , "success" ,  OFF);
-   nox_SetStrByName  (pError , "msg"     ,  jxMessage);
-   nox_SetAsciiByName  (pError , "stmt"    ,  sqlstmt);
+   nox_SetStrByName  (pError , "msg"     ,  msg);
+   if (sqlstmt) {
+      nox_SetAsciiByName  (pError , "stmt"    ,  sqlstmt);
+   }
    messageList (pError);
+   // the job log messages behind the error (sqldiag.c) - "messages" is NoxDbApi's MESSAGES_LIST
+   if (pCon && pCon->pDiag) {
+      nox_NodeMoveInto (pError, "joblog", nox_NodeClone(pCon->pDiag));
+   }
 
    return pError;
 }
+// NOX_GRACEFUL_ERROR: the error of the function that failed
+PNOXNODE static sqlErrorObject(PNOX_SQLCONNECT pCon, PUCHAR sqlstmt)
+{
+   return errorObject (pCon, jxMessage, sqlstmt);
+}
 /* ------------------------------------------------------------- */
-static int check_error (PNOX_SQLCONNECT pCon, PNOX_SQL pSQL)
+// Exported: the error object of the last statement on this connection - the same
+// object NOX_GRACEFUL_ERROR gives - for functions that only return an indicator
+// (nox_sqlExec, nox_sqlUpdate, nox_sqlInsert ...). {"success":true} when it did not fail
+PNOXNODE nox_sqlErrorObject (PNOX_SQLCONNECT pCon)
+{
+   PNOXNODE pOk;
+   if (pCon && pCon->hasError == ON) {
+      return errorObject (pCon, pCon->errMsg, pCon->errStmt);
+   }
+   pOk = nox_NewObject();
+   nox_SetBoolByName (pOk , "success" , ON);
+   return pOk;
+}
+/* ------------------------------------------------------------- */
+// Read the error into sqlCode / sqlState / jxMessage and collect the job log
+// messages behind it - the statement stays open (the caller owns it)
+static void sqlError (PNOX_SQLCONNECT pCon, PNOX_SQL pSQL)
 {
    SQLSMALLINT length;
    ULONG l;
@@ -141,11 +169,27 @@ static int check_error (PNOX_SQLCONNECT pCon, PNOX_SQL pSQL)
 
    length = 0;
    rc = SQLGetDiagRec(hType , handle, 1, psqlState, psqlCode, psqlMsgDta,  sizeof(sqlMsgDta), &length);
-   ae_sprintf( jxMessage , "%-5.5s %-*.*s" , psqlState, length, length, psqlMsgDta);
-   nox_sqlClose (&pSQL); // Free the data
+   if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
+      // jxMessage is in the job CCSID, the message text only - as nox_sqlExecDirectTrace has it
+      if (length > 511) length = 511;   // jxMessage holds 512
+      psqlMsgDta[length] = '\0';
+      stra2e (jxMessage , psqlMsgDta);
+   } else {
+      // no diagnostic record (already read by someone else): never print the empty buffers
+      UCHAR temp [64];
+      a_sprintf (temp , "SQL error %ld - no diagnostic record" , (long) *psqlCode);
+      stra2e (jxMessage , temp);
+   }
+   nox_sqlDiagCollect (pCon, pSQL ? pSQL->sqlstmt : NULL);
    jxError = true;
-
-   return;
+}
+/* ------------------------------------------------------------- */
+// Read the error and close the statement
+static int check_error (PNOX_SQLCONNECT pCon, PNOX_SQL pSQL)
+{
+   sqlError (pCon, pSQL);
+   nox_sqlClose (&pSQL); // Free the data
+   return 0;
 }
 /* ------------------------------------------------------------- */
 static int sqlEscape (PUCHAR out  , PUCHAR in)
@@ -275,6 +319,7 @@ int nox_sqlExecDirectTrace(PNOX_SQLCONNECT pCon, PNOX_SQL pSQL , int hstmt, PUCH
       pTrc->text[length] = '\0';
       stra2e (jxMessage  , pTrc->text );
       joblog (jxMessage);
+      nox_sqlDiagCollect (pCon, sqlstmt);
    }
    pTrc->text [length] = '\0';
    ts_nowstr(pTrc->tsEnd); // TODO !!! not form global
@@ -339,6 +384,7 @@ static PNOX_SQL nox_sqlNewStatement(PNOX_SQLCONNECT pCon, PNOXNODE pSqlParms, BO
 
    if (pCon == NULL) return NULL;
    pCon->sqlCode = 0;
+   nox_sqlDiagStart (pCon);
 
    pSQL = memAllocClear(sizeof(NOX_SQL));
    pSQL->pCon = pCon;
@@ -490,6 +536,53 @@ BOOL findHasFetch  (PUCHAR sqlStmt)
 
 
 /* ------------------------------------------------------------- */
+/* A query: select, with (common table expression) or (select ...)*/
+/* - not call, values, insert, update, delete, merge ...          */
+/* ------------------------------------------------------------- */
+static BOOL isQuery (PUCHAR stmt)
+{
+   PUCHAR p = stmt;
+   for (;*p == '(' || (*p > '\0' && *p <= ' '); p++);
+   if (0 == memicmp (p , "select" , 6) && (p[6] <= ' ' || p[6] == '*' || p[6] == '(')) return true;
+   if (0 == memicmp (p , "with"   , 4) &&  p[4] <= ' ') return true;
+   return false;
+}
+/* ------------------------------------------------------------- */
+/* The clauses that end a query and must stay last: returns where */
+/* the first of them starts (or NULL); *pIsolation when one of    */
+/* them sets the isolation ("with cs", "for update" ...)          */
+/* ------------------------------------------------------------- */
+static PUCHAR findTrailingClause (PUCHAR lookFrom, BOOL * pIsolation)
+{
+   static const struct { PUCHAR text; BOOL isolation; } clauses [] = {
+      { " for update"     , true  },
+      { " for read only"  , false },
+      { " for fetch only" , false },
+      { " optimize for"   , false },
+      { " skip locked"    , false },
+      { " use and keep"   , true  },
+      { " with nc"        , true  },
+      { " with ur"        , true  },
+      { " with cs"        , true  },
+      { " with rs"        , true  },
+      { " with rr"        , true  },
+   };
+   PUCHAR first = NULL;
+   int i;
+
+   *pIsolation = false;
+   for (i = 0; i < sizeof(clauses) / sizeof(clauses[0]); i++) {
+      PUCHAR p = a_stristr (lookFrom , clauses[i].text);
+      if (p) {
+         UCHAR after = p [strlen(clauses[i].text)];
+         if (after > ' ') continue;   // e.g. " with urgency" - not the clause
+         if (clauses[i].isolation) *pIsolation = true;
+         if (first == NULL || p < first) first = p;
+      }
+   }
+   return first;
+}
+/* ------------------------------------------------------------- */
 
 PNOX_SQL nox_sqlOpen(PNOX_SQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, LONG formatP , LONG startP , LONG limitP)
 {
@@ -529,16 +622,18 @@ PNOX_SQL nox_sqlOpen(PNOX_SQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP,
    //// huxi !! need uncomitted read for blob fields
    // and IBM i does not support statement attribute to set the pr statement. :/
    // so we simply append the "with ur" uncommited read options
-   if ((0 != memicmp ( sqlTempStmt , "call"  , 4))
-   &&  (0 != memicmp ( sqlTempStmt , "values", 6))) {
+   // Only a query gets "limit" / "offset" and "with ur". An INSERT / UPDATE / DELETE / MERGE
+   // sent here (e.g. through a "sql to json" service) must run as written: "with ur" makes Db2
+   // run it with isolation CS under commitment control, and with autocommit off it then stays
+   // uncommitted and keeps its rows locked until the job ends
+   if (isQuery (sqlTempStmt)) {
       PUCHAR lookFrom = finalSQLPart (sqlTempStmt);
-      static BOOL compilereg = true;
-      //static regex_t hasLimitReg;
-      //static regex_t hasOffsetReg;
-      //static regex_t hasFetchReg;
+      PUCHAR trailer;
+      UCHAR  tail [256];
       BOOL hasLimit  ;
       BOOL hasOffset ;
       BOOL hasFetch  ;
+      BOOL hasIsolation;
       PUCHAR end;
 
       // Before we begin adding to the statement  - ensure is does not end with a ;
@@ -546,27 +641,19 @@ PNOX_SQL nox_sqlOpen(PNOX_SQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP,
          if (*end == ';') *end = ' ';
          if (*end > ' ') break;
       }
+      *(end + 1) = '\0';
 
-      /* regex does not always work when on other CCSID  platforms
-      if (compilereg) {
-         int rc;
-         UCHAR buf [256];
-         ULONG options =  REG_NOSUB + REG_EXTENDED + REG_ICASE;
-         # pragma convert(1252)
-         rc = regcomp(&hasLimitReg , XlateStringQ (buf , "limit[ ]*[0-9]" , 1252, 0)  , options );
-         rc = regcomp(&hasOffsetReg, XlateStringQ (buf , "offset[ ]*[0-9]", 1252, 0)   , options );
-         rc = regcomp(&hasFetchReg , XlateStringQ (buf , "fetch[ ]*first" , 1252, 0)     , options );
-         # pragma convert(0)
-         compilereg = false;
-      }
-
-      hasLimit  = 0 == (rc= regexec(&hasLimitReg  , lookFrom , 0, NULL, 0));
-      hasOffset = 0 == (rc= regexec(&hasOffsetReg , lookFrom , 0, NULL, 0));
-      hasFetch  = 0 == (rc= regexec(&hasFetchReg  , lookFrom , 0, NULL, 0));
-      */
       hasLimit  = findHasLimit  (lookFrom);
       hasOffset = findHasOffset (lookFrom);
       hasFetch  = findHasFetch  (lookFrom);
+
+      // "limit" and "offset" go before a trailing "for update", "optimize for", "with cs" ...
+      trailer = findTrailingClause (lookFrom, &hasIsolation);
+      *tail = '\0';
+      if (trailer && strlen(trailer) < sizeof(tail)) {
+         strcpy (tail , trailer);
+         *trailer = '\0';
+      }
 
       if (limit > 0 && ! hasFetch && ! hasLimit) {
          a_sprintf (sqlTempStmt + strlen(sqlTempStmt)," limit %ld ", limit);
@@ -575,7 +662,13 @@ PNOX_SQL nox_sqlOpen(PNOX_SQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP,
       if (start > 1 && ! hasOffset) {
          a_sprintf (sqlTempStmt + strlen(sqlTempStmt)," offset %ld ", start - 1);
       }
-      if (pCon->transaction == false ) {
+      strcat (sqlTempStmt , tail);
+
+      //// huxi !! need uncomitted read for blob fields
+      // and IBM i does not support statement attribute to set the pr statement. :/
+      // so we simply append the "with ur" uncommited read options - unless the statement
+      // has its own isolation or is "for update" (that needs a lock)
+      if (pCon->transaction == false && ! hasIsolation) {
          strcat ( sqlTempStmt , " with ur");
       }
    }
@@ -956,9 +1049,12 @@ PNOXNODE nox_sqlFormatRow  (PNOX_SQL pSQL)
       return pRow; // Found
 
    } else {
-      pSQL->pCon->sqlCode = getSqlCode(pSQL->pstmt->hstmt);
       if (pSQL->rc != SQL_NO_DATA_FOUND ) {
-         check_error (pSQL->pCon, pSQL);
+         // sqlError, not getSqlCode first: SQLError would use up the diagnostic record.
+         // Not check_error: that would free pSQL, which the caller still uses and closes
+         sqlError (pSQL->pCon, pSQL);
+      } else {
+         pSQL->pCon->sqlCode = getSqlCode(pSQL->pstmt->hstmt);
       }
    }
    memFree(&buf);
@@ -978,6 +1074,13 @@ PNOXNODE nox_sqlFetchNext (PNOX_SQL pSQL)
 {
    int rc;
    if (pSQL == NULL) return (NULL);
+
+   // No result set (an INSERT / UPDATE / DELETE ... sent as a query): no rows - not an error
+   if (pSQL->nresultcols <= 0) {
+      pSQL->rc = SQL_NO_DATA_FOUND;
+      pSQL->pCon->sqlCode = 0;
+      return (NULL);
+   }
 
    // List next row from the result set
    pSQL->rc = SQLFetch (pSQL->pstmt->hstmt);
@@ -1075,6 +1178,8 @@ void nox_sqlDisconnect (PNOX_SQLCONNECT * ppCon)
    }
 
    nox_NodeDelete(pCon->pOptions);
+   nox_NodeDelete(pCon->pDiag);
+   if (pCon->errStmt) free (pCon->errStmt);
    memFree (ppCon);
 
 }
@@ -1328,7 +1433,7 @@ PNOXNODE nox_sqlResultSet( PNOX_SQLCONNECT pCon ,PUCHAR sqlstmt, PNOXNODE pSqlPa
    pSQL = nox_sqlOpen(pCon, sqlstmt , pSqlParms, format, start , limit);
    if ( pSQL == NULL) {
       if (format & NOX_GRACEFUL_ERROR) {
-         return sqlErrorObject(sqlstmt);
+         return sqlErrorObject(pCon, sqlstmt);
       } else {
         return NULL;
       }
@@ -1341,10 +1446,11 @@ PNOXNODE nox_sqlResultSet( PNOX_SQLCONNECT pCon ,PUCHAR sqlstmt, PNOXNODE pSqlPa
       pRow  = nox_sqlFetchNext (pSQL);
    }
 
-   if ( (pSQL->rc != SQL_NO_DATA_FOUND) && (format & NOX_GRACEFUL_ERROR) ) {
+   // pRow is still set when the limit stopped the loop - that is no error
+   if ( pRow == NULL && pSQL->rc != SQL_NO_DATA_FOUND && (format & NOX_GRACEFUL_ERROR) ) {
       nox_NodeDelete (pRows);
       nox_sqlClose (&pSQL);
-      return sqlErrorObject(sqlstmt);
+      return sqlErrorObject(pCon, sqlstmt);
    }
 
 
@@ -1391,6 +1497,7 @@ PNOXNODE nox_sqlResultSet( PNOX_SQLCONNECT pCon ,PUCHAR sqlstmt, PNOXNODE pSqlPa
       pResult = pRows;
    }
 
+   nox_NodeDelete (pRow); // the row after the limit, if any
    nox_sqlClose (&pSQL);
    return pResult;
 
@@ -1406,33 +1513,43 @@ PNOXNODE nox_sqlResultSetVC( PNOX_SQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE p
    return nox_sqlResultSet( pCon, plvc2str(sqlstmt) , pSqlParms, format , start, limit);
 }
 /* ------------------------------------------------------------- */
-PNOXNODE nox_sqlResultRow ( PNOX_SQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms , LONG format , LONG start )
+// One row; *pFailed tells an error from "no row". On an error the result is
+// the error object with NOX_GRACEFUL_ERROR, else NULL
+static PNOXNODE resultRow ( PNOX_SQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms , LONG format , LONG start, BOOL * pFailed )
 {
    PNOXNODE pRow;
    PNOX_SQL  pSQL;
 
+   *pFailed = false;
    pSQL = nox_sqlOpen(pCon , sqlstmt , pSqlParms, format , start , 1 );
    if ( pSQL == NULL) {
-       if (format & NOX_GRACEFUL_ERROR) {
-           return sqlErrorObject(sqlstmt);
-         } else {
-           return NULL;
-         }
-      }
+      *pFailed = true;
+      return (format & NOX_GRACEFUL_ERROR) ? sqlErrorObject(pCon, sqlstmt) : NULL;
+   }
 
    pRow  = nox_sqlFetchNext (pSQL);
+   if (pRow == NULL && pSQL->rc != SQL_NO_DATA_FOUND) {
+      *pFailed = true;
+      nox_sqlClose (&pSQL);
+      return (format & NOX_GRACEFUL_ERROR) ? sqlErrorObject(pCon, sqlstmt) : NULL;
+   }
    nox_sqlClose (&pSQL);
    return pRow;
-
+}
+PNOXNODE nox_sqlResultRow ( PNOX_SQLCONNECT pCon, PUCHAR sqlstmt, PNOXNODE pSqlParms , LONG format , LONG start )
+{
+   BOOL failed;
+   return resultRow (pCon, sqlstmt, pSqlParms, format, start, &failed);
 }
 // RPG wrapper
-PNOXNODE nox_sqlResultRowVC ( PNOX_SQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP, LONG startP ,  LONG formatP )
+// RPG order (headers/noxDbUtf8.rpgle): connection, statement, template, format, start
+PNOXNODE nox_sqlResultRowVC ( PNOX_SQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP, LONG formatP ,  LONG startP )
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    PNOXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 3) ? pSqlParmsP : NULL;
-   LONG     start     = (pParms->OpDescList->NbrOfParms >= 4) ? startP     : 1;  // From first row
-   LONG     format    = (pParms->OpDescList->NbrOfParms >= 5) ? formatP    : 0;  // Arrray only
-   return nox_sqlResultRow ( pCon, plvc2str(sqlstmt), pSqlParms, start,format);
+   LONG     format    = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;  // Object only
+   LONG     start     = (pParms->OpDescList->NbrOfParms >= 5) ? startP     : 1;  // From first row
+   return nox_sqlResultRow ( pCon, plvc2str(sqlstmt), pSqlParms, format, start);
 }
 /* ------------------------------------------------------------- */
 PNOXNODE nox_sqlValuesVC ( PNOX_SQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSqlParmsP , LONG formatP)
@@ -1443,13 +1560,17 @@ PNOXNODE nox_sqlValuesVC ( PNOX_SQLCONNECT pCon, PLVARCHAR sqlstmt, PNOXNODE pSq
    LONG    format     = (pParms->OpDescList->NbrOfParms >= 4) ? formatP    : 0;
    PNOXNODE pResult;
    PNOXNODE pChild ;
+   BOOL     failed;
    UCHAR   stmtBuf [32760];
 
    strcpy (stmtBuf , "values (");
    strcat (stmtBuf , plvc2str(sqlstmt));
    strcat (stmtBuf , ")");
 
-   pResult =  nox_sqlResultRow ( pCon , stmtBuf, pSqlParms ,1, format);
+   pResult = resultRow ( pCon , stmtBuf, pSqlParms , format, 1, &failed);
+
+   // an error: the error object as it is (NOX_GRACEFUL_ERROR) or NULL
+   if (failed || pResult == NULL) return pResult;
 
    pChild  = nox_GetNodeChild (pResult);
    // more that one return values? then array

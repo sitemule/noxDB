@@ -136,7 +136,7 @@ githash:
 	-echo "// CMD:CRTCMOD" > src/githash.c
 	-echo "#pragma comment(copyright,\"System & Method A/S - Sitemule: git checkout $(GIT_SHORT) (hash: $(GIT_HASH) ) build: $(TS)\")" >> src/githash.c
 
-noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/syscolname.c src/csv.c src/xmlparser.c \
+noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/sqldiag.c src/syscolname.c src/csv.c src/xmlparser.c \
 						src/jsonparser.c src/jsonserial.c src/xmlserial.c src/tostream.c src/reader.c \
 						src/ifs.c src/assert.c \
 						src/iterator.c src/http.c src/generic.c src/trace.clle src/datagen.c src/datainto.c src/githash.c \

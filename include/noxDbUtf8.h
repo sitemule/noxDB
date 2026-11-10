@@ -757,6 +757,11 @@ typedef _Packed struct  {
    SHORT         stmtIx;
    NOX_TRACE      sqlTrace;
    BOOL          transaction;
+   UCHAR         diagFrom[8];   // _MI_Time the statement started (sqldiag.c)
+   PNOXNODE      pDiag;         // job log messages behind the last SQL error
+   LGL           hasError;      // the last statement failed (nox_sqlErrorObject)
+   UCHAR         errMsg[512];   // its message, job CCSID
+   PUCHAR        errStmt;       // its statement (strdup)
 } NOX_SQLCONNECT, * PNOX_SQLCONNECT;
 
 typedef _Packed struct  {
@@ -871,6 +876,9 @@ LGL nox_sqlExecVC(
 #pragma descriptor ( void nox_sqlExecVC      (void))
 PNOXNODE nox_sqlCallStr (PNOX_SQLCONNECT pCon, PUCHAR procedureName , PNOXNODE pInParms);
 PNOXNODE nox_sqlCall    (PNOX_SQLCONNECT pCon, PLVARCHAR procedureName , PNOXNODE pInParms);
+PNOXNODE nox_sqlErrorObject (PNOX_SQLCONNECT pCon);
+void     nox_sqlDiagStart   (PNOX_SQLCONNECT pCon);
+void     nox_sqlDiagCollect (PNOX_SQLCONNECT pCon, PUCHAR sqlstmt);
 
 PNOX_SQLCONNECT  nox_sqlConnect(PNOXNODE pSqlParms  );
 #pragma descriptor ( void nox_sqlConnect    (void))
