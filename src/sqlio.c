@@ -1056,9 +1056,9 @@ PNOXNODE nox_sqlFormatRow  (PNOX_SQL pSQL)
                case SQL_WVARCHAR:
                case SQL_GRAPHIC:
                case SQL_VARGRAPHIC: {
-                  UCHAR temp [32768];
+                  PUCHAR temp;
                   PUCHAR pInBuf = buf;
-                  size_t OutLen;
+                  LONG   OutLen;      // XlateBuffer gives -1 on an error
                   size_t inbytesleft;
 
                   if (pCol->coltype ==  SQL_WVARCHAR) {
@@ -1069,10 +1069,13 @@ PNOXNODE nox_sqlFormatRow  (PNOX_SQL pSQL)
                         if ( * (PSHORT) (pInBuf + inbytesleft - 2) > 0x0020) break;
                      }
                   }
+                  // UTF-8 takes up to 3 bytes for 2 bytes of UTF-16 (a surrogate pair: 4 for 4)
+                  temp = memAlloc (inbytesleft / 2 * 3 + 1);
                   OutLen = XlateBuffer  (xlate_1200_to_1208, temp , pInBuf, inbytesleft);
-                  temp[OutLen] = '\0';
+                  temp[OutLen < 0 ? 0 : OutLen] = '\0';
 
                   nox_NodeInsertNew (pRow , NOX_RL_LAST_CHILD, pCol->colname , temp,  pCol->nodeType );
+                  memFree ((PVOID *) &temp);
 
                   break;
                }
