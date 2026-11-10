@@ -94,12 +94,39 @@ static void messageList (PNOXNODE pError)
    }
 }
 /* ------------------------------------------------------------- */
+/* Convert "in" (zero terminated) with cd into "out" of outSize   */
+/* bytes - cut when longer, always zero terminated                */
+/* ------------------------------------------------------------- */
+extern iconv_t xlate_1208_to_job;   // noxDbUtf8.c, opened in nox_Initialize
+extern iconv_t xlate_job_to_1208;
+static PUCHAR xlateBounded (iconv_t cd, PUCHAR out, LONG outSize, PUCHAR in)
+{
+   size_t inLeft  = strlen(in);
+   size_t outLeft = outSize - 1;
+   char * pIn  = (char *) in;
+   char * pOut = (char *) out;
+   iconv (cd, &pIn, &inLeft, &pOut, &outLeft);  // stops when out is full
+   *pOut = '\0';
+   return out;
+}
+/* ------------------------------------------------------------- */
+/* The SQL message texts come in UTF-8 (the connection is in      */
+/* UTF-8 mode); jxMessage - nox_Message, the job log - is in the  */
+/* job CCSID. stra2e is a 1252 table: each Danish letter in a     */
+/* message became two characters                                  */
+/* ------------------------------------------------------------- */
+static PUCHAR utf8ToJob (PUCHAR out, LONG outSize, PUCHAR in)
+{
+   return xlateBounded (xlate_1208_to_job, out, outSize, in);
+}
+/* ------------------------------------------------------------- */
 // The error object: msg in the job CCSID, stmt as sent (UTF-8)
 static PNOXNODE errorObject(PNOX_SQLCONNECT pCon, PUCHAR msg, PUCHAR sqlstmt)
 {
+   UCHAR    msgUtf8 [512 * 3 + 1];   // msg: jxMessage / errMsg, job CCSID, 512 at most
    PNOXNODE pError = nox_NewObject();
    nox_SetBoolByName (pError , "success" ,  OFF);
-   nox_SetStrByName  (pError , "msg"     ,  msg);
+   nox_SetAsciiByName (pError , "msg"    ,  xlateBounded (xlate_job_to_1208, msgUtf8, sizeof(msgUtf8), msg));
    if (sqlstmt) {
       nox_SetAsciiByName  (pError , "stmt"    ,  sqlstmt);
    }
@@ -133,6 +160,7 @@ PNOXNODE nox_sqlErrorObject (PNOX_SQLCONNECT pCon)
 /* ------------------------------------------------------------- */
 // Read the error into sqlCode / sqlState / jxMessage and collect the job log
 // messages behind it - the statement stays open (the caller owns it)
+/* ------------------------------------------------------------- */
 static void sqlError (PNOX_SQLCONNECT pCon, PNOX_SQL pSQL)
 {
    SQLSMALLINT length;
@@ -171,9 +199,9 @@ static void sqlError (PNOX_SQLCONNECT pCon, PNOX_SQL pSQL)
    rc = SQLGetDiagRec(hType , handle, 1, psqlState, psqlCode, psqlMsgDta,  sizeof(sqlMsgDta), &length);
    if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
       // jxMessage is in the job CCSID, the message text only - as nox_sqlExecDirectTrace has it
-      if (length > 511) length = 511;   // jxMessage holds 512
+      if (length > SQL_MAX_MESSAGE_LENGTH) length = SQL_MAX_MESSAGE_LENGTH;
       psqlMsgDta[length] = '\0';
-      stra2e (jxMessage , psqlMsgDta);
+      utf8ToJob (jxMessage , sizeof(jxMessage) , psqlMsgDta);
    } else {
       // no diagnostic record (already read by someone else): never print the empty buffers
       UCHAR temp [64];
@@ -317,7 +345,7 @@ int nox_sqlExecDirectTrace(PNOX_SQLCONNECT pCon, PNOX_SQL pSQL , int hstmt, PUCH
       jxError = TRUE;
       rc2= SQLGetDiagRec(SQL_HANDLE_STMT,hstmt,1,pCon->sqlState,&pCon->sqlCode, pTrc->text,sizeof(pTrc->text), &length);
       pTrc->text[length] = '\0';
-      stra2e (jxMessage  , pTrc->text );
+      utf8ToJob (jxMessage , sizeof(jxMessage) , pTrc->text );
       joblog (jxMessage);
       nox_sqlDiagCollect (pCon, sqlstmt);
    }
@@ -1852,8 +1880,10 @@ PNOXNODE nox_sqlCallStr (PNOX_SQLCONNECT pCon, PUCHAR procedureName , PNOXNODE p
 
    if (pProcMeta == NULL || pProcMeta->pNodeChildHead == NULL) {
       // jxMessage is in the job CCSID (nox_Message)
-      strjoin (jxMessage , "Procedure " , procedureName , " is not found or not called qualified (schema.procedure)");
-      stra2e  (jxMessage , jxMessage);
+      PUCHAR msg = memAlloc (strlen(procedureName) + 100);
+      strjoin (msg , "Procedure " , procedureName , " is not found or not called qualified (schema.procedure)");
+      utf8ToJob (jxMessage , sizeof(jxMessage) , msg);
+      memFree ((PVOID *) &msg);
       jxError = true;
       nox_NodeDelete (pProcMeta);
       return NULL;
@@ -1870,8 +1900,10 @@ PNOXNODE nox_sqlCallStr (PNOX_SQLCONNECT pCon, PUCHAR procedureName , PNOXNODE p
       }
    }
    if (impl > 1) {
-      strjoin (jxMessage , "Procedure " , procedureName , " has more than one implementation. Can not decide which to use");
-      stra2e  (jxMessage , jxMessage);
+      PUCHAR msg = memAlloc (strlen(procedureName) + 100);
+      strjoin (msg , "Procedure " , procedureName , " has more than one implementation. Can not decide which to use");
+      utf8ToJob (jxMessage , sizeof(jxMessage) , msg);
+      memFree ((PVOID *) &msg);
       jxError = true;
       nox_NodeDelete (pProcMeta);
       return NULL;

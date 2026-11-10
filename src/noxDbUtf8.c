@@ -3854,7 +3854,10 @@ PNOXNODE nox_GetMessageObject (PUCHAR msgId , PUCHAR msgDta)
       nox_SetStrByName (pMsg , "msgDta",  msgDta);
       // TODO - convert the msgid / msgData to text
    } else  {
-      nox_SetStrByName (pMsg , "msg",  jxMessage);
+      // jxMessage is in the job CCSID - stre2a (nox_SetStrByName) is a 1252 table
+      UCHAR temp [sizeof(jxMessage) * 3 + 1];
+      XlateBuffer2str (xlate_job_to_1208, temp , jxMessage , strlen(jxMessage));
+      nox_SetAsciiByName (pMsg , "msg",  temp);
    }
    return pMsg;
 }
