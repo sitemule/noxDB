@@ -9,7 +9,7 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
-// This test, issue0151, is a smoke/regression test for the data-gen limits
+// This test, issue0156, is a smoke/regression test for the data-gen limits
 // added in src/datagen.c:
 //   * toplength limits the root array while it is generated
 //   * countsuffix uses a sibling <array><suffix> field as the array length
@@ -103,7 +103,7 @@ dcl-proc main;
         json_locate(pEmployee : 'items_length') = *NULL);
 
     json_delete(pJson);
-    json_joblog('issue0151 done');
+    json_joblog('issue0156 done');
 
 end-proc;
 
