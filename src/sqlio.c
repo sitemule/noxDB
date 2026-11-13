@@ -49,6 +49,12 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #define SQL_BOOLEAN            16
 #endif
 
+// IBM i SQL CLI option for service programs that can leave the call stack.
+// It is not present in older SQL CLI headers, but is supported by Db2 for i.
+#ifndef SQL_ATTR_INVOKING_PGM
+#define SQL_ATTR_INVOKING_PGM  10037
+#endif
+
 
 // Globlas: TODO !!! remove to make code reintrant
 extern UCHAR jxMessage[512];
@@ -228,6 +234,18 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
 
    // allocate an environment handle
    rc = SQLAllocEnv (&pConnection->henv);
+   if (rc != SQL_SUCCESS ) {
+     check_error (NULL);
+     jx_sqlDisconnect ();
+     return NULL; // we have an error
+   }
+
+   // Scope CLI resources to the top program on the stack. This preserves
+   // cursors, statements, and other resources when a service program leaves
+   // the stack and is re-entered later in the job.
+   SQLINTEGER value = 1;
+   rc = SQLSetEnvAttr (pConnection->henv, SQL_ATTR_INVOKING_PGM,
+                       (SQLPOINTER)&value, 0);
    if (rc != SQL_SUCCESS ) {
      check_error (NULL);
      jx_sqlDisconnect ();
