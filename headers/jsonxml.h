@@ -619,6 +619,9 @@ PJXNODE  jx_LookupValue (PJXNODE pDest, PUCHAR expr , BOOL16 ignorecase);
 
 LONG     jx_getLength (PJXNODE pNode);
 ULONG     jx_NodeCheckSum (PJXNODE pNode);
+void     jx_NodeSetAsPointer (PJXNODE pNode , PUCHAR Value);
+INT64    jx_MemUse (VOID);
+void     jx_traceSetId (INT64 trid);
 
 PJXNODE  jx_NodeMoveInto (PJXNODE  pDest, PUCHAR Name , PJXNODE pSource);
 void jx_NodeRename(PJXNODE pNode, PUCHAR name);
