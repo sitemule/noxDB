@@ -190,6 +190,7 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PNOXNODE parms)
 			pMarker = ++in;
 			for (;isalnum(*in) || *in=='.' || *in=='/' || *in=='_' ; in++);
 			markerLen = in - pMarker ;
+			if (markerLen >= sizeof(marker)) markerLen = sizeof(marker) - 1;
 			if (markerLen > 0) {
 				substr(marker , pMarker , markerLen );
 				out += insertMarkerValue (out , marker, pParms );
@@ -205,6 +206,66 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PNOXNODE parms)
 	}
 
 	return res;
+}
+/* ------------------------------------------------------------- */
+/* The length strFormat writes for "in" with the $name markers	*/
+/* filled in from pParms (a node) - not counting the terminator.  */
+/* A value is counted with all its quotes doubled, so this is an  */
+/* upper bound.												   */
+/* ------------------------------------------------------------- */
+static LONG strFormatLength (PUCHAR in , PNOXNODE pParms)
+{
+	PUCHAR pMarker, value;
+	PNOXNODE pNode;
+	int markerLen ;
+	UCHAR marker [64];
+	UCHAR dollar = 0x67; // as in strFormat
+	LONG len = 0;
+
+	if (pParms == NULL) return strlen(in);
+
+	while (*in) {
+		if (*in == dollar) {
+			pMarker = ++in;
+			for (;isalnum(*in) || *in=='.' || *in=='/' || *in=='_' ; in++);
+			markerLen = in - pMarker ;
+			if (markerLen >= sizeof(marker)) markerLen = sizeof(marker) - 1;
+			if (markerLen > 0) {
+				substr(marker , pMarker , markerLen );
+				pNode = nox_GetNode ( pParms , marker);
+				if (pNode) {
+					value = nox_GetValuePtr ( pNode , "" , NULL );
+					if (value == NULL) value = "";
+					len += pNode->isLiteral ? strlen(value) : 2 * strlen(value) + 2;
+				}
+			}
+		} else {
+			len++;
+			in++;
+		}
+	}
+	return len;
+}
+/* ------------------------------------------------------------- */
+/* strFormat into a buffer of its own, big enough for the result  */
+/* plus "extra" bytes the caller appends. Free it with memFree	*/
+/* ------------------------------------------------------------- */
+static PUCHAR strFormatAlloc (PUCHAR in , PNOXNODE parms, LONG extra)
+{
+	PNOXNODE pParms = parms;
+	PUCHAR out;
+
+	if (parms != NULL && OFF == nox_isNode (parms)) {
+		pParms = nox_ParseString((PUCHAR) parms);
+	}
+
+	out = memAlloc (strFormatLength (in , pParms) + extra + 1);
+	strFormat (out , in , pParms);
+
+	if (pParms != parms) {
+		nox_Close (&pParms);
+	}
+	return out;
 }
 /* ------------------------------------------------------------- */
 static PNOXSQL nox_sqlNewStatement(PNOXSQLCONNECT pCon, PNOXNODE pSqlParms, BOOL exec, BOOL scroll)
@@ -273,7 +334,7 @@ static PNOXSQL nox_sqlNewStatement(PNOXSQLCONNECT pCon, PNOXNODE pSqlParms, BOOL
 PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, BOOL scroll)
 {
 
-	UCHAR sqlTempStmt[32766];
+	PUCHAR sqlTempStmt;
 	PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
 	PNOXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 3 ) ? pSqlParmsP : NULL;
 	LONG   attrParm;
@@ -294,14 +355,15 @@ PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, B
 		rc = SQLSetEnvAttr  (pCon->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
 	}
 
-	// build the final sql statement
-	strFormat(sqlTempStmt , sqlstmt , pSqlParms);
+	// build the final sql statement - room for " with ur"
+	sqlTempStmt = strFormatAlloc (sqlstmt , pSqlParms , 16);
 
 	//// huxi !! need uncomitted read for blob fields
 	// and IBMi does not support statement attribute to set the pr statement. :/
 	// so we simply append the "ur" uncommited read options
 	strcat ( sqlTempStmt , " with ur");
 	pSQL->sqlstmt = strdup(sqlTempStmt);
+	memFree (&sqlTempStmt);
 
 	rc = nox_sqlExecDirectTrace(pCon, pSQL , pSQL->pstmt->hstmt, pSQL->sqlstmt);
 	if (rc != SQL_SUCCESS ) {
@@ -612,7 +674,10 @@ void nox_sqlClose (PNOXSQL * ppSQL)
 {
 	int i;
 	int rc;
-	PNOXSQL pSQL = * ppSQL;
+	PNOXSQL pSQL = (ppSQL == NULL) ? NULL : * ppSQL;
+
+	// Nothing to close - i.e. a statement that failed to prepare
+	if (pSQL == NULL) return;
 
 	if (pSQL->pCon->options.hexSort == ON ) {
 		LONG attrParm = SQL_TRUE ;
@@ -1022,9 +1087,9 @@ LGL nox_sqlExec(PNOXSQLCONNECT pCon,PUCHAR sqlstmt , PNOXNODE pSqlParms)
 
 	// run  the  statement in "sqlstr"
 	if (pSqlParms) {
-		UCHAR sqlTempStmt[32766];
-		strFormat(sqlTempStmt , sqlstmt , pSqlParms);
+		PUCHAR sqlTempStmt = strFormatAlloc (sqlstmt , pSqlParms , 0);
 		rc = nox_sqlExecDirectTrace(pCon, pSQL , pSQL->pstmt->hstmt, sqlTempStmt);
+		memFree (&sqlTempStmt);
 	} else {
 		rc = nox_sqlExecDirectTrace(pCon, pSQL , pSQL->pstmt->hstmt, sqlstmt);
 	}
@@ -1131,6 +1196,37 @@ static BOOL  nodeisblank(PNOXNODE pNode)
 	return false;
 }
 /* ------------------------------------------------------------- */
+/* Column names for the generated insert / update statements:	*/
+/* upper case, cut at the longest name Db2 has (a longer name	 */
+/* fails in SQL anyway). "out" holds COLNAME_MAX + 1 bytes		*/
+/* ------------------------------------------------------------- */
+#define COLNAME_MAX 128
+static void colName (PUCHAR out , PUCHAR name)
+{
+	UCHAR work [COLNAME_MAX + 1];
+	LONG  len = strlen(name);
+	if (len > COLNAME_MAX) len = COLNAME_MAX;
+	substr (work , name , len);
+	astr2upper (out , work);   // Needed for national characters in column names
+}
+/* ------------------------------------------------------------- */
+static LONG rowColumns (PNOXNODE pRow)
+{
+	LONG n = 0;
+	PNOXNODE pNode;
+	for (pNode = nox_GetNodeChild (pRow); pNode; pNode = nox_GetNodeNext(pNode)) n++;
+	return n;
+}
+/* ------------------------------------------------------------- */
+/* Size of an insert / update / select statement for the columns */
+/* of pRow: per column the name, a comma and "=default" or "?"	*/
+/* ------------------------------------------------------------- */
+static LONG rowStmtSize (PUCHAR table , PNOXNODE pRow , PUCHAR where)
+{
+	return 128 + strlen(table) + (where ? strlen(where) : 0)
+		 + rowColumns (pRow) * (2 * COLNAME_MAX + 32);
+}
+/* ------------------------------------------------------------- */
 static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
    PUCHAR sqlStmt, PUCHAR table, PNOXNODE pSqlParms , PUCHAR where)
 {
@@ -1139,7 +1235,7 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
 	PNOXNODE pNode;
 	PUCHAR  name;
 	int     colno;
-	UCHAR   temp [128];
+	UCHAR   temp [COLNAME_MAX + 1];
 
 	stmt += asprintf (stmt , "update %s set " , table);
 
@@ -1147,7 +1243,7 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
 	for ( colno=1; pNode; colno++) {
 		if (! isIdColumn(hMetastmt, colno)) {
 			name  = nox_GetNodeNamePtr   (pNode);
-			astr2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+			colName (temp , name);
 			if  (nodeisnull(pNode)) {
 				stmt += asprintf (stmt , "%s%s=NULL" , comma , temp);
 			} else if  (nodeisblank(pNode)) {
@@ -1172,8 +1268,8 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
 	PUCHAR  name;
 	PUCHAR  value;
 	int     i,colno;
-	UCHAR   markers[4096] ;
-	UCHAR   temp [128];
+	PUCHAR  markers = memAlloc (rowColumns (pSqlParms) * 8 + 1);  // ",default" per column at most
+	UCHAR   temp [COLNAME_MAX + 1];
 	PUCHAR  pMarker = markers;
 
 	stmt += asprintf (stmt , "insert into  %s (" , table);
@@ -1183,7 +1279,7 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
 		if (! isIdColumn(hMetaStmt, colno)) {
 			if (!nodeisnull(pNode)) {
 				name     = nox_GetNodeNamePtr   (pNode);
-				astr2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+				colName (temp , name);
 				stmt    += asprintf (stmt , "%s%s" , comma , temp);
 				if  (nodeisblank(pNode)) {
 					pMarker+= asprintf (pMarker , "%sdefault" , comma);    // because timesstamp / date can be set as ''
@@ -1196,8 +1292,10 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
 		pNode = nox_GetNodeNext(pNode);
 	}
 
+	*pMarker = '\0';
 	stmt += asprintf (stmt , ") values( ");
-	stmt += asprintf (stmt , markers);
+	stmt += asprintf (stmt , "%s" , markers);
+	memFree (&markers);
 	stmt += asprintf (stmt , ")") ;
 }
 /* ------------------------------------------------------------- */
@@ -1340,7 +1438,14 @@ SHORT  doInsertOrUpdate(
 
 
 			if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
-				value = valArr[valArrIx++] = memAlloc(Col.collen);
+				if (valArrIx >= sizeof(valArr) / sizeof(valArr[0])) {
+					asprintf( jxMessage , "Too many object / array columns");
+					jxError = true;
+					for(i=0;i<valArrIx; i++) memFree(&valArr[i]);
+					return SQL_ERROR;
+				}
+				// room for the terminating zero too
+				value = valArr[valArrIx++] = memAlloc(Col.collen + 1);
 				realLength = nox_AsJsonTextMem (pNode , value,  Col.collen );
 				value [realLength] = '\0';
 			} else {
@@ -1441,10 +1546,10 @@ SHORT  doInsertOrUpdate(
 /* ------------------------------------------------------------- */
 static PNOXSQL buildMetaStmt (PNOXSQLCONNECT pCon, PUCHAR table, PNOXNODE pRow)
 {
-	UCHAR     sqlTempStmt[32766];
+	PUCHAR    sqlTempStmt = memAlloc (rowStmtSize (table , pRow , NULL));
 	PUCHAR    stmt = sqlTempStmt;
 	PUCHAR    name;
-	UCHAR     temp  [256];
+	UCHAR     temp  [COLNAME_MAX + 1];
 	PNOXNODE   pNode;
 	PUCHAR    comma = "";
 	SQLRETURN rc;
@@ -1456,7 +1561,7 @@ static PNOXSQL buildMetaStmt (PNOXSQLCONNECT pCon, PUCHAR table, PNOXNODE pRow)
 	pNode    =  nox_GetNodeChild (pRow);
 	while (pNode) {
 		name  = nox_GetNodeNamePtr   (pNode);
-		astr2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+		colName (temp , name);
 		stmt += asprintf (stmt , "%s%s" , comma , temp);
 		comma = ",";
 		pNode = nox_GetNodeNext(pNode);
@@ -1466,6 +1571,7 @@ static PNOXSQL buildMetaStmt (PNOXSQLCONNECT pCon, PUCHAR table, PNOXNODE pRow)
 
 	// prepare the statement that provides the columns
 	rc = SQLPrepare(pSQLmeta->pstmt->hstmt , sqlTempStmt, SQL_NTS);
+	memFree (&sqlTempStmt);
 	if (rc != SQL_SUCCESS ) {
 		check_error (pCon, pSQLmeta);
 		nox_sqlClose (&pSQLmeta); // Free the data
@@ -1481,8 +1587,8 @@ LGL nox_sqlUpdateOrInsert (PNOXSQLCONNECT pCon, BOOL update, PUCHAR table  , PNO
 	PUCHAR valArr[64];
 	SHORT  valArrIx= 0;
 
-	UCHAR sqlTempStmt[32766];
-	UCHAR where [4096];
+	PUCHAR sqlTempStmt = NULL;
+	PUCHAR where = NULL;
 	UCHAR temp  [256];
 	PUCHAR stmt = sqlTempStmt;
 	PNOXNODE pNode;
@@ -1506,7 +1612,8 @@ LGL nox_sqlUpdateOrInsert (PNOXSQLCONNECT pCon, BOOL update, PUCHAR table  , PNO
 		goto cleanup;
 	}
 
-	strFormat(where , whereP , pSqlParms);
+	where = strFormatAlloc (whereP , pSqlParms , 0);
+	sqlTempStmt = memAlloc (rowStmtSize (table , pRow , where));
 	rc = doInsertOrUpdate(pSQL, pSQLmeta, sqlTempStmt, table,pRow, where , update);
 
 	// So far we suceeded: But with data ?
@@ -1520,6 +1627,8 @@ LGL nox_sqlUpdateOrInsert (PNOXSQLCONNECT pCon, BOOL update, PUCHAR table  , PNO
 
 	// Now we are done with the select statement:
 cleanup:
+	memFree (&where);
+	memFree (&sqlTempStmt);
 	if (pRowP != pRow) nox_NodeDelete (pRow);
 	nox_sqlClose (&pSQLmeta); // Free the data
 	nox_sqlClose (&pSQL);
@@ -1528,13 +1637,17 @@ cleanup:
 /* ------------------------------------------------------------- */
 LGL nox_sqlUpdate (PNOXSQLCONNECT pCon, PUCHAR table  , PNOXNODE pRow , PUCHAR where, PNOXNODE pSqlParms  )
 {
-	UCHAR  whereStr [1024];
+	PUCHAR whereStr = NULL;
+	LGL    err;
 	for(; *where == ' ' ; where++); // skip leading blanks
 	if (*where > ' ' && ! amemiBeginsWith(where, "where")) {
+		whereStr = memAlloc (strlen(where) + 8);
 		asprintf (whereStr , "where %s" , where);
 		where = whereStr;
 	}
-	return nox_sqlUpdateOrInsert  (pCon, true , table  , pRow , where, pSqlParms);
+	err = nox_sqlUpdateOrInsert  (pCon, true , table  , pRow , where, pSqlParms);
+	memFree (&whereStr);
+	return err;
 }
 /* ------------------------------------------------------------- */
 LGL nox_sqlUpdateVC (PNOXSQLCONNECT pCon, PLVARCHAR table  , PNOXNODE pRow , PLVARCHAR whereP, PNOXNODE pSqlParmsP  )
