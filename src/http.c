@@ -180,7 +180,8 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PLVARCHAR optionsP)
 
 	// buiild the script / curl command
 	p += sprintf( p , "touch -c 1208 %s;" , temp2);
-	p += sprintf( p , "/QOpenSys/pkgs/bin/curl -k --silent --show-error -o %s", temp2);
+	// -q (first): no .curlrc - the profile's curl defaults must not change the request
+	p += sprintf( p , "/QOpenSys/pkgs/bin/curl -q -k --silent --show-error -o %s", temp2);
 
 	if (pNode) {
 		// The positive value causes it to not produce BOM code
