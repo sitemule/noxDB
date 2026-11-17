@@ -191,7 +191,8 @@ PJXNODE jx_httpRequest (PUCHAR url, PJXNODE pNode, PUCHAR options , PUCHAR forma
    tmpnam(error);
 
    // Build the cur command, note: ignore sertificate error due to IBM i implementation
-   p += sprintf( p , "curl -s -k -o %s", temp2);
+   // -q (first): no .curlrc - the profile's curl defaults must not change the request
+   p += sprintf( p , "curl -q -s -k -o %s", temp2);
 
    if (pNode) {
       // The negative causes it not to produce BOM code
