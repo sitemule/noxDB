@@ -499,6 +499,11 @@ void nox_WriteJsonStmf (
 
 void nox_WriteJsonFd (PNOXNODE pNode, int fd);
 
+// The JSON in chunks to a writer of your own: writer(context, buf, len) per chunk,
+// a negative return stops the output. No size limit. Returns the bytes produced.
+typedef LONG (*NOX_WRITEFUNC) (PVOID context, PUCHAR buf, ULONG len);
+LONG nox_WriteJsonCallback (PNOXNODE pNode, NOX_WRITEFUNC writer, PVOID context);
+
 typedef void (*NOX_DATAGEN)();
 NOX_DATAGEN nox_DataGenFd (int fd);
 

@@ -285,6 +285,53 @@ void nox_WriteJsonFd (PNOXNODE pNode, int fd)
    fclose(pNoxWriter->outFile);
 }
 // ----------------------------------------------------------------------------
+// nox_WriteJsonCallback: the JSON in chunks of up to 4 KB to the caller's
+// writer - no buffer for the whole output, so no size limit. The writer gets
+// the caller's context back with each chunk; a negative return from it stops
+// the output. Returns the number of bytes produced.
+// ----------------------------------------------------------------------------
+typedef struct _CALLBACKWRITER {
+   NOX_WRITEFUNC writer;
+   PVOID         context;
+} CALLBACKWRITER, * PCALLBACKWRITER;
+
+static LONG nox_callbackWriter (PSTREAM p , PUCHAR buf , ULONG len)
+{
+   PNOXWRITER      pNoxWriter = p->handle;
+   PCALLBACKWRITER pCallback  = pNoxWriter->scratchPad;
+   return pCallback->writer (pCallback->context, buf, len);
+}
+
+LONG nox_WriteJsonCallback (PNOXNODE pNode, NOX_WRITEFUNC writer, PVOID context)
+{
+   PSTREAM        pStream;
+   LONG           len;
+   NOXWRITER      noxWriter;
+   PNOXWRITER     pNoxWriter = &noxWriter;
+   CALLBACKWRITER callback;
+
+   if (pNode == NULL || writer == NULL) return 0;
+   if (pNode->signature != NOX_NODESIG) { // a string, as nox_AsJsonTextMem takes it
+      len = strlen((PUCHAR) pNode);
+      return writer (context, (PUCHAR) pNode, len) < 0 ? -1 : len;
+   }
+
+   memset(pNoxWriter , 0 , sizeof(noxWriter));
+   callback.writer  = writer;
+   callback.context = context;
+   pNoxWriter->doTrim     = true;
+   pNoxWriter->scratchPad = &callback;
+
+   pStream = stream_new (4096);
+   pStream->handle = pNoxWriter;
+   pStream->writer = nox_callbackWriter;
+
+   jsonStream (pNode , pStream);
+   len = pStream->totalSize;
+   stream_delete (pStream); // flushes the last chunk
+   return len;
+}
+// ----------------------------------------------------------------------------
 void  jsonStreamRunner   (PSTREAM pStream)
 {
    PNOXNODE  pNode = pStream->context;

@@ -1621,6 +1621,26 @@ Dcl-PR nox_WriteJsonFd extproc(*CWIDEN : 'nox_WriteJsonFd');
 End-PR;
 
 ///
+// Write JSON to a writer procedure
+//
+// Streams the object tree as JSON to a procedure of your own, in chunks of up
+// to 4 KB as the serializer produces them - without buffering the full output,
+// so there is no size limit. The writer is called as
+// writer(context : pBuf : len) and returns int(10): a negative value stops the
+// output. The JSON is UTF-8.
+//
+// @param (input) Node
+// @param (input) Procedure pointer to the writer
+// @param (input) Pointer handed to the writer with each chunk
+// @return Number of bytes produced
+///
+Dcl-PR nox_WriteJsonCallback Int(10) extproc(*CWIDEN : 'nox_WriteJsonCallback');
+  pNode          Pointer    value;
+  writer         Pointer(*proc) value;
+  context        Pointer    value;
+End-PR;
+
+///
 // To JSON string
 //
 // Returns the passed object tree as a JSON string.
