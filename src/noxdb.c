@@ -204,7 +204,7 @@ PJXNODE jx_traceNode (PUCHAR text, PJXNODE pNode)
       jx_WriteJsonStmf (pNode, filename , 1208, OFF, NULL);
    } else if (debugger == 2) {
       UCHAR temp [65536];
-      int l = jx_AsJsonTextMem (pNode , temp , sizeof(temp), 0);
+      int l = jx_AsJsonTextMem (pNode , temp , sizeof(temp) - 1, 0); // room for the terminator
       temp [l] = 0;
       puts (text);
       puts (temp);
@@ -466,7 +466,7 @@ PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
    do {
       bubles = false;
       pNode1  = pNode->pNodeChildHead;
-      if (pNode1 == NULL ) return;
+      if (pNode1 == NULL ) return pNode;
       pNode2  = pNode1->pNodeSibling;
 
       while (pNode2) {

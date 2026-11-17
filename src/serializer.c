@@ -322,6 +322,9 @@ LONG jx_AsJsonTextMem (PJXNODE pNode, PUCHAR buf , ULONG maxLenP, int targetCcsi
 	len = pStream->totalSize;
 	stream_putc   (pStream,'\0');
 	stream_delete (pStream);
+	// The length of what is in "buf" - not the length the whole JSON text would
+	// have had: the writer stops at maxSize
+	if (len > (LONG) pjWrite->bufLen) len = pjWrite->bufLen;
 	jx_deleteWriter(pjWrite);
 
 	jx_SetDelimiters2 (&storeDelimiters);

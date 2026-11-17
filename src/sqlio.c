@@ -352,7 +352,10 @@ static int insertMarkerValue (PUCHAR buf , PUCHAR marker, PJXNODE parms)
    pNode = jx_GetNode   ( parms , marker);
    if (pNode) {
       value = jx_GetValuePtr  ( pNode , "" , NULL );
-      if (pNode->isLiteral) {
+      if (value == NULL) {          // an object / array or a null: SQL null
+         strcpy(buf, "NULL");
+         len = 4;
+      } else if (pNode->isLiteral) {
          strcpy(buf, value);
          len = strlen(buf);
       } else {
@@ -447,7 +450,7 @@ int jx_sqlExecDirectTrace(PJXSQL pSQL , int hstmt, PUCHAR sqlstmt)
    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
      rc2= SQLGetDiagRec(SQL_HANDLE_STMT,hstmt,1,pConnection->sqlState,&sqlCode, pTrc->text,sizeof(pTrc->text), &length);
      sprintf( jxMessage , "%-5.5s %0.*s" , pConnection->sqlState , length, pTrc->text);
-     jx_sqlClose (&pSQL); // Free the data
+     // The caller closes the statement - closing it here too freed it twice
    }
    pTrc->text [length] = '\0';
    ts_nowstr(pTrc->tsEnd); // TODO !!! not form global
@@ -533,8 +536,11 @@ static LONG strFormatLength (PUCHAR in , PJXNODE pParms)
           pNode = jx_GetNode ( pParms , marker);
           if (pNode) {
              value = jx_GetValuePtr ( pNode , "" , NULL );
-             if (value == NULL) value = "";
-             len += pNode->isLiteral ? strlen(value) : 2 * strlen(value) + 2;
+             if (value == NULL) {
+                len += 4;                  // NULL
+             } else {
+                len += pNode->isLiteral ? strlen(value) : 2 * strlen(value) + 2;
+             }
           }
        }
      } else {
@@ -903,6 +909,7 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
    rc = jx_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, pSQL->sqlstmt);
    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
      // is checked in abowe    check_error (pSQL);
+     jx_sqlClose (&pSQL); // Free the data
      return NULL; // we have an error
    }
 
@@ -3512,7 +3519,7 @@ SHORT  doInsertOrUpdate(
 
 
          if (pNode->type == ARRAY ||  pNode->type == OBJECT) {
-            value = pTempBuf = memAlloc(pColData->collen);
+            value = pTempBuf = memAlloc(pColData->collen + 1); // room for the terminator
             lbytes  = jx_AsJsonTextMem (pNode , value ,  pColData->collen , 0);
             value [lbytes] = '\0';
          } else {
