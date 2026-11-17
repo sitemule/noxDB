@@ -133,7 +133,10 @@ static int insertMarkerValue (PUCHAR buf , PUCHAR marker, PNOXNODE parms)
 	pNode = nox_GetNode   ( parms , marker);
 	if (pNode) {
 		value = nox_GetValuePtr  ( pNode , "" , NULL );
-		if (pNode->isLiteral) {
+		if (value == NULL) {          // an object / array or a null: SQL null
+			strcpy(buf, "NULL");
+			len = 4;
+		} else if (pNode->isLiteral) {
 			strcpy(buf, value);
 			len = strlen(buf);
 		} else {
@@ -159,7 +162,7 @@ int nox_sqlExecDirectTrace(PNOXSQLCONNECT pCon, PNOXSQL pSQL , int hstmt, PUCHAR
 	if (rc != SQL_SUCCESS) {
 		rc2= SQLGetDiagRec(SQL_HANDLE_STMT,hstmt,1,pCon->sqlState,&pCon->sqlCode, pTrc->text,sizeof(pTrc->text), &length);
 		asprintf( jxMessage , "%-5.5s %0.*s" , pCon->sqlState , length, pTrc->text);
-		nox_sqlClose (&pSQL); // Free the data
+		// The caller closes the statement - closing it here too freed it twice
 	}
 	pTrc->text [length] = '\0';
 	ts_nowstr(pTrc->tsEnd); // TODO !!! not form global
@@ -235,8 +238,11 @@ static LONG strFormatLength (PUCHAR in , PNOXNODE pParms)
 				pNode = nox_GetNode ( pParms , marker);
 				if (pNode) {
 					value = nox_GetValuePtr ( pNode , "" , NULL );
-					if (value == NULL) value = "";
-					len += pNode->isLiteral ? strlen(value) : 2 * strlen(value) + 2;
+					if (value == NULL) {
+						len += 4;                  // NULL
+					} else {
+						len += pNode->isLiteral ? strlen(value) : 2 * strlen(value) + 2;
+					}
 				}
 			}
 		} else {
@@ -368,6 +374,7 @@ PNOXSQL nox_sqlOpen(PNOXSQLCONNECT pCon, PUCHAR sqlstmt , PNOXNODE pSqlParmsP, B
 	rc = nox_sqlExecDirectTrace(pCon, pSQL , pSQL->pstmt->hstmt, pSQL->sqlstmt);
 	if (rc != SQL_SUCCESS ) {
 		// is checked in abowe    check_error (pSQL);
+		nox_sqlClose (&pSQL); // Free the data
 		return NULL; // we have an error
 	}
 

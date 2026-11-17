@@ -79,29 +79,49 @@ static PUCHAR putShellQuoted (PUCHAR p, PUCHAR s)
 }
 /* ---------------------------------------------------------------------------
    "options" are curl options, i.e.: -H 'Authorization: Bearer x' -X PUT
-   Split them into words the way the shell would (blanks, '...' and "...")
-   and pass each word quoted - so the words reach curl, but nothing in them
-   is run by the shell. Note: they are still curl options - an application
-   must not build them from untrusted input.
+   Split them into words the way the shell would and pass each word quoted -
+   so the words reach curl, but nothing in them is run by the shell:
+   - words are separated by blanks, tabs and line breaks
+   - '...' is taken as it is
+   - "..." too, except that a backslash before " or a backslash is removed
+   - outside quotes a backslash makes the next character an ordinary one
+   No $NAME, $( ), ` ` or ~ expansion. "bs" is the job CCSID's backslash
+   (a variant character). Note: they are still curl options - an
+   application must not build them from untrusted input.
    --------------------------------------------------------------------------- */
-static PUCHAR putShellOptions (PUCHAR p, PUCHAR opt)
+static BOOL isShellBlank (UCHAR c)
+{
+   return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
+}
+static PUCHAR putShellOptions (PUCHAR p, PUCHAR opt, UCHAR bs)
 {
    for (;;) {
       UCHAR quote = 0;
-      for (; *opt == ' ' ; opt++);
+      for (; isShellBlank(*opt) ; opt++);
       if (*opt == '\0') break;
       *(p++) = ' ';
       *(p++) = '\'';
       for (; *opt ; opt++) {
-         if (quote) {
+         if (quote == '\'') {
             if (*opt == quote) {
                quote = 0;
             } else {
                p = putShellChar (p , *opt);
             }
+         } else if (quote == '"') {
+            if (*opt == quote) {
+               quote = 0;
+            } else if (*opt == bs && (opt[1] == '"' || opt[1] == bs)) {
+               p = putShellChar (p , *(++opt));
+            } else {
+               p = putShellChar (p , *opt);
+            }
+         } else if (*opt == bs) {
+            if (opt[1] == '\0') break;     // a backslash at the end: nothing
+            p = putShellChar (p , *(++opt));
          } else if (*opt == '\'' || *opt == '"') {
             quote = *opt;
-         } else if (*opt == ' ') {
+         } else if (isShellBlank(*opt)) {
             break;
          } else {
             p = putShellChar (p , *opt);
@@ -124,6 +144,7 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PLVARCHAR optionsP)
 	UCHAR   temp2[256];
 	UCHAR   error[256];
 	UCHAR   at [2];
+	UCHAR   bs [2];
 	PUCHAR  url;
 	PNOXNODE  pRes;
 	PUCHAR  options;
@@ -149,6 +170,7 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PLVARCHAR optionsP)
 	// Get the job version of a @	
 	#pragma convert(1252)  
 	Xlatestr (at , "@" , 1252 , 0);
+	Xlatestr (bs , "\\" , 1252 , 0); // and of a backslash
 	#pragma convert(0)  
 	
 	// Build workfile names:
@@ -169,7 +191,7 @@ PNOXNODE nox_httpRequest (PLVARCHAR urlP, PNOXNODE pNode, PLVARCHAR optionsP)
 		"-H 'Content-Type: application/json; charset=utf-8' "
 		"-H 'Accept: application/json' "
 	);
-	p = putShellOptions (p , options);
+	p = putShellOptions (p , options, bs[0]);
 	// --url: the url is never taken as a curl option, even if it starts with -
 	p += sprintf( p ,  " --url ");
 	p = putShellQuoted (p , url);

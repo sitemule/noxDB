@@ -93,7 +93,7 @@ PNOXNODE nox_traceNode (PUCHAR text, PNOXNODE pNode)
 		nox_WriteJsonStmf (pNode, filename , 1208, OFF, NULL);
 	} else if (debugger == 2) {
 		UCHAR temp [65536];
-		int l = nox_AsJsonTextMem (pNode , temp , sizeof(temp));
+		int l = nox_AsJsonTextMem (pNode , temp , sizeof(temp) - 1); // room for the terminator
 		// TODO!! 2 ebcdic
 		temp [l] = 0;
 		puts (text);
@@ -407,7 +407,7 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
 	do {
 		bubles = false;
 		pNode1  = pNode->pNodeChildHead;
-		if (pNode1 == NULL ) return;
+		if (pNode1 == NULL ) return pNode;
 		pNode2  = pNode1->pNodeSibling;
 
 		while (pNode2) {
