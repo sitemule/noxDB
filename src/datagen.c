@@ -42,6 +42,15 @@
 #endif
 
 
+// Names are UTF-16 and go into name[256] after conversion (up to 3 bytes for
+// 2): a name longer than 170 characters is cut
+#define DG_NAME_MAX_CHARS 170
+#define DG_NAME_BYTES(p) ((((p)->name.len > DG_NAME_MAX_CHARS) ? DG_NAME_MAX_CHARS : (p)->name.len) * 2)
+// A value is UTF-16 (valueLenBytes): up to 3 bytes for 2 after conversion,
+// plus the terminating zero. Short values on the stack, long ones on the heap
+#define DG_VALUE_BYTES(l) ((l) / 2 * 3 + 4)
+#define DG_VALUE_STACK 32766
+
 static PJXNODE * ppRoot;
 static iconv_t iconvCd;
 static UCHAR countSuffix [64] = "";
@@ -182,7 +191,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
                 skipDepth = 1;
                 break;
             }
-            namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , DG_NAME_BYTES(pParms));
             name[namelen] = '\0';
 
             pObj  = jx_NewObject(NULL);
@@ -208,7 +217,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
                 skipDepth = 1;
                 break;
             }
-            namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , DG_NAME_BYTES(pParms));
             name[namelen] = '\0';
 
             pArr = jx_NewArray(NULL);
@@ -236,7 +245,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
                 skipDepth = 1;
                 break;
             }
-            namelen = XlateBuffer(iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            namelen = XlateBuffer(iconvCd, name , (PUCHAR) &pParms->name.name , DG_NAME_BYTES(pParms));
             name[namelen] = '\0';
 
             pArr = jx_NewArray(NULL);
@@ -257,7 +266,9 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
         }
         case QrnDgEvent_11_ScalarValue      : {
             PJXNODE pValueNode;
-            UCHAR value [32766];
+            UCHAR valueBuf [DG_VALUE_STACK];
+            ULONG valueSize = DG_VALUE_BYTES(pParms->u.scalar.valueLenBytes);
+            PUCHAR value = (valueSize <= sizeof(valueBuf)) ? valueBuf : memAlloc(valueSize);
             ULONG valuelen;
             PUCHAR pValue = value;
             UCHAR name [256];
@@ -265,10 +276,11 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             NODETYPE  type;
 
             if (!acceptElement (pNode)) {   // array element beyond the limit
+                if (value != valueBuf) memFree(&value);
                 break;
             }
 
-            namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            namelen = XlateBuffer (iconvCd, name , (PUCHAR) &pParms->name.name , DG_NAME_BYTES(pParms));
             name[namelen] = '\0';
 
             valuelen = XlateBuffer (iconvCd, value , (PUCHAR) pParms->u.scalar.value  , pParms->u.scalar.valueLenBytes);
@@ -294,6 +306,7 @@ void  jx_dataGenMapper (QrnDgParm_T * pParms)
             }
 
             pValueNode = jx_NodeAdd (pNode , RL_LAST_CHILD , name , pValue, type);
+            if (value != valueBuf) memFree(&value);
             if (first) {
                 first = false;
                 *ppRoot = pValueNode;

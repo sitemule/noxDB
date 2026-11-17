@@ -126,7 +126,8 @@ void jx_AppendName (PJXCOM pJxCom)
    PJXNODE pNode;
    UCHAR c = *pJxCom->pWorkBuf;
 
-   if (*pJxCom->pNameIx > sizeof(pJxCom->StartName)) {
+   // room for this character and the terminating zero (StartName and EndName have the same size)
+   if (*pJxCom->pNameIx >= sizeof(pJxCom->StartName) - 1) {
       jx_SetMessage( "Name to long at (%d:%d)", pJxCom->LineCount, pJxCom->ColCount);
       pJxCom->State = XML_EXIT_ERROR;
       return;

@@ -482,6 +482,7 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PJXNODE parms)
          for (;isalnum(*in) || *in=='.' || *in=='/' || *in=='_' ; in++);
          markerLen = in - pMarker ;
        }
+       if (markerLen >= sizeof(marker)) markerLen = sizeof(marker) - 1;
        if (markerLen > 0) {
           substr(marker , pMarker , markerLen );
           out += insertMarkerValue (out , marker, pParms );
@@ -497,6 +498,72 @@ PUCHAR strFormat (PUCHAR out, PUCHAR in , PJXNODE parms)
   }
 
   return res;
+}
+/* ------------------------------------------------------------- */
+/* The length strFormat writes for "in" with the $name / ${name}  */
+/* markers filled in from pParms (a node) - not counting the      */
+/* terminator. A value is counted with all its quotes doubled, so */
+/* this is an upper bound.                                        */
+/* ------------------------------------------------------------- */
+static LONG strFormatLength (PUCHAR in , PJXNODE pParms)
+{
+  PUCHAR pMarker, value;
+  PJXNODE pNode;
+  int markerLen ;
+  UCHAR marker [64];
+  LONG len = 0;
+
+  if (pParms == NULL) return strlen(in);
+
+  while (*in) {
+     if (*in == jobDollar) {
+       pMarker = ++in;
+       if (*pMarker == jobCurBeg) {
+         pMarker = ++in; // skip the {
+         for (;*in && *in != jobCurEnd ;in++);
+         markerLen = in - pMarker ;
+         if (*in) in++; // skip the } when not end of string
+       } else {
+         for (;isalnum(*in) || *in=='.' || *in=='/' || *in=='_' ; in++);
+         markerLen = in - pMarker ;
+       }
+       if (markerLen >= sizeof(marker)) markerLen = sizeof(marker) - 1;
+       if (markerLen > 0) {
+          substr(marker , pMarker , markerLen );
+          pNode = jx_GetNode ( pParms , marker);
+          if (pNode) {
+             value = jx_GetValuePtr ( pNode , "" , NULL );
+             if (value == NULL) value = "";
+             len += pNode->isLiteral ? strlen(value) : 2 * strlen(value) + 2;
+          }
+       }
+     } else {
+       len++;
+       in++;
+     }
+  }
+  return len;
+}
+/* ------------------------------------------------------------- */
+/* strFormat into a buffer of its own, big enough for the result  */
+/* plus "extra" bytes the caller appends. Free it with memFree    */
+/* ------------------------------------------------------------- */
+static PUCHAR strFormatAlloc (PUCHAR in , PJXNODE parms, LONG extra)
+{
+   PJXNODE pParms = parms;
+   PUCHAR out;
+
+   if (parms != NULL && OFF == jx_isNode (parms)) {
+      pParms = jx_ParseString((PUCHAR) parms, NULL);
+   }
+
+   out = memAlloc (strFormatLength (in , pParms) + extra + 1);
+   strFormat (out , in , pParms);
+
+   if (pParms != parms) {
+      jx_Close (&pParms);
+   }
+   return out;
 }
 /* ------------------------------------------------------------- */
 static PJXSQL jx_sqlNewStatement(PJXNODE pSqlParms, BOOL exec, BOOL scroll)
@@ -735,7 +802,7 @@ BOOL findHasFetch  (PUCHAR sqlStmt)
 PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG startP , LONG limitP )
 {
 
-   UCHAR sqlTempStmt[32766];
+   PUCHAR sqlTempStmt;
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    PJXNODE pSqlParms  =  (pParms->OpDescList->NbrOfParms >= 2 ) ? pSqlParmsP : NULL;
    LONG   format      =  (pParms->OpDescList->NbrOfParms >= 3 ) ? formatP : 0;
@@ -771,8 +838,8 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       rc = SQLSetEnvAttr  (pConnection->henv, attr , &attrParm  , 0);
    }
 
-   // build the final sql statement
-   strFormat(sqlTempStmt , sqlstmt , pSqlParms);
+   // build the final sql statement - room for " limit n offset n with ur"
+   sqlTempStmt = strFormatAlloc (sqlstmt , pSqlParms , 64);
 
 
    //// huxi !! need uncomitted read for blob fields
@@ -830,6 +897,7 @@ PJXSQL jx_sqlOpen(PUCHAR sqlstmt , PJXNODE pSqlParmsP, LONG formatP , LONG start
       }
    }
    pSQL->sqlstmt = strdup(sqlTempStmt);
+   memFree (&sqlTempStmt);
 
 
    rc = jx_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, pSQL->sqlstmt);
@@ -2928,9 +2996,9 @@ LGL jx_sqlExec(PUCHAR sqlstmt , PJXNODE pSqlParms)
 
    // run  the  statement in "sqlstr"
    if (pParms->OpDescList->NbrOfParms >= 2) {
-      UCHAR sqlTempStmt[32766];
-      strFormat(sqlTempStmt , sqlstmt , pSqlParms);
+      PUCHAR sqlTempStmt = strFormatAlloc (sqlstmt , pSqlParms , 0);
       rc = jx_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, sqlTempStmt);
+      memFree (&sqlTempStmt);
    } else {
       rc = jx_sqlExecDirectTrace(pSQL , pSQL->pstmt->hstmt, sqlstmt);
    }
@@ -3029,6 +3097,37 @@ static BOOL  nodeisblank(PJXNODE pNode)
    return false;
 }
 /* ------------------------------------------------------------- */
+/* Column names for the generated insert / update statements:    */
+/* upper case, cut at the longest name Db2 has (a longer name     */
+/* fails in SQL anyway). "out" holds COLNAME_MAX + 1 bytes        */
+/* ------------------------------------------------------------- */
+#define COLNAME_MAX 128
+static void colName (PUCHAR out , PUCHAR name)
+{
+   UCHAR work [COLNAME_MAX + 1];
+   LONG  len = strlen(name);
+   if (len > COLNAME_MAX) len = COLNAME_MAX;
+   substr (work , name , len);
+   str2upper (out , work);   // Needed for national characters in column names
+}
+/* ------------------------------------------------------------- */
+static LONG rowColumns (PJXNODE pRow)
+{
+   LONG n = 0;
+   PJXNODE pNode;
+   for (pNode = jx_GetNodeChild (pRow); pNode; pNode = jx_GetNodeNext(pNode)) n++;
+   return n;
+}
+/* ------------------------------------------------------------- */
+/* Size of an insert / update / select statement for the columns */
+/* of pRow: per column the name, a comma and "=default" or "?"    */
+/* ------------------------------------------------------------- */
+static LONG rowStmtSize (PUCHAR table , PJXNODE pRow , PUCHAR where)
+{
+   return 128 + strlen(table) + (where ? strlen(where) : 0)
+        + rowColumns (pRow) * (2 * COLNAME_MAX + 32);
+}
+/* ------------------------------------------------------------- */
 static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
    PUCHAR sqlStmt, PUCHAR table, PJXNODE pSqlParms , PUCHAR where)
 {
@@ -3037,7 +3136,7 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
    PJXNODE pNode;
    PUCHAR  name;
    int     colno;
-   UCHAR   temp [128];
+   UCHAR   temp [COLNAME_MAX + 1];
 
    stmt += sprintf (stmt , "update %s set " , table);
 
@@ -3045,7 +3144,7 @@ static void buildUpdate (SQLHSTMT hstmt, SQLHSTMT hMetastmt,
    for ( colno=1; pNode; colno++) {
       if (! isIdColumn(hMetastmt, colno)) {
          name  = jx_GetNodeNamePtr   (pNode);
-         str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+         colName (temp , name);
          if  (nodeisnull(pNode)) {
             stmt += sprintf (stmt , "%s%s=NULL" , comma , temp);
          } else if  (nodeisblank(pNode)) {
@@ -3070,8 +3169,8 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
    PUCHAR  name;
    PUCHAR  value;
    int     i,colno;
-   UCHAR   markers[4096] ;
-   UCHAR   temp [128];
+   PUCHAR  markers = memAlloc (rowColumns (pSqlParms) * 8 + 1);  // ",default" per column at most
+   UCHAR   temp [COLNAME_MAX + 1];
    PUCHAR  pMarker = markers;
 
    stmt += sprintf (stmt , "insert into  %s (" , table);
@@ -3081,7 +3180,7 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
       if (! isIdColumn(hMetaStmt, colno)) {
          if (!nodeisnull(pNode)) {
             name     = jx_GetNodeNamePtr   (pNode);
-            str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+            colName (temp , name);
             stmt    += sprintf (stmt , "%s%s" , comma , temp);
             if  (nodeisblank(pNode)) {
                pMarker+= sprintf (pMarker , "%sdefault" , comma);    // because timesstamp / date can be set as ''
@@ -3094,9 +3193,11 @@ static void buildInsert  (SQLHSTMT hstmt, SQLHSTMT hMetaStmt,
       pNode = jx_GetNodeNext(pNode);
    }
 
+   *pMarker = '\0';
    stmt += sprintf (stmt , ") values( ");
-   stmt += sprintf (stmt , markers);
+   stmt += sprintf (stmt , "%s" , markers);
    stmt += sprintf (stmt , ")") ;
+   memFree (&markers);
 }
 /* ------------------------------------------------------------- */
 void createTracetable(PJXSQLCONNECT pCon)
@@ -3587,10 +3688,10 @@ SHORT  doInsertOrUpdate(
 /* ------------------------------------------------------------- */
 static PJXSQL buildMetaStmt (PUCHAR table, PJXNODE pRow)
 {
-   UCHAR     sqlTempStmt[32766];
+   PUCHAR    sqlTempStmt = memAlloc (rowStmtSize (table , pRow , NULL));
    PUCHAR    stmt = sqlTempStmt;
    PUCHAR    name;
-   UCHAR     temp  [256];
+   UCHAR     temp  [COLNAME_MAX + 1];
    PJXNODE   pNode;
    PUCHAR    comma = "";
    SQLRETURN rc;
@@ -3602,7 +3703,7 @@ static PJXSQL buildMetaStmt (PUCHAR table, PJXNODE pRow)
    pNode    =  jx_GetNodeChild (pRow);
    while (pNode) {
       name  = jx_GetNodeNamePtr   (pNode);
-      str2upper (temp  , name);   // Needed for national charse in columns names i.e.: BELØB
+      colName (temp , name);
       stmt += sprintf (stmt , "%s%s" , comma , temp);
       comma = ",";
       pNode = jx_GetNodeNext(pNode);
@@ -3612,6 +3713,7 @@ static PJXSQL buildMetaStmt (PUCHAR table, PJXNODE pRow)
 
    // prepare the statement that provides the columns
    rc = SQLPrepare(pSQLmeta->pstmt->hstmt , sqlTempStmt, SQL_NTS);
+   memFree (&sqlTempStmt);
    if (rc != SQL_SUCCESS ) {
       check_error (pSQLmeta);
       jx_sqlClose (&pSQLmeta); // Free the data
@@ -3627,8 +3729,8 @@ LGL jx_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PJXNODE pRowP , PUCHAR wh
    PUCHAR valArr[64];
    SHORT  valArrIx= 0;
 
-   UCHAR sqlTempStmt[32766];
-   UCHAR where [4096];
+   PUCHAR sqlTempStmt = NULL;
+   PUCHAR where = NULL;
    UCHAR temp  [256];
    PUCHAR stmt = sqlTempStmt;
    PJXNODE pNode;
@@ -3652,7 +3754,8 @@ LGL jx_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PJXNODE pRowP , PUCHAR wh
       goto cleanup;
    }
 
-   strFormat(where , whereP , pSqlParms);
+   where = strFormatAlloc (whereP , pSqlParms , 0);
+   sqlTempStmt = memAlloc (rowStmtSize (table , pRow , where));
    rc = doInsertOrUpdate(pSQL, pSQLmeta, sqlTempStmt, table,pRow, where , update);
 
    // So far we suceeded: But with data ?
@@ -3666,6 +3769,8 @@ LGL jx_sqlUpdateOrInsert (BOOL update, PUCHAR table  , PJXNODE pRowP , PUCHAR wh
 
    // Now we are done with the select statement:
    cleanup:
+   memFree (&where);
+   memFree (&sqlTempStmt);
    if (pRowP != pRow) jx_NodeDelete (pRow);
    jx_sqlClose (&pSQLmeta); // Free the data
    jx_sqlClose (&pSQL);
@@ -3677,14 +3782,18 @@ LGL jx_sqlUpdate (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParm
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
    PUCHAR  where     = (pParms->OpDescList->NbrOfParms >= 3) ? whereP : "";
    PJXNODE pSqlParms = (pParms->OpDescList->NbrOfParms >= 4) ? pSqlParmsP : NULL;
-   UCHAR  whereStr [1024];
+   PUCHAR whereStr = NULL;
+   LGL    err;
    str2upper(table , table);
    for(; *where == ' ' ; where++); // skip leading blanks
    if (*where > ' ' && ! BeginsWith(where, "where")) {
+       whereStr = memAlloc (strlen(where) + 8);
        sprintf (whereStr , "where %s" , where);
        where = whereStr;
    }
-   return jx_sqlUpdateOrInsert  (true , table  , pRow , where, pSqlParms);
+   err = jx_sqlUpdateOrInsert  (true , table  , pRow , where, pSqlParms);
+   memFree (&whereStr);
+   return err;
 }
 /* ------------------------------------------------------------- */
 LGL jx_sqlInsert (PUCHAR table  , PJXNODE pRow , PUCHAR whereP, PJXNODE pSqlParmsP  )

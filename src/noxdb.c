@@ -412,6 +412,22 @@ LGL jx_IsLiteral (PJXNODE node)
 /* ---------------------------------------------------------------------------
    use simple bouble-sort to sort an array by keyvalues
    --------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+   The sort keys are split into 256 byte buffers: each "key:option" between
+   the commas must fit
+   --------------------------------------------------------------------------- */
+static BOOL sortKeysFit (PUCHAR fields)
+{
+   LONG len = 0;
+   for (; *fields ; fields++) {
+      if (*fields == ',') {
+         len = 0;
+      } else if (++len > 255) {
+         return FALSE;
+      }
+   }
+   return TRUE;
+}
 PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
@@ -430,7 +446,10 @@ PJXNODE jx_ArraySort(PJXNODE pNode, PUCHAR fieldsP, USHORT optionsP)
    // if (pNode == NULL || pNode->type != ARRAY) return;
 
    // Lets allow to sourt anuthing ( XML will work too then)
-   if (pNode == NULL) return;
+   if (pNode == NULL) return pNode;
+
+   // A key is a node name or path: one longer than 255 bytes is not sorted on
+   if (! sortKeysFit (fields)) return pNode;
 
    // Split the list into array elements
    // handle the following syntax:

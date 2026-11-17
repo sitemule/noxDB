@@ -364,10 +364,21 @@ static int buildArgBufferArray (PJXMETHOD pMethod, PJXNODE pParms, PVOID argArra
    return args;
 }
 
+/* ------------------------------------------------------------- */
+/* Copy at most size - 1 bytes and terminate                       */
+/* ------------------------------------------------------------- */
+static void strcpyMax (PUCHAR out, PUCHAR in, LONG size)
+{
+   LONG len = strlen(in);
+   if (len > size - 1) len = size - 1;
+   memcpy (out , in , len);
+   out[len] = '\0';
+}
+/* ------------------------------------------------------------- */
 static PJXNODE newReturnNode (PJXPARMMETA pMethodParm, PUCHAR pParmBuffer )
 {
 
-   UCHAR data [32000]; // TODO - dynamic size
+   UCHAR data [32000]; // TODO - dynamic size - longer values are cut
 
 	UCHAR    signature; // always hex 00
 	UCHAR    name[PROC_NAME_MAX];
@@ -403,13 +414,14 @@ static PJXNODE newReturnNode (PJXPARMMETA pMethodParm, PUCHAR pParmBuffer )
          break;
       }
       case JX_DTYPE_CHAR: {
-         strrighttrimncpy(data ,pParmBuffer , pMethodParm->length );
+         strrighttrimncpy(data ,pParmBuffer , min(pMethodParm->length , sizeof(data) - 1));
          break;
       }
       case JX_DTYPE_VARCHAR: {
          int actlen =  (pMethodParm->precision == 4) ? *(PULONG) pParmBuffer : *(PUSHORT) pParmBuffer ;
-         if (actlen > sizeof(data) || actlen > pMethodParm->length ) {
-            actlen = min( sizeof(data) , pMethodParm->length);
+         // room for the terminating zero too
+         if (actlen < 0 || actlen > sizeof(data) - 1 || actlen > pMethodParm->length ) {
+            actlen = (actlen < 0) ? 0 : min( sizeof(data) - 1 , pMethodParm->length);
          }
          substr (data  , pParmBuffer + pMethodParm->precision ,actlen);
          break;
@@ -807,7 +819,7 @@ PJXPARMMETA newMethodParm ( PJXNODE pParmMeta)
    PUCHAR p;
    PJXPARMMETA pMethodParm  = memAlloc (sizeof(JXPARMMETA));
    memset (pMethodParm , 0, sizeof(JXPARMMETA));
-   strcpy(pMethodParm->name , parmMetaValue ( pParmMeta, "name"));
+   strcpyMax(pMethodParm->name , parmMetaValue ( pParmMeta, "name"), sizeof(pMethodParm->name));
    //  TODO !! Cater for PCML version before 7.0
    // if (0 == strcmp("struct" ,jx_GetNodeNamePtr (pParmMeta))) {
    //   pMethodParm->dType = JX_DTYPE_STRUCTURE;
@@ -927,7 +939,7 @@ static PJXNODE buildParmElements(PJXNODE pPcmlProgram, PJXNODE pStructs, PLONG o
             break;
          }
          case JX_DTYPE_DATE:  {
-            strcpy ( pMethodParm->format , parmMetaValue ( pParmMeta, "dateformat"));
+            strcpyMax ( pMethodParm->format , parmMetaValue ( pParmMeta, "dateformat"), sizeof(pMethodParm->format));
             pMethodParm->graphDataType = VALUE;
             pMethodParm->separatorChar = convertSeperator(
                parmMetaValue ( pParmMeta, "dateseparator")
@@ -937,7 +949,7 @@ static PJXNODE buildParmElements(PJXNODE pPcmlProgram, PJXNODE pStructs, PLONG o
          }
 
          case JX_DTYPE_TIME:  {
-            strcpy ( pMethodParm->format , parmMetaValue ( pParmMeta, "timeformat"));
+            strcpyMax ( pMethodParm->format , parmMetaValue ( pParmMeta, "timeformat"), sizeof(pMethodParm->format));
             pMethodParm->graphDataType = VALUE;
             pMethodParm->separatorChar = convertSeperator(
                parmMetaValue ( pParmMeta, "timeseparator")

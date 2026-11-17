@@ -290,7 +290,8 @@ UCHAR SkipBlanks (PJXCOM pJxCom)
    --------------------------------------------------------------------------- */
 void CheckBufSize(PJXCOM pJxCom)
 {
-   if (pJxCom->DataIx >= pJxCom->DataSize ||  pJxCom->Data  == NULL) {
+   // room for the next character and the terminating zero after it
+   if (pJxCom->DataIx + 1 >= pJxCom->DataSize ||  pJxCom->Data  == NULL) {
       pJxCom->DataSize += DATA_SIZE;
       memRealloc(&pJxCom->Data , pJxCom->DataSize ); // Initial size
    }
