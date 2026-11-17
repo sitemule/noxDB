@@ -42,9 +42,9 @@ extern iconv_t xlate_1200_to_1208;
 // ---------------------------------------------------------------------------
 // nox_DataGen state  (thread-local so concurrent threads don't interfere)
 // ---------------------------------------------------------------------------
-// Names are UTF-16 and go into name[256] as UTF-8 (up to 3 bytes for 2):
-// a name longer than 170 characters is cut
-#define DG_NAME_MAX_CHARS 170
+// Names are UTF-16 and go into name[256]: one UTF-16 unit can become 3 bytes,
+// so a name longer than 85 characters is cut
+#define DG_NAME_MAX_CHARS 85
 #define DG_NAME_BYTES(p) ((((p)->name.len > DG_NAME_MAX_CHARS) ? DG_NAME_MAX_CHARS : (p)->name.len) * 2)
 // A value is UTF-16 (valueLenBytes) and becomes UTF-8: up to 3 bytes for 2,
 // plus the terminating zero. Short values on the stack, long ones on the heap

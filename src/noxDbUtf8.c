@@ -136,7 +136,7 @@ PNOXNODE nox_traceNode (PUCHAR text, PNOXNODE pNode)
       }
       case 2: {
          UCHAR temp [65536];
-         int l = nox_AsJsonTextMem (pNode , temp , sizeof(temp));
+         int l = nox_AsJsonTextMem (pNode , temp , sizeof(temp) - 1); // room for the terminator
          // TODO!! 2 ebcdic
          temp [l] = 0;
          puts (text);
@@ -449,7 +449,7 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
    do {
       bubles = false;
       pNode1  = pNode->pNodeChildHead;
-      if (pNode1 == NULL ) return;
+      if (pNode1 == NULL ) return pNode;
       pNode2  = pNode1->pNodeSiblingNext;
 
       while (pNode2) {
