@@ -398,6 +398,22 @@ LGL nox_IsLiteral (PNOXNODE node)
 // use simple bouble-sort to sort an array by keyvalues
 // ---------------------------------------------------------------------------
 #pragma convert(1252)
+/* ---------------------------------------------------------------------------
+   The sort keys are split into 256 byte buffers: each "key:option" between
+   the commas must fit
+   --------------------------------------------------------------------------- */
+static BOOL sortKeysFit (PUCHAR fields)
+{
+   LONG len = 0;
+   for (; *fields ; fields++) {
+      if (*fields == ',') {
+         len = 0;
+      } else if (++len > 255) {
+         return FALSE;
+      }
+   }
+   return TRUE;
+}
 PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
 {
    PNOXNODE pNodeNext, pNode1, pNode2, pCompNode1, pCompNode2 ;
@@ -419,6 +435,8 @@ PNOXNODE nox_ArraySort(PNOXNODE pNode, PUCHAR fields, BOOL useLocale)
    // Split the list into array elements
    // handle the following syntax:
    //    key1:ASC,key2:DESC,key3,key:desc
+   // A key is a node name or path: one longer than 255 bytes is not sorted on
+   if (! sortKeysFit (fields)) return pNode;
    for(kix=0 ; kix < 256 ; kix ++) {
       UCHAR key [256];
       UCHAR descStr  [256];

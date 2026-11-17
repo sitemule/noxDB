@@ -42,6 +42,15 @@ extern iconv_t xlate_1200_to_1208;
 // ---------------------------------------------------------------------------
 // nox_DataGen state  (thread-local so concurrent threads don't interfere)
 // ---------------------------------------------------------------------------
+// Names are UTF-16 and go into name[256] as UTF-8 (up to 3 bytes for 2):
+// a name longer than 170 characters is cut
+#define DG_NAME_MAX_CHARS 170
+#define DG_NAME_BYTES(p) ((((p)->name.len > DG_NAME_MAX_CHARS) ? DG_NAME_MAX_CHARS : (p)->name.len) * 2)
+// A value is UTF-16 (valueLenBytes) and becomes UTF-8: up to 3 bytes for 2,
+// plus the terminating zero. Short values on the stack, long ones on the heap
+#define DG_VALUE_BYTES(l) ((l) / 2 * 3 + 4)
+#define DG_VALUE_STACK 4096
+
 static __thread BOOL       upperCaseNames = false;
 static __thread PNOXNODE * ppRoot         = NULL;
 static __thread PNOXNODE   mapper_pNode   = NULL;
@@ -160,7 +169,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
                 skipDepth = 1;
                 break;
             }
-            namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , DG_NAME_BYTES(pParms));
             name[namelen] = '\0';
 
             if (! upperCaseNames) {
@@ -190,7 +199,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
                 skipDepth = 1;
                 break;
             }
-            namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , DG_NAME_BYTES(pParms));
             name[namelen] = '\0';
 
             if (! upperCaseNames) {
@@ -223,7 +232,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
                 break;
             }
 
-            ULONG namelen = XlateBuffer(xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            ULONG namelen = XlateBuffer(xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , DG_NAME_BYTES(pParms));
             name[namelen] = '\0';
 
             if (! upperCaseNames) {
@@ -248,16 +257,21 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
         }
         case QrnDgEvent_11_ScalarValue      : {
             PNOXNODE pValueNode;
-            UCHAR value [pParms->u.scalar.valueLenBytes];
+            UCHAR valueBuf [DG_VALUE_STACK];
+            ULONG valueSize = DG_VALUE_BYTES(pParms->u.scalar.valueLenBytes);
+            PUCHAR value = (valueSize <= sizeof(valueBuf)) ? valueBuf : memAlloc(valueSize);
             ULONG valuelen;
             PUCHAR pValue = value;
             UCHAR name [256];
             ULONG namelen;
            NOX_NODETYPE  type;
 
-            if (!acceptElement(mapper_pNode)) break;
+            if (!acceptElement(mapper_pNode)) {
+                if (value != valueBuf) memFree(&value);
+                break;
+            }
 
-            namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , pParms->name.len * 2);
+            namelen = XlateBuffer (xlate_1200_to_1208, name , (PUCHAR) &pParms->name.name , DG_NAME_BYTES(pParms));
             name[namelen] = '\0';
 
             if (! upperCaseNames) {
@@ -287,6 +301,7 @@ void  nox_dataGenMapper (QrnDgParm_T * pParms)
             }
 
             pValueNode = nox_NodeInsertNew (mapper_pNode , NOX_RL_LAST_CHILD , name , pValue, type);
+            if (value != valueBuf) memFree(&value);
             if (mapper_first) {
                 mapper_first = false;
                 *ppRoot = pValueNode;
@@ -473,7 +488,7 @@ static void fd_push(BOOL isArray)
 
 static void fd_get_name(UCHAR name[256], QrnDgParm_T * pParms)
 {
-    ULONG namelen = XlateBuffer(xlate_1200_to_1208, name, (PUCHAR)&pParms->name.name, pParms->name.len * 2);
+    ULONG namelen = XlateBuffer(xlate_1200_to_1208, name, (PUCHAR)&pParms->name.name, DG_NAME_BYTES(pParms));
     name[namelen] = '\0';
     a_camel_case(name, name);
 }
@@ -533,7 +548,9 @@ void nox_dataGenFdMapper (QrnDgParm_T * pParms)
         }
         case QrnDgEvent_11_ScalarValue: {
             ULONG vlen = pParms->u.scalar.valueLenBytes;
-            UCHAR value[vlen + 1];
+            UCHAR valueBuf [DG_VALUE_STACK];
+            ULONG valueSize = DG_VALUE_BYTES(vlen);
+            PUCHAR value = (valueSize <= sizeof(valueBuf)) ? valueBuf : memAlloc(valueSize);
             ULONG valuelen;
             PUCHAR pValue = value;
             BOOL isLiteral = false;
@@ -568,6 +585,7 @@ void nox_dataGenFdMapper (QrnDgParm_T * pParms)
                 nox_EncodeJsonStream(fdStream, pValue);
                 stream_putc(fdStream, '"');
             }
+            if (value != valueBuf) memFree(&value);
             break;
         }
         case QrnDgEvent_12_Terminate: {

@@ -101,7 +101,8 @@ void nox_AppendName (PNOXCOM pJxCom)
    PNOXNODE pNode;
    UCHAR c = *pJxCom->pFileBuf;
 
-   if (*pJxCom->pNameIx > sizeof(pJxCom->StartName)) {
+   // room for this character and the terminating zero (StartName and EndName have the same size)
+   if (*pJxCom->pNameIx >= sizeof(pJxCom->StartName) - 1) {
       nox_SetMessage( "Name to long at (%d:%d)", pJxCom->LineCount, pJxCom->ColCount);
       pJxCom->State = NOX_EXIT_ERROR;
       return;
