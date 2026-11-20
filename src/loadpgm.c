@@ -608,6 +608,33 @@ static void copyNodeValueIntoBuffer (PUCHAR pParmBuffer, PNOX_PARMMETA pDef, PNO
    copyValueIntoBuffer (pParmBuffer, pDef,  pValue );
 }
 /* ------------------------------------------------------------- */
+// An array with a <array>_LENGTH sibling: when the payload does not give the length,
+// it is the number of elements the payload has ( at most the dimension ).
+// pMembers: the parms / structure members, pBase: where their offsets count from
+static void fillArrayLengths (PUCHAR pBase, PNOXNODE pMembers, PNOXNODE pValueNode)
+{
+   PNOXNODE pMember;
+   if (pValueNode == NULL) return;
+   for (pMember = nox_GetNodeChild (pMembers); pMember ; pMember = nox_GetNodeNext(pMember)) {
+      PNOX_PARMMETA pDef = getParmDefinition (pMember);
+      PNOX_PARMMETA pLen;
+      PNOXNODE pArray, pElement;
+      LONG count = 0;
+      if (pDef == NULL || pDef->dim <= 0 || pDef->pLengthMeta == NULL) continue;
+      pLen = pDef->pLengthMeta;
+      if (nox_GetValuePtr (pValueNode, pLen->name, NULL) != NULL) continue;  // given
+      pArray = isAnonymousArray (pDef->name) ? pValueNode : nox_GetNode (pValueNode, pDef->name);
+      for (pElement = nox_GetNodeChild (pArray); pElement && count < pDef->dim ; pElement = nox_GetNodeNext (pElement)) {
+         count ++;
+      }
+      switch (pLen->length) {
+         case 8: *(long long *) (pBase + pLen->offset) = count; break;
+         case 4: *(int *)       (pBase + pLen->offset) = count; break;
+         case 2: *(short *)     (pBase + pLen->offset) = count; break;
+      }
+   }
+}
+/* ------------------------------------------------------------- */
 // Each member of a structure at its own offset
 static void copyStructIntoBuffer (PUCHAR pStructBuffer, PNOX_PARMMETA pStructMeta, PNOXNODE pValueNode)
 {
@@ -623,6 +650,8 @@ static void copyStructIntoBuffer (PUCHAR pStructBuffer, PNOX_PARMMETA pStructMet
       }
       pMetaElements = nox_GetNodeNext(pMetaElements);
    }
+
+   fillArrayLengths (pStructBuffer, pStructMeta->pStructure, pValueNode);
 }
 /* ------------------------------------------------------------- */
 static void copyNodeIntoBuffer (PUCHAR pParmBuffer , PNOX_PARMMETA pParentMeta , PNOX_PARMMETA pMeta ,  PNOXNODE pParmValueNode )
@@ -688,6 +717,7 @@ static int buildArgBufferArray (PNOX_METHOD pMethod, PNOXNODE pParms, PVOID argA
       copyNodeIntoBuffer (pBuf, NULL , pMeta ,  pParms);
       pParmObj = nox_GetNodeNext(pParmObj);
    }
+   fillArrayLengths (pParmBuffer, nox_GetNode ( pInterface , A_PARMS), pParms);
    return args;
 }
 /* ------------------------------------------------------------- */
@@ -1398,6 +1428,7 @@ static BOOL buildParameters ( PNOXNODE pProgram , PNOXNODE pPcml , PNOXNODE pStr
       if (pPcmlProgram->Name == NULL || 0 != strcmp(pPcmlProgram->Name, A_PROGRAM)) continue;
 
       pParms = buildParmElements(pPcmlProgram , pStructs , &offset, &size);
+      setArrayLengthNodes (pParms);
 
       if (isProgram ) { // *PGM - the first program element is the entry point
          nox_SetIntByName ( pProgram , A_BUFLEN , size);
