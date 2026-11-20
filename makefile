@@ -140,6 +140,7 @@ noxDbUtf8.srvpgm: hdr src/initialize.cpp src/noxDbUtf8.c src/sqlio.c src/sqldiag
 						src/jsonparser.c src/jsonserial.c src/xmlserial.c src/tostream.c src/reader.c \
 						src/ifs.c src/assert.c \
 						src/iterator.c src/http.c src/generic.c src/trace.clle src/datagen.c src/datainto.c src/githash.c \
+						src/loadpgm.c src/callproc.c \
 						ext/src/memUtil.c ext/src/parms.c ext/src/sndpgmmsg.c ext/src/stream.c ext/src/timestamp.c \
 						ext/src/trycatch.c \
 						ext/src/strUtil.c ext/src/varchar.c ext/src/xlate.c ext/src/e2aa2e.c

@@ -3535,8 +3535,10 @@ INT64 nox_GetValueIntVC (PNOXNODE pNode , PLVARCHAR NameP  , INT64 dftParm)
 INT64 nox_GetValueInt (PNOXNODE pNode , PUCHAR NameP  , INT64 dftParm)
 {
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PUCHAR     path  =  (pParms->OpDescList->NbrOfParms >= 2) ? NameP  : NULL ;
-   INT64      dft   =  (pParms->OpDescList->NbrOfParms >= 3) ? dftParm : 0;
+   // From C there is no operational descriptor list: all parameters are given
+   BOOL       fromC =  (pParms->OpDescList == NULL);
+   PUCHAR     path  =  (fromC || pParms->OpDescList->NbrOfParms >= 2) ? NameP  : NULL ;
+   INT64      dft   =  (fromC || pParms->OpDescList->NbrOfParms >= 3) ? dftParm : 0;
    PUCHAR   value;
 
    value = nox_GetValuePtr    (pNode , path , NULL ) ;

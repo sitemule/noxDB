@@ -2044,10 +2044,17 @@ End-PR;
 // Pprograms and procedures section begin
 ///
 
-/// TODO - migrated !!
+///
 // Programs and procedures : Call program
 //
 // Call ILE program compiled with ctl-opt pgminfo(*PCML:*MODULE)
+//
+// The JSON object is mapped onto the parameters by name (any case), the
+// program is called, and the inputoutput parameters come back as a new
+// object with the names from the PCML (upper case for RPG). All types,
+// data structures and arrays; an array with a sibling <array>_LENGTH
+// returns that many elements. Values are UTF-8 in the graph and in the job
+// CCSID (or the CCSID the PCML gives) in the parameters. See examples/ex90Call.
 //
 // @param (input) Library where the ILE program exists or *LIBL
 // @param (input) Program name of the ILE program
@@ -2057,6 +2064,8 @@ End-PR;
 //
 // @info The caller of this procedure needs to take care of freeing the resources
 //       of the returned noxDB object tree by calling <em>nox_delete(node)</em>.
+// @info Returns *null when the program is not found or has no PCML;
+//       nox_Message() tells why.
 ///
 
 Dcl-PR nox_CallProgram pointer extproc(*CWIDEN : 'nox_CallProgram');
@@ -2067,7 +2076,7 @@ Dcl-PR nox_CallProgram pointer extproc(*CWIDEN : 'nox_CallProgram');
 End-PR;
 
 
-/// TODO - migrated !!
+///
 // Programs and procedures : Load program as procedure pointer
 //
 //
@@ -2081,7 +2090,7 @@ Dcl-PR nox_LoadProgram pointer(*proc) extproc(*CWIDEN : 'nox_loadProgram');
   program        char(10) const;
 End-PR;
 
-/// TODO - migrated !!
+///
 // Programs and procedures : Call program  - lo level
 // @param (input) procedure pointer to the program  to call
 // @param (input) parms pointer to array of addresse to parameters to pass to the procedure
@@ -2094,7 +2103,7 @@ Dcl-PR nox_CallPgm extproc(*CWIDEN : 'nox_callPgm');
 End-PR;
 
 
-/// TODO - migrated !!
+///
 // Programs and procedures : Program meta
 //
 // Returns the parameter meta information as a noxDb object graph accordin to the PCML format
@@ -2115,7 +2124,7 @@ Dcl-PR nox_ProgramMeta pointer extproc(*CWIDEN : 'nox_ProgramMeta');
 End-PR;
 
 
-/// TODO - migrated !!
+///
 // Programs and procedures : Call procedure
 //
 // Call ILE service program procedure compiled with ctl-opt pgminfo(*PCML:*MODULE)
@@ -2140,7 +2149,7 @@ Dcl-PR nox_CallProcedure pointer extproc(*CWIDEN : 'nox_CallProcedure');
 End-PR;
 
 
-/// TODO - migrated !!
+///
 // Programs and procedures : Load service program procedure as procedure pointer
 //
 //
@@ -2156,7 +2165,7 @@ Dcl-PR nox_LoadServiceProgramProc pointer(*proc) extproc(*CWIDEN : 'nox_loadServ
 
 End-PR;
 
-/// TODO - migrated !!
+///
 // Programs and procedures : Call procedure - lo level
 // @param (input) procedure pointer to the procedure to call
 // @param (input) parms pointer to array of addresse to parameters to pass to the procedure
@@ -2168,7 +2177,7 @@ Dcl-PR nox_CallProc extproc(*CWIDEN : 'nox_callProc');
   numberOfParms  int(10) value  ;
 End-PR;
 
-/// TODO - migrated !!
+///
 // Programs and procedures : Program meta
 //
 // Returns the parameter meta information as a noxDb object graph according to the PCML format
@@ -2190,7 +2199,7 @@ Dcl-PR nox_ProcedureMeta pointer extproc(*CWIDEN : 'nox_ProcedureMeta');
   formatOptions  int(10)   value options(*nopass) ;
 End-PR;
 
-/// TODO - migrated !!
+///
 // Programs and procedures : Program and service program meta
 //
 // Returns the parameter meta information as a noxDb object graph according to the PCML format

@@ -1,15 +1,32 @@
 // CMD:CRTCMOD
 /* ------------------------------------------------------------- */
 /* SYSIFCOPT(*IFSIO) OPTION(*EXPMAC *SHOWINC)                    */
-/* Program . . . : CALLsRVPGM                                    */
+/* Module  . . . : loadpgm                                       */
 /* Date  . . . . : 14.06.2012                                    */
 /* Design  . . . : Niels Liisberg                                */
-/* Function  . . : Load service program and procedures           */
+/* Function  . . : Call programs and service program procedures  */
+/*                 described by their PCML                       */
 /*                                                               */
 /* By     Date       Task    Description                         */
 /* NL     14.06.2012         New module                          */
-/* NL     27.20.2026         Refactored for UTF-8                */
+/* NL     20.11.2026         UTF-8: the graph (names, values and */
+/*                           the PCML) is UTF-8, the parameter   */
+/*                           buffers are in the job CCSID (or    */
+/*                           the CCSID the PCML gives a field)   */
 /* ------------------------------------------------------------- */
+/*
+   Encoding rules in this module - read before changing it:
+
+   - Every string literal and character constant in the C code is EBCDIC
+     (no #pragma convert). They are only used on the "buffer side": the
+     parameter storage the called program sees, and the numeric / date
+     helpers in strUtil, which work in the job CCSID.
+   - Every name or value that goes into or comes out of a noxDB graph is
+     UTF-8. Literal graph names come from the A_xxx constants below, which
+     are compiled as CCSID 1252 (ASCII, the same bytes as UTF-8 for them).
+   - Values cross the border in copyValueIntoBuffer (UTF-8 -> buffer) and
+     newReturnNode (buffer -> UTF-8), nowhere else.
+*/
 #include <QLEAWI.h>
 #include <signal.h>
 #include <mih/stsppo.h>
@@ -20,12 +37,13 @@
 #include <miptrnam.h>
 #include <qsygetph.h>
 #include <qbnrpii.h>
+#include <qusec.h>
 #include <mih/callpgmv.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-
+#include <string.h>
+#include <iconv.h>
 
 #include "ostypes.h"
 #include "varchar.h"
@@ -34,17 +52,216 @@
 #include "trycatch.h"
 #include "strUtil.h"
 #include "memUtil.h"
+#include "xlate.h"
 #define NOX_BUILD
 #include "noxDbUtf8.h"
 #include "timestamp.h"
 
 __thread extern LGL isoTimestamp;
+extern iconv_t xlate_job_to_1208;   // noxDbUtf8.c, opened in nox_Initialize
+extern iconv_t xlate_1208_to_job;
+
+#define MAX_ARGS     64     // nox_callProc handles up to 64 parameters
+#define MAX_DIGITS   63     // packed / zoned
+#define SHORT_VALUE  128    // numbers, dates, times, timestamps
+
+// Graph names and PCML vocabulary - UTF-8 (ASCII) bytes
+#pragma convert(1252)
+static UCHAR A_EMPTY       [] = "";
+static UCHAR A_BLANK       [] = " ";
+static UCHAR A_DEF         [] = "def";
+static UCHAR A_PARMS       [] = "parms";
+static UCHAR A_BUFLEN      [] = "buflen";
+static UCHAR A_NAME        [] = "name";
+static UCHAR A_TYPE        [] = "type";
+static UCHAR A_USE         [] = "use";
+static UCHAR A_OFFSET      [] = "offset";
+static UCHAR A_SIZE        [] = "size";
+static UCHAR A_LENGTH      [] = "length";
+static UCHAR A_PREC        [] = "prec";
+static UCHAR A_PRECISION   [] = "precision";
+static UCHAR A_COUNT       [] = "count";
+static UCHAR A_DIM         [] = "dim";
+static UCHAR A_FORMAT      [] = "format";
+static UCHAR A_SEPARATOR   [] = "separator";
+static UCHAR A_STRUCT      [] = "struct";
+static UCHAR A_USAGE       [] = "usage";
+static UCHAR A_INPUTOUTPUT [] = "inputoutput";
+static UCHAR A_OUTPUT      [] = "output";
+static UCHAR A_BOOLEAN     [] = "boolean";
+static UCHAR A_TRUE        [] = "true";
+static UCHAR A_FALSE       [] = "false";
+static UCHAR A_CCSID       [] = "ccsid";
+static UCHAR A_CHARTYPE    [] = "chartype";
+static UCHAR A_TWOBYTE     [] = "twobyte";
+static UCHAR A_DATEFORMAT  [] = "dateformat";
+static UCHAR A_DATESEP     [] = "dateseparator";
+static UCHAR A_TIMEFORMAT  [] = "timeformat";
+static UCHAR A_TIMESEP     [] = "timeseparator";
+static UCHAR A_OUTPUTSIZE  [] = "outputsize";
+static UCHAR A_STRING      [] = "string";
+static UCHAR A_DATA        [] = "data";
+static UCHAR A_PCML        [] = "pcml";
+static UCHAR A_PROGRAM     [] = "program";
+static UCHAR A_SERVICE     [] = "service";
+static UCHAR A_ENTRYPOINT  [] = "entrypoint";
+static UCHAR A_STRUCTS     [] = "__structs__";
+static UCHAR A_LEN_SUFFIX  [] = "_LENGTH";
+static UCHAR A_ANONYMOUS   [] = "___";
+static UCHAR A_T_CHAR      [] = "char";
+static UCHAR A_T_PACKED    [] = "packed";
+static UCHAR A_T_ZONED     [] = "zoned";
+static UCHAR A_T_VARCHAR   [] = "varchar";
+static UCHAR A_T_DATE      [] = "date";
+static UCHAR A_T_TIME      [] = "time";
+static UCHAR A_T_TIMESTAMP [] = "timestamp";
+static UCHAR A_T_INT       [] = "int";
+static UCHAR A_T_BYTE      [] = "byte";
+static UCHAR A_S_HYPHEN    [] = "hyphen";
+static UCHAR A_S_PERIOD    [] = "period";
+static UCHAR A_S_SLASH     [] = "slash";
+static UCHAR A_S_BLANK     [] = "blank";
+static UCHAR A_S_COMMA     [] = "comma";
+static UCHAR A_S_COLON     [] = "colon";
+#pragma convert(0)
+
+#define USE_INPUT  'I'
+#define USE_BOTH   'B'
 
 //  local prototype:
-static void  copyNodeIntoBuffer (PUCHAR pParmBuffer ,PNOX_PARMMETA pParentMeta , PNOX_PARMMETA pMeta, PNOXNODE pParmValueNode );
+static void copyNodeIntoBuffer (PUCHAR pParmBuffer ,PNOX_PARMMETA pParentMeta , PNOX_PARMMETA pMeta, PNOXNODE pParmValueNode );
 
+/* ------------------------------------------------------------- *\
+   Character conversion
+\* ------------------------------------------------------------- */
+typedef struct {
+   LONG    from;
+   LONG    to;
+   iconv_t cd;
+} XLATECACHE;
+#define XLATE_CACHE_SIZE 8
+static __thread XLATECACHE xlateCache [XLATE_CACHE_SIZE];
+static __thread int        xlateCacheUsed = 0;
 
-// -------------------------------------------------------------
+// A conversion descriptor; CCSID 0 is the job's. Descriptors stay open for the job.
+static iconv_t * getXlate (LONG from, LONG to)
+{
+   int i;
+   if (from == 1208 && to == 0) return &xlate_1208_to_job;
+   if (from == 0 && to == 1208) return &xlate_job_to_1208;
+
+   for (i = 0; i < xlateCacheUsed; i++) {
+      if (xlateCache[i].from == from && xlateCache[i].to == to) {
+         return &xlateCache[i].cd;
+      }
+   }
+   if (xlateCacheUsed >= XLATE_CACHE_SIZE) {
+      return NULL;
+   }
+   xlateCache[xlateCacheUsed].cd = XlateOpen (from, to, FALSE);
+   if (xlateCache[xlateCacheUsed].cd.return_value == -1) {
+      return NULL;
+   }
+   xlateCache[xlateCacheUsed].from = from;
+   xlateCache[xlateCacheUsed].to   = to;
+   return &xlateCache[xlateCacheUsed++].cd;
+}
+// Convert at most inLen bytes into at most outSize bytes. Returns the bytes written.
+static LONG xlateBounded (LONG from, LONG to, PUCHAR out, LONG outSize, PUCHAR in, LONG inLen)
+{
+   iconv_t * pcd;
+   size_t inLeft  = inLen;
+   size_t outLeft = outSize;
+   char * pIn  = (char *) in;
+   char * pOut = (char *) out;
+
+   if (inLen <= 0 || outSize <= 0) return 0;
+   if (from == to) {
+      LONG len = inLen < outSize ? inLen : outSize;
+      memcpy (out , in , len);
+      return len;
+   }
+   pcd = getXlate (from, to);
+   if (pcd == NULL) return 0;
+   iconv (*pcd, &pIn, &inLeft, &pOut, &outLeft);
+   return outSize - outLeft;
+}
+// zero terminated string, job CCSID -> UTF-8 ( out must hold strlen(in) * 4 + 1 )
+static PUCHAR job2utf8 (PUCHAR out, LONG outSize, PUCHAR in)
+{
+   LONG len = xlateBounded (0, 1208, out, outSize - 1, in, strlen(in));
+   out[len] = '\0';
+   return out;
+}
+// zero terminated string, UTF-8 -> job CCSID
+static PUCHAR utf82job (PUCHAR out, LONG outSize, PUCHAR in)
+{
+   LONG len = xlateBounded (1208, 0, out, outSize - 1, in, strlen(in));
+   out[len] = '\0';
+   return out;
+}
+// Blank padded char(10) object name in the job CCSID -> trimmed UTF-8
+static PUCHAR objName2utf8 (PUCHAR out, LONG outSize, PUCHAR in)
+{
+   UCHAR temp [11];
+   strtrimncpy (temp, in, 10);
+   return job2utf8 (out, outSize, temp);
+}
+// An integer value from the graph
+static LONG getIntByName (PNOXNODE pNode, PUCHAR name, LONG dft)
+{
+   PUCHAR value = pNode ? nox_GetValuePtr (pNode, name, NULL) : NULL;
+   return (value && *value) ? a2i (value) : dft;
+}
+/* ------------------------------------------------------------- *\
+   Text fields: UTF-8 <-> the field's CCSID ( 0 = the job's,
+   65535 = binary, copied as is )
+\* ------------------------------------------------------------- */
+static LONG putText (PUCHAR pBuf, LONG bufLen, LONG ccsid, PUCHAR value, BOOL pad)
+{
+   LONG len;
+   if (ccsid == 65535) {
+      len = strlen (value);
+      if (len > bufLen) len = bufLen;
+      memcpy (pBuf, value, len);
+   } else {
+      len = xlateBounded (1208, ccsid == 0 ? 0 : ccsid, pBuf, bufLen, value, strlen(value));
+   }
+   if (pad && len < bufLen) {
+      UCHAR blank [8];
+      LONG  blankLen = (ccsid == 65535) ? 0 : xlateBounded (1208, ccsid, blank, sizeof(blank), A_BLANK, 1);
+      if (blankLen <= 0) {
+         memset (pBuf + len, 0x40, bufLen - len);
+      } else {
+         while (len + blankLen <= bufLen) {
+            memcpy (pBuf + len, blank, blankLen);
+            len += blankLen;
+         }
+         if (len < bufLen) memset (pBuf + len, 0x00, bufLen - len);
+      }
+      len = bufLen;
+   }
+   return len;
+}
+// buffer -> UTF-8, zero terminated. out must hold len * 4 + 1 bytes
+static PUCHAR getText (PUCHAR out, LONG outSize, LONG ccsid, PUCHAR pBuf, LONG len, BOOL rightTrim)
+{
+   LONG outLen;
+   if (ccsid == 65535) {
+      outLen = len < outSize - 1 ? len : outSize - 1;
+      memcpy (out, pBuf, outLen);
+   } else {
+      outLen = xlateBounded (ccsid == 0 ? 0 : ccsid, 1208, out, outSize - 1, pBuf, len);
+   }
+   out [outLen] = '\0';
+   if (rightTrim) {
+      while (outLen > 0 && (out[outLen-1] == 0x20 || out[outLen-1] == 0x00)) {
+         out[--outLen] = '\0';
+      }
+   }
+   return out;
+}
+/* ------------------------------------------------------------- */
 void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib)
 {
    _MPTR_Template_T op;
@@ -52,7 +269,6 @@ void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib)
    matptr (&op, proc);
    memcpy (lib , &op.Obj_Ptr.Library_ID.Name , 10);
 }
-
 /* ------------------------------------------------------------- */
 _SYSPTR nox_loadServiceProgram (PUCHAR lib , PUCHAR srvPgm)
 {
@@ -74,13 +290,11 @@ _SYSPTR nox_loadServiceProgram (PUCHAR lib , PUCHAR srvPgm)
 /* ------------------------------------------------------------- */
 _SYSPTR nox_loadProc (_SYSPTR srvPgm ,  PUCHAR procName)
 {
-   _SYSPTR proc;
-   int type;
-   APIERR  apierr;
+   _SYSPTR proc = NULL;
+   int type = 0;
    UINT64 mark;
    int expNo = 0;
    int expLen = 0;
-   int i;
    int acInfoLen;
    Qle_ABP_Info_t acinfo;
    Qus_EC_t       ec;
@@ -88,17 +302,19 @@ _SYSPTR nox_loadProc (_SYSPTR srvPgm ,  PUCHAR procName)
    if (srvPgm == NULL) return NULL;
 
    ec.Bytes_Provided = sizeof(ec);
-   apierr.size = sizeof(apierr);
+   ec.Bytes_Available = 0;
    acInfoLen = sizeof(acinfo);
    QleActBndPgmLong(&srvPgm, &mark , &acinfo , &acInfoLen , &ec);
+   if (ec.Bytes_Available > 0) return NULL;
    proc = QleGetExpLong(&mark , &expNo  , &expLen , procName , &proc , &type , &ec);
+   if (ec.Bytes_Available > 0) return NULL;
    return proc;
 }
 /* ------------------------------------------------------------- */
 _SYSPTR nox_loadServiceProgramProc (PUCHAR lib , PUCHAR srvPgm, PUCHAR procName)
 {
-    _SYSPTR pgm = nox_loadServiceProgram (lib , srvPgm);
-    return nox_loadProc (pgm, procName);
+   _SYSPTR pgm = nox_loadServiceProgram (lib , srvPgm);
+   return nox_loadProc (pgm, procName);
 }
 /* ------------------------------------------------------------- */
 _SYSPTR nox_loadProgram (PUCHAR lib , PUCHAR pgm)
@@ -118,296 +334,403 @@ _SYSPTR nox_loadProgram (PUCHAR lib , PUCHAR pgm)
    }
    return pPgm;
 }
-/* ------------------------------------------------------------- */
-#pragma convert(1252)
-static void converttDate ( PUCHAR pOut, PUCHAR pIn , PUCHAR pFormat )
-{
-   if (0 == strcmp ( pFormat , "ISO")) {
-      strcpy(pOut, pIn); // noxDb is always in ISO
-   } else if (0 == strcmp ( pFormat , "EUR")) { // YYYY-MM-DD to DD/MM/YYYY
-      strcpy (pOut , "0001-01-01");
-      memcpy ( pOut + 6 , pIn +0 , 4); // YYYY
-      memcpy ( pOut + 3 , pIn +5 , 2); // MM
-      memcpy ( pOut + 0 , pIn +8 , 2); // DD
-   } // todo  - more to come
-   else {
-      strcpy ( pOut , pFormat); // Abbend !!
-   }
-}
-#pragma convert(0)
-/* ------------------------------------------------------------- */
-#pragma convert(1252)
-static PUCHAR fmtDate ( PUCHAR pOut, PUCHAR pIn , PUCHAR pFormat )
-{
-   if (0 == strcmp ( pFormat , "ISO")) {
-      substr (pOut, pIn , 10 ); // noxDb is always in ISO
-   } else if (0 == strcmp ( pFormat , "EUR")) { // DD/MM/YYYY to YYYY-MM-DD
-      memcpy ( pOut + 0 , pIn +6 , 4); // YYYY
-      memcpy ( pOut + 5 , pIn +3 , 2); // MM
-      memcpy ( pOut + 8 , pIn +0 , 2); // DD
-      pOut[2] = pOut[5] = '-';
-      pOut[10] = '\0';
-   } // todo  - more to come
-   else {
-      substr (pOut, pIn , 10 ); // noxDb is always in ISO
-   }
-   return pOut;
-}
-#pragma convert(0)
-/* ------------------------------------------------------------- */
-#pragma convert(1252)
-static PUCHAR fmtTime ( PUCHAR pOut, PUCHAR pIn )
-{
-   substr  (pOut , pIn , 8);
-   pOut[2] = pOut[5] = '.';
-   return pOut;
-}
-#pragma convert(0)
-/* ------------------------------------------------------------- */
-#pragma convert(1252)
-static UCHAR converttSeperator (PUCHAR pSeprator)
-{
-   if (pSeprator == NULL) {
-      return '\0';
-   } else if (0 == strcmp ( pSeprator , "hyphen")) {
-      return '-';
-   } else if (0 == strcmp ( pSeprator , "period")) {
-      return '.';
-   } else if (0 == strcmp ( pSeprator , "slash")) {
-      return '/';
-   } else if (0 == strcmp ( pSeprator , "blank")) {
-      return ' ';
-   } else {
-      return '-'; // default !!
-   }
-}
-#pragma convert(0)
-/* ------------------------------------------------------------- */
-static PUCHAR parmMetaValue (PNOXNODE pNode , PUCHAR key)
-{
-   PUCHAR value = nox_GetAttrValuePtr ( nox_AttributeLookup (  pNode, key));
-   if (value) {
-      return value;
-   } else {
-      return "";
-   }
-}
-/* ------------------------------------------------------------- */
-static int  parmMetaValueInt (PNOXNODE pNode , PUCHAR key, int dftvalue)
-{
-   PUCHAR value = nox_GetAttrValuePtr ( nox_AttributeLookup (  pNode, key));
-   if (value) {
-      return atoi(value);
-   } else {
-      return dftvalue;
-   }
-}
-/* ------------------------------------------------------------- */
+/* ------------------------------------------------------------- *\
+   Buffer side helpers - EBCDIC (job CCSID)
+\* ------------------------------------------------------------- */
 static int min(int a, int b)
 {
    return (a<b) ? a : b;
 }
 /* ------------------------------------------------------------- */
-#pragma convert(1252)
+// Keep sign, digits and the first decimal point; at most MAX_DIGITS digits.
+// str2packedMem / str2zonedMem work in fixed buffers, so the input is bounded here.
+static PUCHAR cleanNumber (PUCHAR out, PUCHAR in)
+{
+   PUCHAR p = out;
+   int  digits = 0;
+   BOOL point = FALSE;
+   for (; *in ; in++) {
+      if (*in >= '0' && *in <= '9') {
+         if (digits < MAX_DIGITS) {
+            *p++ = *in;
+            digits ++;
+         }
+      } else if (*in == '-' && p == out) {
+         *p++ = '-';
+      } else if ((*in == '.' || *in == ',') && ! point) {
+         *p++ = '.';
+         point = TRUE;
+      }
+   }
+   *p = '\0';
+   return out;
+}
+/* ------------------------------------------------------------- */
+static void intToMem (PUCHAR out, PUCHAR in, int len, BOOL isSigned)
+{
+   if (isSigned) {
+      long long v = strtoll (in, NULL, 10);
+      switch (len) {
+         case 8: *(long long *) out = v; break;
+         case 4: *(int *)       out = (int) v; break;
+         case 2: *(short *)     out = (short) v; break;
+         case 1: *(signed char *) out = (signed char) v; break;
+      }
+   } else {
+      unsigned long long v = strtoull (in, NULL, 10);
+      switch (len) {
+         case 8: *(unsigned long long *) out = v; break;
+         case 4: *(unsigned int *)       out = (unsigned int) v; break;
+         case 2: *(unsigned short *)     out = (unsigned short) v; break;
+         case 1: *(unsigned char *)      out = (unsigned char) v; break;
+      }
+   }
+}
+/* ------------------------------------------------------------- */
+static PUCHAR fmtInteger (PUCHAR out, PUCHAR in, int len, BOOL isSigned)
+{
+   if (isSigned) {
+      switch (len) {
+         case 8: sprintf (out, "%lld", *(long long *) in); break;
+         case 4: sprintf (out, "%d"  , *(int *) in);       break;
+         case 2: sprintf (out, "%hd" , *(short *) in);     break;
+         case 1: sprintf (out, "%d"  , (int) *(signed char *) in); break;
+         default: strcpy (out, "0");
+      }
+   } else {
+      switch (len) {
+         case 8: sprintf (out, "%llu", *(unsigned long long *) in); break;
+         case 4: sprintf (out, "%u"  , *(unsigned int *) in);       break;
+         case 2: sprintf (out, "%hu" , *(unsigned short *) in);     break;
+         case 1: sprintf (out, "%u"  , (unsigned) *(unsigned char *) in); break;
+         default: strcpy (out, "0");
+      }
+   }
+   return out;
+}
+/* ------------------------------------------------------------- */
+// PCML int: precision 15/31/63 is signed, 16/32/64 unsigned (8 for a 1 byte)
+static BOOL isSignedInt (PNOX_PARMMETA pMeta)
+{
+   return (pMeta->precision % 2 != 0);
+}
+/* ------------------------------------------------------------- */
+// Date formats with 2 digit years are 8 long, the others 10
+static BOOL isShortDateFormat (PUCHAR format)
+{
+   return (0 == strcmp (format, "YMD")
+   ||      0 == strcmp (format, "DMY")
+   ||      0 == strcmp (format, "MDY"));
+}
+static UCHAR dateSeparator (PNOX_PARMMETA pMeta)
+{
+   PUCHAR f = pMeta->format;
+   if (*f == '\0' || 0 == strcmp (f, "ISO") || 0 == strcmp (f, "JIS")) return '-';
+   if (0 == strcmp (f, "EUR")) return '.';
+   if (0 == strcmp (f, "USA")) return '/';
+   return pMeta->separatorChar ? pMeta->separatorChar : '/';
+}
+/* ------------------------------------------------------------- */
+// noxDB date (ISO yyyy-mm-dd) -> the parameter's date format
+static void dateToBuffer (PUCHAR pBuf, PNOX_PARMMETA pMeta, PUCHAR pIn)
+{
+   UCHAR iso [11];
+   UCHAR sep = dateSeparator (pMeta);
+   PUCHAR f = pMeta->format;
+   PUCHAR y, m, d;
+
+   strcpy (iso , "0001-01-01");
+   memcpy (iso , pIn , min (strlen(pIn), 10));
+   y = iso; m = iso + 5; d = iso + 8;
+
+   if (0 == strcmp (f, "EUR")) {          // dd.mm.yyyy
+      memcpy (pBuf + 0, d, 2); pBuf[2] = sep; memcpy (pBuf + 3, m, 2); pBuf[5] = sep; memcpy (pBuf + 6, y, 4);
+   } else if (0 == strcmp (f, "USA")) {   // mm/dd/yyyy
+      memcpy (pBuf + 0, m, 2); pBuf[2] = sep; memcpy (pBuf + 3, d, 2); pBuf[5] = sep; memcpy (pBuf + 6, y, 4);
+   } else if (0 == strcmp (f, "YMD")) {   // yy/mm/dd
+      memcpy (pBuf + 0, y + 2, 2); pBuf[2] = sep; memcpy (pBuf + 3, m, 2); pBuf[5] = sep; memcpy (pBuf + 6, d, 2);
+   } else if (0 == strcmp (f, "DMY")) {   // dd/mm/yy
+      memcpy (pBuf + 0, d, 2); pBuf[2] = sep; memcpy (pBuf + 3, m, 2); pBuf[5] = sep; memcpy (pBuf + 6, y + 2, 2);
+   } else if (0 == strcmp (f, "MDY")) {   // mm/dd/yy
+      memcpy (pBuf + 0, m, 2); pBuf[2] = sep; memcpy (pBuf + 3, d, 2); pBuf[5] = sep; memcpy (pBuf + 6, y + 2, 2);
+   } else {                               // ISO, JIS: yyyy-mm-dd
+      memcpy (pBuf + 0, y, 4); pBuf[4] = sep; memcpy (pBuf + 5, m, 2); pBuf[7] = sep; memcpy (pBuf + 8, d, 2);
+   }
+}
+/* ------------------------------------------------------------- */
+// the parameter's date format -> noxDB date (ISO yyyy-mm-dd), zero terminated
+static PUCHAR dateFromBuffer (PUCHAR pOut, PNOX_PARMMETA pMeta, PUCHAR pBuf)
+{
+   PUCHAR f = pMeta->format;
+   UCHAR  y [5] , m [3], d [3];
+
+   strcpy (y , "0001"); strcpy (m , "01"); strcpy (d , "01");
+
+   if (0 == strcmp (f, "EUR")) {
+      memcpy (d, pBuf + 0, 2); memcpy (m, pBuf + 3, 2); memcpy (y, pBuf + 6, 4);
+   } else if (0 == strcmp (f, "USA")) {
+      memcpy (m, pBuf + 0, 2); memcpy (d, pBuf + 3, 2); memcpy (y, pBuf + 6, 4);
+   } else if (isShortDateFormat (f)) {
+      UCHAR yy [3];
+      yy[2] = '\0';
+      if (*f == 'Y') {
+         memcpy (yy, pBuf + 0, 2); memcpy (m, pBuf + 3, 2); memcpy (d, pBuf + 6, 2);
+      } else if (*f == 'D') {
+         memcpy (d, pBuf + 0, 2); memcpy (m, pBuf + 3, 2); memcpy (yy, pBuf + 6, 2);
+      } else {
+         memcpy (m, pBuf + 0, 2); memcpy (d, pBuf + 3, 2); memcpy (yy, pBuf + 6, 2);
+      }
+      // As RPG: 40-99 is 19xx, 00-39 is 20xx
+      sprintf (y, "%s%s", (atoi(yy) >= 40) ? "19" : "20" , yy);
+   } else {
+      memcpy (y, pBuf + 0, 4); memcpy (m, pBuf + 5, 2); memcpy (d, pBuf + 8, 2);
+   }
+   sprintf (pOut, "%s-%s-%s", y, m, d);
+   return pOut;
+}
+/* ------------------------------------------------------------- */
+// hh.mm.ss or hh:mm:ss -> the parameter's time separator
+static void timeToBuffer (PUCHAR pBuf, PNOX_PARMMETA pMeta, PUCHAR pIn)
+{
+   UCHAR sep = pMeta->separatorChar ? pMeta->separatorChar : '.';
+   memcpy (pBuf , "00.00.00", 8);
+   memcpy (pBuf , pIn , min (strlen(pIn), 8));
+   pBuf[2] = pBuf[5] = sep;
+}
+/* ------------------------------------------------------------- */
+// yyyy-mm-dd-hh.mm.ss.ffffff - also takes ISO 8601 (T and :) and stops at a time zone
+static void timestampToBuffer (PUCHAR pBuf, PNOX_PARMMETA pMeta, PUCHAR pIn)
+{
+   UCHAR ts [40];
+   int   i;
+   strcpy (ts , "0001-01-01-00.00.00.000000000000");
+   for (i = 0; i < pMeta->length && i < 32 && pIn[i] ; i++) {
+      UCHAR c = pIn[i];
+      if (i >= 19 && (c == 'Z' || c == '+' || c == '-')) break;
+      ts[i] = c;
+   }
+   if (ts[10] == 'T' || ts[10] == ' ') ts[10] = '-';
+   if (ts[13] == ':') ts[13] = '.';
+   if (ts[16] == ':') ts[16] = '.';
+   if (ts[19] == ',') ts[19] = '.';
+   memcpy (pBuf , ts , pMeta->length);
+}
+/* ------------------------------------------------------------- */
 static PNOX_PARMMETA getParmDefinition( PNOXNODE pNode)
 {
-   return (PNOX_PARMMETA) nox_GetNodeAttrValuePtr  (pNode , "def" , NULL);
+   return (PNOX_PARMMETA) nox_GetNodeAttrValuePtr  (pNode , A_DEF , NULL);
 }
-#pragma convert(0)
 /* ------------------------------------------------------------- */
-#pragma convert(1252)
+// name suffix is ___ then it is Anonymous Array
+static BOOL isAnonymousArray (PUCHAR name)
+{
+   int l = strlen(name);
+   return (l > 3 && 0==memcmp(name + l -3 , A_ANONYMOUS, 3 ));
+}
+/* ------------------------------------------------------------- */
+// The UTF-8 value from the graph into the parameter buffer
 static void copyValueIntoBuffer(PUCHAR pBuf, PNOX_PARMMETA pMethodParm , PUCHAR  pValue )
 {
+   UCHAR value [SHORT_VALUE];
+   UCHAR clean [SHORT_VALUE];
+
+   if (pValue == NULL) pValue = A_EMPTY;
 
    switch (pMethodParm->dType) {
       case NOX_DTYPE_CHAR: {
          // Boolean Hack for backwards compability (PCML-V7)
-         if (pMethodParm->length == 1 && (0 == strcmp(pValue, "false") || 0 == strcmp(pValue, "true"))) {
-            *(PUCHAR) pBuf = (*pValue == 'f') ? '0' : '1';
+         if (pMethodParm->length == 1 && (0 == strcmp(pValue, A_FALSE) || 0 == strcmp(pValue, A_TRUE))) {
+            *pBuf = (0 == strcmp(pValue, A_FALSE)) ? '0' : '1';
          } else {
-            padncpy ( pBuf, pValue , pMethodParm->length);
+            putText (pBuf, pMethodParm->length * pMethodParm->charSize, pMethodParm->ccsid, pValue, TRUE);
          }
-         break;
+         return;
       }
       case NOX_DTYPE_VARCHAR: {
-         ULONG actlen = min(strlen (pValue), pMethodParm->length);
+         LONG bytes = putText (pBuf + pMethodParm->precision,
+            pMethodParm->length * pMethodParm->charSize, pMethodParm->ccsid, pValue, FALSE);
+         ULONG chars = bytes / pMethodParm->charSize;
          if (pMethodParm->precision == 4) {
-            *(PULONG)  pBuf = actlen;
+            *(PULONG)  pBuf = chars;
          } else {
-            *(PUSHORT) pBuf = actlen;
+            *(PUSHORT) pBuf = chars;
          }
-         memcpy ( pBuf + pMethodParm->precision, pValue , actlen); // include the zero term
-         break;
+         return;
       }
+      case NOX_DTYPE_BOOL: {
+         // '' , '0' and 'f'alse are off - in UTF-8
+         *pBuf = (*pValue == '\0' || *pValue == 0x30 || *pValue == 0x66) ? '0' : '1';
+         return;
+      }
+      case NOX_DTYPE_NOX_UNKNOWN:
+      case NOX_DTYPE_STRUCTURE:
+         return;
+   }
 
+   // The rest are short values handled in the job CCSID
+   utf82job (value , sizeof(value), pValue);
+
+   switch (pMethodParm->dType) {
       case NOX_DTYPE_INT: {
-         str2integerMem ( pBuf  , pValue , pMethodParm->length, pMethodParm->precision);
+         intToMem (pBuf, value, pMethodParm->length, isSignedInt (pMethodParm));
          break;
       }
       case NOX_DTYPE_BYTE: {
-         *(PUCHAR) pBuf = atoi (pValue);
+         *pBuf = (UCHAR) atoi (value);
          break;
       }
       case NOX_DTYPE_PACKED: {
-         str2packedMem ( pBuf  , pValue , pMethodParm->length, pMethodParm->precision);
+         str2packedMem ( pBuf , cleanNumber (clean, value) , pMethodParm->length, pMethodParm->precision);
          break;
       }
       case NOX_DTYPE_ZONED: {
-         str2zonedMem ( pBuf , pValue , pMethodParm->length, pMethodParm->precision);
+         str2zonedMem ( pBuf , cleanNumber (clean, value) , pMethodParm->length, pMethodParm->precision);
          break;
       }
       case NOX_DTYPE_DATE: {
-         converttDate  ( pBuf , pValue , pMethodParm->format);
+         dateToBuffer ( pBuf , pMethodParm, value);
          break;
       }
       case NOX_DTYPE_TIME: {
-         memcpy ( pBuf , "00.00.00", 8);
-         memcpy ( pBuf , pValue , min(strlen(pValue), pMethodParm->length));
+         timeToBuffer ( pBuf , pMethodParm, value);
          break;
       }
       case NOX_DTYPE_TIME_STAMP: {
-         memcpy ( pBuf , "0001-01-01-00.00.00.000000000", pMethodParm->length);
-         memcpy ( pBuf , pValue , min(strlen(pValue), pMethodParm->length));
-         break;
-      }
-      case NOX_DTYPE_BOOL: {
-         *(PUCHAR) pBuf = (*pValue == '\0' || *pValue == '0' || *pValue == 'f') ? '0' : '1';
-         break;
-      }
-      case NOX_DTYPE_NOX_UNKNOWN: {
+         timestampToBuffer ( pBuf , pMethodParm, value);
          break;
       }
    }
 }
-#pragma convert(0)
-// ---------------------------------------------------------------------------------------
-#pragma convert(1252)
-static void  copyNodeValueIntoBuffer (PUCHAR pParmBuffer, PNOX_PARMMETA pDef, PNOXNODE pValueNode)
+/* ------------------------------------------------------------- */
+static void copyNodeValueIntoBuffer (PUCHAR pParmBuffer, PNOX_PARMMETA pDef, PNOXNODE pValueNode)
 {
-   PUCHAR pValue  = nox_GetValuePtr   (pValueNode , pDef->name , "");
+   PUCHAR pValue = pValueNode ? nox_GetValuePtr (pValueNode , pDef->name , A_EMPTY) : A_EMPTY;
    copyValueIntoBuffer (pParmBuffer, pDef,  pValue );
 }
-#pragma convert(0)
-// ---------------------------------------------------------------------------------------
-// name suffix is ___ then it is Anonymous Array
-#pragma convert(1252)
-static BOOL isAnonymousArray (PUCHAR name) {
-   int l = strlen(name);
-   return (l > 3 && 0==memcmp(name + l -3 ,"___", 3 ));
-}
-#pragma convert(0)
-// ---------------------------------------------------------------------------------------
-static void  copyNodeIntoBuffer (PUCHAR pParmBuffer , PNOX_PARMMETA pParentMeta , PNOX_PARMMETA pMeta ,  PNOXNODE pParmValueNode )
+/* ------------------------------------------------------------- */
+// Each member of a structure at its own offset
+static void copyStructIntoBuffer (PUCHAR pStructBuffer, PNOX_PARMMETA pStructMeta, PNOXNODE pValueNode)
 {
-
+   PNOXNODE pMetaElements = nox_GetNodeChild (pStructMeta->pStructure);
+   while (pMetaElements) {
+      PNOX_PARMMETA pDef = getParmDefinition (pMetaElements);
+      if (pDef) {
+         if (pDef->pStructure || pDef->dim > 0) {
+            copyNodeIntoBuffer (pStructBuffer + pDef->offset, pStructMeta, pDef, pValueNode);
+         } else {
+            copyNodeValueIntoBuffer (pStructBuffer + pDef->offset, pDef, pValueNode);
+         }
+      }
+      pMetaElements = nox_GetNodeNext(pMetaElements);
+   }
+}
+/* ------------------------------------------------------------- */
+static void copyNodeIntoBuffer (PUCHAR pParmBuffer , PNOX_PARMMETA pParentMeta , PNOX_PARMMETA pMeta ,  PNOXNODE pParmValueNode )
+{
    if (pMeta->dim > 0 ) {
-      PNOXNODE pArray =  isAnonymousArray (pMeta->name) ? pParmValueNode :nox_GetNode   (pParmValueNode , pMeta->name);
+      PNOXNODE pArray = isAnonymousArray (pMeta->name) ? pParmValueNode : nox_GetNode (pParmValueNode , pMeta->name);
       PNOXNODE pArrayElement = nox_GetNodeChild (pArray);
-      if (pMeta->pStructure) {
-         PNOXNODE pStructObj = nox_GetNodeChild (pMeta->pStructure);
-         PNOX_PARMMETA pDef = getParmDefinition (pStructObj);
-         for (int i=0; i < pMeta->dim ; i++) {
-            copyNodeIntoBuffer(pParmBuffer, pMeta , pDef ,  pArrayElement);
-            pParmBuffer += pMeta->size;
-            pArrayElement = nox_GetNodeNext(pArrayElement);
+      int i;
+      for (i=0; i < pMeta->dim && pArrayElement; i++) {
+         if (pMeta->pStructure) {
+            copyStructIntoBuffer (pParmBuffer, pMeta, pArrayElement);
+         } else {
+            copyValueIntoBuffer (pParmBuffer, pMeta , nox_GetNodeValuePtr (pArrayElement , A_EMPTY));
          }
-      } else {
-         for (int i=0; i < pMeta->dim ; i++) {
-            PUCHAR pValue  = nox_GetNodeValuePtr  (pArrayElement , "");
-            copyValueIntoBuffer(pParmBuffer, pMeta ,  pValue );
-            pParmBuffer += pMeta->size;
-            pArrayElement = nox_GetNodeNext(pArrayElement);
+         pParmBuffer += pMeta->size;
+         pArrayElement = nox_GetNodeNext(pArrayElement);
+      }
+      // Elements not given: blank / zero as an empty value gives
+      for (; i < pMeta->dim ; i++) {
+         if (pMeta->pStructure) {
+            copyStructIntoBuffer (pParmBuffer, pMeta, NULL);
+         } else {
+            copyValueIntoBuffer (pParmBuffer, pMeta , A_EMPTY);
          }
+         pParmBuffer += pMeta->size;
       }
    } else if (pMeta->pStructure) {
       PNOXNODE pValueNode = nox_GetNode ( pParmValueNode , pMeta->name);
-      // TODO experimental !!! if not each payload element maps to parameter then  map the root payload to first structure
-      if ( pValueNode == NULL && pParentMeta == NULL && pMeta->use == 'I') {
+      // If the payload has no element for the top level structure, then map the root payload to it
+      if ( pValueNode == NULL && pParentMeta == NULL) {
          pValueNode = pParmValueNode;
       }
-      PNOXNODE pMetaElements = nox_GetNodeChild (pMeta->pStructure);
-      while (pMetaElements) {
-         PNOX_PARMMETA pDef = getParmDefinition (pMetaElements);
-         if (pDef->pStructure) {
-            copyNodeIntoBuffer (pParmBuffer, pMeta, pDef ,   pValueNode);
-         } else {
-            copyNodeValueIntoBuffer ( pParmBuffer, pDef, pValueNode);
-         }
-         pParmBuffer += pDef->size;
-         pMetaElements = nox_GetNodeNext(pMetaElements);
-      }
-   // Since the parent has the definition, and each values comes as an object in an array:
-   } else if (pParentMeta && pParentMeta->dim > 0) {
-      PNOXNODE pMetaElements = nox_GetNodeChild(pParentMeta->pStructure);
-      while (pMetaElements) {
-         PNOX_PARMMETA pDef = getParmDefinition (pMetaElements);
-         if (pDef->pStructure || pDef->dim > 0 ) {
-            copyNodeIntoBuffer (pParmBuffer, pMeta, pDef ,pParmValueNode);
-         } else {
-            copyNodeValueIntoBuffer ( pParmBuffer, pDef, pParmValueNode);
-         }
-         pParmBuffer += pDef->size;
-         pMetaElements = nox_GetNodeNext(pMetaElements);
-      }
+      copyStructIntoBuffer (pParmBuffer, pMeta, pValueNode);
    } else {
       copyNodeValueIntoBuffer ( pParmBuffer, pMeta, pParmValueNode);
    }
 }
-// ---------------------------------------------------------------------------------------
-#pragma convert(1252)
-static int buildArgBufferArray (PNOX_METHOD pMethod, PNOXNODE pParms, PVOID argArray [256] , PUCHAR * ppArgBuffer)
+/* ------------------------------------------------------------- */
+static PNOXNODE getInterface (PNOX_METHOD pMethod)
 {
-
-   int args = 0;
-   ULONG   bufTotlen;
-   PUCHAR  pParmBuffer;
+   return (pMethod->pProc == NULL) ? pMethod->pPgm : pMethod->pProc;
+}
+/* ------------------------------------------------------------- */
+static int buildArgBufferArray (PNOX_METHOD pMethod, PNOXNODE pParms, PVOID argArray [MAX_ARGS] , PUCHAR * ppArgBuffer)
+{
+   int      args = 0;
+   LONG     bufTotlen;
+   PUCHAR   pParmBuffer;
    PNOXNODE pInterface, pParmObj;
 
-   pInterface = (pMethod->pProc == NULL) ? pMethod->pPgm : pMethod->pProc;
-   bufTotlen =  nox_GetValueInt  (pInterface , "buflen" , 0) ;
+   pInterface = getInterface (pMethod);
+   bufTotlen  = getIntByName (pInterface , A_BUFLEN , 0) ;
 
-   pParmBuffer = memAlloc (bufTotlen);
-   memset ( pParmBuffer , '\0',  bufTotlen);
+   pParmBuffer = memAllocClear (bufTotlen > 0 ? bufTotlen : 1);
    *ppArgBuffer = pParmBuffer;
 
-   pParmObj = nox_GetNodeChild(nox_GetNode ( pInterface , "parms"));
+   pParmObj = nox_GetNodeChild(nox_GetNode ( pInterface , A_PARMS));
    while (pParmObj) {
       PNOX_PARMMETA pMeta = getParmDefinition (pParmObj);
       PUCHAR pBuf = pParmBuffer + pMeta->offset;
+      if (args >= MAX_ARGS) return -1;
       argArray [args++] = pBuf;
       copyNodeIntoBuffer (pBuf, NULL , pMeta ,  pParms);
       pParmObj = nox_GetNodeNext(pParmObj);
    }
    return args;
 }
-#pragma convert(0)
-// ---------------------------------------------------------------------------------------
+/* ------------------------------------------------------------- */
+// The parameter buffer -> a new UTF-8 graph node
 static PNOXNODE newReturnNode (PNOX_PARMMETA pMethodParm, PUCHAR pParmBuffer )
 {
-
-   UCHAR data [32000]; // TODO - dynamic size
+   UCHAR    data  [SHORT_VALUE];
+   UCHAR    value [SHORT_VALUE * 4];
+   PNOXNODE pNode;
 
    switch (pMethodParm->dType) {
-      case NOX_DTYPE_STRUCTURE: {
-         break;
-      }
       case NOX_DTYPE_CHAR: {
-         strrighttrimncpy(data ,pParmBuffer , pMethodParm->length );
-         break;
+         LONG   bytes = pMethodParm->length * pMethodParm->charSize;
+         LONG   size  = bytes * 4 + 1;
+         PUCHAR text  = memAlloc (size);
+         getText (text, size, pMethodParm->ccsid, pParmBuffer, bytes, TRUE);
+         pNode = NewNode (pMethodParm->name , text , pMethodParm->graphDataType);
+         memFree (&text);
+         return pNode;
       }
       case NOX_DTYPE_VARCHAR: {
-         int actlen =  (pMethodParm->precision == 4) ? *(PULONG) pParmBuffer : *(PUSHORT) pParmBuffer ;
-         substr (data  , pParmBuffer + pMethodParm->precision ,actlen);
-         break;
+         LONG   chars = (pMethodParm->precision == 4) ? *(PULONG) pParmBuffer : *(PUSHORT) pParmBuffer ;
+         LONG   bytes;
+         LONG   size;
+         PUCHAR text;
+         if (chars > pMethodParm->length) chars = pMethodParm->length;
+         bytes = chars * pMethodParm->charSize;
+         size  = bytes * 4 + 1;
+         text  = memAlloc (size);
+         getText (text, size, pMethodParm->ccsid, pParmBuffer + pMethodParm->precision, bytes, FALSE);
+         pNode = NewNode (pMethodParm->name , text , pMethodParm->graphDataType);
+         memFree (&text);
+         return pNode;
+      }
+      case NOX_DTYPE_BOOL: {
+         return NewNode (pMethodParm->name , (*pParmBuffer == '1') ? A_TRUE : A_FALSE , NOX_LITERAL);
       }
       case NOX_DTYPE_BYTE: {
-         USHORT i = *(PUCHAR) pParmBuffer;
-         sprintf ( data , "%hd" , *pParmBuffer);
+         sprintf ( data , "%u" , (unsigned) *(PUCHAR) pParmBuffer);
          break;
       }
       case NOX_DTYPE_INT: {
-         BOOL isSigned = (pMethodParm->precision % 2 != 0) ? TRUE : FALSE;
-         fmtInteger (data , pParmBuffer , pMethodParm->length , isSigned );
+         fmtInteger (data , pParmBuffer , pMethodParm->length , isSignedInt (pMethodParm));
          break;
       }
       case NOX_DTYPE_PACKED: {
@@ -419,126 +742,119 @@ static PNOXNODE newReturnNode (PNOX_PARMMETA pMethodParm, PUCHAR pParmBuffer )
          break;
       }
       case NOX_DTYPE_DATE: {
-         fmtDate  ( data , pParmBuffer , pMethodParm->format);
+         dateFromBuffer  ( data , pMethodParm, pParmBuffer);
          break;
       }
       case NOX_DTYPE_TIME: {
-         fmtTime  ( data , pParmBuffer);
+         substr (data, pParmBuffer, 8);
+         data[2] = data[5] = '.';
          break;
       }
       case NOX_DTYPE_TIME_STAMP: {
-         substr  ( data  ,  pParmBuffer , pMethodParm->length);
+         substr  ( data  ,  pParmBuffer , min (pMethodParm->length, sizeof(data) - 1));
          if (isoTimestamp == ON) {
             ts_ibm2iso8601(data);
          }
          break;
       }
-      case NOX_DTYPE_BOOL: {
-         strcpy ( data , (*pParmBuffer == '1') ? "true" : "false");
-         break;
-      }
-      case NOX_DTYPE_NOX_UNKNOWN: {
-         break;
+      default: {
+         *data = '\0';
       }
    }
-   return nox_NewNode(pMethodParm->name , data , pMethodParm->graphDataType );
-
+   job2utf8 (value, sizeof(value), data);
+   return NewNode (pMethodParm->name , value , pMethodParm->graphDataType );
 }
 /* ------------------------------------------------------------- */
 // If we have a length parameter, that is:
-// Find a sibling to the structure with  name - sufixed by _LENGTH,
-// then take this values as the current length - otherwise it is the "dim" value that counts
+// A sibling to the array with the name suffixed by _LENGTH,
+// then take its value as the current length - otherwise it is the "dim" value that counts
 /* ------------------------------------------------------------- */
-static LONG getCurrentLength(PNOXPARMMETA pMethodParm, PNOXNODE pParmObj, PUCHAR pStartBuffer)
+static LONG getCurrentLength(PNOX_PARMMETA pMethodParm, PUCHAR pStartBuffer)
 {
-   // If the LENGTH is in the PCML - we can use this:
-   PNOXPARMMETA pLenMeta = pMethodParm->pLengthMeta;
-   if (pLenMeta) {
+   PNOX_PARMMETA pLenMeta = pMethodParm->pLengthMeta;
+   LONG len = pMethodParm->dim;
+   if (pLenMeta && pStartBuffer) {
       switch (pLenMeta->length) {
-         case  8: return *(long long *) (pStartBuffer + pLenMeta->offset);
-         case  4: return *(long *     ) (pStartBuffer + pLenMeta->offset);
-         case  2: return *(short int *) (pStartBuffer + pLenMeta->offset);
-         default: return pMethodParm->dim;
+         case  8: len = *(long long *) (pStartBuffer + pLenMeta->offset); break;
+         case  4: len = *(int *      ) (pStartBuffer + pLenMeta->offset); break;
+         case  2: len = *(short int *) (pStartBuffer + pLenMeta->offset); break;
       }
-   } else {
-      return pMethodParm->dim;
    }
+   // Never beyond the storage
+   if (len < 0 || len > pMethodParm->dim) len = pMethodParm->dim;
+   return len;
+}
+/* ------------------------------------------------------------- */
 static void  setReturnObject (PNOXNODE pReturnObject, PNOXNODE pParmObj , PUCHAR pParmBuffer, PUCHAR pParentBuffer, BOOL isArray )
 {
    PNOX_PARMMETA pMethodParm = getParmDefinition (pParmObj);
+   int i;
+
+   if (pMethodParm == NULL) return;
 
    if (pMethodParm->dim > 0 && isArray == FALSE) {
-      int  currentLength = getCurrentLength(pMethodParm, pParmObj, pParentBuffer);
+      LONG currentLength = getCurrentLength(pMethodParm, pParentBuffer);
+      PNOXNODE pTarget;
       if (isAnonymousArray(pMethodParm->name)) {
-         if (pMethodParm->pStructure) {
-            PNOXNODE pStructObj = nox_GetNodeChild(pMethodParm->pStructure);
-            for (int i = 0 ; i< currentLength ; i++) {
-               setReturnObject ( pReturnObject  , pStructObj , pParmBuffer, pParentBuffer, TRUE);
-               pParmBuffer += pMethodParm->size;
-            }
-         } else {
-            for (int i = 0 ; i< currentLength ; i++) {
-               nox_NodeInsertChildTail  ( pReturnObject , newReturnNode (pMethodParm, pParmBuffer));
-               pParmBuffer += pMethodParm->size;
-            }
+         pTarget = pReturnObject;
+      } else {
+         pTarget = nox_NewArray();
+         nox_NodeRename (pTarget , pMethodParm->name);
+      }
+      if (pMethodParm->pStructure) {
+         PNOXNODE pStructObj = nox_GetNodeChild(pMethodParm->pStructure);
+         for (i = 0 ; i< currentLength ; i++) {
+            setReturnObject ( pTarget , pStructObj , pParmBuffer, pParmBuffer, TRUE);
+            pParmBuffer += pMethodParm->size;
          }
       } else {
-         PNOXNODE pReturnArray = nox_NewArray(NULL);
-         nox_NodeRename (pReturnArray , pMethodParm->name);
-         if (pMethodParm->pStructure) {
-            PNOXNODE pStructObj = nox_GetNodeChild(pMethodParm->pStructure);
-            for (int i = 0 ; i< currentLength ; i++) {
-               setReturnObject ( pReturnArray  , pStructObj , pParmBuffer, pParentBuffer, TRUE);
-               pParmBuffer += pMethodParm->size;
-            }
-         } else {
-            for (int i = 0 ; i< currentLength ; i++) {
-               nox_NodeInsertChildTail  ( pReturnArray , newReturnNode (pMethodParm, pParmBuffer));
-               pParmBuffer += pMethodParm->size;
-            }
+         for (i = 0 ; i< currentLength ; i++) {
+            nox_NodeInsertChildTail  ( pTarget , newReturnNode (pMethodParm, pParmBuffer));
+            pParmBuffer += pMethodParm->size;
          }
-         nox_NodeInsertChildTail (pReturnObject , pReturnArray );
+      }
+      if (pTarget != pReturnObject) {
+         nox_NodeInsertChildTail (pReturnObject , pTarget );
       }
    } else if (isArray) {
-      PNOXNODE pReturnStruct = isAnonymousArray(pMethodParm->name) ? nox_NewArray(NULL) : nox_NewObject(NULL);
+      // One element of an array of structures: pParmObj is the first member
+      PNOXNODE pReturnStruct = nox_NewObject();
       for (; pParmObj ; pParmObj = nox_GetNodeNext(pParmObj)) {
          PNOX_PARMMETA pStructParm = getParmDefinition (pParmObj);
-         setReturnObject ( pReturnStruct , pParmObj, pParmBuffer + pStructParm->offset, pParentBuffer, FALSE);
+         if (pStructParm) {
+            setReturnObject ( pReturnStruct , pParmObj, pParmBuffer + pStructParm->offset, pParmBuffer, FALSE);
+         }
       }
       nox_NodeInsertChildTail (pReturnObject , pReturnStruct );
-   } else if (pMethodParm->dType == NOX_DTYPE_STRUCTURE) {
+   } else if (pMethodParm->pStructure) {
       PNOXNODE pStructObj = nox_GetNodeChild(pMethodParm->pStructure);
-      PNOXNODE pReturnStruct = isAnonymousArray(pMethodParm->name) ? nox_NewArray(NULL) : nox_NewObject(NULL);
+      PNOXNODE pReturnStruct = isAnonymousArray(pMethodParm->name) ? nox_NewArray() : nox_NewObject();
       nox_NodeRename (pReturnStruct , pMethodParm->name);
       for (; pStructObj ; pStructObj = nox_GetNodeNext(pStructObj)) {
          PNOX_PARMMETA pStructParm = getParmDefinition (pStructObj);
-         setReturnObject ( pReturnStruct , pStructObj, pParmBuffer + pStructParm->offset, pParentBuffer,FALSE);
+         if (pStructParm) {
+            setReturnObject ( pReturnStruct , pStructObj, pParmBuffer + pStructParm->offset, pParmBuffer, FALSE);
+         }
       }
       nox_NodeInsertChildTail (pReturnObject , pReturnStruct );
-   } else {
-      if ( pMethodParm->dontRender == FALSE) {
-         nox_NodeInsertChildTail (pReturnObject , newReturnNode (pMethodParm,  pParmBuffer));
-      }
+   } else if ( pMethodParm->dontRender == FALSE) {
+      nox_NodeInsertChildTail (pReturnObject , newReturnNode (pMethodParm,  pParmBuffer));
    }
 }
 /* ------------------------------------------------------------- */
-static PNOXNODE buildReturnObject (PNOX_METHOD  pMethod, PNOXNODE pParms, PVOID argArray [256], int args)
+static PNOXNODE buildReturnObject (PNOX_METHOD  pMethod, PVOID argArray [MAX_ARGS], PUCHAR pArgBuffer)
 {
-   PNOXNODE pReturnObject = NULL ;
-   PNOXNODE pInterface = (pMethod->pProc == NULL) ? pMethod->pPgm : pMethod->pProc;
-#pragma convertt(1252)
-   PNOXNODE pParmObj = nox_GetNodeChild(nox_GetNode ( pInterface , "parms"));
-#pragma convertt(0)
-   for (int argIx= 0; pParmObj ;  argIx++, pParmObj = nox_GetNodeNext(pParmObj)) {
+   PNOXNODE pReturnObject = nox_NewObject();
+   PNOXNODE pInterface = getInterface (pMethod);
+   PNOXNODE pParmObj = nox_GetNodeChild(nox_GetNode ( pInterface , A_PARMS));
+   int argIx;
+
+   for (argIx= 0; pParmObj ;  argIx++, pParmObj = nox_GetNodeNext(pParmObj)) {
       PNOX_PARMMETA pMethodParm = getParmDefinition (pParmObj);
-      if (pMethodParm->use == 'B') { // BOTH .. TODO in enum
-         if (pReturnObject == NULL) {
-            pReturnObject = isAnonymousArray(pMethodParm->name) ? nox_NewArray(NULL) : nox_NewObject(NULL);
-         }
-         setReturnObject (pReturnObject , pParmObj,  argArray [argIx], FALSE);
+      if (pMethodParm->use == USE_BOTH) {
+         setReturnObject (pReturnObject , pParmObj, argArray [argIx], pArgBuffer, FALSE);
       }
    }
-
    return pReturnObject;
 }
 
@@ -559,49 +875,59 @@ static PNOXNODE buildReturnObject (PNOX_METHOD  pMethod, PNOXNODE pParms, PVOID 
     <data name="id" type="int" length="4" precision="31" usage="input"/>
     <data name="employee" type="struct" struct="employee_t" usage="inputoutput"/>
   </program>
-  <program name="allTypes" entrypoint="ALLTYPES">
-    <data name="char" type="char" length="10" usage="inputoutput"/>
-    <data name="varchar" type="varchar" length="10" usage="inputoutput"/>
-    <data name="int8" type="int" length="8" precision="63" usage="inputoutput"/>
-    <data name="int4" type="int" length="4" precision="31" usage="inputoutput"/>
-    <data name="uns8" type="int" length="8" precision="64" usage="inputoutput"/>
-    <data name="uns4" type="int" length="4" precision="32" usage="inputoutput"/>
-    <data name="uns2" type="byte" length="1" usage="inputoutput"/>
-    <data name="packed" type="packed" length="9" precision="2" usage="inputoutput"/>
-    <data name="zoned" type="zoned" length="9" precision="2" usage="inputoutput"/>
-    <data name="ind" type="char" length="1" boolean="true" usage="inputoutput"/>
-    <data name="date" type="date" dateformat="ISO" dateseparator="hyphen" usage="inputoutput"/>
-    <data name="time" type="time" timeformat="ISO" timeseparator="period" usage="inputoutput"/>
-    <data name="timestamp" type="timestamp" usage="inputoutput"/>
-  </program>
   <program name="nameAge" entrypoint="NAMEAGE">
     <data name="Name" type="char" length="10" usage="input"/>
     <data name="Text" type="char" length="200" usage="inputoutput"/>
     <data name="Age" type="packed" length="5" precision="0" usage="inputoutput"/>
   </program>
-</pcml>\* --------------------------------------------------------------------------- */
+</pcml>
+\* --------------------------------------------------------------------------- */
 
 /* --------------------------------------------------------------------------- *\
-    Call the plain program resolved by the system pointer:
+    Call the program / procedure resolved by the system pointer
+    parms: a graph, or a JSON string in the job CCSID
 \* --------------------------------------------------------------------------- */
 static PNOXNODE  call    (PNOX_METHOD pMethod , PNOXNODE parms, ULONG options)
 {
    PNOXNODE pReturnObject;
    PNOXNODE pParms;
-   BOOL    freeAfter;
-   PUCHAR  pArgBuffer;
-   PVOID   argArray[256];
+   BOOL     freeAfter = FALSE;
+   PUCHAR   pArgBuffer = NULL;
+   PVOID    argArray[MAX_ARGS];
+   int      args;
 
-   if ((parms != NULL)
-   &&  (parms->signature != NOX_NODESIG)) {
-      pParms  = nox_ParseString ((PUCHAR) parms, "" );
-      freeAfter = TRUE;
-   } else {
-      pParms  = parms;
-      freeAfter = FALSE;
+   if (pMethod->userMethod == NULL) {
+      nox_SetMessage ("%s %s/%s not found or not authorized",
+         pMethod->userMethodIsProgram ? "Program" : "Procedure",
+         pMethod->library,
+         pMethod->userMethodIsProgram ? pMethod->program : pMethod->procedure);
+      return NULL;
+   }
+   if (getInterface (pMethod) == NULL) {
+      nox_SetMessage ("No PCML for %s/%s %s - compile it with ctl-opt pgminfo(*PCML:*MODULE)",
+         pMethod->library, pMethod->program,
+         pMethod->userMethodIsProgram ? "" : pMethod->procedure);
+      return NULL;
    }
 
-   int args = buildArgBufferArray ( pMethod, pParms, argArray, &pArgBuffer);
+   if (parms != NULL && parms->signature != NOX_NODESIG) {
+      LONG   size = strlen ((PUCHAR) parms) * 4 + 1;
+      PUCHAR utf8 = memAlloc (size);
+      job2utf8 (utf8, size, (PUCHAR) parms);
+      pParms = nox_ParseString (utf8);
+      memFree (&utf8);
+      freeAfter = TRUE;
+   } else {
+      pParms = parms;
+   }
+
+   args = buildArgBufferArray ( pMethod, pParms, argArray, &pArgBuffer);
+   if (args < 0) {
+      nox_SetMessage ("%s/%s has more than %d parameters", pMethod->library, pMethod->program, MAX_ARGS);
+      memFree (&pArgBuffer);
+      if (freeAfter) nox_NodeDelete (pParms);
+      return NULL;
+   }
 
    if ( pMethod->userMethodIsProgram) {
       nox_callPgm ( pMethod->userMethod , argArray , args );
@@ -609,276 +935,364 @@ static PNOXNODE  call    (PNOX_METHOD pMethod , PNOXNODE parms, ULONG options)
       nox_callProc (pMethod->userMethod , argArray , args);
    }
 
-   pReturnObject = buildReturnObject (pMethod, pParms, argArray, args);
+   pReturnObject = buildReturnObject (pMethod, argArray, pArgBuffer);
 
    memFree (&pArgBuffer);
-
    if (freeAfter) {
       nox_NodeDelete (pParms);
    }
-
    return pReturnObject;
 }
-
 /* --------------------------------------------------------------------------- *\
-    Get the pcml from the program
-     https://www.ibm.com/docs/en/i/7.4.0?topic=syntax-pcml-data-tag
+    Retrieve the PCML of each module of a program / service program
+    ( QBNRPII: https://www.ibm.com/docs/en/i/7.3?topic=ssw_ibm_i_73/apis/qbnrpii.html )
+    Returns the number of PCML documents parsed into ppRoots ( UTF-8 graphs ),
+    -1 on error. libFound gets the library the object was found in (job CCSID).
 \* --------------------------------------------------------------------------- */
-PNOXNODE  nox_ProgramMeta ( PUCHAR library , PUCHAR Program)
+static int retrievePcml (PUCHAR library, PUCHAR program, BOOL isProgram, PUCHAR libFound, PNOXNODE ** ppRoots)
 {
-   Qbn_Interface_Entry_t * pet;
    Qbn_PGII0100_t * ppgi;
-   UCHAR buffer [100000];
-   long long err = 0;
-   long i;
-   PNOXNODE pPcml;
-   PUCHAR pcml;
-   UCHAR libpgm [20];
+   Qbn_Interface_Entry_t * pet = NULL;
+   Qus_EC_t ec;
+   UCHAR    libpgm [20];
+   LONG     bufSize = 65536;
+   PUCHAR   buffer;
+   int      i, count = 0;
+   PNOXNODE * pRoots;
 
-   padncpy ( libpgm      , Program , 10 );
+   *ppRoots = NULL;
+   padncpy ( libpgm      , program , 10 );
    padncpy ( libpgm +10  , library , 10 );
 
-   QBNRPII (
-      buffer ,                   /* Receiver variable                    */
-      sizeof(buffer),            /* Length of receiver variable          */
-      "RPII0100 ",               /* Format name                          */
-      libpgm     ,               /* Qualified object name                */
-      "*PGM      ",              /* Object Type                          */
-      "*ALLBNDMOD          ",    /* Qualified bound module name          */
-      &err                       /* Error code                           */
-   );
-   ppgi = (Qbn_PGII0100_t *) buffer;
-   pet = (Qbn_Interface_Entry_t * ) (buffer + ppgi->Offset_First_Entry);
-   pcml = buffer + pet->Offset_Interface_Info;
-   pcml [pet->Interface_Info_Length_Ret] = '\0';
-   pPcml  = nox_ParseString(pcml, "");
-
-   // would yield QTEMP - where it is build
-   // if (*library == '*') {
-   //    memcpy ( library , pet->Module_Library, 10);
-   // }
-
-   return  pPcml;
-}
-/* --------------------------------------------------------------------------- *\
-    Get the pcml from the program
-\* --------------------------------------------------------------------------- */
-PNOXNODE  nox_ProcedureMeta ( PUCHAR library , PUCHAR Program , PUCHAR Procedure)
-{
-   Qbn_Interface_Entry_t * pet;
-   Qbn_PGII0100_t * ppgi;
-   UCHAR buffer [100000];
-   long long err = 0;
-   long i;
-   PNOXNODE pPcml;
-   PUCHAR pcml;
-   UCHAR libpgm [20];
-
-   padncpy ( libpgm      , Program , 10 );
-   padncpy ( libpgm +10  , library , 10 );
-
-   QBNRPII (
-      buffer ,                   /* Receiver variable                    */
-      sizeof(buffer),            /* Length of receiver variable          */
-      "RPII0100 ",               /* Format name                          */
-      libpgm     ,               /* Qualified object name                */
-      "*SRVPGM      ",              /* Object Type                          */
-      "*ALLBNDMOD          ",    /* Qualified bound module name          */
-      &err                       /* Error code                           */
-   );
-   ppgi = (Qbn_PGII0100_t *) buffer;
-   pet = (Qbn_Interface_Entry_t * ) (buffer + ppgi->Offset_First_Entry);
-   for (i=0;i< ppgi->Number_Entries; i++ ) {
-      pcml = buffer + pet->Offset_Interface_Info;
-      pcml [pet->Interface_Info_Length_Ret] = '\0';
-      pPcml  = nox_ParseString(pcml, "");
-
-      // would yield QTEMP - where it is build
-      // if (*library == '*') {
-      //    memcpy ( library , pet->Module_Library, 10);
-      // }
-
-      return  pPcml;
-      // TODO !! pOpenAPI->ccsid = pet->Interface_Info_CCSID;
-      /*
-
-      printf ("Module : %10.10s \n" ,  pet->Module_Name);
-      printf ("library: %10.10s \n" ,  pet->Module_library);
-      printf ("ccsid  : %d \n" ,  pet->Interface_Info_CCSID);
-      printf ("pcml   : %s \n" ,  pcml);
-      */
-      pet = (Qbn_Interface_Entry_t *) ((char *) pet + pet->Offset_Next_Entry);
+   for (;;) {
+      buffer = memAllocClear (bufSize);
+      memset (&ec , 0 , sizeof(ec));
+      ec.Bytes_Provided = sizeof(ec);
+      QBNRPII (
+         buffer ,                           /* Receiver variable           */
+         bufSize,                           /* Length of receiver variable */
+         "RPII0100",                        /* Format name                 */
+         libpgm ,                           /* Qualified object name       */
+         isProgram ? "*PGM      " : "*SRVPGM   ", /* Object Type          */
+         "*ALLBNDMOD          ",            /* Qualified bound module name */
+         &ec                                /* Error code                  */
+      );
+      if (ec.Bytes_Available > 0) {
+         nox_SetMessage ("%7.7s retrieving the PCML of %10.10s/%10.10s", ec.Exception_Id, libpgm + 10, libpgm);
+         memFree (&buffer);
+         return -1;
+      }
+      ppgi = (Qbn_PGII0100_t *) buffer;
+      if (ppgi->Bytes_Available <= bufSize) break;
+      bufSize = ppgi->Bytes_Available + 1024;
+      memFree (&buffer);
    }
-   return NULL;
+
+   memcpy (libFound , ppgi->Obj_Lib_Name, 10);
+   if (*libFound <= ' ') memcpy (libFound, libpgm + 10 , 10);
+   libFound[10] = '\0';
+
+   pRoots = memAllocClear (sizeof(PNOXNODE) * (ppgi->Number_Entries + 1));
+   for (i=0; i < ppgi->Number_Entries; i++) {
+      LONG   len, size, utf8Len;
+      PUCHAR utf8;
+      PNOXNODE pRoot;
+
+      LONG   entryOffset = (i == 0) ? ppgi->Offset_First_Entry : pet->Offset_Next_Entry;
+      if (entryOffset <= 0 || entryOffset + sizeof(Qbn_Interface_Entry_t) > bufSize) break;
+      pet = (Qbn_Interface_Entry_t *) (buffer + entryOffset);
+      len = pet->Interface_Info_Length_Ret;
+      if (len <= 0 || pet->Offset_Interface_Info + len > bufSize) continue;
+
+      size = len * 4 + 1;
+      utf8 = memAlloc (size);
+      utf8Len = xlateBounded (pet->Interface_Info_CCSID, 1208, utf8, size - 1, buffer + pet->Offset_Interface_Info, len);
+      utf8 [utf8Len] = '\0';
+      pRoot = nox_ParseString (utf8);
+      memFree (&utf8);
+      if (pRoot) {
+         pRoots[count++] = pRoot;
+      }
+   }
+   memFree (&buffer);
+   *ppRoots = pRoots;
+   return count;
 }
-//  ---------------------------------------------------------------------------
-#pragma convertt(1252)
-NOX_DTYPE converttDataType (PUCHAR type)
+/* --------------------------------------------------------------------------- */
+static void freePcml (PNOXNODE * pRoots, int count)
 {
-   if (type == NULL) {
-      return NOX_DTYPE_NOX_UNKNOWN;
-   } else if (0 == strcmp(type , "char")) {
-      return NOX_DTYPE_CHAR;
-   } else if (0 == strcmp(type , "packed")) {
-      return NOX_DTYPE_PACKED;
-   } else if (0 == strcmp(type , "zoned")) {
-      return NOX_DTYPE_ZONED;
-   } else if (0 == strcmp(type , "varchar")) {
-      return NOX_DTYPE_VARCHAR;
-   } else if (0 == strcmp(type , "date")) {
-      return NOX_DTYPE_DATE;
-   } else if (0 == strcmp(type , "time")) {
-      return NOX_DTYPE_TIME;
-   } else if (0 == strcmp(type , "timestamp")) {
-      return NOX_DTYPE_TIME_STAMP;
-   } else if (0 == strcmp(type , "int")) {
-      return NOX_DTYPE_INT;
-   } else if (0 == strcmp(type , "byte")) {
-      return NOX_DTYPE_BYTE;
-   } else if (0 == strcmp(type , "struct")) {
-      return NOX_DTYPE_STRUCTURE;
+   int i;
+   for (i=0; i < count ; i++) {
+      nox_NodeDelete (pRoots[i]);
+   }
+   memFree (&pRoots);
+}
+/* --------------------------------------------------------------------------- */
+// The <pcml> element of a parsed PCML document
+static PNOXNODE pcmlElement (PNOXNODE pRoot)
+{
+   PNOXNODE p = nox_GetNode (pRoot , A_PCML);
+   if (p == NULL && pRoot && pRoot->Name && 0 == strcmp (pRoot->Name, A_PCML)) {
+      p = pRoot;
+   }
+   return p;
+}
+/* --------------------------------------------------------------------------- *\
+    Get the pcml from the program  ( UTF-8 graph, as the PCML is )
+     https://www.ibm.com/docs/en/i/7.3?topic=syntax-pcml-data-tag
+\* --------------------------------------------------------------------------- */
+PNOXNODE  nox_ProgramMeta ( PUCHAR library , PUCHAR program)
+{
+   PNOXNODE * pRoots;
+   PNOXNODE pResult;
+   UCHAR    libFound [11];
+   int i, count = retrievePcml (library, program, TRUE, libFound, &pRoots);
+   if (count <= 0) {
+      if (pRoots) memFree (&pRoots);
+      return NULL;
+   }
+   // A program has one PCML for its entry module; keep the first
+   pResult = pRoots[0];
+   for (i=1; i < count ; i++) nox_NodeDelete (pRoots[i]);
+   memFree (&pRoots);
+   return pResult;
+}
+/* --------------------------------------------------------------------------- *\
+    Get the pcml from a service program: all its modules merged into one <pcml>
+\* --------------------------------------------------------------------------- */
+PNOXNODE  nox_ProcedureMeta ( PUCHAR library , PUCHAR program , PUCHAR procedure)
+{
+   PNOXNODE * pRoots;
+   PNOXNODE pResult, pPcml;
+   UCHAR    libFound [11];
+   int i, count = retrievePcml (library, program, FALSE, libFound, &pRoots);
+   if (count <= 0) {
+      if (pRoots) memFree (&pRoots);
+      return NULL;
+   }
+   pResult = pRoots[0];
+   pPcml   = pcmlElement (pResult);
+   for (i=1; i < count ; i++) {
+      PNOXNODE pFrom = pcmlElement (pRoots[i]);
+      PNOXNODE pChild = nox_GetNodeChild (pFrom);
+      while (pPcml && pChild) {
+         PNOXNODE pNext = nox_GetNodeNext (pChild);
+         nox_NodeInsertChildTail (pPcml, nox_NodeUnlink (pChild));
+         pChild = pNext;
+      }
+      nox_NodeDelete (pRoots[i]);
+   }
+   memFree (&pRoots);
+   return pResult;
+}
+/* --------------------------------------------------------------------------- *\
+    Meta graph building - all names and values are UTF-8
+\* --------------------------------------------------------------------------- */
+static PUCHAR parmMetaValue (PNOXNODE pNode , PUCHAR key)
+{
+   PUCHAR value = nox_GetAttrValuePtr ( nox_AttributeLookup (  pNode, key));
+   return value ? value : A_EMPTY;
+}
+/* ------------------------------------------------------------- */
+static int  parmMetaValueInt (PNOXNODE pNode , PUCHAR key, int dftvalue)
+{
+   PUCHAR value = nox_GetAttrValuePtr ( nox_AttributeLookup (  pNode, key));
+   return (value && *value) ? a2i(value) : dftvalue;
+}
+/* ------------------------------------------------------------- */
+// The parameter definition lives in the "def" attribute of its node.
+// NOX_PARMMETA begins with x'00' so it serializes as "", and it is freed with the graph
+static void setParmDefinition (PNOXNODE pNode, PNOX_PARMMETA pMeta)
+{
+   PNOXATTR pAttr;
+   nox_SetNodeAttrValue (pNode , A_DEF , A_EMPTY);
+   pAttr = nox_AttributeLookup (pNode, A_DEF);
+   memFree (&pAttr->Value);
+   pAttr->Value = (PUCHAR) pMeta;
+}
+/* ------------------------------------------------------------- */
+// A one character code (job CCSID) as a UTF-8 value
+static void setCharByName (PNOXNODE pNode, PUCHAR name, UCHAR c)
+{
+   UCHAR e [2], a [8];
+   e[0] = c;
+   e[1] = '\0';
+   nox_SetValueByName (pNode, name, job2utf8 (a, sizeof(a), e), NOX_VALUE);
+}
+/* ------------------------------------------------------------- */
+static NOX_DTYPE convertDataType (PUCHAR type)
+{
+   if      (0 == strcmp(type , A_T_CHAR     )) return NOX_DTYPE_CHAR;
+   else if (0 == strcmp(type , A_T_PACKED   )) return NOX_DTYPE_PACKED;
+   else if (0 == strcmp(type , A_T_ZONED    )) return NOX_DTYPE_ZONED;
+   else if (0 == strcmp(type , A_T_VARCHAR  )) return NOX_DTYPE_VARCHAR;
+   else if (0 == strcmp(type , A_T_DATE     )) return NOX_DTYPE_DATE;
+   else if (0 == strcmp(type , A_T_TIME     )) return NOX_DTYPE_TIME;
+   else if (0 == strcmp(type , A_T_TIMESTAMP)) return NOX_DTYPE_TIME_STAMP;
+   else if (0 == strcmp(type , A_T_INT      )) return NOX_DTYPE_INT;
+   else if (0 == strcmp(type , A_T_BYTE     )) return NOX_DTYPE_BYTE;
+   else if (0 == strcmp(type , A_STRUCT     )) return NOX_DTYPE_STRUCTURE;
+   else return NOX_DTYPE_NOX_UNKNOWN;
+}
+/* ------------------------------------------------------------- */
+// PCML separator name -> the separator character in the job CCSID ( 0 = none given )
+static UCHAR convertSeparator (PUCHAR pSeparator)
+{
+   if (*pSeparator == '\0')                 return '\0';
+   if (0 == strcmp (pSeparator , A_S_HYPHEN)) return '-';
+   if (0 == strcmp (pSeparator , A_S_PERIOD)) return '.';
+   if (0 == strcmp (pSeparator , A_S_SLASH )) return '/';
+   if (0 == strcmp (pSeparator , A_S_BLANK )) return ' ';
+   if (0 == strcmp (pSeparator , A_S_COMMA )) return ',';
+   if (0 == strcmp (pSeparator , A_S_COLON )) return ':';
+   return '\0';
+}
+/* --------------------------------------------------------------------------- *\
+   Create a new method parameter definition from a PCML <data> element
+\* --------------------------------------------------------------------------- */
+static PNOX_PARMMETA newMethodParm ( PNOXNODE pParmMeta)
+{
+   PUCHAR usage;
+   PNOX_PARMMETA pMethodParm  = memAllocClear (sizeof(NOX_PARMMETA));
+
+   strncpy (pMethodParm->name , parmMetaValue ( pParmMeta, A_NAME), PROC_NAME_MAX - 1);
+   if (0 == strcmp (parmMetaValue ( pParmMeta, A_BOOLEAN), A_TRUE)) {
+      pMethodParm->dType  = NOX_DTYPE_BOOL;
    } else {
-      return NOX_DTYPE_NOX_UNKNOWN;
+      pMethodParm->dType  = convertDataType(parmMetaValue ( pParmMeta, A_TYPE));
    }
+   usage = parmMetaValue ( pParmMeta, A_USAGE);
+   pMethodParm->use       = (0 == strcmp(usage , A_INPUTOUTPUT) || 0 == strcmp(usage , A_OUTPUT)) ? USE_BOTH : USE_INPUT;
+   pMethodParm->length    = parmMetaValueInt ( pParmMeta, A_LENGTH, 0);
+   pMethodParm->precision = parmMetaValueInt ( pParmMeta, A_PRECISION, 0);
+   pMethodParm->dim       = parmMetaValueInt ( pParmMeta, A_COUNT, 0);
+   pMethodParm->ccsid     = parmMetaValueInt ( pParmMeta, A_CCSID, 0);
+   pMethodParm->charSize  = (0 == strcmp (parmMetaValue ( pParmMeta, A_CHARTYPE), A_TWOBYTE)) ? 2 : 1;
+   pMethodParm->size      = pMethodParm->length;
+   pMethodParm->graphDataType = NOX_VALUE;
+   if (pMethodParm->dim < 0) pMethodParm->dim = 0;
+   return pMethodParm;
 }
-#pragma convertt(0)
-/* --------------------------------------------------------------------------- *\
-   Recursivly run through each node
-\* --------------------------------------------------------------------------- */
-#pragma convertt(1252)
-static LONG getTotalStructSize(PNOXNODE pStructure) {
+/* --------------------------------------------------------------------------- */
+static LONG getTotalStructSize(PNOXNODE pStructure)
+{
    LONG totalSize = 0 ;
-   for (PNOXNODE pElements = nox_GetNodeChild ( pStructure ) ; pElements ; pElements =  nox_GetNodeNext  (pElements )) {
-      PNOX_PARMMETA pMeta = (PNOX_PARMMETA) nox_GetNodeAttrValuePtr ( pElements, "def" , NULL);
-      if  (pMeta) {  // TODO !!! need it allways !!
-         if  (pMeta->pStructure) {
-            totalSize += getTotalStructSize (pElements);
-         }
+   PNOXNODE pElements;
+   for (pElements = nox_GetNodeChild ( pStructure ) ; pElements ; pElements =  nox_GetNodeNext  (pElements )) {
+      PNOX_PARMMETA pMeta = getParmDefinition (pElements);
+      if  (pMeta) {
          totalSize += (pMeta->dim > 0) ? pMeta->size * pMeta->dim : pMeta->size;
       }
    }
    return totalSize;
 }
-#pragma convertt(0)
-/* --------------------------------------------------------------------------- *\
-   Create a new method parameter object
-\* --------------------------------------------------------------------------- */
-#pragma convertt(1252)
-PNOX_PARMMETA newMethodParm ( PNOXNODE pParmMeta)
+/* --------------------------------------------------------------------------- */
+static PNOXNODE buildMethodParmObject ( PNOX_PARMMETA pMethodParm, PUCHAR structName)
 {
-   PUCHAR p;
-   PNOX_PARMMETA pMethodParm  = memAlloc (sizeof(NOX_PARMMETA));
-   memset (pMethodParm , 0, sizeof(NOX_PARMMETA));
-   strcpy(pMethodParm->name , parmMetaValue ( pParmMeta, "name"));
-   //  TODO !! Cater for PCML version before 7.0
-   // if (0 == strcmp("struct" ,nox_GetNodeNamePtr (pParmMeta))) {
-   //   pMethodParm->dType = NOX_DTYPE_STRUCTURE;
-   //} else {
-   if (*parmMetaValue ( pParmMeta, "boolean") == 't') { // short for "true"
-      pMethodParm->dType  = NOX_DTYPE_BOOL;
-   } else {
-      pMethodParm->dType  = converttDataType(parmMetaValue ( pParmMeta, "type"));
-   }
-   pMethodParm->use       = (0 == strcmp(parmMetaValue ( pParmMeta, "usage") , "inputoutput")) ? 'B' : 'I';
-   pMethodParm->length    = parmMetaValueInt ( pParmMeta, "length", 0);
-   pMethodParm->precision = parmMetaValueInt ( pParmMeta, "precision", 0);
-   pMethodParm->dim       = parmMetaValueInt ( pParmMeta, "count", 0);
-   // pMethodParm->format    = NULL;
-   // pMethodParm->separator = NULL;
-   // pMethodParm->separatorChar = '.';
-   // pMethodParm->dType     = '?';
-   pMethodParm->size      = pMethodParm->length;
-   pMethodParm->graphDataType = NOX_VALUE;
-   return pMethodParm;
-}
-#pragma convertt(0)
-// ----------------------------------------------------------------------------------------
-#pragma convertt(1252)
-PNOXNODE buildMethodParmObject ( PNOX_PARMMETA pMethodParm)
-{
-   PNOXNODE  pParmObject = nox_NewObject (NULL);
+   PNOXNODE  pParmObject = nox_NewObject ();
 
    // The internal binary definition structure pointer saved in the graph
-   nox_SetNodeAttrValuePtr(pParmObject  , "def" , (PUCHAR) pMethodParm);
+   setParmDefinition (pParmObject , pMethodParm);
 
+   nox_SetValueByName(pParmObject  , A_NAME  , pMethodParm->name   , NOX_VALUE);
    if (pMethodParm->pStructure) {
       pMethodParm->length = pMethodParm->size =  getTotalStructSize (pMethodParm->pStructure);
-      // No !! Structure size for array is done at top level:
-      // if (pMethodParm->dim > 0) {
-      //    pMethodParm->size *= pMethodParm->dim;
-      // }
-      nox_SetValueByName(pParmObject  , "name"  , pMethodParm->name   , NOX_VALUE);
-      nox_SetIntByName  (pParmObject  , "offset", pMethodParm->offset , OFF);
-      nox_SetIntByName  (pParmObject  , "size"  , pMethodParm->size , OFF);
+      setCharByName     (pParmObject  , A_USE   , pMethodParm->use);
+      nox_SetIntByName  (pParmObject  , A_OFFSET, pMethodParm->offset);
+      nox_SetIntByName  (pParmObject  , A_SIZE  , pMethodParm->size);
       if (pMethodParm->dim > 0) {
-         nox_SetIntByName  (pParmObject  , "dim" ,  pMethodParm->dim, OFF);
+         nox_SetIntByName  (pParmObject  , A_DIM ,  pMethodParm->dim);
       }
-      nox_SetValueByName(pParmObject  , "struct" , (PUCHAR) pMethodParm->pStructure  , NOXDB_SUBGRAPH);
+      nox_SetValueByName(pParmObject  , A_STRUCT , structName , NOX_VALUE);
    } else {
-      nox_SetValueByName(pParmObject  , "name"  , pMethodParm->name   , NOX_VALUE);
-      nox_SetCharByName (pParmObject  , "type"  , pMethodParm->dType  , OFF);
-      nox_SetCharByName (pParmObject  , "use"   , pMethodParm->use    , OFF);
-      nox_SetIntByName  (pParmObject  , "offset", pMethodParm->offset , OFF);
-      nox_SetIntByName  (pParmObject  , "size"  , pMethodParm->size , OFF);
-      nox_SetIntByName  (pParmObject  , "length", pMethodParm->length , OFF);
-      nox_SetIntByName  (pParmObject  , "prec" ,  pMethodParm->precision, OFF);
+      setCharByName     (pParmObject  , A_TYPE  , pMethodParm->dType);
+      setCharByName     (pParmObject  , A_USE   , pMethodParm->use);
+      nox_SetIntByName  (pParmObject  , A_OFFSET, pMethodParm->offset);
+      nox_SetIntByName  (pParmObject  , A_SIZE  , pMethodParm->size);
+      nox_SetIntByName  (pParmObject  , A_LENGTH, pMethodParm->length);
+      nox_SetIntByName  (pParmObject  , A_PREC  , pMethodParm->precision);
       if (*pMethodParm->format) {
-         nox_SetValueByName(pParmObject  , "format", pMethodParm->format   , NOX_VALUE);
+         UCHAR format [64];
+         nox_SetValueByName(pParmObject  , A_FORMAT, job2utf8 (format, sizeof(format), pMethodParm->format) , NOX_VALUE);
       }
       if (pMethodParm->separatorChar) {
-         nox_SetCharByName (pParmObject  , "separator",  pMethodParm->separatorChar , NOX_VALUE);
+         setCharByName  (pParmObject  , A_SEPARATOR,  pMethodParm->separatorChar);
+      }
+      if (pMethodParm->ccsid) {
+         nox_SetIntByName  (pParmObject  , A_CCSID ,  pMethodParm->ccsid);
       }
       if (pMethodParm->dim > 0) {
-         nox_SetIntByName  (pParmObject  , "dim" ,  pMethodParm->dim, OFF);
+         nox_SetIntByName  (pParmObject  , A_DIM ,  pMethodParm->dim);
       }
    }
-
    return pParmObject;
 }
-#pragma convertt(0)
-// ----------------------------------------------------------------------------------------
-#pragma convertt(1252)
-static PNOXNODE buildParmElements(PNOXNODE pPcmlProgram, PNOXNODE pStructs, PLONG offset, PLONG size, PNOXNODE pProgram)
+/* --------------------------------------------------------------------------- *\
+   The <data> elements of a <struct> or <program>
+\* --------------------------------------------------------------------------- */
+static PNOXNODE buildParmElements(PNOXNODE pPcmlProgram, PNOXNODE pStructs, PLONG offset, PLONG size)
 {
+   PNOXNODE pParms    = nox_NewArray ();
+   PNOXNODE pParmMeta;
 
-   PNOXNODE pParms    = nox_NewArray (NULL);
-   PNOXNODE pParmMeta = nox_GetNode  (pPcmlProgram , "data");
-   while (pParmMeta) {
-      PNOXNODE     pParm;
-      PNOX_PARMMETA pMethodParm = newMethodParm ( pParmMeta);
+   for (pParmMeta = nox_GetNodeChild (pPcmlProgram); pParmMeta; pParmMeta = nox_GetNodeNext(pParmMeta)) {
+      PNOXNODE      pParm;
+      PNOX_PARMMETA pMethodParm;
+      PUCHAR        structName = A_EMPTY;
+      LONG          totSize;
+
+      BOOL          isInlineStruct;
+
+      if (pParmMeta->Name == NULL) continue;
+      isInlineStruct = (0 == strcmp (pParmMeta->Name, A_STRUCT));
+      if (! isInlineStruct && 0 != strcmp (pParmMeta->Name, A_DATA)) continue;
+
+      pMethodParm = newMethodParm ( pParmMeta);
+      if (isInlineStruct) {
+         pMethodParm->dType = NOX_DTYPE_STRUCTURE;
+      }
 
       switch ( pMethodParm->dType) {
 
          case NOX_DTYPE_STRUCTURE: {
-            // Is it a varchar
             PNOXNODE pChild1 = nox_GetNodeChild ( pParmMeta);
             PNOXNODE pChild2 = nox_GetNodeNext  ( pChild1 );
 
-            // PCML prior to V6 for VARCHAR
+            // VARCHAR in PCML before V7: <struct name="x" outputsize="42"> ( or <data type="struct"> )
+            // with <data name="length" type="int" length="2"/> and <data name="string"/>
             if ((pChild1 && pChild2)
-            && ( 0 == strcmp (parmMetaValue ( pChild1, "name") ,"length")
-            &&   0 == strcmp (parmMetaValue ( pChild2, "name") ,"string"))) {
+            && ( 0 == strcmp (parmMetaValue ( pChild1, A_NAME) , A_LENGTH)
+            &&   0 == strcmp (parmMetaValue ( pChild2, A_NAME) , A_STRING))) {
                pMethodParm->dType = NOX_DTYPE_VARCHAR;
-               pMethodParm->precision = parmMetaValueInt ( pChild1, "length", 2);
-               pMethodParm->size = parmMetaValueInt ( pParmMeta, "outputsize", 0);
+               pMethodParm->precision = parmMetaValueInt ( pChild1, A_LENGTH, 2);
+               pMethodParm->size = parmMetaValueInt ( pParmMeta, A_OUTPUTSIZE, 0);
+               if (pMethodParm->size <= pMethodParm->precision) {
+                  // An input only varchar has no outputsize - its declared length is not in the PCML.
+                  // The callee reads only the current length, so give it the room the prefix allows
+                  pMethodParm->size = pMethodParm->precision + ((pMethodParm->precision == 4) ? 1048576 : 65535);
+               }
                pMethodParm->length = pMethodParm->size - pMethodParm->precision;
+               pMethodParm->ccsid    = parmMetaValueInt ( pChild2, A_CCSID, pMethodParm->ccsid);
+               pMethodParm->graphDataType = NOX_VALUE;
+            } else if (isInlineStruct) {
+               // Not a layout we know: keep its room so the next parameters stay in place
+               pMethodParm->dType = NOX_DTYPE_NOX_UNKNOWN;
+               pMethodParm->size  = parmMetaValueInt ( pParmMeta, A_OUTPUTSIZE, 0);
             } else {
-               PUCHAR nodeName ;
-               nodeName =  parmMetaValue ( pParmMeta , "struct");
-               pMethodParm->pStructure  = nox_GetNode  (pStructs , nodeName);
+               structName = parmMetaValue ( pParmMeta , A_STRUCT);
+               pMethodParm->pStructure  = nox_GetNode  (pStructs , structName);
             }
             break;
          }
          case NOX_DTYPE_CHAR:{
-            pMethodParm->graphDataType = NOX_VALUE;
+            pMethodParm->size = pMethodParm->length * pMethodParm->charSize;
             break;
          }
          case NOX_DTYPE_VARCHAR: {
-            pMethodParm->graphDataType = NOX_VALUE;
             if (pMethodParm->precision == 0) {
                pMethodParm->precision = 2;
             }
-            pMethodParm->size = pMethodParm->precision + pMethodParm->length;
+            pMethodParm->size = pMethodParm->precision + pMethodParm->length * pMethodParm->charSize;
             break;
          }
          case NOX_DTYPE_INT:
@@ -894,253 +1308,272 @@ static PNOXNODE buildParmElements(PNOXNODE pPcmlProgram, PNOXNODE pStructs, PLON
             break;
          }
          case NOX_DTYPE_DATE:  {
-            strcpy ( pMethodParm->format , parmMetaValue ( pParmMeta, "dateformat"));
-            pMethodParm->graphDataType = NOX_VALUE;
-            pMethodParm->separatorChar = converttSeperator(
-               parmMetaValue ( pParmMeta, "dateseparator")
-            );
-            pMethodParm->length = pMethodParm->size  = 10 ; // TODO More?
+            utf82job (pMethodParm->format, sizeof(pMethodParm->format), parmMetaValue ( pParmMeta, A_DATEFORMAT));
+            pMethodParm->separatorChar = convertSeparator(parmMetaValue ( pParmMeta, A_DATESEP));
+            pMethodParm->length = pMethodParm->size = isShortDateFormat (pMethodParm->format) ? 8 : 10;
             break;
          }
-
          case NOX_DTYPE_TIME:  {
-            strcpy ( pMethodParm->format , parmMetaValue ( pParmMeta, "timeformat"));
-            pMethodParm->graphDataType = NOX_VALUE;
-            pMethodParm->separatorChar = converttSeperator(
-               parmMetaValue ( pParmMeta, "timeseparator")
-            );
+            utf82job (pMethodParm->format, sizeof(pMethodParm->format), parmMetaValue ( pParmMeta, A_TIMEFORMAT));
+            pMethodParm->separatorChar = convertSeparator(parmMetaValue ( pParmMeta, A_TIMESEP));
             pMethodParm->length = pMethodParm->size = 8 ;
             break;
          }
          case NOX_DTYPE_TIME_STAMP: {
-            if ( *parmMetaValue ( pParmMeta, "precision") == '\0') {
+            if ( *parmMetaValue ( pParmMeta, A_PRECISION) == '\0') {
                pMethodParm->precision = 6;
             }
-            pMethodParm->length = 20 + pMethodParm->precision;
+            if (pMethodParm->precision > 12) pMethodParm->precision = 12;
+            pMethodParm->length = (pMethodParm->precision > 0) ? 20 + pMethodParm->precision : 19;
             pMethodParm->size = pMethodParm->length;
             break;
          }
-
          default:
-            pMethodParm->graphDataType = NOX_VALUE;
+            break;
       }
 
       pMethodParm->offset = *offset;
 
-      pParm = buildMethodParmObject (pMethodParm);
+      pParm = buildMethodParmObject (pMethodParm, structName);
 
       // Setup for next iteration
-      LONG totSize = pMethodParm->dim > 0 ? pMethodParm->size * pMethodParm->dim : pMethodParm->size;
+      totSize = pMethodParm->dim > 0 ? pMethodParm->size * pMethodParm->dim : pMethodParm->size;
       *offset += totSize;
       *size   += totSize;
 
-
       nox_ArrayPush ( pParms , pParm , FALSE);
-
-      pParmMeta = nox_GetNodeNext(pParmMeta);
    }
    return pParms;
 }
-#pragma convertt(0)
 /* --------------------------------------------------------------------------- *\
-   Find _Length nodes - map and set attibutes
+   Find _LENGTH nodes - map and set attributes
 \* --------------------------------------------------------------------------- */
 static void setArrayLengthNodes (PNOXNODE pElements)
 {
-   UCHAR nodeName [256];
-   PNOXNODE pNode = pElements->pNodeChildHead;
-   while (pNode) {
+   UCHAR nodeName [PROC_NAME_MAX + 16];
+   PNOXNODE pNode;
+   for (pNode = nox_GetNodeChild (pElements); pNode ; pNode = nox_GetNodeNext (pNode)) {
       PNOX_PARMMETA pParm = getParmDefinition (pNode);
-      if (pParm->dim > 0) {
-         strcpy (nodeName , pParm->name);
-         #pragma convertt(1252)
-         strcat (nodeName, "_LENGTH");
-         #pragma convertt(0)
-         PNOXNODE pLookupNode = pElements->pNodeChildHead;
-         while (pLookupNode) {
-            PNOX_PARMMETA pLookupParm = getParmDefinition (pLookupNode);
-            if (0==strcmp(pLookupParm->name , nodeName)) {
-               pLookupParm->dontRender = TRUE;
-               pParm->pLengthMeta = pLookupParm;
-               break;
-            }
-            pLookupNode = pLookupNode->pNodeSibling;
+      PNOXNODE pLookupNode;
+      if (pParm == NULL || pParm->dim <= 0) continue;
+      strcpy (nodeName , pParm->name);
+      strcat (nodeName , A_LEN_SUFFIX);
+      for (pLookupNode = nox_GetNodeChild (pElements); pLookupNode ; pLookupNode = nox_GetNodeNext (pLookupNode)) {
+         PNOX_PARMMETA pLookupParm = getParmDefinition (pLookupNode);
+         if (pLookupParm && 0==strcmp(pLookupParm->name , nodeName)) {
+            pLookupParm->dontRender = TRUE;
+            pParm->pLengthMeta = pLookupParm;
+            break;
          }
       }
-      pNode = pNode->pNodeSibling;
    }
 }
 /* --------------------------------------------------------------------------- *\
-   Load all complex (if any) datatypes and make a __structs__ node
+   One module's <struct> elements into pStructs ( name -> array of members )
 \* --------------------------------------------------------------------------- */
-#pragma convertt(1252)
-static void buildStructures ( PNOXNODE pProgram , PNOXNODE pPcml)
+static void buildStructures ( PNOXNODE pStructs , PNOXNODE pPcml)
 {
-   PNOXNODE pPcmlStruct = nox_GetNode  (pPcml , "/pcml/struct");
-   if (pPcmlStruct) {
-
-      PNOXNODE pStructs  = nox_NewObject(NULL);
-
-      while ( pPcmlStruct && 0==strcmp(nox_GetNodeNamePtr(pPcmlStruct),"struct")) {
-         PUCHAR  structureName = parmMetaValue ( pPcmlStruct, "name");
-         LONG   offset = 0;
-         LONG   size   = 0;
-         PNOXNODE pElements = buildParmElements(pPcmlStruct , pStructs , &offset, &size, pProgram);
-         nox_SetNodeAttrValueInt (pElements , "size", size);
-         setArrayLengthNodes (pElements);
-         nox_NodeMoveInto (pStructs, structureName, pElements );
-         pPcmlStruct = nox_GetNodeNext(pPcmlStruct);
-      }
-      nox_NodeMoveInto (pProgram, "__structs__", pStructs );
+   PNOXNODE pPcmlStruct;
+   for (pPcmlStruct = nox_GetNodeChild (pPcml); pPcmlStruct ; pPcmlStruct = nox_GetNodeNext(pPcmlStruct)) {
+      LONG offset = 0;
+      LONG size   = 0;
+      PNOXNODE pElements;
+      if (pPcmlStruct->Name == NULL || 0 != strcmp(pPcmlStruct->Name, A_STRUCT)) continue;
+      pElements = buildParmElements(pPcmlStruct , pStructs , &offset, &size);
+      setArrayLengthNodes (pElements);
+      nox_NodeMoveInto (pStructs, parmMetaValue ( pPcmlStruct, A_NAME), pElements );
    }
 }
-#pragma convertt(0)
 /* --------------------------------------------------------------------------- *\
-   Load all program/procedure entry points
+   One module's <program> elements: entry points with their parameters
 \* --------------------------------------------------------------------------- */
-#pragma convertt(1252)
-static void buildParameters ( PNOXNODE pProgram , PNOXNODE pPcml , BOOL isProgram )
+static BOOL buildParameters ( PNOXNODE pProgram , PNOXNODE pPcml , PNOXNODE pStructs, BOOL isProgram )
 {
+   PNOXNODE pPcmlProgram;
+   for (pPcmlProgram = nox_GetNodeChild (pPcml); pPcmlProgram ; pPcmlProgram = nox_GetNodeNext(pPcmlProgram)) {
+      LONG     offset = 0;
+      LONG     size   = 0;
+      PNOXNODE pParms;
 
-   PNOXNODE pPcmlProgram = nox_GetNode (pPcml , "/pcml/program");
-   PNOXNODE pStructs     = nox_GetNode (pProgram ,  "__structs__");
+      if (pPcmlProgram->Name == NULL || 0 != strcmp(pPcmlProgram->Name, A_PROGRAM)) continue;
 
-   while (pPcmlProgram && 0==strcmp(nox_GetNodeNamePtr(pPcmlProgram),"program")) {
-      LONG    offset = 0;
-      LONG    size   = 0;
-      PNOXNODE pParms = buildParmElements(pPcmlProgram , pStructs , &offset, &size, pProgram);
+      pParms = buildParmElements(pPcmlProgram , pStructs , &offset, &size);
 
-      if (isProgram ) { // *PGM
-         nox_SetIntByName ( pProgram , "buflen" , size  , OFF);
-         nox_NodeMoveInto ( pProgram , "parms" , pParms);
+      if (isProgram ) { // *PGM - the first program element is the entry point
+         nox_SetIntByName ( pProgram , A_BUFLEN , size);
+         nox_NodeMoveInto ( pProgram , A_PARMS , pParms);
+         return TRUE;
       } else {
-         UCHAR tempProc [PROC_NAME_MAX];
-         PNOXNODE pProcedure    = nox_NewObject(NULL);
-         PUCHAR  procedureName  = parmMetaValue ( pPcmlProgram, "name");
-         nox_SetIntByName ( pProcedure , "buflen" , size , OFF);
-         nox_NodeMoveInto ( pProcedure , "parms"  , pParms);
-         strtrimncpy ( tempProc , procedureName , PROC_NAME_MAX);
-         nox_NodeMoveInto ( pProgram , tempProc, pProcedure);
+         PNOXNODE pProcedure = nox_NewObject();
+         nox_SetValueByName ( pProcedure , A_ENTRYPOINT , parmMetaValue ( pPcmlProgram, A_ENTRYPOINT), NOX_VALUE);
+         nox_SetIntByName   ( pProcedure , A_BUFLEN , size);
+         nox_NodeMoveInto   ( pProcedure , A_PARMS  , pParms);
+         nox_NodeMoveInto   ( pProgram , parmMetaValue ( pPcmlProgram, A_NAME), pProcedure);
       }
-
-      pPcmlProgram = nox_GetNodeNext(pPcmlProgram);
-
    }
+   return FALSE;
 }
-#pragma convertt(0)
 /* --------------------------------------------------------------------------- *\
-   Convert pcml to uniform json used for both programs and service programs
+   Convert pcml to uniform json used for both programs and service programs:
+   { "LIB": { "program"|"service": { "PGM": { "__structs__":{..}, "buflen":n, "parms":[..] } } } }
+   ( for a service program each procedure is an object with buflen and parms )
 \* --------------------------------------------------------------------------- */
-PNOXNODE  nox_ApplicationMeta ( PUCHAR library , PUCHAR program , PUCHAR objectType)
+static PNOXNODE applicationMeta ( PUCHAR library , PUCHAR program , BOOL isProgram)
 {
-   PNOXNODE pPcml;
-   UCHAR   tempPgm [11];
-   UCHAR   tempLib [11];
-   BOOL    isProgram = objectType[1] == 'P';
+   PNOXNODE * pRoots;
+   PNOXNODE pResultObject, pLib, pObjectType, pProgram, pStructs;
+   UCHAR    libFound [11];
+   UCHAR    name [64];
+   BOOL     found = FALSE;
+   int      i, count;
 
-   if (isProgram) {
-      if ( *library == '*' ) {
-         _SYSPTR pPgm = nox_loadProgram (library, program);
-         getLibraryForSysPtr ( pPgm , library);
+   count = retrievePcml (library, program, isProgram, libFound, &pRoots);
+   if (count <= 0) {
+      if (pRoots) memFree (&pRoots);
+      if (count == 0) {
+         nox_SetMessage ("No PCML in %10.10s/%10.10s - compile it with ctl-opt pgminfo(*PCML:*MODULE)", library, program);
       }
-      pPcml = nox_ProgramMeta ( library , program );
-   } else {
-      if ( *library == '*' ) {
-         _SYSPTR pPgm = nox_loadServiceProgram (library, program);
-         getLibraryForSysPtr ( pPgm , library);
-      }
-      pPcml = nox_ProcedureMeta ( library , program , "*ALL");
-   }
-
-   if (pPcml == NULL ) return NULL;
-
-   // TODO : for now return null, but let a object with out PCML make a default graph for caching
-   #pragma convertt(1252)
-   PNOXNODE pPcmlProgram = nox_GetNode  (pPcml , "/pcml/program");
-   #pragma convertt(0)
-   if (pPcmlProgram == NULL) {
-      nox_NodeDelete (pPcml);
       return NULL;
    }
 
-   PNOXNODE pResultObject = nox_NewObject(NULL);
-   PNOXNODE pLib          = nox_NewObject(NULL);
-   PNOXNODE pObjectType   = nox_NewObject(NULL);
-   PNOXNODE pProgram      = nox_NewObject(NULL);
+   pProgram = nox_NewObject();
+   pStructs = nox_NewObject();
 
-   buildStructures ( pProgram , pPcml);
-   buildParameters ( pProgram , pPcml , isProgram);
+   for (i=0; i < count ; i++) {
+      PNOXNODE pPcml = pcmlElement (pRoots[i]);
+      PNOXNODE pModuleStructs = nox_NewObject();
+      PNOXNODE pStruct;
+      if (pPcml == NULL) {
+         nox_NodeDelete (pModuleStructs);
+         continue;
+      }
+      // Each module's parameters refer to that module's structures
+      buildStructures ( pModuleStructs , pPcml);
+      if (!found) {
+         found = buildParameters ( pProgram , pPcml , pModuleStructs, isProgram);
+      }
+      // Gather them; a name already taken by another module keeps that module's struct only
+      // in the definitions that refer to it ( the nodes stay where they are, only moved )
+      pStruct = nox_GetNodeChild (pModuleStructs);
+      while (pStruct) {
+         PNOXNODE pNext = nox_GetNodeNext (pStruct);
+         if (nox_GetNode (pStructs , pStruct->Name) == NULL) {
+            nox_NodeInsertChildTail (pStructs, nox_NodeUnlink (pStruct));
+         }
+         pStruct = pNext;
+      }
+      // Structures with a duplicate name are still referenced: keep them alive with the result
+      if (nox_GetNodeChild (pModuleStructs)) {
+         UCHAR moduleKey [32];
+         sprintf (moduleKey, "%s%d", "__structs__", i);
+         nox_NodeMoveInto (pProgram, job2utf8 (name, sizeof(name), moduleKey), pModuleStructs);
+      } else {
+         nox_NodeDelete (pModuleStructs);
+      }
+   }
+   freePcml (pRoots, count);
 
+   if (nox_GetNodeChild (pStructs)) {
+      nox_NodeMoveInto (pProgram, A_STRUCTS, pStructs);
+   } else {
+      nox_NodeDelete (pStructs);
+   }
 
-   strtrimncpy ( tempPgm  , program , 10);
-   strtrimncpy ( tempLib  , library , 10);
-   nox_NodeMoveInto ( pObjectType   , tempPgm , pProgram);
-   #pragma convertt(1252)
-   nox_NodeMoveInto ( pLib          , isProgram ? "program" : "service" , pObjectType);
-   #pragma convertt(0)
-   nox_NodeMoveInto ( pResultObject , tempLib , pLib);
-   nox_NodeDelete (pPcml);
-
-
+   pObjectType   = nox_NewObject();
+   pLib          = nox_NewObject();
+   pResultObject = nox_NewObject();
+   nox_NodeMoveInto ( pObjectType   , objName2utf8 (name, sizeof(name), program) , pProgram);
+   nox_NodeMoveInto ( pLib          , isProgram ? A_PROGRAM : A_SERVICE , pObjectType);
+   nox_NodeMoveInto ( pResultObject , objName2utf8 (name, sizeof(name), libFound) , pLib);
    return pResultObject;
-
 }
-
-
 /* --------------------------------------------------------------------------- *\
-    Handler :
+   procedure: *NULL or *PGM for a program, otherwise a service program
+\* --------------------------------------------------------------------------- */
+PNOXNODE  nox_ApplicationMeta ( PUCHAR library , PUCHAR program , PUCHAR procedure)
+{
+   BOOL isProgram = (procedure == NULL || 0 == strcmp (procedure , "*PGM"));
+   return applicationMeta (library, program, isProgram);
+}
+/* --------------------------------------------------------------------------- */
+// { lib: { program|service: { pgm: {...} } } } -> the pgm object
+static PNOXNODE metaObject (PNOXNODE pMeta)
+{
+   return nox_GetNodeChild (nox_GetNodeChild (nox_GetNodeChild (pMeta)));
+}
+/* --------------------------------------------------------------------------- */
+// A procedure by its PCML name or entry point, any case
+static PNOXNODE findProcedure (PNOXNODE pPgm, PUCHAR procedureUtf8)
+{
+   PNOXNODE pProc;
+   for (pProc = nox_GetNodeChild (pPgm); pProc ; pProc = nox_GetNodeNext (pProc)) {
+      if (pProc->Name == NULL || pProc->type != NOX_OBJECT) continue;
+      if (0 == strncmp (pProc->Name, A_STRUCTS, 11)) continue;
+      if (0 == a_stricmp (pProc->Name , procedureUtf8)
+      ||  0 == a_stricmp (nox_GetValuePtr (pProc, A_ENTRYPOINT, A_EMPTY), procedureUtf8)) {
+         return pProc;
+      }
+   }
+   return NULL;
+}
+/* --------------------------------------------------------------------------- *\
+    Call a program
 \* --------------------------------------------------------------------------- */
 PNOXNODE  nox_CallProgram (PUCHAR library , PUCHAR program, PNOXNODE parmsP, ULONG optionsP)
 {
-
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PNOXNODE parms   = (pParms->OpDescList->NbrOfParms >= 3 ) ? parmsP : NULL;
-   ULONG   options = (pParms->OpDescList->NbrOfParms >= 4 ) ? optionsP : 0;
+   PNOXNODE parms   = (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 3 ) ? parmsP : NULL;
+   ULONG   options  = (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 4 ) ? optionsP : 0;
    NOX_METHOD pgm;
+   PNOXNODE pResult;
 
    memset ( &pgm , 0 , sizeof(pgm));
    strtrimncpy (pgm.library   , library , 10);
    strtrimncpy (pgm.program   , program  , 10);
-   strtrimncpy (pgm.procedure , "*PGM" , PROC_NAME_MAX );
-   pgm.userMethod = nox_loadProgram ( pgm.library, pgm.program);
-   pgm.pMetaNode  = nox_ApplicationMeta (pgm.library , pgm.program , pgm.procedure );
+   strcpy      (pgm.procedure , "*PGM");
    pgm.userMethodIsProgram = TRUE;
-   pgm.pLib  = nox_GetNode(pgm.pMetaNode , pgm.library);
-   #pragma convertt(1252)
-   pgm.pPgm  = nox_GetNode(nox_GetNode(pgm.pLib , "program") , pgm.program);
-   #pragma convertt(0)
+   pgm.userMethod = nox_loadProgram ( pgm.library, pgm.program);
+   if (pgm.userMethod) {
+      pgm.pMetaNode  = applicationMeta (pgm.library , pgm.program , TRUE);
+      pgm.pPgm       = metaObject (pgm.pMetaNode);
+      if (pgm.pPgm && nox_GetNode (pgm.pPgm, A_PARMS) == NULL && getIntByName (pgm.pPgm, A_BUFLEN, -1) < 0) {
+         pgm.pPgm = NULL; // no entry point in the PCML
+      }
+   }
    pgm.pProc = NULL;
 
-   PNOXNODE pResult = call (&pgm, parms , options);
+   pResult = call (&pgm, parms , options);
    nox_NodeDelete( pgm.pMetaNode );
    return pResult;
 }
 /* --------------------------------------------------------------------------- *\
-    Handler :
+    Call a service program procedure
 \* --------------------------------------------------------------------------- */
 PNOXNODE  nox_CallProcedure (PUCHAR library, PUCHAR srvPgm, PUCHAR procedure, PNOXNODE parmsP, ULONG optionsP)
 {
-
    PNPMPARMLISTADDRP pParms = _NPMPARMLISTADDR();
-   PNOXNODE parms   = (pParms->OpDescList->NbrOfParms >= 4 ) ? parmsP : NULL;
-   ULONG   options = (pParms->OpDescList->NbrOfParms >= 5 ) ? optionsP : 0;
+   PNOXNODE parms   = (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 4 ) ? parmsP : NULL;
+   ULONG   options  = (pParms->OpDescList == NULL || pParms->OpDescList->NbrOfParms >= 5 ) ? optionsP : 0;
    NOX_METHOD pgm;
+   PNOXNODE pResult;
+   UCHAR    procUtf8 [PROC_NAME_MAX * 4 + 1];
 
    memset ( &pgm , 0 , sizeof(pgm));
    strtrimncpy (pgm.library   , library , 10);
    strtrimncpy (pgm.program   , srvPgm , 10);
-   strtrimncpy (pgm.procedure , procedure , PROC_NAME_MAX );
-
-   pgm.userMethod = nox_loadServiceProgramProc ( pgm.library, pgm.program , pgm.procedure);
-   pgm.pMetaNode  = nox_ApplicationMeta (pgm.library , pgm.program , pgm.procedure );
+   strtrimncpy (pgm.procedure , procedure ? procedure : "" , PROC_NAME_MAX );
    pgm.userMethodIsProgram = FALSE;
-   pgm.pLib  = nox_GetNode(pgm.pMetaNode , pgm.library);
-   #pragma convertt(1252)
-   pgm.pPgm  = nox_GetNode(nox_GetNode(pgm.pLib , "service") , pgm.program);
-   #pragma convertt(0)
-   pgm.pProc = nox_GetNode(pgm.pPgm      , pgm.procedure);
+   pgm.userMethod = nox_loadServiceProgramProc ( pgm.library, pgm.program , pgm.procedure);
+   if (pgm.userMethod) {
+      pgm.pMetaNode  = applicationMeta (pgm.library , pgm.program , FALSE);
+      pgm.pPgm       = metaObject (pgm.pMetaNode);
+      pgm.pProc      = findProcedure (pgm.pPgm, job2utf8 (procUtf8, sizeof(procUtf8), pgm.procedure));
+      if (pgm.pProc == NULL) {
+         pgm.pPgm = NULL;  // so the call reports the missing PCML
+      }
+   }
 
-   PNOXNODE pResult = call (&pgm, parms , options);
+   pResult = call (&pgm, parms , options);
    nox_NodeDelete( pgm.pMetaNode);
    return pResult;
 }

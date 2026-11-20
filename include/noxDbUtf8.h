@@ -340,6 +340,8 @@ typedef struct _NOXPARMMETA  {
 	PNOXNODE  pStructure;
 	struct _NOXPARMMETA* pLengthMeta;
 	BOOL     dontRender;
+	LONG     ccsid;      // char/varchar: CCSID of the data, 0 = the job's
+	LONG     charSize;   // char/varchar: bytes per character (2 for chartype="twobyte")
 } NOX_PARMMETA, * PNOX_PARMMETA;
 #endif
 
@@ -667,6 +669,17 @@ _SYSPTR nox_loadProgram (PUCHAR lib, PUCHAR pgm);
 void nox_callProc ( _SYSPTR proc, void * args [64], SHORT parms);
 void nox_callPgm  ( _SYSPTR proc, void * args  [], SHORT parms);
 void getLibraryForSysPtr (_SYSPTR proc, UCHAR * lib);
+
+// Call programs and service program procedures by their PCML (ctl-opt pgminfo(*PCML:*MODULE)).
+// library / program are blank padded char(10) in the job CCSID, procedure a string in the job CCSID.
+// parms is a noxDB graph or a JSON string in the job CCSID; the result is a new graph (UTF-8).
+PNOXNODE nox_CallProgram   (PUCHAR library, PUCHAR program, PNOXNODE parms, ULONG options);
+#pragma descriptor ( void nox_CallProgram   (void))
+PNOXNODE nox_CallProcedure (PUCHAR library, PUCHAR srvPgm, PUCHAR procedure, PNOXNODE parms, ULONG options);
+#pragma descriptor ( void nox_CallProcedure (void))
+PNOXNODE nox_ProgramMeta     (PUCHAR library, PUCHAR program);
+PNOXNODE nox_ProcedureMeta   (PUCHAR library, PUCHAR srvPgm, PUCHAR procedure);
+PNOXNODE nox_ApplicationMeta (PUCHAR library, PUCHAR program, PUCHAR procedure);
 
 
 // SQL functions

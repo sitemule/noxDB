@@ -1,0 +1,26 @@
+/* ------------------------------------------------------------------ */
+/* Run a test program in CCSID 500 - the CCSID the RPG tests are      */
+/* compiled in from the IFS - and write the job log, failed asserts   */
+/* included, to /tmp/<pgm>.joblog.csv                                 */
+/*   CALL RUNTEST PARM('CALLPGM')                                     */
+/* ------------------------------------------------------------------ */
+PGM PARM(&PGM)
+  DCL VAR(&PGM)  TYPE(*CHAR) LEN(10)
+  DCL VAR(&STMF) TYPE(*CHAR) LEN(64)
+
+  CHGJOB CCSID(500)
+  CALL PGM(&PGM)
+  MONMSG MSGID(CPF0000 CEE0000 MCH0000)
+
+  CHGVAR VAR(&STMF) VALUE('/tmp/' *TCAT &PGM *TCAT '.joblog.csv')
+  DLTF FILE(QTEMP/JOBLOG)
+  MONMSG MSGID(CPF0000)
+  RUNSQL SQL('create table qtemp.joblog as (select message_id, +
+              message_type, from_program, from_module, +
+              from_procedure, from_instruction, +
+              cast(message_text as varchar(1000)) message_text +
+              from table(qsys2.joblog_info(''*'')) x) with data') +
+         COMMIT(*NONE)
+  CPYTOIMPF FROMFILE(QTEMP/JOBLOG) TOSTMF(&STMF) MBROPT(*REPLACE) +
+            STMFCCSID(1208) RCDDLM(*LF)
+ENDPGM

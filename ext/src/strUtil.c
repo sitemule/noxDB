@@ -989,7 +989,7 @@ PUCHAR str2integerMem ( PUCHAR out , PUCHAR in , SHORT len , BOOL isSigned )
 // ---------------------------------------------------------------------------
 PUCHAR fmtPacked(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint)
 {
-   UCHAR  temp [64];
+   UCHAR  temp [128]; // sign, 63 digits, point and zero
    PUCHAR pOut = temp;
    SHORT  ByteLen = len / 2 + 1;  /* Bytes required */
    SHORT  HighNibbel = len % 2;
@@ -1017,7 +1017,7 @@ PUCHAR fmtPacked(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint
 // ---------------------------------------------------------------------------
 PUCHAR fmtZoned(PUCHAR out , PUCHAR in , SHORT len , SHORT prec, UCHAR decPoint)
 {
-   UCHAR  temp [64];
+   UCHAR  temp [128]; // sign, 63 digits, point and zero
    PUCHAR pOut = temp;
    SHORT  ByteLen = len ;  // Bytes required
    SHORT  j;
