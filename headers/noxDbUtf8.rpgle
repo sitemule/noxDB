@@ -242,6 +242,21 @@ Dcl-PR nox_ParseString Pointer extproc(*CWIDEN:'nox_ParseStringVC');
 End-PR;
 
 ///
+// Parse string from a pointer
+//
+// Parses a zero terminated JSON or XML string in UTF-8, of any length - for
+// buffers larger than a varchar, e.g. a request body. If the pointer already
+// points to a noxDB node, that node is returned.
+//
+// @param (input) Pointer to a zero terminated JSON or XML string
+// @return Pointer to the root node of the noxDB object graph, *null for
+//         *null or an empty string
+///
+Dcl-PR nox_ParseStringPtr Pointer extproc(*CWIDEN:'nox_ParseString');
+  String         Pointer value;
+End-PR;
+
+///
 // Set decimal separator
 //
 // Set , or . for decimal separator.
