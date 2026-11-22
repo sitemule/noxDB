@@ -2933,14 +2933,13 @@ PNOX_SQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
    // Scope CLI resources to the top program on the stack. This preserves
    // cursors, statements, and other resources when a service program leaves
    // the stack and is re-entered later in the job.
+   // The job has one CLI environment: when another part of the job already has a connection
+   // in it (noxDB, an IceBreak server job), its attributes can not be set any more - CLI
+   // answers "function sequence error" (10). Then the environment is used as it is, like the
+   // sort sequence below; failing here made every connect in such a job fail.
    SQLINTEGER value = 1;
    rc = SQLSetEnvAttr (pCon->henv, SQL_ATTR_INVOKING_PGM,
                        (SQLPOINTER)&value, 0);
-   if (rc != SQL_SUCCESS ) {
-      check_error (pCon, NULL);
-      nox_sqlDisconnect (&pCon);
-      return NULL; // we have an error
-   }
 
    // This is OK for now - it will inhirit it from the initial connection
    // and work from out side as well
