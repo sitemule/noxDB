@@ -2935,11 +2935,36 @@ PNOX_SQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
    // the stack and is re-entered later in the job.
    // The job has one CLI environment: when another part of the job already has a connection
    // in it (noxDB, an IceBreak server job), its attributes can not be set any more - CLI
-   // answers "function sequence error" (10). Then the environment is used as it is, like the
-   // sort sequence below; failing here made every connect in such a job fail.
+   // answers function sequence error (SQLSTATE HY010). Then the environment is used as it is
+   // (the scoping does not apply - said once in the job log); failing here made every connect
+   // in such a job fail. Any other error still fails the connect.
    SQLINTEGER value = 1;
    rc = SQLSetEnvAttr (pCon->henv, SQL_ATTR_INVOKING_PGM,
                        (SQLPOINTER)&value, 0);
+   if (rc != SQL_SUCCESS ) {
+      static __thread BOOL told = false;
+      SQLCHAR    state [SQL_SQLSTATE_SIZE + 1];
+      SQLINTEGER code = 0;
+      SQLCHAR    text [SQL_MAX_MESSAGE_LENGTH + 1];
+      SQLSMALLINT textLen = 0;
+      static const UCHAR hy010Ebcdic [5] = { 0xC8, 0xE8, 0xF0, 0xF1, 0xF0 }; // "HY010" in EBCDIC
+      memset (state , 0 , sizeof(state));
+      SQLGetDiagRec (SQL_HANDLE_ENV, pCon->henv, 1, state, &code, text, sizeof(text), &textLen);
+      if (memcmp (state , "HY010" , 5) == 0            // the literal is 1252 here
+      ||  memcmp (state , hy010Ebcdic , 5) == 0) {     // the job's CCSID
+         if (! told) {
+            UCHAR msg [128];
+            told = true;
+            // the literal is 1252 here, joblog wants the job's CCSID
+            stra2e (msg , "noxDbUtf8: the job's SQL CLI environment is already in use - SQL_ATTR_INVOKING_PGM not set");
+            joblog (msg);
+         }
+      } else {
+         check_error (pCon, NULL);
+         nox_sqlDisconnect (&pCon);
+         return NULL; // we have an error
+      }
+   }
 
    // This is OK for now - it will inhirit it from the initial connection
    // and work from out side as well
