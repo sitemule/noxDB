@@ -2941,9 +2941,10 @@ PNOX_SQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
    // the stack and is re-entered later in the job.
    // The job has one CLI environment: when another part of the job already has a connection
    // in it (noxDB, an IceBreak server job), its attributes can not be set any more - CLI
-   // answers function sequence error (SQLSTATE HY010). Then the environment is used as it is
-   // (the scoping does not apply - said once in the job log, unless this noxDbUtf8 set it on
-   // an earlier connect); failing here made every connect in such a job fail. An error
+   // answers function sequence error (SQLSTATE HY010). Then the environment is used as the
+   // first connect left it: in an IceBreak job that is noxDB, which sets SQL_ATTR_INVOKING_PGM
+   // too. Said once in the job log, unless this noxDbUtf8 set it on an earlier connect itself;
+   // failing here made every connect in such a job fail. An error
    // without a diagnostic record is taken the same way; any other error still fails the
    // connect. The attribute can not be read back: SQLGetEnvAttr answers -1 for it on 7.3.
    static BOOL invokingPgmSet = false;
@@ -2967,10 +2968,10 @@ PNOX_SQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
       } else if (memcmp (state , "HY010" , 5) == 0     // the literal is 1252 here
       ||  memcmp (state , hy010Ebcdic , 5) == 0) {     // the job's CCSID
          if (! told && ! invokingPgmSet) {
-            UCHAR msg [128];
+            UCHAR msg [160];
             told = true;
             // the literal is 1252 here, joblog wants the job's CCSID
-            stra2e (msg , "noxDbUtf8: the job's SQL CLI environment is already in use - SQL_ATTR_INVOKING_PGM not set");
+            stra2e (msg , "noxDbUtf8: the SQL CLI environment was set up by an earlier connect in the job - its SQL_ATTR_INVOKING_PGM applies");
             joblog (msg);
          }
       } else {
