@@ -49,8 +49,12 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #define SQL_BOOLEAN            16
 #endif
 
-// IBM i SQL CLI option for service programs that can leave the call stack.
-// It is not present in older SQL CLI headers, but is supported by Db2 for i.
+// Undocumented IBM i SQL CLI environment attribute, given to us by IBM's SQL CLI development
+// (it is in no QSYSINC header). CLI resources (cursors, statement handles, ...) belong to the
+// program that called SQLAllocEnv: when that program leaves the stack they can be lost - see
+// SQLAllocEnv in the IBM i documentation and the SQL CLI FAQ, "Cursor not open (SQLSTATE 24501)".
+// Set to 1 IMMEDIATELY after SQLAllocEnv, it scopes them to the top program on the stack instead,
+// as long as none of the activation groups in the stack are reclaimed.
 #ifndef SQL_ATTR_INVOKING_PGM
 #define SQL_ATTR_INVOKING_PGM  10037
 #endif
@@ -219,6 +223,8 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
    pConnection = &connection;
    memset(pConnection , 0 , sizeof(JXSQLCONNECT));
    pConnection->sqlTrace.handle = -1;
+   pConnection->henv = -1;  // not allocated yet: a failure below must not free handle 0
+   pConnection->hdbc = -1;
    pConnection->pCd = XlateOpenDescriptor (13488, 0, false);
    po = &pConnection->options;
    po->upperCaseColName = OFF;
@@ -240,16 +246,47 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
      return NULL; // we have an error
    }
 
-   // Scope CLI resources to the top program on the stack. This preserves
-   // cursors, statements, and other resources when a service program leaves
+   // Scope CLI resources to the top program on the stack (SQL_ATTR_INVOKING_PGM above). This
+   // preserves cursors, statements, and other resources when this service program leaves
    // the stack and is re-entered later in the job.
-   SQLINTEGER value = 1;
-   rc = SQLSetEnvAttr (pConnection->henv, SQL_ATTR_INVOKING_PGM,
-                       (SQLPOINTER)&value, 0);
-   if (rc != SQL_SUCCESS ) {
-     check_error (NULL);
-     jx_sqlDisconnect ();
-     return NULL; // we have an error
+   // The job has one CLI environment: when another part of the job already has a connection
+   // in it (noxDbUtf8, other CLI code), its attributes can not be set any more - CLI answers
+   // function sequence error (SQLSTATE HY010). Then the environment is used as the first
+   // connect left it - said once in the job log, unless this noxDB set it on an earlier
+   // connect itself; failing here made every connect in such a job fail. An error without a
+   // diagnostic record is taken the same way; any other error still fails the connect.
+   // The attribute can not be read back: SQLGetEnvAttr answers -1 for it on 7.3.
+   {
+     static BOOL invokingPgmSet = false;
+     SQLINTEGER value = 1;
+     rc = SQLSetEnvAttr (pConnection->henv, SQL_ATTR_INVOKING_PGM,
+                         (SQLPOINTER)&value, 0);
+     if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
+       invokingPgmSet = true;
+     } else {
+       static BOOL told = false;
+       SQLCHAR     state [SQL_SQLSTATE_SIZE + 1];
+       SQLINTEGER  code = 0;
+       SQLCHAR     text [SQL_MAX_MESSAGE_LENGTH + 1];
+       SQLSMALLINT textLen = 0;
+       SQLRETURN   diagRc;
+       static const UCHAR hy010Ascii [5] = { 0x48, 0x59, 0x30, 0x31, 0x30 }; // "HY010" in ASCII
+       memset (state , 0 , sizeof(state));
+       diagRc = SQLGetDiagRec (SQL_HANDLE_ENV, pConnection->henv, 1, state, &code, text, sizeof(text), &textLen);
+       if (diagRc != SQL_SUCCESS && diagRc != SQL_SUCCESS_WITH_INFO) {
+         ; // no diagnostic record, nothing to tell a real error by: use the environment
+       } else if (memcmp (state , "HY010" , 5) == 0       // the job's CCSID
+              ||  memcmp (state , hy010Ascii , 5) == 0) { // in case CLI runs in UTF-8 mode
+         if (! told && ! invokingPgmSet) {
+           told = true;
+           jx_joblog ("noxDB: the SQL CLI environment was set up by an earlier connect in the job - its SQL_ATTR_INVOKING_PGM applies");
+         }
+       } else {
+         check_error (NULL);
+         jx_sqlDisconnect ();
+         return NULL; // we have an error
+       }
+     }
    }
 
    // Note - this is invers: Default to IBMi naming
@@ -278,12 +315,10 @@ static PJXSQLCONNECT jx_sqlNewConnection(void )
    rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_EXTENDED_COL_INFO , &attrParm  , 0);
    */
 
+   // Like SQL_ATTR_SYS_NAMING above: when an earlier connect in the job set up the
+   // environment this answers HY010, and the job keeps that connect's sort sequence
    attrParm = SQL_TRUE;
    rc = SQLSetEnvAttr  (pConnection->henv, SQL_ATTR_JOB_SORT_SEQUENCE , &attrParm  , 0);
-   if (rc != SQL_SUCCESS ) {
-     jx_sqlDisconnect ();
-     return NULL; // we have an error
-   }
 
    rc = SQLAllocConnect (pConnection->henv, &pConnection->hdbc);  // allocate a connection handle
    if (rc != SQL_SUCCESS ) {
