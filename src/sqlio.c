@@ -46,8 +46,12 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/cli/rzadphdapi.htm?lang
 #define SQL_BOOLEAN            16
 #endif
 
-// IBM i SQL CLI option for service programs that can leave the call stack.
-// It is not present in older SQL CLI headers, but is supported by Db2 for i.
+// Undocumented IBM i SQL CLI environment attribute, given to us by IBM's SQL CLI development
+// (it is in no QSYSINC header). CLI resources (cursors, statement handles, ...) belong to the
+// program that called SQLAllocEnv: when that program leaves the stack they can be lost - see
+// SQLAllocEnv in the IBM i documentation and the SQL CLI FAQ, "Cursor not open (SQLSTATE 24501)".
+// Set to 1 IMMEDIATELY after SQLAllocEnv, it scopes them to the top program on the stack instead,
+// as long as none of the activation groups in the stack are reclaimed. Issue 157.
 #ifndef SQL_ATTR_INVOKING_PGM
 #define SQL_ATTR_INVOKING_PGM  10037
 #endif
@@ -2910,6 +2914,8 @@ PNOX_SQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
 
    pCon = memAllocClear(sizeof(NOX_SQLCONNECT));
    pCon->sqlTrace.handle = -1;
+   pCon->henv = -1;  // not allocated yet: a failure below must not free handle 0
+   pCon->hdbc = -1;
    pCon->iconv = XlateOpen (13488, 0, false);
    po = &pCon->options;
    po->upperCaseColName = OFF;
@@ -2930,29 +2936,37 @@ PNOX_SQLCONNECT nox_sqlConnect(PNOXNODE pOptionsP)
       return NULL; // we have an error
    }
 
-   // Scope CLI resources to the top program on the stack. This preserves
-   // cursors, statements, and other resources when a service program leaves
+   // Scope CLI resources to the top program on the stack (SQL_ATTR_INVOKING_PGM above). This
+   // preserves cursors, statements, and other resources when this service program leaves
    // the stack and is re-entered later in the job.
    // The job has one CLI environment: when another part of the job already has a connection
    // in it (noxDB, an IceBreak server job), its attributes can not be set any more - CLI
    // answers function sequence error (SQLSTATE HY010). Then the environment is used as it is
-   // (the scoping does not apply - said once in the job log); failing here made every connect
-   // in such a job fail. Any other error still fails the connect.
+   // (the scoping does not apply - said once in the job log, unless this noxDbUtf8 set it on
+   // an earlier connect); failing here made every connect in such a job fail. An error
+   // without a diagnostic record is taken the same way; any other error still fails the
+   // connect. The attribute can not be read back: SQLGetEnvAttr answers -1 for it on 7.3.
+   static BOOL invokingPgmSet = false;
    SQLINTEGER value = 1;
    rc = SQLSetEnvAttr (pCon->henv, SQL_ATTR_INVOKING_PGM,
                        (SQLPOINTER)&value, 0);
-   if (rc != SQL_SUCCESS ) {
+   if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
+      invokingPgmSet = true;
+   } else {
       static __thread BOOL told = false;
       SQLCHAR    state [SQL_SQLSTATE_SIZE + 1];
       SQLINTEGER code = 0;
       SQLCHAR    text [SQL_MAX_MESSAGE_LENGTH + 1];
       SQLSMALLINT textLen = 0;
       static const UCHAR hy010Ebcdic [5] = { 0xC8, 0xE8, 0xF0, 0xF1, 0xF0 }; // "HY010" in EBCDIC
+      SQLRETURN  diagRc;
       memset (state , 0 , sizeof(state));
-      SQLGetDiagRec (SQL_HANDLE_ENV, pCon->henv, 1, state, &code, text, sizeof(text), &textLen);
-      if (memcmp (state , "HY010" , 5) == 0            // the literal is 1252 here
+      diagRc = SQLGetDiagRec (SQL_HANDLE_ENV, pCon->henv, 1, state, &code, text, sizeof(text), &textLen);
+      if (diagRc != SQL_SUCCESS && diagRc != SQL_SUCCESS_WITH_INFO) {
+         ; // no diagnostic record, nothing to tell a real error by: use the environment
+      } else if (memcmp (state , "HY010" , 5) == 0     // the literal is 1252 here
       ||  memcmp (state , hy010Ebcdic , 5) == 0) {     // the job's CCSID
-         if (! told) {
+         if (! told && ! invokingPgmSet) {
             UCHAR msg [128];
             told = true;
             // the literal is 1252 here, joblog wants the job's CCSID
